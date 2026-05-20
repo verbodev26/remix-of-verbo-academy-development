@@ -30,15 +30,27 @@ function StudentDashboard() {
   const currentUnit = level?.units[1] ?? level?.units[0];
   const levelProgress = 64; // mock
 
-  // Time-based rating popup: trigger when we are within (duration - 10) and end of session
+  // Time-based rating popup: trigger when within (duration - 10) and end.
+  // Persisted in localStorage so it only appears once per session, ever.
   const [ratingSession, setRatingSession] = useState<typeof SESSIONS[number] | null>(null);
-  const [dismissed, setDismissed] = useState<Set<string>>(new Set());
+  const [handled, setHandled] = useState<Set<string>>(() => {
+    if (typeof window === "undefined") return new Set();
+    try {
+      const raw = localStorage.getItem("verbo:rated-sessions");
+      return new Set(raw ? (JSON.parse(raw) as string[]) : []);
+    } catch { return new Set(); }
+  });
+
+  const persistHandled = (next: Set<string>) => {
+    setHandled(next);
+    try { localStorage.setItem("verbo:rated-sessions", JSON.stringify([...next])); } catch {}
+  };
 
   useEffect(() => {
     const tick = () => {
       const now = Date.now();
       for (const s of upcoming) {
-        if (dismissed.has(s.id)) continue;
+        if (handled.has(s.id)) continue;
         const start = +new Date(s.date_time);
         const end = start + s.duration_minutes * 60_000;
         const triggerAt = end - 10 * 60_000;
@@ -52,7 +64,26 @@ function StudentDashboard() {
     tick();
     const id = setInterval(tick, 15_000);
     return () => clearInterval(id);
-  }, [upcoming, dismissed]);
+  }, [upcoming, handled]);
+
+  const handleSubmit = (rating: number) => {
+    if (!ratingSession) return;
+    // In a real backend, persist `rating` for ratingSession.id here.
+    console.log("Session rating submitted:", ratingSession.id, rating);
+    const next = new Set(handled).add(ratingSession.id);
+    persistHandled(next);
+    setRatingSession(null);
+  };
+
+  const handleClose = () => {
+    if (!ratingSession) return;
+    // User skipped — auto-count as 5 stars for the teacher.
+    console.log("Session rating skipped → auto 5★ for teacher:", ratingSession.id);
+    const next = new Set(handled).add(ratingSession.id);
+    persistHandled(next);
+    setRatingSession(null);
+  };
+
 
   const quote = useMemo(() => QUOTES[new Date().getDate() % QUOTES.length], []);
 
