@@ -108,16 +108,16 @@ const CANCEL_LIMIT = 3;
 const CANCEL_KEY_OLD = "verbo:club-cancels";
 const CANCEL_KEY = "verbo:club-cancels-v2";
 
-function readCancels(): Record<string, number> {
+function readCancels(userId?: string): Record<string, number> {
   if (typeof window === "undefined") return {};
   try {
     const raw = localStorage.getItem(CANCEL_KEY);
     if (raw) return JSON.parse(raw);
     const oldRaw = localStorage.getItem(CANCEL_KEY_OLD);
-    if (oldRaw) {
+    if (oldRaw && userId) {
       const n = Number(oldRaw);
       localStorage.removeItem(CANCEL_KEY_OLD);
-      return { [user?.id ?? "guest"]: n };
+      return { [userId]: n };
     }
     return {};
   } catch {
