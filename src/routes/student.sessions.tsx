@@ -105,6 +105,29 @@ function sessionToEvent(s: Session): CalEvent {
 }
 
 const CANCEL_LIMIT = 3;
+const CANCEL_KEY_OLD = "verbo:club-cancels";
+const CANCEL_KEY = "verbo:club-cancels-v2";
+
+function readCancels(userId?: string): Record<string, number> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = localStorage.getItem(CANCEL_KEY);
+    if (raw) return JSON.parse(raw);
+    const oldRaw = localStorage.getItem(CANCEL_KEY_OLD);
+    if (oldRaw && userId) {
+      const n = Number(oldRaw);
+      localStorage.removeItem(CANCEL_KEY_OLD);
+      return { [userId]: n };
+    }
+    return {};
+  } catch {
+    return {};
+  }
+}
+
+function persistCancels(map: Record<string, number>) {
+  if (typeof window !== "undefined") localStorage.setItem(CANCEL_KEY, JSON.stringify(map));
+}
 
 function Page() {
   const { user } = useAuth();
@@ -118,17 +141,10 @@ function Page() {
   const [events, setEvents] = useState<CalEvent[]>(initial);
   useEffect(() => setEvents(initial), [initial]);
 
-  // Cancellation tracking (persisted)
-  const [cancelCount, setCancelCount] = useState<number>(() => {
-    if (typeof window === "undefined") return 0;
-    return Number(localStorage.getItem("verbo:club-cancels") ?? 0);
-  });
+  // Cancellation tracking (per-student, persisted)
+  const [cancelMap, setCancelMap] = useState<Record<string, number>>(() => readCancels(user?.id));
+  const cancelCount = cancelMap[user?.id ?? "guest"] ?? 0;
   const blocked = cancelCount >= CANCEL_LIMIT;
-
-  const persistCancels = (n: number) => {
-    setCancelCount(n);
-    if (typeof window !== "undefined") localStorage.setItem("verbo:club-cancels", String(n));
-  };
 
   // Calendar navigation
   const [cursor, setCursor] = useState(() => {
@@ -173,7 +189,9 @@ function Page() {
       return;
     }
     alert(`Cancellation ${next} of ${CANCEL_LIMIT}. Please remember that club spots are highly limited for your team.`);
-    persistCancels(next);
+    const nextMap = { ...cancelMap, [user?.id ?? "guest"]: next };
+    setCancelMap(nextMap);
+    if (typeof window !== "undefined") localStorage.setItem(CANCEL_KEY, JSON.stringify(nextMap));
     updateEvent(ev.id, { user_booked: false, spots_booked: Math.max(0, (ev.spots_booked ?? 1) - 1) });
     setSelected({ ...ev, user_booked: false, spots_booked: Math.max(0, (ev.spots_booked ?? 1) - 1) });
   };
