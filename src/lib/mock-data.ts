@@ -10,6 +10,12 @@ export interface User {
   current_level?: string;
   attendance_percentage?: number;
   avatar?: string;
+  // Corporate profile (students)
+  company?: string;
+  hired_plan?: string;
+  member_since?: string; // ISO date
+  hired_sessions?: number;
+  remaining_sessions?: number;
 }
 
 export type SessionStatus = "scheduled" | "completed" | "absent" | "delayed";
