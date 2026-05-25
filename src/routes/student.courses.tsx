@@ -38,10 +38,6 @@ type View =
   | { kind: "units"; level: Level }
   | { kind: "unit"; level: Level; unit: Unit };
 
-const STATIC_PROGRESS: Record<string, number> = {
-  "A1-U1": 0, "A1-U2": 0, "A2-U1": 0, "A2-U2": 0,
-  "B1-U1": 0, "B1-U2": 0, "B1-U3": 0, "B2-U1": 0,
-};
 
 function Page() {
   const { user } = useAuth();
