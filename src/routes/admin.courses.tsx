@@ -139,6 +139,13 @@ function Page() {
                       <Sparkles className="h-3.5 w-3.5" /> Add Activities
                     </PrimaryButton>
                     <button
+                      onClick={() => setEditUnit({ levelId: lvl.id, unit: u })}
+                      className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-[#f38934]"
+                      aria-label="Edit unit"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                    <button
                       onClick={() => deleteUnit(lvl.id, u.id)}
                       className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-destructive"
                       aria-label="Delete unit"
