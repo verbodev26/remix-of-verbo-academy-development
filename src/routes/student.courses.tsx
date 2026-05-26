@@ -137,7 +137,7 @@ function LevelsView({ levels, currentLevel, onOpen }: { levels: Level[]; current
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        {LEVELS.map((lvl, idx) => {
+        {levels.map((lvl, idx) => {
           const isCurrent = lvl.id === currentLevel;
           const isLocked = currentIdx !== -1 && idx > currentIdx;
           const done = lvl.units.filter((u) => completion[u.id]).length;
