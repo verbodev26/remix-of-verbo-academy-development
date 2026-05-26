@@ -112,13 +112,13 @@ function Page() {
     const liveUnit = liveLevel.units.find((u) => u.id === view.unit.id);
     if (!liveUnit) {
       // Unit was deleted by admin — fall back to units list.
-      return <UnitsView key={rev} levels={levels} level={liveLevel} currentLevel={user?.current_level} onBack={() => setView({ kind: "levels" })} onOpen={(unit) => setView({ kind: "unit", level: liveLevel, unit })} />;
+      return <UnitsView key={rev} level={liveLevel} currentLevel={user?.current_level} onBack={() => setView({ kind: "levels" })} onOpen={(unit) => setView({ kind: "unit", level: liveLevel, unit })} />;
     }
     return <PreUnitView key={rev} level={liveLevel} unit={liveUnit} onBack={() => setView({ kind: "units", level: liveLevel })} onChange={() => setRev((r) => r + 1)} />;
   }
   if (view.kind === "units") {
     const liveLevel = levels.find((l) => l.id === view.level.id) ?? view.level;
-    return <UnitsView key={rev} levels={levels} level={liveLevel} currentLevel={user?.current_level} onBack={() => setView({ kind: "levels" })} onOpen={(unit) => setView({ kind: "unit", level: liveLevel, unit })} />;
+    return <UnitsView key={rev} level={liveLevel} currentLevel={user?.current_level} onBack={() => setView({ kind: "levels" })} onOpen={(unit) => setView({ kind: "unit", level: liveLevel, unit })} />;
   }
   return <LevelsView key={rev} levels={levels} currentLevel={user?.current_level} onOpen={(level) => setView({ kind: "units", level })} />;
 }
