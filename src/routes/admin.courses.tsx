@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { LEVELS, type Level } from "@/lib/mock-data";
+import { LEVELS, type Level, type Unit } from "@/lib/mock-data";
 import { Card, GhostButton, PrimaryButton, SectionTitle, Pill } from "@/components/verbo/ui";
 import {
   Plus,
