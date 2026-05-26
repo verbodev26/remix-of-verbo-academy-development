@@ -168,6 +168,16 @@ function Page() {
           onCreate={(lvlId, title, num, videoUrl, pdfUrl) => { createUnit(lvlId, title, num, videoUrl, pdfUrl); setUnitModalLevel(null); }}
         />
       )}
+      {editUnit && (
+        <UnitModal
+          level={levels.find((l) => l.id === editUnit.levelId) ?? levels[0]}
+          levels={levels}
+          onClose={() => setEditUnit(null)}
+          onUpdate={(lvlId, title, num, videoUrl, pdfUrl, originalUnitId) => { updateUnit(lvlId, title, num, videoUrl, pdfUrl, originalUnitId); setEditUnit(null); }}
+          editingUnit={editUnit.unit}
+          editingLevelId={editUnit.levelId}
+        />
+      )}
       {actModalUnit && (
         <ActivityModal
           unitId={actModalUnit.unitId}
