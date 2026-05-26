@@ -14,6 +14,7 @@ import {
   AlignLeft,
   Shuffle,
   BookOpen,
+  Pencil,
 } from "lucide-react";
 import {
   type Activity,
