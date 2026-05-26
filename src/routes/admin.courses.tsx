@@ -53,6 +53,7 @@ const textareaCls =
 function Page() {
   const [levels, setLevels] = useState<LocalLevel[]>(LEVELS);
   const [unitModalLevel, setUnitModalLevel] = useState<LocalLevel | null>(null);
+  const [editUnit, setEditUnit] = useState<{ levelId: string; unit: Unit } | null>(null);
   const [actModalUnit, setActModalUnit] = useState<{ levelId: string; unitId: string; unitTitle: string } | null>(null);
   const [activityRev, setActivityRev] = useState(0);
 
@@ -64,12 +65,31 @@ function Page() {
     setLevels((prev) => {
       const next = prev.map((l) =>
         l.id === lvlId
-          ? { ...l, units: [...l.units, { id: `${lvlId}-U${unitNumber}`, title, video_url: videoUrl, pdf_url: pdfUrl }] }
+          ? { ...l, units: [...l.units, { id: `${lvlId}-U${unitNumber}`, title, video_url: videoUrl, pdf_url: pdfUrl }].sort((a, b) => a.id.localeCompare(b.id)) }
           : l,
       );
       persistLevels(next);
       return next;
     });
+  };
+
+  const updateUnit = (lvlId: string, title: string, unitNumber: number, videoUrl: string, pdfUrl: string, originalUnitId: string) => {
+    const newUnitId = `${lvlId}-U${unitNumber}`;
+    setLevels((prev) => {
+      const next = prev.map((l) => {
+        const filtered = l.units.filter((u) => u.id !== originalUnitId);
+        if (l.id === lvlId) {
+          return { ...l, units: [...filtered, { id: newUnitId, title, video_url: videoUrl, pdf_url: pdfUrl }].sort((a, b) => a.id.localeCompare(b.id)) };
+        }
+        return { ...l, units: filtered };
+      });
+      persistLevels(next);
+      return next;
+    });
+    if (newUnitId !== originalUnitId) {
+      renameUnitReferences(originalUnitId, newUnitId);
+      setActivityRev((r) => r + 1);
+    }
   };
 
   const deleteUnit = (lvlId: string, unitId: string) => {
