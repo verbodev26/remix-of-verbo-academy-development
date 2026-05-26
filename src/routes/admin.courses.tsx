@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { LEVELS, type Level } from "@/lib/mock-data";
+import { LEVELS, type Level, type Unit } from "@/lib/mock-data";
 import { Card, GhostButton, PrimaryButton, SectionTitle, Pill } from "@/components/verbo/ui";
 import {
   Plus,
@@ -14,6 +14,7 @@ import {
   AlignLeft,
   Shuffle,
   BookOpen,
+  Pencil,
 } from "lucide-react";
 import {
   type Activity,
@@ -23,6 +24,7 @@ import {
   addActivity,
   loadActivities,
   removeActivity,
+  renameUnitReferences,
 } from "@/lib/activities-store";
 
 export const Route = createFileRoute("/admin/courses")({ component: Page });
@@ -51,6 +53,7 @@ const textareaCls =
 function Page() {
   const [levels, setLevels] = useState<LocalLevel[]>(LEVELS);
   const [unitModalLevel, setUnitModalLevel] = useState<LocalLevel | null>(null);
+  const [editUnit, setEditUnit] = useState<{ levelId: string; unit: Unit } | null>(null);
   const [actModalUnit, setActModalUnit] = useState<{ levelId: string; unitId: string; unitTitle: string } | null>(null);
   const [activityRev, setActivityRev] = useState(0);
 
@@ -62,12 +65,31 @@ function Page() {
     setLevels((prev) => {
       const next = prev.map((l) =>
         l.id === lvlId
-          ? { ...l, units: [...l.units, { id: `${lvlId}-U${unitNumber}`, title, video_url: videoUrl, pdf_url: pdfUrl }] }
+          ? { ...l, units: [...l.units, { id: `${lvlId}-U${unitNumber}`, title, video_url: videoUrl, pdf_url: pdfUrl }].sort((a, b) => a.id.localeCompare(b.id)) }
           : l,
       );
       persistLevels(next);
       return next;
     });
+  };
+
+  const updateUnit = (lvlId: string, title: string, unitNumber: number, videoUrl: string, pdfUrl: string, originalUnitId: string) => {
+    const newUnitId = `${lvlId}-U${unitNumber}`;
+    setLevels((prev) => {
+      const next = prev.map((l) => {
+        const filtered = l.units.filter((u) => u.id !== originalUnitId);
+        if (l.id === lvlId) {
+          return { ...l, units: [...filtered, { id: newUnitId, title, video_url: videoUrl, pdf_url: pdfUrl }].sort((a, b) => a.id.localeCompare(b.id)) };
+        }
+        return { ...l, units: filtered };
+      });
+      persistLevels(next);
+      return next;
+    });
+    if (newUnitId !== originalUnitId) {
+      renameUnitReferences(originalUnitId, newUnitId);
+      setActivityRev((r) => r + 1);
+    }
   };
 
   const deleteUnit = (lvlId: string, unitId: string) => {
@@ -117,6 +139,13 @@ function Page() {
                       <Sparkles className="h-3.5 w-3.5" /> Add Activities
                     </PrimaryButton>
                     <button
+                      onClick={() => setEditUnit({ levelId: lvl.id, unit: u })}
+                      className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-[#f38934]"
+                      aria-label="Edit unit"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                    <button
                       onClick={() => deleteUnit(lvl.id, u.id)}
                       className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-destructive"
                       aria-label="Delete unit"
@@ -139,6 +168,16 @@ function Page() {
           onCreate={(lvlId, title, num, videoUrl, pdfUrl) => { createUnit(lvlId, title, num, videoUrl, pdfUrl); setUnitModalLevel(null); }}
         />
       )}
+      {editUnit && (
+        <UnitModal
+          level={levels.find((l) => l.id === editUnit.levelId) ?? levels[0]}
+          levels={levels}
+          onClose={() => setEditUnit(null)}
+          onUpdate={(lvlId, title, num, videoUrl, pdfUrl, originalUnitId) => { updateUnit(lvlId, title, num, videoUrl, pdfUrl, originalUnitId); setEditUnit(null); }}
+          editingUnit={editUnit.unit}
+          editingLevelId={editUnit.levelId}
+        />
+      )}
       {actModalUnit && (
         <ActivityModal
           unitId={actModalUnit.unitId}
@@ -152,23 +191,47 @@ function Page() {
 
 /* ---------------- Unit Modal ---------------- */
 
-function UnitModal({ level, levels, onClose, onCreate }: {
+function extractUnitNumber(unitId: string): number {
+  const match = unitId.match(/-U(\d+)$/);
+  return match ? parseInt(match[1], 10) : 1;
+}
+
+function UnitModal({ level, levels, onClose, onCreate, onUpdate, editingUnit, editingLevelId }: {
   level: LocalLevel;
   levels: LocalLevel[];
   onClose: () => void;
-  onCreate: (levelId: string, title: string, unitNumber: number, videoUrl: string, pdfUrl: string) => void;
+  onCreate?: (levelId: string, title: string, unitNumber: number, videoUrl: string, pdfUrl: string) => void;
+  onUpdate?: (levelId: string, title: string, unitNumber: number, videoUrl: string, pdfUrl: string, originalUnitId: string) => void;
+  editingUnit?: Unit;
+  editingLevelId?: string;
 }) {
-  const [title, setTitle] = useState("");
-  const [levelId, setLevelId] = useState(level.id);
-  const selected = levels.find((l) => l.id === levelId) ?? level;
-  const [unitNumber, setUnitNumber] = useState(selected.units.length + 1);
-  const [videoUrl, setVideoUrl] = useState("");
-  const [pdfUrl, setPdfUrl] = useState("");
+  const isEdit = !!editingUnit;
+  const initialLevelId = isEdit ? (editingLevelId ?? level.id) : level.id;
+  const initialUnitNumber = isEdit ? extractUnitNumber(editingUnit!.id) : (levels.find((l) => l.id === initialLevelId)?.units.length ?? 0) + 1;
 
-  useEffect(() => { setUnitNumber((levels.find((l) => l.id === levelId)?.units.length ?? 0) + 1); }, [levelId, levels]);
+  const [title, setTitle] = useState(isEdit ? editingUnit!.title : "");
+  const [levelId, setLevelId] = useState(initialLevelId);
+  const selected = levels.find((l) => l.id === levelId) ?? level;
+  const [unitNumber, setUnitNumber] = useState(initialUnitNumber);
+  const [videoUrl, setVideoUrl] = useState(isEdit ? editingUnit!.video_url : "");
+  const [pdfUrl, setPdfUrl] = useState(isEdit ? editingUnit!.pdf_url : "");
+
+  useEffect(() => {
+    if (!isEdit) {
+      setUnitNumber((levels.find((l) => l.id === levelId)?.units.length ?? 0) + 1);
+    }
+  }, [levelId, levels, isEdit]);
+
+  const handleSave = () => {
+    if (isEdit && onUpdate) {
+      onUpdate(levelId, title.trim(), unitNumber, videoUrl.trim(), pdfUrl.trim(), editingUnit!.id);
+    } else if (onCreate) {
+      onCreate(levelId, title.trim(), unitNumber, videoUrl.trim(), pdfUrl.trim());
+    }
+  };
 
   return (
-    <ModalShell title="New unit" subtitle="Add a unit to a level. You can attach activities afterwards." onClose={onClose}>
+    <ModalShell title={isEdit ? "Edit Unit" : "New unit"} subtitle={isEdit ? "Update this unit's details. Activities remain untouched." : "Add a unit to a level. You can attach activities afterwards."} onClose={onClose}>
       <div className="space-y-4 p-6">
         <Field label="Unit Title">
           <input value={title} onChange={(e) => setTitle(e.target.value)} className={inputCls} placeholder="e.g. Travel & directions" />
@@ -192,7 +255,7 @@ function UnitModal({ level, levels, onClose, onCreate }: {
       </div>
       <ModalFooter>
         <GhostButton onClick={onClose}>Cancel</GhostButton>
-        <PrimaryButton disabled={!title.trim()} onClick={() => onCreate(levelId, title.trim(), unitNumber, videoUrl.trim(), pdfUrl.trim())}>Create unit</PrimaryButton>
+        <PrimaryButton disabled={!title.trim()} onClick={handleSave}>{isEdit ? "Save Changes" : "Create unit"}</PrimaryButton>
       </ModalFooter>
     </ModalShell>
   );
