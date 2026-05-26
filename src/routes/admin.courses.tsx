@@ -24,6 +24,7 @@ import {
   addActivity,
   loadActivities,
   removeActivity,
+  renameUnitReferences,
 } from "@/lib/activities-store";
 
 export const Route = createFileRoute("/admin/courses")({ component: Page });
