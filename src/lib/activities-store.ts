@@ -1,6 +1,6 @@
 // Mock activities engine — persisted to localStorage so admin edits + student
 // progress survive reloads without a backend.
-import { LEVELS } from "./mock-data";
+import { loadLevels } from "./courses-store";
 
 export type ExerciseType =
   | "fill_gaps"
