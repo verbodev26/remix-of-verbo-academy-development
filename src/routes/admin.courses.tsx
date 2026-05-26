@@ -29,21 +29,9 @@ import {
 
 export const Route = createFileRoute("/admin/courses")({ component: Page });
 
-type LocalLevel = Level & { units: Level["units"] };
+import { loadLevels, persistLevels, subscribeLevels } from "@/lib/courses-store";
 
-const STORAGE_LEVELS = "verbo:levels";
-
-function loadLevels(): LocalLevel[] {
-  if (typeof window === "undefined") return LEVELS;
-  try {
-    const raw = localStorage.getItem(STORAGE_LEVELS);
-    if (raw) return JSON.parse(raw);
-  } catch { /* noop */ }
-  return LEVELS;
-}
-function persistLevels(l: LocalLevel[]) {
-  try { localStorage.setItem(STORAGE_LEVELS, JSON.stringify(l)); } catch { /* noop */ }
-}
+type LocalLevel = Level;
 
 const inputCls =
   "h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground shadow-sm transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30";
@@ -57,7 +45,10 @@ function Page() {
   const [actModalUnit, setActModalUnit] = useState<{ levelId: string; unitId: string; unitTitle: string } | null>(null);
   const [activityRev, setActivityRev] = useState(0);
 
-  useEffect(() => { setLevels(loadLevels()); }, []);
+  useEffect(() => {
+    setLevels(loadLevels());
+    return subscribeLevels(() => setLevels(loadLevels()));
+  }, []);
 
   const allActivities = useMemo(() => loadActivities(), [activityRev]);
 
