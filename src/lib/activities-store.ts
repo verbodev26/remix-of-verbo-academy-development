@@ -142,7 +142,7 @@ export function renameUnitReferences(oldUnitId: string, newUnitId: string) {
 export function isUnitUnlocked(unitId: string): boolean {
   const completion = loadCompletion();
   if (completion[unitId]) return true;
-  for (const lvl of LEVELS) {
+  for (const lvl of loadLevels()) {
     const idx = lvl.units.findIndex((u) => u.id === unitId);
     if (idx === -1) continue;
     if (idx === 0) return true;
