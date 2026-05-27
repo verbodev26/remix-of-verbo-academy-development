@@ -540,3 +540,95 @@ function SessionRow({
     </tr>
   );
 }
+
+// ============== Bulk edit form (inside student modal) ==============
+function BulkEditForm({
+  teachers,
+  currentTeamsLink,
+  currentTeacherId,
+  onCancel,
+  onApply,
+}: {
+  teachers: ReturnType<typeof USERS.filter>;
+  currentTeamsLink: string;
+  currentTeacherId: string;
+  onCancel: () => void;
+  onApply: (opts: { teamsLink: string; teacherId: string; time: string; days: number[] }) => void;
+}) {
+  const [teamsLink, setTeamsLink] = useState(currentTeamsLink);
+  const [teacherId, setTeacherId] = useState(currentTeacherId);
+  const [time, setTime] = useState("19:00");
+  const [days, setDays] = useState<number[]>([]);
+
+  const toggleDay = (d: number) =>
+    setDays((prev) => (prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]));
+
+  return (
+    <div className="mb-5 rounded-xl border p-5" style={{ borderColor: BRAND, backgroundColor: "#f5f8fa" }}>
+      <div className="mb-4 flex items-center gap-2">
+        <Pencil className="h-4 w-4" style={{ color: BRAND }} />
+        <div className="text-sm font-semibold" style={{ color: BRAND }}>Bulk Edit · Future sessions only</div>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <Field label="MS Teams Link (applied to all future sessions)">
+          <input
+            value={teamsLink}
+            onChange={(e) => setTeamsLink(e.target.value)}
+            className="mt-1.5 w-full cursor-text rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
+          />
+        </Field>
+        <Field label="Update Teacher">
+          <select
+            value={teacherId}
+            onChange={(e) => setTeacherId(e.target.value)}
+            className="mt-1.5 w-full cursor-pointer rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
+          >
+            {teachers.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+          </select>
+        </Field>
+        <Field label="New Time Slot">
+          <input
+            type="time"
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+            className="mt-1.5 w-full cursor-pointer rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
+          />
+        </Field>
+        <Field label="Change Frequency (optional)">
+          <div className="mt-1.5 flex flex-wrap gap-2">
+            {DAY_LABELS.map((lbl, i) => {
+              const v = DAY_INDEX[i];
+              const active = days.includes(v);
+              return (
+                <button
+                  key={v}
+                  onClick={() => toggleDay(v)}
+                  className="cursor-pointer rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors"
+                  style={
+                    active
+                      ? { backgroundColor: BRAND, color: "white", borderColor: BRAND }
+                      : { backgroundColor: "transparent", color: "var(--foreground)", borderColor: "var(--border)" }
+                  }
+                >
+                  {lbl}
+                </button>
+              );
+            })}
+          </div>
+        </Field>
+      </div>
+
+      <div className="mt-5 flex justify-end gap-2">
+        <GhostButton onClick={onCancel} className="!px-4 !py-2 text-xs">Cancel</GhostButton>
+        <button
+          onClick={() => onApply({ teamsLink, teacherId, time, days })}
+          className="inline-flex cursor-pointer items-center gap-2 rounded-lg px-4 py-2 text-xs font-medium text-white shadow-soft transition-opacity hover:opacity-90"
+          style={{ backgroundColor: ORANGE }}
+        >
+          Apply Bulk Changes
+        </button>
+      </div>
+    </div>
+  );
+}
