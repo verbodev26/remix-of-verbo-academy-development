@@ -321,6 +321,7 @@ function StudentSessionsModal({
 }) {
   const student = userById(studentId);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [bulkOpen, setBulkOpen] = useState(false);
 
   const studentSessions = useMemo(
     () =>
@@ -331,17 +332,20 @@ function StudentSessionsModal({
     [sessions, studentId],
   );
 
+  const currentTeamsLink = useMemo(() => {
+    const future = sessions.find(
+      (s) => s.student_id === studentId && !["completed", "absent"].includes(s.status) && s.teams_link,
+    );
+    return future?.teams_link ?? `https://teams.microsoft.com/l/meetup/${studentId}`;
+  }, [sessions, studentId]);
+
   const updateSession = (id: string, patch: Partial<ExtSession>, rescheduleApplied = false) => {
     const next = sessions.map((s) => {
       if (s.id !== id) return s;
       const merged = { ...s, ...patch };
       if (rescheduleApplied) {
-        // Status transition rules
-        if (s.status === "scheduled" || s.status === "rescheduled") {
-          merged.status = "rescheduled";
-        } else if (s.status === "ready" || s.status === "rearranged") {
-          merged.status = "rearranged";
-        }
+        if (s.status === "scheduled" || s.status === "rescheduled") merged.status = "rescheduled";
+        else if (s.status === "ready" || s.status === "rearranged") merged.status = "rearranged";
       }
       return merged;
     });
@@ -351,6 +355,29 @@ function StudentSessionsModal({
   const removeSession = (id: string) => {
     if (!window.confirm("Delete this session?")) return;
     onSave(sessions.filter((s) => s.id !== id));
+  };
+
+  const applyBulk = (opts: { teamsLink: string; teacherId: string; time: string; days: number[] }) => {
+    const [hh, mm] = opts.time.split(":").map(Number);
+    const next = sessions.map((s) => {
+      if (s.student_id !== studentId) return s;
+      if (["completed", "absent"].includes(s.status)) return s;
+      const merged: ExtSession = { ...s, teams_link: opts.teamsLink, teacher_id: opts.teacherId };
+      const dt = new Date(s.date_time);
+      dt.setHours(hh, mm, 0, 0);
+      if (opts.days.length > 0 && !opts.days.includes(dt.getDay())) {
+        for (let i = 1; i <= 7; i++) {
+          const d = new Date(dt); d.setDate(d.getDate() + i);
+          if (opts.days.includes(d.getDay())) { dt.setDate(dt.getDate() + i); break; }
+        }
+      }
+      merged.date_time = dt.toISOString();
+      if (s.status === "scheduled" || s.status === "rescheduled") merged.status = "rescheduled";
+      else if (s.status === "ready" || s.status === "rearranged") merged.status = "rearranged";
+      return merged;
+    });
+    onSave(next);
+    setBulkOpen(false);
   };
 
   return (
@@ -363,13 +390,32 @@ function StudentSessionsModal({
           <X className="h-4 w-4" />
         </button>
 
-        <div className="mb-5">
-          <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Student Calendar</div>
-          <h3 className="mt-1 text-xl font-semibold tracking-tight text-foreground">{student?.name}</h3>
-          <div className="mt-0.5 text-sm text-muted-foreground">{student?.company} · {student?.hired_plan}</div>
+        <div className="mb-5 flex flex-wrap items-start justify-between gap-3 pr-10">
+          <div>
+            <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Student Calendar</div>
+            <h3 className="mt-1 text-xl font-semibold tracking-tight text-foreground">{student?.name}</h3>
+            <div className="mt-0.5 text-sm text-muted-foreground">{student?.company} · {student?.hired_plan}</div>
+          </div>
+          <button
+            onClick={() => setBulkOpen((v) => !v)}
+            className="inline-flex cursor-pointer items-center gap-2 rounded-lg border px-3.5 py-2 text-xs font-medium transition-colors hover:opacity-90"
+            style={{ borderColor: BRAND, color: BRAND, backgroundColor: bulkOpen ? "#e6eef3" : "transparent" }}
+          >
+            <Pencil className="h-3.5 w-3.5" /> Edit Bulk Schedule / Link
+          </button>
         </div>
 
-        <div className="overflow-hidden rounded-xl border border-border">
+        {bulkOpen && (
+          <BulkEditForm
+            teachers={teachers}
+            currentTeamsLink={currentTeamsLink}
+            currentTeacherId={studentSessions.find((s) => !["completed","absent"].includes(s.status))?.teacher_id ?? teachers[0]?.id ?? ""}
+            onCancel={() => setBulkOpen(false)}
+            onApply={applyBulk}
+          />
+        )}
+
+        <div className="mt-5 overflow-hidden rounded-xl border border-border">
           <table className="w-full text-sm">
             <thead className="bg-secondary text-left text-xs uppercase tracking-wider text-muted-foreground">
               <tr>
@@ -492,5 +538,97 @@ function SessionRow({
         </div>
       </td>
     </tr>
+  );
+}
+
+// ============== Bulk edit form (inside student modal) ==============
+function BulkEditForm({
+  teachers,
+  currentTeamsLink,
+  currentTeacherId,
+  onCancel,
+  onApply,
+}: {
+  teachers: ReturnType<typeof USERS.filter>;
+  currentTeamsLink: string;
+  currentTeacherId: string;
+  onCancel: () => void;
+  onApply: (opts: { teamsLink: string; teacherId: string; time: string; days: number[] }) => void;
+}) {
+  const [teamsLink, setTeamsLink] = useState(currentTeamsLink);
+  const [teacherId, setTeacherId] = useState(currentTeacherId);
+  const [time, setTime] = useState("19:00");
+  const [days, setDays] = useState<number[]>([]);
+
+  const toggleDay = (d: number) =>
+    setDays((prev) => (prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]));
+
+  return (
+    <div className="mb-5 rounded-xl border p-5" style={{ borderColor: BRAND, backgroundColor: "#f5f8fa" }}>
+      <div className="mb-4 flex items-center gap-2">
+        <Pencil className="h-4 w-4" style={{ color: BRAND }} />
+        <div className="text-sm font-semibold" style={{ color: BRAND }}>Bulk Edit · Future sessions only</div>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <Field label="MS Teams Link (applied to all future sessions)">
+          <input
+            value={teamsLink}
+            onChange={(e) => setTeamsLink(e.target.value)}
+            className="mt-1.5 w-full cursor-text rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
+          />
+        </Field>
+        <Field label="Update Teacher">
+          <select
+            value={teacherId}
+            onChange={(e) => setTeacherId(e.target.value)}
+            className="mt-1.5 w-full cursor-pointer rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
+          >
+            {teachers.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+          </select>
+        </Field>
+        <Field label="New Time Slot">
+          <input
+            type="time"
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+            className="mt-1.5 w-full cursor-pointer rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
+          />
+        </Field>
+        <Field label="Change Frequency (optional)">
+          <div className="mt-1.5 flex flex-wrap gap-2">
+            {DAY_LABELS.map((lbl, i) => {
+              const v = DAY_INDEX[i];
+              const active = days.includes(v);
+              return (
+                <button
+                  key={v}
+                  onClick={() => toggleDay(v)}
+                  className="cursor-pointer rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors"
+                  style={
+                    active
+                      ? { backgroundColor: BRAND, color: "white", borderColor: BRAND }
+                      : { backgroundColor: "transparent", color: "var(--foreground)", borderColor: "var(--border)" }
+                  }
+                >
+                  {lbl}
+                </button>
+              );
+            })}
+          </div>
+        </Field>
+      </div>
+
+      <div className="mt-5 flex justify-end gap-2">
+        <GhostButton onClick={onCancel} className="!px-4 !py-2 text-xs">Cancel</GhostButton>
+        <button
+          onClick={() => onApply({ teamsLink, teacherId, time, days })}
+          className="inline-flex cursor-pointer items-center gap-2 rounded-lg px-4 py-2 text-xs font-medium text-white shadow-soft transition-opacity hover:opacity-90"
+          style={{ backgroundColor: ORANGE }}
+        >
+          Apply Bulk Changes
+        </button>
+      </div>
+    </div>
   );
 }
