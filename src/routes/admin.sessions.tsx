@@ -448,18 +448,12 @@ function SessionRow({
     return <Pill tone={statusTone(s)}>{s}</Pill>;
   };
 
-  if (!editing) {
-    return (
+  return (
+    <>
       <tr className="border-t border-border">
         <td className="px-4 py-3 text-foreground">{dt.toLocaleString([], { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</td>
         <td className="px-4 py-3 text-muted-foreground">{teacher?.name}</td>
-        <td className="px-4 py-3">
-          <span style={statusStyle(session.status)} className="inline-block rounded-full">
-            <Pill tone={session.status === "rearranged" ? "default" : statusTone(session.status)}>
-              <span style={session.status === "rearranged" ? { color: "white" } : undefined}>{session.status}</span>
-            </Pill>
-          </span>
-        </td>
+        <td className="px-4 py-3">{renderStatus(session.status)}</td>
         <td className="px-4 py-3">
           <div className="flex justify-end gap-1.5">
             <button onClick={onEdit} className="cursor-pointer rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground" title="Edit">
