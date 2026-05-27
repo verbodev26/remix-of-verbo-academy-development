@@ -3,7 +3,9 @@ import { useMemo, useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { SESSIONS, userById, type Session, type SessionStatus } from "@/lib/mock-data";
 import { Card, Pill, SectionTitle, PrimaryButton, GhostButton } from "@/components/verbo/ui";
-import { CalendarClock, Video, ChevronLeft, ChevronRight, X, Download, AlertTriangle, CheckCircle2, Users } from "lucide-react";
+import { CalendarClock, Video, ChevronLeft, ChevronRight, X, Download, AlertTriangle, CheckCircle2, Users, BookOpen } from "lucide-react";
+import { getLessonPlan, subscribeLessonPlans, type LessonPlan } from "@/lib/lesson-plans-store";
+import { loadLevels } from "@/lib/courses-store";
 
 export const Route = createFileRoute("/student/sessions")({ component: Page });
 
