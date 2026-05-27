@@ -158,70 +158,243 @@ function formatCountdown(ms: number) {
   return `${h}h ${String(m).padStart(2, "0")}m`;
 }
 
+type EntryType = "New word" | "Pronunciation" | "Mistake" | "Tip" | "Other";
+interface Entry { id: string; type: EntryType; content: string }
+const ENTRY_TYPES: EntryType[] = ["New word", "Pronunciation", "Mistake", "Tip", "Other"];
+const MIN_ENTRIES = 6;
+const MAX_ENTRIES = 10;
+
+function makeEntry(): Entry {
+  return { id: Math.random().toString(36).slice(2), type: "New word", content: "" };
+}
+
 function ReportModal({ session, onClose, onSubmit }: { session: Session; onClose: () => void; onSubmit: (id: string, status: SessionStatus) => void }) {
   const student = userById(session.student_id);
   const [status, setStatus] = useState<SessionStatus>("completed");
   const [notes, setNotes] = useState("");
+  const [entries, setEntries] = useState<Entry[]>(() => Array.from({ length: MIN_ENTRIES }, makeEntry));
+  const [submitted, setSubmitted] = useState(false);
 
-  const styleFor = (opt: SessionStatus, selected: boolean) => {
-    if (!selected) return "border-border text-foreground hover:bg-secondary";
-    if (opt === "completed") return "border-transparent text-white";
-    if (opt === "absent") return "border-transparent text-white";
-    return "border-transparent text-white";
-  };
-  const bgFor = (opt: SessionStatus) => {
-    if (opt === "completed") return "#22c55e";
-    if (opt === "absent") return "#ef4444";
-    return "#f38934";
+  const bgFor = (opt: SessionStatus) => opt === "completed" ? "#22c55e" : opt === "absent" ? "#ef4444" : "#f38934";
+
+  const filledCount = entries.filter((e) => e.content.trim().length > 0).length;
+  const isAbsent = status === "absent";
+  const canSubmit = isAbsent ? notes.trim().length > 0 : filledCount >= MIN_ENTRIES && filledCount <= MAX_ENTRIES;
+
+  const addEntry = () => setEntries((p) => (p.length >= MAX_ENTRIES ? p : [...p, makeEntry()]));
+  const updateEntry = (id: string, patch: Partial<Entry>) =>
+    setEntries((p) => p.map((e) => (e.id === id ? { ...e, ...patch } : e)));
+  const removeEntry = (id: string) => setEntries((p) => p.filter((e) => e.id !== id));
+
+  const handleSubmit = () => {
+    if (!canSubmit) return;
+    setSubmitted(true);
+    onSubmit(session.id, status === "absent" ? "absent" : "completed");
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 backdrop-blur-sm p-4">
-      <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-8 shadow-floating">
+      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border border-border bg-card p-8 shadow-floating">
         <div className="flex items-start justify-between">
           <div>
-            <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Session report</div>
+            <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{submitted ? "Final report preview" : "Session report"}</div>
             <h2 className="mt-1 text-xl font-semibold tracking-tight text-foreground">{student?.name}</h2>
             <p className="mt-0.5 text-sm text-muted-foreground">{fmt(session.date_time)}</p>
           </div>
           <button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary"><X className="h-4 w-4" /></button>
         </div>
 
-        <div className="mt-6">
-          <label className="text-xs font-medium text-foreground">Attendance</label>
-          <div className="mt-2 grid grid-cols-3 gap-2">
-            {(["completed", "absent", "delayed"] as SessionStatus[]).map((opt) => {
-              const selected = status === opt;
-              return (
-                <button
-                  key={opt}
-                  onClick={() => setStatus(opt)}
-                  style={selected ? { backgroundColor: bgFor(opt) } : undefined}
-                  className={`rounded-lg border px-3 py-2 text-sm capitalize transition-colors ${styleFor(opt, selected)}`}
-                >
-                  {opt === "completed" ? "Present" : opt}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="mt-5">
-          <label className="text-xs font-medium text-foreground">Class notes</label>
-          <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            rows={4}
-            placeholder="Topics covered, student performance, homework…"
-            className="mt-2 w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+        {submitted ? (
+          <ReportPreview
+            studentName={student?.name ?? ""}
+            dateLabel={fmt(session.date_time)}
+            status={status}
+            notes={notes}
+            entries={entries.filter((e) => e.content.trim().length > 0)}
+            onClose={onClose}
           />
-        </div>
+        ) : (
+          <>
+            <div className="mt-6">
+              <label className="text-xs font-medium text-foreground">Attendance</label>
+              <div className="mt-2 grid grid-cols-3 gap-2">
+                {(["completed", "absent", "delayed"] as SessionStatus[]).map((opt) => {
+                  const selected = status === opt;
+                  return (
+                    <button
+                      key={opt}
+                      onClick={() => setStatus(opt)}
+                      style={selected ? { backgroundColor: bgFor(opt) } : undefined}
+                      className={`rounded-lg border px-3 py-2 text-sm capitalize transition-colors ${
+                        selected ? "border-transparent text-white" : "border-border text-foreground hover:bg-secondary"
+                      }`}
+                    >
+                      {opt === "completed" ? "Present" : opt}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
-        <div className="mt-6 flex justify-end gap-2">
-          <GhostButton onClick={onClose}>Cancel</GhostButton>
-          <PrimaryButton onClick={() => onSubmit(session.id, status)}>Submit report</PrimaryButton>
-        </div>
+            {isAbsent ? (
+              <div className="mt-5">
+                <label className="text-xs font-medium text-foreground">Teacher's comments <span className="text-muted-foreground">(required)</span></label>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  rows={5}
+                  placeholder="Justification, follow-up plan, communication with the student…"
+                  className="mt-2 w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+            ) : (
+              <>
+                <div className="mt-6">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-medium text-foreground">Pedagogical entries</label>
+                    <span className="text-xs text-muted-foreground tabular-nums">
+                      {filledCount} / {MIN_ENTRIES}–{MAX_ENTRIES} filled
+                    </span>
+                  </div>
+                  <div className="mt-2 space-y-2">
+                    {entries.map((e, idx) => (
+                      <div key={e.id} className="flex items-start gap-2">
+                        <select
+                          value={e.type}
+                          onChange={(ev) => updateEntry(e.id, { type: ev.target.value as EntryType })}
+                          className="h-[42px] w-[150px] shrink-0 rounded-lg border border-input bg-background px-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                        >
+                          {ENTRY_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                        <input
+                          value={e.content}
+                          onChange={(ev) => updateEntry(e.id, { content: ev.target.value })}
+                          placeholder={`Entry #${idx + 1} — content or notes…`}
+                          className="h-[42px] flex-1 rounded-lg border border-input bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                        />
+                        <button
+                          onClick={() => removeEntry(e.id)}
+                          disabled={entries.length <= 1}
+                          className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-secondary disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    onClick={addEntry}
+                    disabled={entries.length >= MAX_ENTRIES}
+                    className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-dashed border-border px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <Plus className="h-4 w-4" /> Add new entry
+                  </button>
+                </div>
+
+                <div className="mt-5">
+                  <label className="text-xs font-medium text-foreground">Class notes <span className="text-muted-foreground">(optional)</span></label>
+                  <textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    rows={3}
+                    placeholder="Topics covered, student performance, homework…"
+                    className="mt-2 w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+              </>
+            )}
+
+            <div className="mt-6 flex items-center justify-between gap-2">
+              <p className="text-xs text-muted-foreground">
+                {isAbsent
+                  ? "Comments required to submit."
+                  : filledCount < MIN_ENTRIES
+                  ? `Add ${MIN_ENTRIES - filledCount} more entr${MIN_ENTRIES - filledCount === 1 ? "y" : "ies"} to submit.`
+                  : "Ready to submit."}
+              </p>
+              <div className="flex gap-2">
+                <GhostButton onClick={onClose}>Cancel</GhostButton>
+                <PrimaryButton onClick={handleSubmit} disabled={!canSubmit}>Submit report</PrimaryButton>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
 }
+
+function ReportPreview({ studentName, dateLabel, status, notes, entries, onClose }: {
+  studentName: string; dateLabel: string; status: SessionStatus; notes: string; entries: Entry[]; onClose: () => void;
+}) {
+  return (
+    <div className="mt-6 space-y-5">
+      <div className="flex items-start gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+        <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+        <span>Report successfully compiled and dispatched to the student's registered email!</span>
+      </div>
+
+      <div className="rounded-xl border border-border bg-background p-6">
+        <div className="flex items-start justify-between border-b border-border pb-4">
+          <div>
+            <div className="text-[10px] font-semibold uppercase tracking-[0.18em]" style={{ color: "#01304a" }}>Verbo Language Solutions</div>
+            <h3 className="mt-1 text-lg font-semibold tracking-tight text-foreground">Final Session Report</h3>
+          </div>
+          <div className="text-right text-xs text-muted-foreground">
+            <div>{dateLabel}</div>
+            <div className="mt-0.5 capitalize">Status: <span className="font-medium text-foreground">{status === "completed" ? "Completed" : status}</span></div>
+          </div>
+        </div>
+
+        <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Student</div>
+            <div className="mt-0.5 font-medium text-foreground">{studentName}</div>
+          </div>
+          <div>
+            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Entries</div>
+            <div className="mt-0.5 font-medium text-foreground">{entries.length}</div>
+          </div>
+        </div>
+
+        {entries.length > 0 && (
+          <div className="mt-5 overflow-hidden rounded-lg border border-border">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-secondary text-left text-[11px] uppercase tracking-wider text-muted-foreground">
+                  <th className="px-3 py-2 font-medium w-[140px]">Type</th>
+                  <th className="px-3 py-2 font-medium">Content</th>
+                </tr>
+              </thead>
+              <tbody>
+                {entries.map((e) => (
+                  <tr key={e.id} className="border-t border-border">
+                    <td className="px-3 py-2 align-top">
+                      <span className="inline-flex rounded-md px-2 py-0.5 text-xs font-medium" style={{ backgroundColor: "#f3893420", color: "#01304a" }}>{e.type}</span>
+                    </td>
+                    <td className="px-3 py-2 text-foreground">{e.content}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {notes.trim().length > 0 && (
+          <div className="mt-5">
+            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Teacher's comments</div>
+            <p className="mt-1 whitespace-pre-wrap text-sm text-foreground">{notes}</p>
+          </div>
+        )}
+      </div>
+
+      <div className="flex justify-end gap-2">
+        <GhostButton onClick={onClose}>Close</GhostButton>
+        <PrimaryButton onClick={() => alert("Mock download: Verbo_Session_Report.pdf")}>
+          <Download className="h-4 w-4" /> Download PDF (Mock Download)
+        </PrimaryButton>
+      </div>
+    </div>
+  );
+}
+
