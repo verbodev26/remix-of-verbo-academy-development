@@ -471,6 +471,40 @@ function EventModal({
   );
 }
 
+// ---------- Lesson plan (synced from teacher) ----------
+function LessonPlanBlock({ sessionId }: { sessionId: string }) {
+  const [plan, setPlan] = useState<LessonPlan | undefined>(undefined);
+  useEffect(() => {
+    const refresh = () => setPlan(getLessonPlan(sessionId));
+    refresh();
+    return subscribeLessonPlans(refresh);
+  }, [sessionId]);
+  if (!plan) return null;
+  const levels = loadLevels();
+  const level = levels.find((l) => l.id === plan.level_id);
+  const unit = level?.units.find((u) => u.id === plan.unit_id);
+  return (
+    <div className="mt-3 rounded-lg border border-border bg-secondary/40 p-3">
+      <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-foreground">
+        <BookOpen className="h-3.5 w-3.5" /> Lesson plan
+      </div>
+      <div className="mt-2 space-y-1.5">
+        <div className="flex justify-between gap-3"><span className="text-muted-foreground">Title</span><span className="font-medium text-foreground text-right">{plan.title}</span></div>
+        <div className="flex justify-between gap-3"><span className="text-muted-foreground">Type</span><span className="text-foreground">{plan.type}</span></div>
+        {unit && (
+          <div className="flex justify-between gap-3"><span className="text-muted-foreground">Unit</span><span className="text-foreground text-right">{level?.id} · {unit.title}</span></div>
+        )}
+        {plan.comments && (
+          <div>
+            <div className="text-muted-foreground">Teacher's notes</div>
+            <p className="mt-1 whitespace-pre-wrap text-foreground">{plan.comments}</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ---------- Helpers ----------
 function shortLabel(ev: CalEvent): string {
   if (ev.kind === "verbo-insights") return "Verbo Insights";
