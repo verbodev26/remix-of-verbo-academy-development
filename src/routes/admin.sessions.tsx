@@ -448,8 +448,8 @@ function SessionRow({
     return <Pill tone={statusTone(s)}>{s}</Pill>;
   };
 
-  return (
-    <>
+  if (!editing) {
+    return (
       <tr className="border-t border-border">
         <td className="px-4 py-3 text-foreground">{dt.toLocaleString([], { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</td>
         <td className="px-4 py-3 text-muted-foreground">{teacher?.name}</td>
