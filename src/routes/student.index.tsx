@@ -51,9 +51,10 @@ function StudentDashboard() {
   // Live sessions store (persisted)
   const sessions = useSyncExternalStore(
     subscribeSessions,
-    () => loadSessions(),
-    () => loadSessions(),
+    getSessionsSnapshot,
+    getServerSessionsSnapshot,
   );
+
 
   // Local cancellation count (for the warning copy)
   const [cancelCount, setCancelCount] = useState<number>(() => {
