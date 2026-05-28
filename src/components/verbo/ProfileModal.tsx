@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "@/lib/auth";
 import { Award, Crown, Flame, Lock, Trophy, Camera } from "lucide-react";
+import { setAvatar, useAvatar } from "@/lib/avatar-store";
 
 interface Props {
   open: boolean;
