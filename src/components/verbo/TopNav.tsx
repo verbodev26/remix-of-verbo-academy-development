@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { LogOut } from "lucide-react";
 import { useState } from "react";
 import { ProfileModal } from "./ProfileModal";
+import { useAvatar } from "@/lib/avatar-store";
 
 interface NavItem { to: string; label: string }
 
