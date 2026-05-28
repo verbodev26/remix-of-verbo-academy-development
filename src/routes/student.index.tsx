@@ -247,7 +247,7 @@ function StudentDashboard() {
                     <GhostButton className="flex-1" onClick={() => setToCancel(s)}>
                       <X className="h-3.5 w-3.5" /> Can't attend
                     </GhostButton>
-                    <SuccessButton className="flex-1 verbo-btn-glow" onClick={() => window.open(s.teams_link, "_blank")}>
+                    <SuccessButton className="flex-1 verbo-btn-glow bg-lime-500" onClick={() => window.open(s.teams_link, "_blank")}>
                       <Video className="h-4 w-4" /> Connect
                     </SuccessButton>
                   </div>
