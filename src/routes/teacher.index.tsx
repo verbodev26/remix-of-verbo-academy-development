@@ -106,7 +106,7 @@ function TeacherDashboard() {
                         <Lock className="h-4 w-4" /> Overdue (Locked)
                       </button>
                     ) : (
-                      <PrimaryButton onClick={() => setEditing(s)}>
+                      <PrimaryButton onClick={() => setEvaluating(s)}>
                         <FileEdit className="h-4 w-4" /> Fill session report
                       </PrimaryButton>
                     )
