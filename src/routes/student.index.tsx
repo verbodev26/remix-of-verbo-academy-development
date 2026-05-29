@@ -3,8 +3,15 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useAuth } from "@/lib/auth";
 import { LEVELS, QUOTES, userById } from "@/lib/mock-data";
 import { persistSessions, subscribeSessions, getSessionsSnapshot, getServerSessionsSnapshot, type ExtSession } from "@/lib/sessions-store";
+import {
+  averagePerformance,
+  getPerformanceSnapshot,
+  getServerPerformanceSnapshot,
+  subscribePerformance,
+  type PerformanceRating,
+} from "@/lib/performance-store";
 import { Card as PlainCard, GhostButton, MetricCard, Pill, PrimaryButton, ProgressBar, SectionTitle, SuccessButton } from "@/components/verbo/ui";
-import { CalendarClock, Download, Flame, Quote, Video, X } from "lucide-react";
+import { BarChart3, CalendarClock, Download, Flame, Quote, Star, Video, X } from "lucide-react";
 import { RatingModal } from "@/components/verbo/RatingModal";
 import {
   Dialog,
