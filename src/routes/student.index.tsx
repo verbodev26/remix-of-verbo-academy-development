@@ -310,6 +310,7 @@ function StudentDashboard() {
                 <th className="px-6 py-3 font-medium">Teacher</th>
                 <th className="px-6 py-3 font-medium">Status</th>
                 <th className="px-6 py-3 font-medium">Rating</th>
+                <th className="px-6 py-3 font-medium">My Performance</th>
                 <th className="px-6 py-3 font-medium text-right">Report</th>
               </tr>
             </thead>
@@ -319,12 +320,25 @@ function StudentDashboard() {
                 const tone = s.status === "completed" ? "success"
                   : s.status === "absent" ? "danger"
                   : s.status === "delayed" ? "warning" : "default";
+                const rating = performance[s.id];
                 return (
                   <tr key={s.id} className="border-b border-border last:border-0">
                     <td className="px-6 py-4 text-foreground">{fmt(s.date_time)}</td>
                     <td className="px-6 py-4 text-muted-foreground">{teacher?.name}</td>
                     <td className="px-6 py-4"><Pill tone={tone as any}>{s.status}</Pill></td>
                     <td className="px-6 py-4 text-muted-foreground">{s.student_rating ? `${s.student_rating}★` : "—"}</td>
+                    <td className="px-6 py-4">
+                      <button
+                        disabled={!rating}
+                        onClick={() => rating && setPerfDetail({ session: s, rating })}
+                        className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-border transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-30"
+                        style={{ color: rating ? "#f38934" : undefined }}
+                        aria-label="View performance breakdown"
+                        title="View performance breakdown"
+                      >
+                        <BarChart3 className="h-3.5 w-3.5" />
+                      </button>
+                    </td>
                     <td className="px-6 py-4 text-right">
                       <button
                         disabled={!s.report_pdf_url}
