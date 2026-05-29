@@ -20,7 +20,8 @@ function TeacherDashboard() {
   const { user } = useAuth();
   const [now, setNow] = useState(Date.now());
   const [sessions, setSessions] = useState<LocalSession[]>(() => SESSIONS.map((s) => ({ ...s })));
-  const [editing, setEditing] = useState<Session | null>(null);
+  const [evaluating, setEvaluating] = useState<Session | null>(null);
+  const [editing, setEditing] = useState<{ session: Session; perf: PerformanceRating } | null>(null);
 
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000 * 30);
