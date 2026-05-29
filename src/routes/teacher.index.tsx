@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { SESSIONS, studentsOfTeacher, userById, type Session, type SessionStatus } from "@/lib/mock-data";
 import { Card, GhostButton, MetricCard, Pill, PrimaryButton, SectionTitle } from "@/components/verbo/ui";
-import { CalendarClock, FileEdit, X, Lock, Plus, Trash2, Download, CheckCircle2 } from "lucide-react";
+import { CalendarClock, FileEdit, X, Lock, Plus, Trash2, Download, CheckCircle2, Star } from "lucide-react";
+import { savePerformance, type PerformanceRating } from "@/lib/performance-store";
 
 export const Route = createFileRoute("/teacher/")({ component: TeacherDashboard });
 
