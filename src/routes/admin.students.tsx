@@ -60,12 +60,21 @@ function writeRegisteredStudents(list: User[]) {
 }
 
 const PLAN_OPTIONS = [
-  "Trial",
-  "Standard Quarterly",
-  "Standard Annual",
-  "Premium Quarterly",
-  "Premium Annual",
-  "Enterprise",
+  "Verbo Core Lite",
+  "Verbo Core",
+  "Verbo Advance Lite",
+  "Verbo Advance",
+  "Verbo Elite",
+  "Verbo Signature",
+];
+
+const LEVEL_OPTIONS: { value: string; label: string }[] = [
+  { value: "A1", label: "A1 — Beginner" },
+  { value: "A2", label: "A2 — Elementary" },
+  { value: "B1", label: "B1 — Intermediate" },
+  { value: "B2", label: "B2 — Upper Intermediate" },
+  { value: "C1", label: "C1 — Advanced" },
+  { value: "C2", label: "C2 — Mastery" },
 ];
 
 function Page() {
@@ -109,6 +118,7 @@ function Page() {
       password: updated.password,
       company: updated.company,
       hired_plan: updated.hired_plan,
+      current_level: updated.current_level,
       member_since: updated.member_since,
       hired_sessions: updated.hired_sessions,
       remaining_sessions: updated.remaining_sessions,
@@ -249,6 +259,7 @@ function RegisterModal({
     email: "",
     password: "",
     hired_plan: "",
+    current_level: "",
     member_since: "",
     hired_sessions: 0,
     remaining_sessions: 0,
@@ -262,7 +273,9 @@ function RegisterModal({
   const isValid =
     form.name.trim() &&
     form.email.trim() &&
-    form.password.trim();
+    form.password.trim() &&
+    form.current_level &&
+    form.hired_plan;
 
   const handleSave = () => {
     if (!isValid) return;
@@ -274,6 +287,7 @@ function RegisterModal({
       role: "student",
       company: form.company.trim() || undefined,
       hired_plan: form.hired_plan || undefined,
+      current_level: form.current_level || undefined,
       member_since: form.member_since || undefined,
       hired_sessions: Number(form.hired_sessions) || 0,
       remaining_sessions: Number(form.remaining_sessions) || 0,
@@ -362,11 +376,25 @@ function RegisterModal({
               <select
                 value={form.hired_plan}
                 onChange={(e) => set("hired_plan", e.target.value)}
-                className={inputCls}
+                className={`${inputCls} cursor-pointer`}
               >
                 <option value="">Select a plan</option>
                 {PLAN_OPTIONS.map((p) => (
                   <option key={p} value={p}>{p}</option>
+                ))}
+              </select>
+            </Field>
+
+            <Field label="Initial English Level" icon={<GraduationCap className="h-3.5 w-3.5" />}>
+              <select
+                value={form.current_level}
+                onChange={(e) => set("current_level", e.target.value)}
+                className={`${inputCls} cursor-pointer`}
+                required
+              >
+                <option value="">Select a level</option>
+                {LEVEL_OPTIONS.map((l) => (
+                  <option key={l.value} value={l.value}>{l.label}</option>
                 ))}
               </select>
             </Field>
@@ -404,7 +432,7 @@ function RegisterModal({
               <select
                 value={form.teacher_id}
                 onChange={(e) => set("teacher_id", e.target.value)}
-                className={inputCls}
+                className={`${inputCls} cursor-pointer`}
               >
                 <option value="">Select a teacher (optional)</option>
                 {teachers.map((t) => (
@@ -553,7 +581,7 @@ function StudentModal({
               <select
                 value={form.hired_plan ?? ""}
                 onChange={(e) => set("hired_plan", e.target.value)}
-                className={inputCls}
+                className={`${inputCls} cursor-pointer`}
               >
                 <option value="">Select a plan</option>
                 {PLAN_OPTIONS.map((p) => (
