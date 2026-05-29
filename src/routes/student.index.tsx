@@ -204,6 +204,33 @@ function StudentDashboard() {
         </PremiumCard>
       </section>
 
+      {/* Performance Metrics */}
+      <section>
+        <SectionTitle>Performance Metrics</SectionTitle>
+        <PremiumCard>
+          {perfAvg.count === 0 ? (
+            <div className="text-sm text-muted-foreground">
+              No teacher evaluations yet. Your performance averages will appear here after your first rated session.
+            </div>
+          ) : (
+            <>
+              <div className="mb-5 flex items-center justify-between">
+                <p className="text-xs text-muted-foreground">
+                  Historical averages across {perfAvg.count} rated session{perfAvg.count === 1 ? "" : "s"}.
+                </p>
+                <span className="text-xs font-medium" style={{ color: "#01304a" }}>Scale 0 – 5</span>
+              </div>
+              <div className="grid gap-5 sm:grid-cols-2">
+                <PerfBar label="Fluency" value={perfAvg.fluency} />
+                <PerfBar label="Vocabulary Range" value={perfAvg.vocabulary} />
+                <PerfBar label="Confidence" value={perfAvg.confidence} />
+                <PerfBar label="Grammar Accuracy" value={perfAvg.grammar} />
+              </div>
+            </>
+          )}
+        </PremiumCard>
+      </section>
+
       {/* Current course */}
       <section>
         <SectionTitle>Current Course</SectionTitle>
