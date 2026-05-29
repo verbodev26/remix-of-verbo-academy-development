@@ -209,7 +209,7 @@ function ReportModal({ session, perf, onClose, onSubmit }: { session: Session; p
   const handleSubmit = () => {
     if (!canSubmit) return;
     setSubmitted(true);
-    onSubmit(session.id, status === "absent" ? "absent" : "completed");
+    onSubmit(session.id, status === "absent" ? "absent" : "completed", perf);
   };
 
   return (
