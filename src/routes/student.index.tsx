@@ -88,6 +88,7 @@ function StudentDashboard() {
   const history = mySessions
     .filter((s) => !["scheduled", "rescheduled", "ready"].includes(s.status))
     .sort((a, b) => +new Date(b.date_time) - +new Date(a.date_time));
+  const perfAvg = averagePerformance(history.map((s) => s.id), performance);
 
   const level = LEVELS.find((l) => l.id === user.current_level);
   const currentUnit = level?.units[1] ?? level?.units[0];
