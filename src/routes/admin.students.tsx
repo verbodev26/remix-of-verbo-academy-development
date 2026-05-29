@@ -385,6 +385,20 @@ function RegisterModal({
               </select>
             </Field>
 
+            <Field label="Initial English Level" icon={<GraduationCap className="h-3.5 w-3.5" />}>
+              <select
+                value={form.current_level}
+                onChange={(e) => set("current_level", e.target.value)}
+                className={`${inputCls} cursor-pointer`}
+                required
+              >
+                <option value="">Select a level</option>
+                {LEVEL_OPTIONS.map((l) => (
+                  <option key={l.value} value={l.value}>{l.label}</option>
+                ))}
+              </select>
+            </Field>
+
             <Field label="Member since" icon={<CalendarDays className="h-3.5 w-3.5" />}>
               <input
                 type="date"
