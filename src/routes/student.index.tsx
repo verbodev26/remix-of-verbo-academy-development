@@ -405,6 +405,81 @@ function StudentDashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Performance Breakdown Modal */}
+      <Dialog open={!!perfDetail} onOpenChange={(o) => !o && setPerfDetail(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle style={{ color: "#01304a" }}>Session Performance Breakdown</DialogTitle>
+          </DialogHeader>
+          {perfDetail && (
+            <>
+              <div className="rounded-lg border border-border bg-secondary/40 p-3 text-xs">
+                <div className="font-medium text-foreground">{fmt(perfDetail.session.date_time)}</div>
+                <div className="mt-0.5 text-muted-foreground">
+                  with {userById(perfDetail.session.teacher_id)?.name}
+                </div>
+              </div>
+              <div className="mt-2 space-y-3">
+                <PerfStars label="Fluency" value={perfDetail.rating.fluency} />
+                <PerfStars label="Vocabulary Range" value={perfDetail.rating.vocabulary} />
+                <PerfStars label="Confidence" value={perfDetail.rating.confidence} />
+                <PerfStars label="Grammar Accuracy" value={perfDetail.rating.grammar} />
+              </div>
+            </>
+          )}
+          <DialogFooter>
+            <PrimaryButton className="verbo-btn-glow" onClick={() => setPerfDetail(null)}>Close</PrimaryButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function PerfBar({ label, value }: { label: string; value: number }) {
+  const pct = Math.max(0, Math.min(100, (value / 5) * 100));
+  return (
+    <div>
+      <div className="flex items-baseline justify-between">
+        <span className="text-sm font-medium" style={{ color: "#01304a" }}>{label}</span>
+        <span className="text-xs font-semibold tabular-nums" style={{ color: "#01304a" }}>
+          {value.toFixed(1)}<span className="text-muted-foreground"> / 5</span>
+        </span>
+      </div>
+      <div className="mt-2 h-2.5 w-full overflow-hidden rounded-full" style={{ backgroundColor: "rgba(1, 48, 74, 0.1)" }}>
+        <div
+          className="h-full rounded-full transition-all"
+          style={{
+            width: `${pct}%`,
+            background: "linear-gradient(90deg, #01304a, #f38934)",
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function PerfStars({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-sm font-medium" style={{ color: "#01304a" }}>{label}</span>
+      <div className="flex items-center gap-1">
+        {[1, 2, 3, 4, 5].map((n) => {
+          const active = n <= value;
+          return (
+            <Star
+              key={n}
+              className="h-4 w-4"
+              style={{
+                color: active ? "#f38934" : "#e5e7eb",
+                fill: active ? "#f38934" : "transparent",
+              }}
+            />
+          );
+        })}
+        <span className="ml-2 text-xs tabular-nums text-muted-foreground">{value}/5</span>
+      </div>
     </div>
   );
 }
