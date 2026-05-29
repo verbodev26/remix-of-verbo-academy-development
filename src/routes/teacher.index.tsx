@@ -418,3 +418,117 @@ function ReportPreview({ studentName, dateLabel, status, notes, entries, onClose
   );
 }
 
+
+function StarRating({ value, onChange, label }: { value: number; onChange: (n: number) => void; label: string }) {
+  const [hover, setHover] = useState(0);
+  return (
+    <div>
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium" style={{ color: "#01304a" }}>{label}</span>
+        <span className="text-xs tabular-nums text-muted-foreground">{value > 0 ? `${value}/5` : "—"}</span>
+      </div>
+      <div className="mt-2 flex items-center gap-1.5">
+        {[1, 2, 3, 4, 5].map((n) => {
+          const active = n <= (hover || value);
+          return (
+            <button
+              key={n}
+              type="button"
+              onMouseEnter={() => setHover(n)}
+              onMouseLeave={() => setHover(0)}
+              onClick={() => onChange(n)}
+              className="cursor-pointer p-1 transition-transform hover:scale-110"
+              aria-label={`${label} ${n} stars`}
+            >
+              <Star
+                className="h-7 w-7 transition-colors"
+                style={{
+                  color: active ? "#f38934" : "#e5e7eb",
+                  fill: active ? "#f38934" : "transparent",
+                }}
+              />
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function PerformanceEvaluationModal({
+  session,
+  onClose,
+  onContinue,
+}: {
+  session: Session;
+  onClose: () => void;
+  onContinue: (perf: PerformanceRating) => void;
+}) {
+  const student = userById(session.student_id);
+  const [perf, setPerf] = useState<PerformanceRating>({ fluency: 0, vocabulary: 0, confidence: 0, grammar: 0 });
+  const canContinue = perf.fluency > 0 && perf.vocabulary > 0 && perf.confidence > 0 && perf.grammar > 0;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 backdrop-blur-sm p-4"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-lg rounded-2xl border border-border bg-card p-8 shadow-floating"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+      >
+        <div className="flex items-start justify-between">
+          <div>
+            <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Step 1 of 2</div>
+            <h2 className="mt-1 text-xl font-semibold tracking-tight" style={{ color: "#01304a" }}>
+              Student Performance Evaluation
+            </h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-muted-foreground hover:bg-secondary"
+            aria-label="Close"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="mt-5 rounded-lg border border-border bg-secondary/40 p-4 text-sm">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Student</div>
+              <div className="mt-0.5 font-medium text-foreground">{student?.name}</div>
+            </div>
+            <div>
+              <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Session</div>
+              <div className="mt-0.5 font-medium text-foreground">{fmt(session.date_time)}</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6 space-y-5">
+          <StarRating label="Fluency" value={perf.fluency} onChange={(n) => setPerf((p) => ({ ...p, fluency: n }))} />
+          <StarRating label="Vocabulary Range" value={perf.vocabulary} onChange={(n) => setPerf((p) => ({ ...p, vocabulary: n }))} />
+          <StarRating label="Confidence" value={perf.confidence} onChange={(n) => setPerf((p) => ({ ...p, confidence: n }))} />
+          <StarRating label="Grammar Accuracy" value={perf.grammar} onChange={(n) => setPerf((p) => ({ ...p, grammar: n }))} />
+        </div>
+
+        <div className="mt-7 flex items-center justify-between gap-3">
+          <p className="text-xs text-muted-foreground">
+            {canContinue ? "Ready to continue." : "Rate all 4 criteria to continue."}
+          </p>
+          <button
+            disabled={!canContinue}
+            onClick={() => onContinue(perf)}
+            className="inline-flex cursor-pointer items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold text-white shadow-soft transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+            style={{ backgroundColor: "#f38934" }}
+          >
+            Continue to Lesson Report
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
