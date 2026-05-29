@@ -3,8 +3,15 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useAuth } from "@/lib/auth";
 import { LEVELS, QUOTES, userById } from "@/lib/mock-data";
 import { persistSessions, subscribeSessions, getSessionsSnapshot, getServerSessionsSnapshot, type ExtSession } from "@/lib/sessions-store";
+import {
+  averagePerformance,
+  getPerformanceSnapshot,
+  getServerPerformanceSnapshot,
+  subscribePerformance,
+  type PerformanceRating,
+} from "@/lib/performance-store";
 import { Card as PlainCard, GhostButton, MetricCard, Pill, PrimaryButton, ProgressBar, SectionTitle, SuccessButton } from "@/components/verbo/ui";
-import { CalendarClock, Download, Flame, Quote, Video, X } from "lucide-react";
+import { BarChart3, CalendarClock, Download, Flame, Quote, Star, Video, X } from "lucide-react";
 import { RatingModal } from "@/components/verbo/RatingModal";
 import {
   Dialog,
@@ -54,6 +61,12 @@ function StudentDashboard() {
     getSessionsSnapshot,
     getServerSessionsSnapshot,
   );
+  const performance = useSyncExternalStore(
+    subscribePerformance,
+    getPerformanceSnapshot,
+    getServerPerformanceSnapshot,
+  );
+  const [perfDetail, setPerfDetail] = useState<{ session: ExtSession; rating: PerformanceRating } | null>(null);
 
 
   // Local cancellation count (for the warning copy)
@@ -75,6 +88,7 @@ function StudentDashboard() {
   const history = mySessions
     .filter((s) => !["scheduled", "rescheduled", "ready"].includes(s.status))
     .sort((a, b) => +new Date(b.date_time) - +new Date(a.date_time));
+  const perfAvg = averagePerformance(history.map((s) => s.id), performance);
 
   const level = LEVELS.find((l) => l.id === user.current_level);
   const currentUnit = level?.units[1] ?? level?.units[0];
@@ -190,6 +204,33 @@ function StudentDashboard() {
         </PremiumCard>
       </section>
 
+      {/* Performance Metrics */}
+      <section>
+        <SectionTitle>Performance Metrics</SectionTitle>
+        <PremiumCard>
+          {perfAvg.count === 0 ? (
+            <div className="text-sm text-muted-foreground">
+              No teacher evaluations yet. Your performance averages will appear here after your first rated session.
+            </div>
+          ) : (
+            <>
+              <div className="mb-5 flex items-center justify-between">
+                <p className="text-xs text-muted-foreground">
+                  Historical averages across {perfAvg.count} rated session{perfAvg.count === 1 ? "" : "s"}.
+                </p>
+                <span className="text-xs font-medium" style={{ color: "#01304a" }}>Scale 0 – 5</span>
+              </div>
+              <div className="grid gap-5 sm:grid-cols-2">
+                <PerfBar label="Fluency" value={perfAvg.fluency} />
+                <PerfBar label="Vocabulary Range" value={perfAvg.vocabulary} />
+                <PerfBar label="Confidence" value={perfAvg.confidence} />
+                <PerfBar label="Grammar Accuracy" value={perfAvg.grammar} />
+              </div>
+            </>
+          )}
+        </PremiumCard>
+      </section>
+
       {/* Current course */}
       <section>
         <SectionTitle>Current Course</SectionTitle>
@@ -269,6 +310,7 @@ function StudentDashboard() {
                 <th className="px-6 py-3 font-medium">Teacher</th>
                 <th className="px-6 py-3 font-medium">Status</th>
                 <th className="px-6 py-3 font-medium">Rating</th>
+                <th className="px-6 py-3 font-medium">My Performance</th>
                 <th className="px-6 py-3 font-medium text-right">Report</th>
               </tr>
             </thead>
@@ -278,12 +320,25 @@ function StudentDashboard() {
                 const tone = s.status === "completed" ? "success"
                   : s.status === "absent" ? "danger"
                   : s.status === "delayed" ? "warning" : "default";
+                const rating = performance[s.id];
                 return (
                   <tr key={s.id} className="border-b border-border last:border-0">
                     <td className="px-6 py-4 text-foreground">{fmt(s.date_time)}</td>
                     <td className="px-6 py-4 text-muted-foreground">{teacher?.name}</td>
                     <td className="px-6 py-4"><Pill tone={tone as any}>{s.status}</Pill></td>
                     <td className="px-6 py-4 text-muted-foreground">{s.student_rating ? `${s.student_rating}★` : "—"}</td>
+                    <td className="px-6 py-4">
+                      <button
+                        disabled={!rating}
+                        onClick={() => rating && setPerfDetail({ session: s, rating })}
+                        className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-border transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-30"
+                        style={{ color: rating ? "#f38934" : undefined }}
+                        aria-label="View performance breakdown"
+                        title="View performance breakdown"
+                      >
+                        <BarChart3 className="h-3.5 w-3.5" />
+                      </button>
+                    </td>
                     <td className="px-6 py-4 text-right">
                       <button
                         disabled={!s.report_pdf_url}
@@ -350,6 +405,81 @@ function StudentDashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Performance Breakdown Modal */}
+      <Dialog open={!!perfDetail} onOpenChange={(o) => !o && setPerfDetail(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle style={{ color: "#01304a" }}>Session Performance Breakdown</DialogTitle>
+          </DialogHeader>
+          {perfDetail && (
+            <>
+              <div className="rounded-lg border border-border bg-secondary/40 p-3 text-xs">
+                <div className="font-medium text-foreground">{fmt(perfDetail.session.date_time)}</div>
+                <div className="mt-0.5 text-muted-foreground">
+                  with {userById(perfDetail.session.teacher_id)?.name}
+                </div>
+              </div>
+              <div className="mt-2 space-y-3">
+                <PerfStars label="Fluency" value={perfDetail.rating.fluency} />
+                <PerfStars label="Vocabulary Range" value={perfDetail.rating.vocabulary} />
+                <PerfStars label="Confidence" value={perfDetail.rating.confidence} />
+                <PerfStars label="Grammar Accuracy" value={perfDetail.rating.grammar} />
+              </div>
+            </>
+          )}
+          <DialogFooter>
+            <PrimaryButton className="verbo-btn-glow" onClick={() => setPerfDetail(null)}>Close</PrimaryButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function PerfBar({ label, value }: { label: string; value: number }) {
+  const pct = Math.max(0, Math.min(100, (value / 5) * 100));
+  return (
+    <div>
+      <div className="flex items-baseline justify-between">
+        <span className="text-sm font-medium" style={{ color: "#01304a" }}>{label}</span>
+        <span className="text-xs font-semibold tabular-nums" style={{ color: "#01304a" }}>
+          {value.toFixed(1)}<span className="text-muted-foreground"> / 5</span>
+        </span>
+      </div>
+      <div className="mt-2 h-2.5 w-full overflow-hidden rounded-full" style={{ backgroundColor: "rgba(1, 48, 74, 0.1)" }}>
+        <div
+          className="h-full rounded-full transition-all"
+          style={{
+            width: `${pct}%`,
+            background: "linear-gradient(90deg, #01304a, #f38934)",
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function PerfStars({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-sm font-medium" style={{ color: "#01304a" }}>{label}</span>
+      <div className="flex items-center gap-1">
+        {[1, 2, 3, 4, 5].map((n) => {
+          const active = n <= value;
+          return (
+            <Star
+              key={n}
+              className="h-4 w-4"
+              style={{
+                color: active ? "#f38934" : "#e5e7eb",
+                fill: active ? "#f38934" : "transparent",
+              }}
+            />
+          );
+        })}
+        <span className="ml-2 text-xs tabular-nums text-muted-foreground">{value}/5</span>
+      </div>
     </div>
   );
 }
