@@ -415,15 +415,17 @@ function Page() {
 // ---------- Boarding Pass (upcoming/live) ----------
 function BoardingPass({ s, onOpen }: { s: CalEvent; onOpen: () => void }) {
   const teacher = s.teacher_id ? userById(s.teacher_id) : undefined;
-  const live = liveState(s);
+  const locked = s.status === "absent" || s.status === "cancelled";
+  const live = !locked ? liveState(s) : null;
   const tone =
+    s.status === "absent" || s.status === "cancelled" ? "danger" :
     s.status === "ready" ? "default" :
     s.status === "pending-reschedule" ? "warning" :
     s.status === "scheduled" ? "default" : "muted";
   const initials = (teacher?.name ?? "T").split(" ").map((p) => p[0]).slice(0, 2).join("");
   return (
     <div
-      className={`relative overflow-hidden rounded-2xl bg-white shadow-[0_4px_20px_-2px_rgba(1,48,74,0.06)] ring-1 ring-border ${live === "live" ? "verbo-live-pulse" : ""}`}
+      className={`relative overflow-hidden rounded-2xl bg-white shadow-[0_4px_20px_-2px_rgba(1,48,74,0.06)] ring-1 ring-border ${live === "live" ? "verbo-live-pulse" : ""} ${locked ? "opacity-75" : ""}`}
     >
       {live === "live" && (
         <div className="verbo-live-dot absolute right-4 top-4 inline-flex items-center gap-1 rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-md">
