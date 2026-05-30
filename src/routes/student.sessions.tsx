@@ -667,3 +667,42 @@ function shade(hex: string, pct: number): string {
   b = Math.max(0, Math.min(255, Math.round(b + (b * pct) / 100)));
   return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
 }
+
+// ---------- Late Cancellation Modal ----------
+function LateCancelModal({ onClose, onConfirm }: { onClose: () => void; onConfirm: () => void }) {
+  return (
+    <div onClick={onClose} className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-md rounded-2xl bg-card p-6 ring-1 ring-red-200"
+        style={{ boxShadow: "0 10px 30px rgba(239, 68, 68, 0.15), 0 0 0 1px rgba(239, 68, 68, 0.1)" }}
+      >
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-600">
+            <AlertTriangle className="h-5 w-5" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold tracking-tight text-foreground">Late Cancellation Warning!</h3>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              Cancellation received with less than 24 hours notice. The session has been marked as Absent and forfeited. No reschedule is available.
+            </p>
+          </div>
+        </div>
+        <div className="mt-6 flex gap-2">
+          <button
+            onClick={onClose}
+            className="flex-1 cursor-pointer rounded-lg bg-slate-700 px-4 py-2 text-sm font-medium text-white shadow-soft transition-opacity hover:opacity-90"
+          >
+            Go Back
+          </button>
+          <button
+            onClick={onConfirm}
+            className="flex-1 cursor-pointer rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-soft transition-opacity hover:opacity-90"
+          >
+            Confirm Cancellation
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
