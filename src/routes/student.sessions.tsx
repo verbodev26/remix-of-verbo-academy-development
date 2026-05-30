@@ -400,6 +400,13 @@ function Page() {
             cancelCount={cancelCount}
           />
         )}
+
+        {lateCancel && (
+          <LateCancelModal
+            onClose={() => setLateCancel(null)}
+            onConfirm={confirmLateCancel}
+          />
+        )}
       </div>
     </div>
   );
