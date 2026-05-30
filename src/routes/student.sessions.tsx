@@ -171,6 +171,7 @@ function Page() {
 
   const [cursor, setCursor] = useState(() => { const d = new Date(); d.setDate(1); return d; });
   const [selected, setSelected] = useState<CalEvent | null>(null);
+  const [lateCancel, setLateCancel] = useState<CalEvent | null>(null);
 
   const updateEvent = (id: string, patch: Partial<CalEvent>) =>
     setEvents((prev) => prev.map((e) => (e.id === id ? { ...e, ...patch } : e)));
@@ -179,11 +180,16 @@ function Page() {
     const hoursUntil = (new Date(ev.date).getTime() - Date.now()) / 36e5;
     if (hoursUntil > 24) {
       updateEvent(ev.id, { status: "pending-reschedule" });
-      alert("Cancellation confirmed. Your session is now Pending Reschedule — our team will reach out shortly to set a new time.");
+      setSelected(null);
     } else {
-      updateEvent(ev.id, { status: "absent" });
-      alert("⚠ Cancellation received with less than 24 hours notice. The session has been marked as Absent and forfeited — no reschedule is available.");
+      setLateCancel(ev);
     }
+  };
+
+  const confirmLateCancel = () => {
+    if (!lateCancel) return;
+    updateEvent(lateCancel.id, { status: "absent" });
+    setLateCancel(null);
     setSelected(null);
   };
 
@@ -223,6 +229,7 @@ function Page() {
 
   const oneOnOnes = events.filter((e) => e.kind === "one-on-one");
   const upcoming = oneOnOnes
+    .filter((s) => s.status !== "absent" && s.status !== "cancelled" && s.status !== "completed")
     .filter((s) => s.status === "scheduled" || s.status === "ready" || s.status === "pending-reschedule" || liveState(s) === "live")
     .sort((a, b) => +new Date(a.date) - +new Date(b.date));
   const past = oneOnOnes
@@ -393,6 +400,13 @@ function Page() {
             cancelCount={cancelCount}
           />
         )}
+
+        {lateCancel && (
+          <LateCancelModal
+            onClose={() => setLateCancel(null)}
+            onConfirm={confirmLateCancel}
+          />
+        )}
       </div>
     </div>
   );
@@ -401,15 +415,17 @@ function Page() {
 // ---------- Boarding Pass (upcoming/live) ----------
 function BoardingPass({ s, onOpen }: { s: CalEvent; onOpen: () => void }) {
   const teacher = s.teacher_id ? userById(s.teacher_id) : undefined;
-  const live = liveState(s);
+  const locked = s.status === "absent" || s.status === "cancelled";
+  const live = !locked ? liveState(s) : null;
   const tone =
+    s.status === "absent" || s.status === "cancelled" ? "danger" :
     s.status === "ready" ? "default" :
     s.status === "pending-reschedule" ? "warning" :
     s.status === "scheduled" ? "default" : "muted";
   const initials = (teacher?.name ?? "T").split(" ").map((p) => p[0]).slice(0, 2).join("");
   return (
     <div
-      className={`relative overflow-hidden rounded-2xl bg-white shadow-[0_4px_20px_-2px_rgba(1,48,74,0.06)] ring-1 ring-border ${live === "live" ? "verbo-live-pulse" : ""}`}
+      className={`relative overflow-hidden rounded-2xl bg-white shadow-[0_4px_20px_-2px_rgba(1,48,74,0.06)] ring-1 ring-border ${live === "live" ? "verbo-live-pulse" : ""} ${locked ? "opacity-75" : ""}`}
     >
       {live === "live" && (
         <div className="verbo-live-dot absolute right-4 top-4 inline-flex items-center gap-1 rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-md">
@@ -432,7 +448,15 @@ function BoardingPass({ s, onOpen }: { s: CalEvent; onOpen: () => void }) {
             </div>
             <div className="flex items-center gap-2">
               <Pill tone={tone as "default" | "success" | "warning" | "danger" | "muted"}>{statusLabel(s.status)}</Pill>
-              {s.status === "ready" ? (
+              {locked ? (
+                <button
+                  disabled
+                  className="inline-flex items-center gap-2 rounded-lg bg-muted px-4 py-2 text-sm font-medium text-muted-foreground shadow-soft"
+                  style={{ cursor: "not-allowed" }}
+                >
+                  Cancelled
+                </button>
+              ) : s.status === "ready" ? (
                 <button
                   onClick={onOpen}
                   className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-[#01304a] px-4 py-2 text-sm font-medium text-white shadow-soft transition-transform hover:-translate-y-0.5 hover:shadow-md"
@@ -642,4 +666,43 @@ function shade(hex: string, pct: number): string {
   g = Math.max(0, Math.min(255, Math.round(g + (g * pct) / 100)));
   b = Math.max(0, Math.min(255, Math.round(b + (b * pct) / 100)));
   return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+}
+
+// ---------- Late Cancellation Modal ----------
+function LateCancelModal({ onClose, onConfirm }: { onClose: () => void; onConfirm: () => void }) {
+  return (
+    <div onClick={onClose} className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-md rounded-2xl bg-card p-6 ring-1 ring-red-200"
+        style={{ boxShadow: "0 10px 30px rgba(239, 68, 68, 0.15), 0 0 0 1px rgba(239, 68, 68, 0.1)" }}
+      >
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-600">
+            <AlertTriangle className="h-5 w-5" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold tracking-tight text-foreground">Late Cancellation Warning!</h3>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              Cancellation received with less than 24 hours notice. The session has been marked as Absent and forfeited. No reschedule is available.
+            </p>
+          </div>
+        </div>
+        <div className="mt-6 flex gap-2">
+          <button
+            onClick={onClose}
+            className="flex-1 cursor-pointer rounded-lg bg-slate-700 px-4 py-2 text-sm font-medium text-white shadow-soft transition-opacity hover:opacity-90"
+          >
+            Go Back
+          </button>
+          <button
+            onClick={onConfirm}
+            className="flex-1 cursor-pointer rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-soft transition-opacity hover:opacity-90"
+          >
+            Confirm Cancellation
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
