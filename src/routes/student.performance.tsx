@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSyncExternalStore } from "react";
-import { ArrowLeft, BookOpen, Ear, Mic, PenLine, Zap, type LucideIcon } from "lucide-react";
+import { ArrowLeft, BookOpen, Ear, Mic, PenLine, Rocket, type LucideIcon } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import {
   getPerformanceSnapshot,
