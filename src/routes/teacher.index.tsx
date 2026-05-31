@@ -333,7 +333,7 @@ function ReportModal({ session, perf, onClose, onSubmit }: { session: Session; p
                 </div>
 
                 <div className="mt-5">
-                  <label className="text-xs font-medium text-foreground">Class notes <span className="text-muted-foreground">(optional)</span></label>
+                  <label className="text-xs font-medium text-foreground">Class notes <span className="text-red-600">*</span> <span className="text-muted-foreground">(required)</span></label>
                   <textarea
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
