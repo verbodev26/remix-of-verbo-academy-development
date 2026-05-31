@@ -232,10 +232,19 @@ function Landing() {
 
 
           {/* Footer */}
-          <footer className="border-t border-border bg-background">
-            <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-6 py-8 text-xs text-muted-foreground md:flex-row">
+          <footer style={{ backgroundColor: "#0a0f14", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+            <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-6 py-8 text-xs md:flex-row">
               <Logo />
-              <div>© {new Date().getFullYear()} Verbo Language Solutions. All rights reserved.</div>
+              <div className="flex flex-col items-center gap-1 md:flex-row md:gap-3" style={{ color: "#64748b" }}>
+                <span>© 2026 Verbo Language Solutions. All rights reserved.</span>
+                <Link
+                  to="/privacy"
+                  className="font-medium transition-colors duration-200 hover:text-[#f38934]"
+                  style={{ color: "#94a3b8" }}
+                >
+                  Privacy Policy
+                </Link>
+              </div>
             </div>
           </footer>
         </main>
