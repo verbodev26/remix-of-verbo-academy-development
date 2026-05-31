@@ -11,6 +11,7 @@ function StudentLayout() {
     <RoleGuard allow="student">
       <div className="min-h-screen" style={{ backgroundColor: "#f4f6f8" }}>
         <TopNav
+          variant="dark"
           items={[
             { to: "/student", label: "Dashboard" },
             { to: "/student/sessions", label: "Live Sessions" },
