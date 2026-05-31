@@ -299,12 +299,20 @@ function ReportModal({ session, perf, onClose, onSubmit }: { session: Session; p
                         >
                           {ENTRY_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
                         </select>
-                        <input
-                          value={e.content}
-                          onChange={(ev) => updateEntry(e.id, { content: ev.target.value })}
-                          placeholder={`Entry #${idx + 1} — content or notes…`}
-                          className="h-[42px] flex-1 rounded-lg border border-input bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                        />
+                        <div className="flex flex-1 gap-2">
+                          <input
+                            value={e.term}
+                            onChange={(ev) => updateEntry(e.id, { term: ev.target.value })}
+                            placeholder={ENTRY_PLACEHOLDERS[e.type].term}
+                            className="h-[42px] min-w-0 flex-1 rounded-lg border border-input bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                          />
+                          <input
+                            value={e.explanation}
+                            onChange={(ev) => updateEntry(e.id, { explanation: ev.target.value })}
+                            placeholder={ENTRY_PLACEHOLDERS[e.type].explanation}
+                            className="h-[42px] min-w-0 flex-1 rounded-lg border border-input bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                          />
+                        </div>
                         <button
                           onClick={() => removeEntry(e.id)}
                           disabled={entries.length <= 1}
