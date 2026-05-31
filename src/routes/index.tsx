@@ -257,14 +257,16 @@ function Pillar({
 }) {
   return (
     <div
-      className="verbo-feature-card verbo-fade-up rounded-2xl p-8"
+      className="verbo-glass-card verbo-fade-up group relative rounded-2xl p-8"
       style={{ animationDelay: delay }}
     >
-      <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-[#01304a] text-white">
+      <div className="relative flex h-11 w-11 items-center justify-center rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm">
         {icon}
       </div>
-      <h3 className="mt-5 text-base font-semibold tracking-tight text-foreground text-slate-50">{title}</h3>
-      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{children}</p>
+      <h3 className="relative mt-5 text-base font-semibold tracking-tight text-white">{title}</h3>
+      <p className="relative mt-2 text-sm leading-relaxed" style={{ color: "#cbd5e1" }}>
+        {children}
+      </p>
     </div>
   );
 }
