@@ -205,9 +205,12 @@ function ReportModal({ session, perf, onClose, onSubmit }: { session: Session; p
 
   const bgFor = (opt: SessionStatus) => opt === "completed" ? "#22c55e" : opt === "absent" ? "#ef4444" : "#f38934";
 
-  const filledCount = entries.filter((e) => e.content.trim().length > 0).length;
+  const filledCount = entries.filter((e) => e.term.trim().length > 0 && e.explanation.trim().length > 0).length;
   const isAbsent = status === "absent";
-  const canSubmit = isAbsent ? notes.trim().length > 0 : filledCount >= MIN_ENTRIES && filledCount <= MAX_ENTRIES;
+  const notesFilled = notes.trim().length > 0;
+  const canSubmit = isAbsent
+    ? notesFilled
+    : filledCount >= MIN_ENTRIES && filledCount <= MAX_ENTRIES && notesFilled;
 
   const addEntry = () => setEntries((p) => (p.length >= MAX_ENTRIES ? p : [...p, makeEntry()]));
   const updateEntry = (id: string, patch: Partial<Entry>) =>
