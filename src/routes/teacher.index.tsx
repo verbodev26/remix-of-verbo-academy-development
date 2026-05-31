@@ -179,13 +179,21 @@ function formatCountdown(ms: number) {
 }
 
 type EntryType = "New word" | "Pronunciation" | "Mistake" | "Tip" | "Other";
-interface Entry { id: string; type: EntryType; content: string }
+interface Entry { id: string; type: EntryType; term: string; explanation: string }
 const ENTRY_TYPES: EntryType[] = ["New word", "Pronunciation", "Mistake", "Tip", "Other"];
 const MIN_ENTRIES = 6;
 const MAX_ENTRIES = 10;
 
+const ENTRY_PLACEHOLDERS: Record<EntryType, { term: string; explanation: string }> = {
+  "New word": { term: "New word…", explanation: "Definition or example of use…" },
+  "Mistake": { term: "Student's mistake…", explanation: "Correct form…" },
+  "Pronunciation": { term: "Target word/phrase…", explanation: "Phonetic guide or sound correction…" },
+  "Tip": { term: "Focus area…", explanation: "Practical advice…" },
+  "Other": { term: "Topic/Concept…", explanation: "Additional notes…" },
+};
+
 function makeEntry(): Entry {
-  return { id: Math.random().toString(36).slice(2), type: "New word", content: "" };
+  return { id: Math.random().toString(36).slice(2), type: "New word", term: "", explanation: "" };
 }
 
 function ReportModal({ session, perf, onClose, onSubmit }: { session: Session; perf: PerformanceRating; onClose: () => void; onSubmit: (id: string, status: SessionStatus, perf: PerformanceRating) => void }) {
@@ -197,9 +205,12 @@ function ReportModal({ session, perf, onClose, onSubmit }: { session: Session; p
 
   const bgFor = (opt: SessionStatus) => opt === "completed" ? "#22c55e" : opt === "absent" ? "#ef4444" : "#f38934";
 
-  const filledCount = entries.filter((e) => e.content.trim().length > 0).length;
+  const filledCount = entries.filter((e) => e.term.trim().length > 0 && e.explanation.trim().length > 0).length;
   const isAbsent = status === "absent";
-  const canSubmit = isAbsent ? notes.trim().length > 0 : filledCount >= MIN_ENTRIES && filledCount <= MAX_ENTRIES;
+  const notesFilled = notes.trim().length > 0;
+  const canSubmit = isAbsent
+    ? notesFilled
+    : filledCount >= MIN_ENTRIES && filledCount <= MAX_ENTRIES && notesFilled;
 
   const addEntry = () => setEntries((p) => (p.length >= MAX_ENTRIES ? p : [...p, makeEntry()]));
   const updateEntry = (id: string, patch: Partial<Entry>) =>
@@ -230,7 +241,9 @@ function ReportModal({ session, perf, onClose, onSubmit }: { session: Session; p
             dateLabel={fmt(session.date_time)}
             status={status}
             notes={notes}
-            entries={entries.filter((e) => e.content.trim().length > 0)}
+            entries={entries
+              .filter((e) => e.term.trim().length > 0 && e.explanation.trim().length > 0)
+              .map((e) => ({ id: e.id, type: e.type, content: `${e.term.trim()} — ${e.explanation.trim()}` }))}
             onClose={onClose}
           />
         ) : (
@@ -277,7 +290,7 @@ function ReportModal({ session, perf, onClose, onSubmit }: { session: Session; p
                     </span>
                   </div>
                   <div className="mt-2 space-y-2">
-                    {entries.map((e, idx) => (
+                    {entries.map((e) => (
                       <div key={e.id} className="flex items-start gap-2">
                         <select
                           value={e.type}
@@ -286,12 +299,20 @@ function ReportModal({ session, perf, onClose, onSubmit }: { session: Session; p
                         >
                           {ENTRY_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
                         </select>
-                        <input
-                          value={e.content}
-                          onChange={(ev) => updateEntry(e.id, { content: ev.target.value })}
-                          placeholder={`Entry #${idx + 1} — content or notes…`}
-                          className="h-[42px] flex-1 rounded-lg border border-input bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                        />
+                        <div className="flex flex-1 gap-2">
+                          <input
+                            value={e.term}
+                            onChange={(ev) => updateEntry(e.id, { term: ev.target.value })}
+                            placeholder={ENTRY_PLACEHOLDERS[e.type].term}
+                            className="h-[42px] min-w-0 flex-1 rounded-lg border border-input bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                          />
+                          <input
+                            value={e.explanation}
+                            onChange={(ev) => updateEntry(e.id, { explanation: ev.target.value })}
+                            placeholder={ENTRY_PLACEHOLDERS[e.type].explanation}
+                            className="h-[42px] min-w-0 flex-1 rounded-lg border border-input bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                          />
+                        </div>
                         <button
                           onClick={() => removeEntry(e.id)}
                           disabled={entries.length <= 1}
@@ -312,7 +333,7 @@ function ReportModal({ session, perf, onClose, onSubmit }: { session: Session; p
                 </div>
 
                 <div className="mt-5">
-                  <label className="text-xs font-medium text-foreground">Class notes <span className="text-muted-foreground">(optional)</span></label>
+                  <label className="text-xs font-medium text-foreground">Class notes <span className="text-red-600">*</span> <span className="text-muted-foreground">(required)</span></label>
                   <textarea
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
@@ -327,9 +348,11 @@ function ReportModal({ session, perf, onClose, onSubmit }: { session: Session; p
             <div className="mt-6 flex items-center justify-between gap-2">
               <p className="text-xs text-muted-foreground">
                 {isAbsent
-                  ? "Comments required to submit."
+                  ? (notesFilled ? "Ready to submit." : "Comments required to submit.")
                   : filledCount < MIN_ENTRIES
                   ? `Add ${MIN_ENTRIES - filledCount} more entr${MIN_ENTRIES - filledCount === 1 ? "y" : "ies"} to submit.`
+                  : !notesFilled
+                  ? "Class notes are required to submit."
                   : "Ready to submit."}
               </p>
               <div className="flex gap-2">
@@ -345,7 +368,7 @@ function ReportModal({ session, perf, onClose, onSubmit }: { session: Session; p
 }
 
 function ReportPreview({ studentName, dateLabel, status, notes, entries, onClose }: {
-  studentName: string; dateLabel: string; status: SessionStatus; notes: string; entries: Entry[]; onClose: () => void;
+  studentName: string; dateLabel: string; status: SessionStatus; notes: string; entries: { id: string; type: EntryType; content: string }[]; onClose: () => void;
 }) {
   return (
     <div className="mt-6 space-y-5">
