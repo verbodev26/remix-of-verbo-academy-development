@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Logo } from "@/components/verbo/Logo";
 import { Preloader } from "@/components/verbo/Preloader";
-import { ArrowRight, ShieldCheck, Users, BarChart3 } from "lucide-react";
+import { ArrowRight, CalendarClock, Trophy, Network } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
