@@ -199,7 +199,7 @@ function BoostButton({ slug, compact = false }: { slug: string; compact?: boolea
       }`}
       style={{ background: "#f38934" }}
     >
-      <Zap className={compact ? "h-3 w-3" : "h-3.5 w-3.5"} />
+      <Rocket className={compact ? "h-3 w-3" : "h-3.5 w-3.5"} />
       Boost Skill
     </Link>
   );
