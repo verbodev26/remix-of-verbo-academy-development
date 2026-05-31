@@ -366,7 +366,7 @@ function ReportModal({ session, perf, onClose, onSubmit }: { session: Session; p
 }
 
 function ReportPreview({ studentName, dateLabel, status, notes, entries, onClose }: {
-  studentName: string; dateLabel: string; status: SessionStatus; notes: string; entries: Entry[]; onClose: () => void;
+  studentName: string; dateLabel: string; status: SessionStatus; notes: string; entries: { id: string; type: EntryType; content: string }[]; onClose: () => void;
 }) {
   return (
     <div className="mt-6 space-y-5">
