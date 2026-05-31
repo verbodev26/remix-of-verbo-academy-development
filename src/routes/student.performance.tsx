@@ -124,6 +124,10 @@ function PerformanceView() {
     grammar: baseAverage(performance, "grammar"),
   };
 
+  function isEvaluated(value: unknown): value is number {
+    return typeof value === "number" && !Number.isNaN(value);
+  }
+
   const computedMacros = MACRO_SKILLS.map((m) => {
     const subs = m.subs.map((s) => {
       const { avg, count } = baseAvgs[s.base];
@@ -132,11 +136,16 @@ function PerformanceView() {
       const adjusted = Math.max(0, Math.min(100, base + hashOffset(`${m.key}:${s.name}`)));
       return { ...s, value: adjusted };
     });
-    const ratedValues = subs.filter((s) => s.value !== null).map((s) => s.value as number);
+
+    const ratedValues = subs
+      .map((s) => s.value)
+      .filter(isEvaluated);
+
     const overall =
       ratedValues.length === 0
         ? null
         : Math.round(ratedValues.reduce((a, b) => a + b, 0) / ratedValues.length);
+
     return { ...m, subs, overall };
   });
 
