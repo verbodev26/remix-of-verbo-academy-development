@@ -241,7 +241,9 @@ function ReportModal({ session, perf, onClose, onSubmit }: { session: Session; p
             dateLabel={fmt(session.date_time)}
             status={status}
             notes={notes}
-            entries={entries.filter((e) => e.content.trim().length > 0)}
+            entries={entries
+              .filter((e) => e.term.trim().length > 0 && e.explanation.trim().length > 0)
+              .map((e) => ({ id: e.id, type: e.type, content: `${e.term.trim()} — ${e.explanation.trim()}` }))}
             onClose={onClose}
           />
         ) : (
