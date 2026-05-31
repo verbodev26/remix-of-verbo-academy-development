@@ -179,13 +179,21 @@ function formatCountdown(ms: number) {
 }
 
 type EntryType = "New word" | "Pronunciation" | "Mistake" | "Tip" | "Other";
-interface Entry { id: string; type: EntryType; content: string }
+interface Entry { id: string; type: EntryType; term: string; explanation: string }
 const ENTRY_TYPES: EntryType[] = ["New word", "Pronunciation", "Mistake", "Tip", "Other"];
 const MIN_ENTRIES = 6;
 const MAX_ENTRIES = 10;
 
+const ENTRY_PLACEHOLDERS: Record<EntryType, { term: string; explanation: string }> = {
+  "New word": { term: "New word…", explanation: "Definition or example of use…" },
+  "Mistake": { term: "Student's mistake…", explanation: "Correct form…" },
+  "Pronunciation": { term: "Target word/phrase…", explanation: "Phonetic guide or sound correction…" },
+  "Tip": { term: "Focus area…", explanation: "Practical advice…" },
+  "Other": { term: "Topic/Concept…", explanation: "Additional notes…" },
+};
+
 function makeEntry(): Entry {
-  return { id: Math.random().toString(36).slice(2), type: "New word", content: "" };
+  return { id: Math.random().toString(36).slice(2), type: "New word", term: "", explanation: "" };
 }
 
 function ReportModal({ session, perf, onClose, onSubmit }: { session: Session; perf: PerformanceRating; onClose: () => void; onSubmit: (id: string, status: SessionStatus, perf: PerformanceRating) => void }) {
