@@ -265,7 +265,7 @@ function PreUnitView({ level, unit, onBack, onChange }: { level: Level; unit: Un
       <div className="flex items-start justify-between gap-6">
         <div>
           <div className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">{level.id} · Pre-unit</div>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-foreground text-slate-50">{unit.title}</h1>
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-black">{unit.title}</h1>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
             Watch the introduction video, review the PDF guide, then start the interactive activities.
           </p>
