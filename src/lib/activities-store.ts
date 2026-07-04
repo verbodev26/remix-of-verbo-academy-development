@@ -26,11 +26,14 @@ export interface MatchItem {
   key: string;
 }
 
+export type SessionPhase = "pre" | "post";
+
 export interface Activity {
   id: string;
   unit_id: string;
   name: string;
   type: ExerciseType;
+  session_phase?: SessionPhase; // defaults to "pre" for legacy activities
   // fill_gaps / read_complete
   paragraph?: string;
   answer?: string;
@@ -75,6 +78,11 @@ export function saveActivities(list: Activity[]) { safeWrite(ACTIVITIES_KEY, lis
 export function activitiesForUnit(unitId: string): Activity[] {
   return loadActivities().filter((a) => a.unit_id === unitId);
 }
+
+export function phaseOf(a: Activity): SessionPhase {
+  return a.session_phase ?? "pre";
+}
+
 
 export function addActivity(a: Activity) {
   const list = loadActivities();
