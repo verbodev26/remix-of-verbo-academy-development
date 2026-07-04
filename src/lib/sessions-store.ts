@@ -8,7 +8,10 @@ export type ExtSessionStatus =
   | "rearranged"
   | "completed"
   | "absent"
-  | "delayed";
+  | "delayed"
+  | "cancelled"
+  | "pending_reschedule"
+  | "no_show";
 
 export interface ExtSession extends Omit<Session, "status"> {
   status: ExtSessionStatus;
