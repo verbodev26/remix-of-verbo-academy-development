@@ -81,6 +81,7 @@ export function TopNav({ items, variant = "light" }: { items: NavItem[]; variant
         </div>
       </div>
       {isStudent && <ProfileModal open={profileOpen} onOpenChange={setProfileOpen} />}
+      {isAdmin && <AdminProfileModal open={profileOpen} onOpenChange={setProfileOpen} />}
     </header>
   );
 }
