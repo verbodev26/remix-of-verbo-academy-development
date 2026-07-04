@@ -300,7 +300,7 @@ function Tag({ children, className = "" }: { children: React.ReactNode; classNam
 // ===========================================================================
 // DETAIL MODAL
 // ===========================================================================
-type Tab = "overview" | "kpis" | "availability" | "notes";
+type Tab = "overview" | "kpis" | "availability" | "financial" | "notes";
 
 function TeacherDetailModal({
   teacher: t, teachers, onClose, onPersist, onReassign, onMarkReviewed, onEdit,
