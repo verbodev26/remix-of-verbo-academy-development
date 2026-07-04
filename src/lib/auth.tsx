@@ -5,6 +5,9 @@ interface AuthCtx {
   user: User | null;
   login: (email: string, password: string) => { ok: true; role: Role } | { ok: false; error: string };
   logout: () => void;
+  updateProfile: (
+    updates: { name?: string; currentPassword?: string; newPassword?: string },
+  ) => { ok: true } | { ok: false; error: string };
 }
 
 const Ctx = createContext<AuthCtx | null>(null);
