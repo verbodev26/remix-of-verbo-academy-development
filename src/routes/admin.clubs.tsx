@@ -63,14 +63,6 @@ const STATUS_TONE: Record<TimeStatus, "default" | "success" | "warning" | "dange
   cancelled: "danger",
 };
 
-function assignmentOf(c: Club): AssignmentStatus {
-  return c.teacher_id ? "assigned" : "created";
-}
-
-function teacherName(id?: string) {
-  if (!id) return null;
-  return USERS.find((u) => u.id === id)?.name ?? null;
-}
 
 function formatDate(iso: string) {
   const d = new Date(iso);
