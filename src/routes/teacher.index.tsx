@@ -236,6 +236,15 @@ function TeacherDashboard() {
           onSubmit={handleSubmit}
         />
       )}
+      {planning && (
+        <PlanModal
+          session={planning as ExtSession}
+          existing={plans[planning.id]}
+          levels={levels}
+          onClose={() => setPlanning(null)}
+          onSave={handleSavePlan}
+        />
+      )}
     </div>
   );
 }
