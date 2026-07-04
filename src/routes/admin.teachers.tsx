@@ -547,6 +547,12 @@ function TeacherDetailModal({
             </div>
           )}
 
+          {tab === "financial" && (
+            <FinancialTab t={t} onPersist={onPersist} onAddAdjustment={() => setAddAdjOpen(true)} />
+          )}
+
+
+
           {tab === "notes" && (
             <div>
               <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"><ShieldAlert className="h-3.5 w-3.5" /> Internal notes (admin only)</p>
