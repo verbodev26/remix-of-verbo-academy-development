@@ -16,6 +16,7 @@ import {
   Plus, X, Eye, EyeOff, KeyRound, Mail, Building2, CalendarDays, GraduationCap,
   Users, Briefcase, Compass, Globe, Crown, Copy, Check, Snowflake, Ban, Play, Unlock,
   Sparkles, Wand2, Pencil, Video, Repeat, Clock, CreditCard, ShieldAlert,
+  Search, ArrowUpDown, Filter,
 } from "lucide-react";
 
 export const Route = createFileRoute("/admin/students")({ component: Page });
