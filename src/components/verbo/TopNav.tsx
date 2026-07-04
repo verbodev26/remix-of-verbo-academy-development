@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { LogOut } from "lucide-react";
 import { useState } from "react";
 import { ProfileModal } from "./ProfileModal";
+import { AdminProfileModal } from "./AdminProfileModal";
 import { useAvatar } from "@/lib/avatar-store";
 
 interface NavItem { to: string; label: string }
@@ -13,8 +14,11 @@ export function TopNav({ items, variant = "light" }: { items: NavItem[]; variant
   const navigate = useNavigate();
   const [profileOpen, setProfileOpen] = useState(false);
   const isStudent = user?.role === "student";
+  const isAdmin = user?.role === "admin";
+  const canEditProfile = isStudent || isAdmin;
   const avatar = useAvatar(user?.id);
   const isDark = variant === "dark";
+
 
   return (
     <header
@@ -48,13 +52,13 @@ export function TopNav({ items, variant = "light" }: { items: NavItem[]; variant
           </div>
           <button
             type="button"
-            onClick={() => isStudent && setProfileOpen(true)}
-            disabled={!isStudent}
+            onClick={() => canEditProfile && setProfileOpen(true)}
+            disabled={!canEditProfile}
             className={`flex h-9 w-9 overflow-hidden items-center justify-center rounded-full text-sm font-bold text-white transition-all ${
               isDark
                 ? "bg-[#f38934]"
                 : "bg-secondary text-foreground"
-            } ${isStudent ? "cursor-pointer hover:ring-2 hover:ring-[#f38934]/60 hover:shadow-md" : ""}`}
+            } ${canEditProfile ? "cursor-pointer hover:ring-2 hover:ring-[#f38934]/60 hover:shadow-md" : ""}`}
             aria-label="Open profile"
           >
             {avatar ? (
@@ -77,6 +81,7 @@ export function TopNav({ items, variant = "light" }: { items: NavItem[]; variant
         </div>
       </div>
       {isStudent && <ProfileModal open={profileOpen} onOpenChange={setProfileOpen} />}
+      {isAdmin && <AdminProfileModal open={profileOpen} onOpenChange={setProfileOpen} />}
     </header>
   );
 }
