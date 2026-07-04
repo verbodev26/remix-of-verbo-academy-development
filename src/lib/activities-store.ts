@@ -79,6 +79,11 @@ export function activitiesForUnit(unitId: string): Activity[] {
   return loadActivities().filter((a) => a.unit_id === unitId);
 }
 
+export function phaseOf(a: Activity): SessionPhase {
+  return a.session_phase ?? "pre";
+}
+
+
 export function addActivity(a: Activity) {
   const list = loadActivities();
   list.push(a);
