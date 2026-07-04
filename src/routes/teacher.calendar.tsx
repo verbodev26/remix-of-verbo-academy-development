@@ -20,6 +20,7 @@ import {
   type ExtSession,
   type ExtSessionStatus,
 } from "@/lib/sessions-store";
+import { PlanModal } from "@/components/verbo/PlanModal";
 
 export const Route = createFileRoute("/teacher/calendar")({ component: Page });
 
