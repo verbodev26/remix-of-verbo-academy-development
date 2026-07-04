@@ -26,10 +26,22 @@ function TeacherDashboard() {
   const [sessions, setSessions] = useState<LocalSession[]>(() => SESSIONS.map((s) => ({ ...s })));
   const [evaluating, setEvaluating] = useState<Session | null>(null);
   const [editing, setEditing] = useState<{ session: Session; perf: PerformanceRating } | null>(null);
+  const [planning, setPlanning] = useState<Session | null>(null);
+  const [levels, setLevels] = useState<Level[]>([]);
+  const [plans, setPlans] = useState<Record<string, LessonPlan>>({});
 
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000 * 30);
     return () => clearInterval(t);
+  }, []);
+
+  // Hydrate levels + lesson plans on the client only (avoids SSR mismatch)
+  useEffect(() => {
+    setLevels(loadLevels());
+    setPlans(loadLessonPlans());
+    const u1 = subscribeLevels(() => setLevels(loadLevels()));
+    const u2 = subscribeLessonPlans(() => setPlans(loadLessonPlans()));
+    return () => { u1(); u2(); };
   }, []);
 
   // Auto-lock overdue sessions: flip to completed-without-report
