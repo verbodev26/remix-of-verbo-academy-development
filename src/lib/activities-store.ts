@@ -26,11 +26,14 @@ export interface MatchItem {
   key: string;
 }
 
+export type SessionPhase = "pre" | "post";
+
 export interface Activity {
   id: string;
   unit_id: string;
   name: string;
   type: ExerciseType;
+  session_phase?: SessionPhase; // defaults to "pre" for legacy activities
   // fill_gaps / read_complete
   paragraph?: string;
   answer?: string;
