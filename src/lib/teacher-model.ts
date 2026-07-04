@@ -8,6 +8,61 @@ import { PRODUCTS, type ProductId } from "./student-model";
 export const DEFAULT_HOURLY_RATE = 120; // MXN / hour
 export const AVAILABILITY_CHANGE_DAYS = 30; // teacher may request a change once per N days
 
+// ----------------------------------------------------------------------------
+// Financial / payroll model
+// ----------------------------------------------------------------------------
+export type PaymentFrequency = "weekly" | "biweekly" | "monthly";
+
+export const PAYMENT_FREQUENCIES: { id: PaymentFrequency; label: string; count: number }[] = [
+  { id: "weekly", label: "Weekly", count: 4 },
+  { id: "biweekly", label: "Biweekly", count: 2 },
+  { id: "monthly", label: "Monthly", count: 1 },
+];
+
+export function paymentFrequency(t: User): PaymentFrequency {
+  return (t.payment_frequency as PaymentFrequency) ?? "monthly";
+}
+
+function isoDate(year: number, month: number, day: number): string {
+  const mm = String(month + 1).padStart(2, "0");
+  const dd = String(day).padStart(2, "0");
+  return `${year}-${mm}-${dd}`;
+}
+
+// Evenly-spread default pay dates within the current month for a frequency.
+export function generatePaymentDates(freq: PaymentFrequency, base = new Date()): string[] {
+  const year = base.getFullYear();
+  const month = base.getMonth();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  if (freq === "monthly") return [isoDate(year, month, daysInMonth)];
+  if (freq === "biweekly") return [isoDate(year, month, 15), isoDate(year, month, daysInMonth)];
+  return [7, 14, 21, Math.min(28, daysInMonth)].map((d) => isoDate(year, month, d));
+}
+
+export function defaultPaymentRecords(freq: PaymentFrequency, base = new Date()) {
+  return generatePaymentDates(freq, base).map((date, i) => ({
+    id: `pay-${i}-${date}`,
+    date,
+    status: "pending" as const,
+  }));
+}
+
+export function hoursWorked(t: User): number {
+  return typeof t.hours_cycle === "number" ? t.hours_cycle : (t.hours_month ?? 0);
+}
+
+export function adjustmentsTotal(t: User): number {
+  return (t.adjustments ?? []).reduce((sum, a) => sum + a.amount, 0);
+}
+
+export function financialSummary(t: User) {
+  const rate = t.hourly_rate ?? DEFAULT_HOURLY_RATE;
+  const hours = hoursWorked(t);
+  const subtotal = hours * rate;
+  const adj = adjustmentsTotal(t);
+  return { rate, hours, subtotal, adjustments: adj, total: subtotal + adj };
+}
+
 export type TeacherStatus = "active" | "frozen" | "removed";
 export type QualifiedProduct = ProductId; // enterprise | go | international | vip
 
