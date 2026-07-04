@@ -52,7 +52,18 @@ function Page() {
     forceTick((n) => n + 1);
   }, []);
 
+  // Deep-link from the Admin Overview snapshot — open the rating chart.
+  useEffect(() => {
+    if (focusTeacher) {
+      const t = USERS.find((u) => u.id === focusTeacher && u.role === "teacher");
+      if (t) setChartFor(t);
+      navigate({ search: {}, replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusTeacher]);
+
   const teachers = USERS.filter((u) => u.role === "teacher");
+
 
   const rows = useMemo(
     () => teachers.map((t) => ({
