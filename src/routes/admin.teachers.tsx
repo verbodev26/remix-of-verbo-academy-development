@@ -6,7 +6,7 @@ import {
   QUALIFIED_PRODUCTS, DEFAULT_HOURLY_RATE, AVAILABILITY_CHANGE_DAYS,
   teacherStatus, qualifiedProducts, assignedStudents, activeStudents,
   teachersForProduct, avgRating, flaggedReviews, pendingReviews,
-  PAYMENT_FREQUENCIES, paymentFrequency, defaultPaymentRecords, financialSummary, hoursWorked,
+  PAYMENT_FREQUENCIES, paymentFrequency, defaultPaymentRecords, financialSummary,
   type QualifiedProduct, type TeacherStatus, type PaymentFrequency,
 } from "@/lib/teacher-model";
 import { useAvatar } from "@/lib/avatar-store";
