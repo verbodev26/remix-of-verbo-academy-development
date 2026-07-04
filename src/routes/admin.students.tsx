@@ -20,7 +20,13 @@ import {
   Search, ArrowUpDown, Filter,
 } from "lucide-react";
 
-export const Route = createFileRoute("/admin/students")({ component: Page });
+export const Route = createFileRoute("/admin/students")({
+  component: Page,
+  validateSearch: (s: Record<string, unknown>): { new?: boolean; student?: string } => ({
+    new: s.new === true || s.new === "true" || s.new === "1",
+    student: typeof s.student === "string" ? s.student : undefined,
+  }),
+});
 
 // ---------------------------------------------------------------------------
 // Persistence (localStorage — swap for Lovable Cloud later)
