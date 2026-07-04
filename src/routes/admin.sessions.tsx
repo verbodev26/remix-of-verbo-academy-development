@@ -549,6 +549,7 @@ function SessionRow({
   const [date, setDate] = useState(dateInput);
   const [teacherId, setTeacherId] = useState(session.teacher_id);
   const [status, setStatus] = useState<ExtSessionStatus>(session.status);
+  const [absentCause, setAbsentCause] = useState<"student" | "teacher">(session.absent_cause ?? "student");
 
   const renderStatus = (s: ExtSessionStatus) => {
     const meta = STATUS_META[s] ?? STATUS_META.scheduled;
