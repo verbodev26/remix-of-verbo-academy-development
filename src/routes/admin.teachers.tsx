@@ -643,11 +643,26 @@ function cycleLabel(base = new Date()) {
 
 function FinancialTab({ t, onPersist, onAddAdjustment }: { t: User; onPersist: (u: User) => void; onAddAdjustment: () => void }) {
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [bonusAmount, setBonusAmount] = useState("");
+  const bonusEligible = isBonusEligible(t);
   const summary = financialSummary(t);
   const records = t.payment_records && t.payment_records.length > 0
     ? t.payment_records
     : defaultPaymentRecords(paymentFrequency(t));
   const adjustments = t.adjustments ?? [];
+
+  const addBonusAdjustment = () => {
+    const amount = Number(bonusAmount);
+    if (!Number.isFinite(amount) || amount <= 0) return;
+    const adj = {
+      id: `adj-${Date.now()}`,
+      date: new Date().toISOString(),
+      amount,
+      reason: "Bono por cumplimiento de KPIs",
+    };
+    onPersist({ ...t, adjustments: [...(t.adjustments ?? []), adj] });
+    setBonusAmount("");
+  };
 
   const ensureRecords = () => {
     if (!t.payment_records || t.payment_records.length === 0) {
