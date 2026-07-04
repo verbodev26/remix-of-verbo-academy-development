@@ -90,54 +90,100 @@ function TeacherDashboard() {
         <MetricCard label="Avg rating" value="4.7★" sub="last 30 days" />
       </section>
 
-      <section>
-        <SectionTitle>Active & upcoming classes</SectionTitle>
-        <div className="space-y-3">
-          {upcoming.map((s) => {
-            const student = userById(s.student_id);
-            const start = +new Date(s.date_time);
-            const end = start + s.duration_minutes * 60_000;
-            const isActive = now >= start && now <= end;
-            const sessionPassed = now >= start;
-            const deadline = end + REPORT_WINDOW_MS;
-            const msLeft = deadline - now;
-            const overdue = sessionPassed && msLeft <= 0;
-            const showReportControls = sessionPassed;
-
-            return (
-              <Card key={s.id} className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <div className="flex items-start gap-4">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-secondary"><CalendarClock className="h-5 w-5" /></div>
-                  <div>
-                    <div className="text-sm font-medium text-foreground">{student?.name} <span className="text-muted-foreground">· {student?.current_level}</span></div>
-                    <div className="text-xs text-muted-foreground">{fmt(s.date_time)} · {s.duration_minutes} min</div>
+      <section className="grid gap-6 md:grid-cols-2">
+        {/* Left — Plan your upcoming Sessions */}
+        <div>
+          <SectionTitle>Plan your upcoming Sessions</SectionTitle>
+          <div className="space-y-3">
+            {toPlan.length === 0 && (
+              <Card><p className="text-sm text-muted-foreground">No sessions to plan right now.</p></Card>
+            )}
+            {toPlan.map((s) => {
+              const student = userById(s.student_id);
+              const planned = Boolean(plans[s.id]);
+              return (
+                <Card key={s.id} className="flex items-center justify-between gap-3 !p-4">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-secondary"><CalendarClock className="h-4 w-4" /></div>
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-medium text-foreground">{student?.name} <span className="text-muted-foreground">· {student?.current_level}</span></div>
+                      <div className="text-xs text-muted-foreground">{fmt(s.date_time)}</div>
+                    </div>
                   </div>
-                </div>
-                <div className="flex flex-col items-end gap-2 md:flex-row md:items-center">
-                  {isActive && <Pill tone="success">Live now</Pill>}
-                  {showReportControls && !overdue && (
-                    <span className="text-xs font-medium text-muted-foreground tabular-nums">
-                      Time left to submit: {formatCountdown(msLeft)}
-                    </span>
-                  )}
-                  {showReportControls && (
-                    overdue ? (
-                      <button
-                        disabled
-                        className="inline-flex items-center gap-2 rounded-md border border-border bg-muted px-4 py-2 text-sm font-medium text-muted-foreground cursor-not-allowed"
+                  <div className="flex shrink-0 items-center gap-2">
+                    {planned && <Pill tone="success">Planned</Pill>}
+                    <GhostButton onClick={() => setPlanning(s)}>{planned ? "Review" : "Plan"}</GhostButton>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Right — Complete your sessions */}
+        <div>
+          <SectionTitle>Complete your sessions</SectionTitle>
+          <div className="space-y-3">
+            {upcoming.length === 0 && (
+              <Card><p className="text-sm text-muted-foreground">No sessions awaiting completion.</p></Card>
+            )}
+            {upcoming.map((s) => {
+              const student = userById(s.student_id);
+              const start = +new Date(s.date_time);
+              const end = start + s.duration_minutes * 60_000;
+              const isActive = now >= start && now <= end;
+              const sessionPassed = now >= start;
+              const deadline = end + REPORT_WINDOW_MS;
+              const msLeft = deadline - now;
+              const overdue = sessionPassed && msLeft <= 0;
+              const showReportControls = sessionPassed;
+
+              return (
+                <Card key={s.id} className="flex flex-col gap-3 !p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-secondary"><CalendarClock className="h-4 w-4" /></div>
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-medium text-foreground">{student?.name} <span className="text-muted-foreground">· {student?.current_level}</span></div>
+                      <div className="text-xs text-muted-foreground">{fmt(s.date_time)} · {s.duration_minutes} min</div>
+                    </div>
+                    {isActive && <Pill tone="success">Live now</Pill>}
+                  </div>
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    {showReportControls && !overdue && (
+                      <span className="mr-auto text-xs font-medium text-muted-foreground tabular-nums">
+                        Time left: {formatCountdown(msLeft)}
+                      </span>
+                    )}
+                    {isActive && s.teams_link && (
+                      <a
+                        href={s.teams_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-white shadow-sm transition-opacity hover:opacity-90"
+                        style={{ backgroundColor: "#16a34a" }}
                       >
-                        <Lock className="h-4 w-4" /> Overdue (Locked)
-                      </button>
-                    ) : (
-                      <PrimaryButton onClick={() => setEvaluating(s)}>
-                        <FileEdit className="h-4 w-4" /> Fill session report
-                      </PrimaryButton>
-                    )
-                  )}
-                </div>
-              </Card>
-            );
-          })}
+                        <Video className="h-4 w-4" /> Join Live Session
+                      </a>
+                    )}
+                    {showReportControls && (
+                      overdue ? (
+                        <button
+                          disabled
+                          className="inline-flex items-center gap-2 rounded-md border border-border bg-muted px-3 py-2 text-sm font-medium text-muted-foreground cursor-not-allowed"
+                        >
+                          <Lock className="h-4 w-4" /> Overdue (Locked)
+                        </button>
+                      ) : (
+                        <PrimaryButton onClick={() => setEvaluating(s)}>
+                          <FileEdit className="h-4 w-4" /> Fill session report
+                        </PrimaryButton>
+                      )
+                    )}
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
         </div>
       </section>
 
