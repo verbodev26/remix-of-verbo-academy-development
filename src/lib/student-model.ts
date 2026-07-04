@@ -4,7 +4,7 @@
 // Everything here is meant to be easy to edit once the real catalog lands.
 // ============================================================================
 
-export type ProductId = "enterprise" | "go" | "international";
+export type ProductId = "enterprise" | "go" | "international" | "vip";
 export type AccessPlanId = "Core" | "Advance" | "Elite" | "Signature";
 export type StudentStatus = "active" | "suspended" | "frozen";
 
@@ -18,7 +18,7 @@ export const MAX_INSIGHT_STRIKES = 3;
 export interface ProductDef {
   id: ProductId;
   name: string;
-  icon: "briefcase" | "compass" | "globe";
+  icon: "briefcase" | "compass" | "globe" | "crown";
   blurb: string;
   hasFocus: boolean;
   defaultAccessPlan?: AccessPlanId; // auto-selected (still editable)
@@ -53,6 +53,15 @@ export const PRODUCTS: ProductDef[] = [
     hasFocus: true,
     defaultAccessPlan: "Advance",
     levels: ["Survival Basics", "Travel Ready", "Social Fluency", "Full Command"],
+  },
+  {
+    id: "vip",
+    name: "VIP",
+    icon: "crown",
+    blurb: "Premium white-glove program with full personalization.",
+    hasFocus: true,
+    defaultAccessPlan: "Signature",
+    levels: ["VIP Foundations", "VIP Momentum", "VIP Mastery", "VIP Signature"],
   },
 ];
 
