@@ -73,10 +73,21 @@ function similarTitle(a: string, b: string) {
 type ViewMode = "list" | "calendar" | "history";
 
 function Page() {
-  const [clubs, setClubs] = useState<Club[]>(SEED);
+  const { new: openNew } = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const [clubs, setClubs] = useState<Club[]>(CLUB_SEED);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Club | null>(null);
   const [view, setView] = useState<ViewMode>("list");
+
+  // Open the create modal when arriving from a Quick Action (?new=1).
+  useEffect(() => {
+    if (openNew) {
+      setEditing(null);
+      setOpen(true);
+      navigate({ search: {}, replace: true });
+    }
+  }, [openNew, navigate]);
 
   const onCreate = () => { setEditing(null); setOpen(true); };
   const onEdit = (c: Club) => { setEditing(c); setOpen(true); };
