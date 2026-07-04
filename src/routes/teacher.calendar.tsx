@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, X, CalendarClock, Lock } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarClock } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { SESSIONS, userById } from "@/lib/mock-data";
 import { Card, GhostButton, PrimaryButton, SectionTitle } from "@/components/verbo/ui";
