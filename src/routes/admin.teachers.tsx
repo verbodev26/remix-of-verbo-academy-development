@@ -613,7 +613,222 @@ function TeacherDetailModal({
           </div>
         )}
       </div>
+
+      {addAdjOpen && (
+        <AddAdjustmentModal
+          onClose={() => setAddAdjOpen(false)}
+          onSave={(amount, reason) => {
+            const adj = { id: `adj-${Date.now()}`, date: new Date().toISOString(), amount, reason };
+            onPersist({ ...t, adjustments: [...(t.adjustments ?? []), adj] });
+            setAddAdjOpen(false);
+          }}
+        />
+      )}
     </Overlay>
+  );
+}
+
+// ===========================================================================
+// FINANCIAL TAB
+// ===========================================================================
+function money(n: number) {
+  const sign = n < 0 ? "-" : "";
+  return `${sign}$${Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function cycleLabel(base = new Date()) {
+  return base.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+}
+
+function FinancialTab({ t, onPersist, onAddAdjustment }: { t: User; onPersist: (u: User) => void; onAddAdjustment: () => void }) {
+  const summary = financialSummary(t);
+  const records = t.payment_records && t.payment_records.length > 0
+    ? t.payment_records
+    : defaultPaymentRecords(paymentFrequency(t));
+  const adjustments = t.adjustments ?? [];
+
+  const ensureRecords = () => {
+    if (!t.payment_records || t.payment_records.length === 0) {
+      onPersist({ ...t, payment_records: records });
+    }
+  };
+
+  const updateRecord = (id: string, patch: Partial<{ date: string; status: "pending" | "paid" }>) => {
+    const next = records.map((r) => (r.id === id ? { ...r, ...patch } : r));
+    onPersist({ ...t, payment_records: next });
+  };
+
+  const generatePDF = async () => {
+    const { default: jsPDF } = await import("jspdf");
+    const autoTable = (await import("jspdf-autotable")).default;
+    const doc = new jsPDF();
+    const period = cycleLabel();
+
+    doc.setFontSize(18);
+    doc.text("Payroll Report", 14, 20);
+    doc.setFontSize(11);
+    doc.setTextColor(90);
+    doc.text(`Teacher: ${t.name}`, 14, 30);
+    doc.text(`Email: ${t.email}`, 14, 36);
+    doc.text(`Cycle: ${period}`, 14, 42);
+    doc.text(`Payment frequency: ${paymentFrequency(t)}`, 14, 48);
+
+    autoTable(doc, {
+      startY: 56,
+      head: [["Concept", "Value"]],
+      body: [
+        ["Hours worked (this cycle)", `${summary.hours} h`],
+        ["Hourly rate", money(summary.rate)],
+        ["Subtotal", money(summary.subtotal)],
+      ],
+      theme: "grid",
+      headStyles: { fillColor: [2, 70, 107] },
+    });
+
+    let y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
+    doc.setFontSize(13);
+    doc.setTextColor(0);
+    doc.text("Adjustments", 14, y);
+    autoTable(doc, {
+      startY: y + 4,
+      head: [["Date", "Amount (MXN)", "Reason"]],
+      body: adjustments.length
+        ? adjustments.map((a) => [new Date(a.date).toLocaleDateString(), money(a.amount), a.reason])
+        : [["—", "—", "No adjustments applied"]],
+      theme: "grid",
+      headStyles: { fillColor: [2, 70, 107] },
+    });
+
+    y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 14;
+    doc.setFontSize(15);
+    doc.text(`Total to Pay: ${money(summary.total)} MXN`, 14, y);
+
+    doc.save(`payroll-${t.name.replace(/\s+/g, "-").toLowerCase()}-${period.replace(/\s+/g, "-").toLowerCase()}.pdf`);
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Summary */}
+      <div>
+        <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Cycle summary · {cycleLabel()}</div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <BigStat label="Hours worked (this cycle)" value={`${summary.hours} h`} />
+          <BigStat label="Hourly rate" value={money(summary.rate)} />
+          <BigStat label="Subtotal" value={money(summary.subtotal)} />
+        </div>
+      </div>
+
+      {/* Payment dates */}
+      <div>
+        <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          <CalendarClock className="h-3.5 w-3.5" /> Payment dates ({paymentFrequency(t)})
+        </div>
+        <div className="space-y-2">
+          {records.map((r) => (
+            <div key={r.id} className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background px-3 py-2.5">
+              <input
+                type="date"
+                value={r.date.slice(0, 10)}
+                onChange={(e) => { ensureRecords(); updateRecord(r.id, { date: e.target.value }); }}
+                className="rounded-lg border border-input bg-background px-2.5 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+              <button
+                onClick={() => { ensureRecords(); updateRecord(r.id, { status: r.status === "paid" ? "pending" : "paid" }); }}
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition ${r.status === "paid" ? "bg-success/15 text-success" : "bg-amber-500/15 text-amber-600"}`}
+              >
+                <span className={`h-2 w-2 rounded-full ${r.status === "paid" ? "bg-success" : "bg-amber-500"}`} />
+                {r.status === "paid" ? "Paid" : "Pending"}
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Adjustments */}
+      <div>
+        <div className="mb-2 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <CircleDollarSign className="h-3.5 w-3.5" /> Manual adjustments
+          </div>
+          <GhostBtn onClick={onAddAdjustment}><Plus className="h-3.5 w-3.5" /> Add adjustment</GhostBtn>
+        </div>
+        {adjustments.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No adjustments applied.</p>
+        ) : (
+          <div className="overflow-hidden rounded-lg border border-border">
+            <table className="w-full text-sm">
+              <thead className="bg-secondary/50 text-[10.5px] uppercase tracking-wider text-muted-foreground">
+                <tr>
+                  <th className="px-3 py-2 text-left font-semibold">Date</th>
+                  <th className="px-3 py-2 text-right font-semibold">Amount</th>
+                  <th className="px-3 py-2 text-left font-semibold">Reason</th>
+                </tr>
+              </thead>
+              <tbody>
+                {adjustments.map((a) => (
+                  <tr key={a.id} className="border-t border-border">
+                    <td className="whitespace-nowrap px-3 py-2 text-muted-foreground">{new Date(a.date).toLocaleDateString()}</td>
+                    <td className={`whitespace-nowrap px-3 py-2 text-right font-semibold ${a.amount < 0 ? "text-destructive" : "text-success"}`}>{money(a.amount)}</td>
+                    <td className="px-3 py-2 text-foreground">{a.reason}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Total */}
+      <div className="rounded-xl border border-border bg-secondary/30 p-5 text-center">
+        <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Total to pay</div>
+        <div className="mt-1 text-4xl font-bold tracking-tight text-foreground">{money(summary.total)}</div>
+        <div className="mt-0.5 text-xs text-muted-foreground">MXN · subtotal {money(summary.subtotal)} {summary.adjustments >= 0 ? "+" : "−"} {money(Math.abs(summary.adjustments))} adjustments</div>
+      </div>
+
+      <div className="flex justify-end">
+        <PrimaryBtn onClick={generatePDF}><FileDown className="h-3.5 w-3.5" /> Generate PDF report</PrimaryBtn>
+      </div>
+    </div>
+  );
+}
+
+// ===========================================================================
+// ADD ADJUSTMENT MODAL (stacked over teacher detail)
+// ===========================================================================
+function AddAdjustmentModal({ onClose, onSave }: { onClose: () => void; onSave: (amount: number, reason: string) => void }) {
+  const [amount, setAmount] = useState("");
+  const [reason, setReason] = useState("");
+  const num = Number(amount);
+  const valid = amount.trim() !== "" && !Number.isNaN(num) && num !== 0 && reason.trim() !== "";
+
+  return (
+    <div onClick={onClose} className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md overflow-hidden rounded-2xl bg-card shadow-floating">
+        <div className="flex items-start justify-between border-b border-border px-6 py-5" style={{ background: "linear-gradient(135deg, #01304a 0%, #02466b 100%)" }}>
+          <div>
+            <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/60">Financial</div>
+            <h2 className="mt-1 text-lg font-semibold tracking-tight text-white">Add adjustment</h2>
+          </div>
+          <button onClick={onClose} aria-label="Close" className="rounded-md p-1 text-white/70 transition-colors hover:bg-white/10 hover:text-white"><X className="h-4 w-4" /></button>
+        </div>
+        <div className="space-y-4 px-6 py-5">
+          <Field label="Amount (MXN)">
+            <div className="flex items-center rounded-lg border border-input bg-background">
+              <span className="pl-3 text-sm text-muted-foreground">$</span>
+              <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="e.g. 500 or -200" className="w-full bg-transparent px-2 py-2 text-sm text-foreground focus:outline-none" />
+            </div>
+            <p className="mt-1 text-[10.5px] text-muted-foreground">Usa un número positivo para bonos, negativo para descuentos.</p>
+          </Field>
+          <Field label="Reason">
+            <textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={4} placeholder="Motivo del ajuste…" className={inputCls} />
+          </Field>
+        </div>
+        <div className="flex items-center justify-end gap-2 border-t border-border bg-secondary/30 px-6 py-4">
+          <GhostBtn onClick={onClose}>Cancel</GhostBtn>
+          <PrimaryBtn onClick={() => onSave(num, reason.trim())} disabled={!valid}>Save</PrimaryBtn>
+        </div>
+      </div>
+    </div>
   );
 }
 
