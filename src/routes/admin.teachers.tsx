@@ -6,13 +6,14 @@ import {
   QUALIFIED_PRODUCTS, DEFAULT_HOURLY_RATE, AVAILABILITY_CHANGE_DAYS,
   teacherStatus, qualifiedProducts, assignedStudents, activeStudents,
   teachersForProduct, avgRating, flaggedReviews, pendingReviews,
-  type QualifiedProduct, type TeacherStatus,
+  PAYMENT_FREQUENCIES, paymentFrequency, defaultPaymentRecords, financialSummary, hoursWorked,
+  type QualifiedProduct, type TeacherStatus, type PaymentFrequency,
 } from "@/lib/teacher-model";
 import { useAvatar } from "@/lib/avatar-store";
 import {
   Plus, X, Eye, EyeOff, Star, Users, Clock, KeyRound, Snowflake, Ban, Play,
   Pencil, Search, Filter, ArrowUpDown, Check, AlertTriangle, Mail, ShieldAlert,
-  CheckCircle2, CalendarClock, ChevronRight, UserX,
+  CheckCircle2, CalendarClock, ChevronRight, UserX, Wallet, FileDown, CircleDollarSign,
 } from "lucide-react";
 
 export const Route = createFileRoute("/admin/teachers")({ component: Page });
