@@ -514,7 +514,6 @@ function StudentSessionsModal({
                   editing={editingId === s.id}
                   onEdit={() => setEditingId(s.id)}
                   onCancelEdit={() => setEditingId(null)}
-                  onDelete={() => removeSession(s.id)}
                   onSubmit={(patch, rescheduled) => {
                     updateSession(s.id, patch, rescheduled);
                     setEditingId(null);
