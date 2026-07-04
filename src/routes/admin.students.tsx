@@ -50,7 +50,7 @@ const LEVEL_OPTIONS = [
   { value: "C2", label: "C2 — Mastery" },
 ];
 
-const PRODUCT_ICON = { briefcase: Briefcase, compass: Compass, globe: Globe } as const;
+const PRODUCT_ICON = { briefcase: Briefcase, compass: Compass, globe: Globe, crown: Crown } as const;
 
 function initials(name: string) {
   return name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
