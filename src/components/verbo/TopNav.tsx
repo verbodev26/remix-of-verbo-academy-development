@@ -52,13 +52,13 @@ export function TopNav({ items, variant = "light" }: { items: NavItem[]; variant
           </div>
           <button
             type="button"
-            onClick={() => isStudent && setProfileOpen(true)}
-            disabled={!isStudent}
+            onClick={() => canEditProfile && setProfileOpen(true)}
+            disabled={!canEditProfile}
             className={`flex h-9 w-9 overflow-hidden items-center justify-center rounded-full text-sm font-bold text-white transition-all ${
               isDark
                 ? "bg-[#f38934]"
                 : "bg-secondary text-foreground"
-            } ${isStudent ? "cursor-pointer hover:ring-2 hover:ring-[#f38934]/60 hover:shadow-md" : ""}`}
+            } ${canEditProfile ? "cursor-pointer hover:ring-2 hover:ring-[#f38934]/60 hover:shadow-md" : ""}`}
             aria-label="Open profile"
           >
             {avatar ? (
