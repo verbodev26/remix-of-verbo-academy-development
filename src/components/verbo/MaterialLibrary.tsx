@@ -124,7 +124,7 @@ export function MaterialLibrary({ items, title = "Resources" }: { items: StoredM
 
       {!category ? (
         <>
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-50">{title}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">{title}</h1>
           {categories.length === 0 ? (
             <Card className="text-sm text-muted-foreground">No materials available yet.</Card>
           ) : (
@@ -154,7 +154,7 @@ export function MaterialLibrary({ items, title = "Resources" }: { items: StoredM
       ) : (
         <>
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-semibold tracking-tight text-slate-50">{category}</h1>
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">{category}</h1>
             <GhostButton onClick={() => setCategory(null)}>
               <ArrowLeft className="h-3.5 w-3.5" /> All categories
             </GhostButton>
