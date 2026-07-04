@@ -1,10 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
-import { SESSIONS, studentsOfTeacher, userById, type Session, type SessionStatus } from "@/lib/mock-data";
+import { SESSIONS, studentsOfTeacher, userById, type Session, type SessionStatus, type Level } from "@/lib/mock-data";
 import { Card, GhostButton, MetricCard, Pill, PrimaryButton, SectionTitle } from "@/components/verbo/ui";
-import { CalendarClock, FileEdit, X, Lock, Plus, Trash2, Download, CheckCircle2, Mic, PenLine, Ear, BookOpen, ChevronRight, type LucideIcon } from "lucide-react";
+import { CalendarClock, FileEdit, X, Lock, Plus, Trash2, Download, CheckCircle2, Mic, PenLine, Ear, BookOpen, ChevronRight, Video, type LucideIcon } from "lucide-react";
 import { savePerformance, type PerformanceRating } from "@/lib/performance-store";
+import { PlanModal } from "@/components/verbo/PlanModal";
+import { loadLevels, subscribeLevels } from "@/lib/courses-store";
+import { loadLessonPlans, saveLessonPlan, subscribeLessonPlans, type LessonPlan } from "@/lib/lesson-plans-store";
+import type { ExtSession } from "@/lib/sessions-store";
 
 export const Route = createFileRoute("/teacher/")({ component: TeacherDashboard });
 
