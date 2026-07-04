@@ -14,7 +14,7 @@ import { Card, GhostButton, PrimaryButton } from "@/components/verbo/ui";
 import { useAvatar } from "@/lib/avatar-store";
 import {
   Plus, X, Eye, EyeOff, KeyRound, Mail, Building2, CalendarDays, GraduationCap,
-  Users, Briefcase, Compass, Globe, Copy, Check, Snowflake, Ban, Play, Unlock,
+  Users, Briefcase, Compass, Globe, Crown, Copy, Check, Snowflake, Ban, Play, Unlock,
   Sparkles, Wand2, Pencil, Video, Repeat, Clock, CreditCard, ShieldAlert,
 } from "lucide-react";
 
