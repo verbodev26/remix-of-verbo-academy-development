@@ -18,7 +18,7 @@ export const MAX_INSIGHT_STRIKES = 3;
 export interface ProductDef {
   id: ProductId;
   name: string;
-  icon: "briefcase" | "compass" | "globe";
+  icon: "briefcase" | "compass" | "globe" | "crown";
   blurb: string;
   hasFocus: boolean;
   defaultAccessPlan?: AccessPlanId; // auto-selected (still editable)
