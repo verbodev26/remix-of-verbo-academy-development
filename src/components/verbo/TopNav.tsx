@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { LogOut } from "lucide-react";
 import { useState } from "react";
 import { ProfileModal } from "./ProfileModal";
+import { AdminProfileModal } from "./AdminProfileModal";
 import { useAvatar } from "@/lib/avatar-store";
 
 interface NavItem { to: string; label: string }
@@ -13,8 +14,11 @@ export function TopNav({ items, variant = "light" }: { items: NavItem[]; variant
   const navigate = useNavigate();
   const [profileOpen, setProfileOpen] = useState(false);
   const isStudent = user?.role === "student";
+  const isAdmin = user?.role === "admin";
+  const canEditProfile = isStudent || isAdmin;
   const avatar = useAvatar(user?.id);
   const isDark = variant === "dark";
+
 
   return (
     <header
