@@ -197,7 +197,10 @@ function BulkScheduler({
   const [days, setDays] = useState<number[]>([1, 3]); // Mon, Wed
 
   const student = students.find((s) => s.id === studentId);
-  const teamsLink = student ? `https://teams.microsoft.com/l/meetup/${student.id}` : "";
+  // Shared source of truth: the student's Video Call Link (Students profile).
+  const teamsLink = student
+    ? (getStudentVideoLink(student.id) || `https://teams.microsoft.com/l/meetup/${student.id}`)
+    : "";
 
   const scheduledForStudent = existing.filter(
     (x) => x.student_id === studentId && !["completed", "absent"].includes(x.status),
@@ -223,23 +226,49 @@ function BulkScheduler({
 
   const overLimit = generated.length > remaining;
 
+  // Summary of dates skipped on the last Assign because the teacher was already
+  // booked with another student at that exact date/time.
+  const [conflictSummary, setConflictSummary] = useState<Date[]>([]);
+
   const toggleDay = (d: number) =>
     setDays((prev) => (prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]));
 
   const assign = () => {
     if (!studentId || !teacherId || generated.length === 0 || overLimit) return;
-    const batch: ExtSession[] = generated.map((dt, i) => ({
-      id: `bulk-${Date.now()}-${i}`,
-      student_id: studentId,
-      teacher_id: teacherId,
-      date_time: dt.toISOString(),
-      duration_minutes: 60,
-      teams_link: teamsLink,
-      status: "scheduled",
-    }));
-    onCreate(batch);
-    setStartDate(""); setEndDate("");
+
+    // Teacher double-booking detection: skip any slot where the selected
+    // teacher already has an active session with a different student.
+    const isBlocking = (st: ExtSessionStatus) =>
+      !["completed", "absent", "cancelled", "no_show"].includes(st);
+    const clear: Date[] = [];
+    const conflicts: Date[] = [];
+    generated.forEach((dt) => {
+      const clash = existing.some(
+        (x) =>
+          x.teacher_id === teacherId &&
+          x.student_id !== studentId &&
+          isBlocking(x.status) &&
+          new Date(x.date_time).getTime() === dt.getTime(),
+      );
+      (clash ? conflicts : clear).push(dt);
+    });
+
+    if (clear.length > 0) {
+      const batch: ExtSession[] = clear.map((dt, i) => ({
+        id: `bulk-${Date.now()}-${i}`,
+        student_id: studentId,
+        teacher_id: teacherId,
+        date_time: dt.toISOString(),
+        duration_minutes: 60,
+        teams_link: teamsLink,
+        status: "scheduled",
+      }));
+      onCreate(batch);
+    }
+    setConflictSummary(conflicts);
+    if (conflicts.length === 0) { setStartDate(""); setEndDate(""); }
   };
+
 
   return (
     <div className="space-y-5">
