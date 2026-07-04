@@ -732,13 +732,13 @@ function FinancialTab({ t, onPersist, onAddAdjustment }: { t: User; onPersist: (
                 onChange={(e) => { ensureRecords(); updateRecord(r.id, { date: e.target.value }); }}
                 className="rounded-lg border border-input bg-background px-2.5 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               />
-              <button
-                onClick={() => { ensureRecords(); updateRecord(r.id, { status: r.status === "paid" ? "pending" : "paid" }); }}
-                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition ${r.status === "paid" ? "bg-success/15 text-success" : "bg-amber-500/15 text-amber-600"}`}
+              <span
+                title="Status updates automatically when the PDF report is generated"
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${r.status === "paid" ? "bg-success/15 text-success" : "bg-amber-500/15 text-amber-600"}`}
               >
                 <span className={`h-2 w-2 rounded-full ${r.status === "paid" ? "bg-success" : "bg-amber-500"}`} />
                 {r.status === "paid" ? "Paid" : "Pending"}
-              </button>
+              </span>
             </div>
           ))}
         </div>
