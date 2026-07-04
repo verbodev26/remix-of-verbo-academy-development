@@ -27,7 +27,12 @@ import {
   User as UserIcon,
 } from "lucide-react";
 
-export const Route = createFileRoute("/admin/clubs")({ component: Page });
+export const Route = createFileRoute("/admin/clubs")({
+  component: Page,
+  validateSearch: (s: Record<string, unknown>): { new?: boolean } => ({
+    new: s.new === true || s.new === "true" || s.new === "1",
+  }),
+});
 
 
 const STATUS_TONE: Record<TimeStatus, "default" | "success" | "warning" | "danger" | "muted"> = {
