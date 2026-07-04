@@ -5,7 +5,6 @@ import {
   loadSessions,
   persistSessions,
   subscribeSessions,
-  statusTone,
   type ExtSession,
   type ExtSessionStatus,
 } from "@/lib/sessions-store";
