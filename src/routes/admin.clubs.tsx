@@ -1,7 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, GhostButton, Pill, PrimaryButton, SectionTitle } from "@/components/verbo/ui";
 import { USERS } from "@/lib/mock-data";
+import {
+  type Club, type ClubType, type TimeStatus,
+  CLUB_SEED, assignmentOf, clubTeacherName as teacherName,
+} from "@/lib/clubs-store";
 import {
   Sparkles,
   BookOpen,
