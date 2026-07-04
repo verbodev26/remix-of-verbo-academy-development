@@ -38,7 +38,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(KEY);
   };
 
-  return <Ctx.Provider value={{ user, login, logout }}>{children}</Ctx.Provider>;
+  const updateProfile: AuthCtx["updateProfile"] = (updates) => {
+    if (!user) return { ok: false, error: "No active session." };
+
+    if (updates.newPassword) {
+      if (updates.currentPassword !== user.password) {
+        return { ok: false, error: "Current password is incorrect." };
+      }
+      if (updates.newPassword.length < 4) {
+        return { ok: false, error: "New password must be at least 4 characters." };
+      }
+    }
+
+    const next: User = {
+      ...user,
+      ...(updates.name ? { name: updates.name.trim() } : {}),
+      ...(updates.newPassword ? { password: updates.newPassword } : {}),
+    };
+
+    // Keep the in-memory mock DB in sync so a re-login reflects the change.
+    const idx = USERS.findIndex((u) => u.id === user.id);
+    if (idx !== -1) USERS[idx] = next;
+
+    setUser(next);
+    localStorage.setItem(KEY, JSON.stringify(next));
+    return { ok: true };
+  };
+
+  return <Ctx.Provider value={{ user, login, logout, updateProfile }}>{children}</Ctx.Provider>;
 }
 
 export function useAuth() {
