@@ -53,6 +53,8 @@ const STATUS_META: Record<TeacherStatus, { label: string; cls: string }> = {
 // PAGE
 // ===========================================================================
 function Page() {
+  const { teacher: focusTeacher } = Route.useSearch();
+  const navigate = Route.useNavigate();
   const [, forceTick] = useState(0);
   const [detailId, setDetailId] = useState<string | null>(null);
   const [formFor, setFormFor] = useState<User | "new" | null>(null);
@@ -67,6 +69,15 @@ function Page() {
     SESSIONS.forEach((s) => { if (reviews[s.id]) Object.assign(s, reviews[s.id]); });
     forceTick((n) => n + 1);
   }, []);
+
+  // Deep-link from the Admin Overview snapshot (open a teacher profile).
+  useEffect(() => {
+    if (focusTeacher) {
+      setDetailId(focusTeacher);
+      navigate({ search: {}, replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusTeacher]);
 
   const teachers = USERS.filter((u) => u.role === "teacher");
   const detail = detailId ? teachers.find((t) => t.id === detailId) ?? null : null;
