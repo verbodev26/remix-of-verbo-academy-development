@@ -534,7 +534,6 @@ function SessionRow({
   editing,
   onEdit,
   onCancelEdit,
-  onDelete,
   onSubmit,
 }: {
   session: ExtSession;
@@ -542,7 +541,6 @@ function SessionRow({
   editing: boolean;
   onEdit: () => void;
   onCancelEdit: () => void;
-  onDelete: () => void;
   onSubmit: (patch: Partial<ExtSession>, rescheduled: boolean) => void;
 }) {
   const teacher = userById(session.teacher_id);
@@ -551,19 +549,18 @@ function SessionRow({
 
   const [date, setDate] = useState(dateInput);
   const [teacherId, setTeacherId] = useState(session.teacher_id);
+  const [status, setStatus] = useState<ExtSessionStatus>(session.status);
 
   const renderStatus = (s: ExtSessionStatus) => {
-    if (s === "rearranged") {
-      return (
-        <span
-          className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium"
-          style={{ backgroundColor: AMBER, color: "white" }}
-        >
-          rearranged
-        </span>
-      );
-    }
-    return <Pill tone={statusTone(s)}>{s}</Pill>;
+    const meta = STATUS_META[s] ?? STATUS_META.scheduled;
+    return (
+      <span
+        className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium"
+        style={{ backgroundColor: meta.bg, color: meta.color }}
+      >
+        {meta.label}
+      </span>
+    );
   };
 
   if (!editing) {
@@ -576,9 +573,6 @@ function SessionRow({
           <div className="flex justify-end gap-1.5">
             <button onClick={onEdit} className="cursor-pointer rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground" title="Edit">
               <Pencil className="h-3.5 w-3.5" />
-            </button>
-            <button onClick={onDelete} className="cursor-pointer rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive" title="Delete">
-              <Trash2 className="h-3.5 w-3.5" />
             </button>
           </div>
         </td>
@@ -596,7 +590,11 @@ function SessionRow({
           {teachers.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
         </select>
       </td>
-      <td className="px-4 py-3 text-xs text-muted-foreground">{session.status}</td>
+      <td className="px-4 py-3">
+        <select value={status} onChange={(e) => setStatus(e.target.value as ExtSessionStatus)} className="w-full cursor-pointer rounded-md border border-input bg-background px-2 py-1.5 text-xs">
+          {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{STATUS_META[s].label}</option>)}
+        </select>
+      </td>
       <td className="px-4 py-3">
         <div className="flex justify-end gap-2">
           <GhostButton onClick={onCancelEdit} className="!px-3 !py-1 text-xs">Cancel</GhostButton>
@@ -604,7 +602,13 @@ function SessionRow({
             onClick={() => {
               const newIso = new Date(date).toISOString();
               const dateChanged = newIso !== session.date_time;
-              onSubmit({ date_time: newIso, teacher_id: teacherId }, dateChanged);
+              // Manual status choice wins; only auto-mark rescheduled when the
+              // admin left the status untouched but moved the date.
+              const statusChanged = status !== session.status;
+              onSubmit(
+                { date_time: newIso, teacher_id: teacherId, status },
+                dateChanged && !statusChanged,
+              );
             }}
             className="!px-3 !py-1 text-xs"
             style={{ backgroundColor: ORANGE }}
@@ -616,6 +620,7 @@ function SessionRow({
     </tr>
   );
 }
+
 
 // ============== Bulk edit form (inside student modal) ==============
 function BulkEditForm({
