@@ -303,7 +303,7 @@ function AnnouncementsSection() {
 
   return (
     <section>
-      <SectionTitle>Announcements</SectionTitle>
+      <h2 className="mb-4 text-base font-semibold tracking-tight text-foreground">Announcements</h2>
       <Card className="!p-0">
         {/* Composer */}
         <div className="space-y-4 border-b border-border p-6">
