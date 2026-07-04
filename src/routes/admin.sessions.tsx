@@ -618,7 +618,12 @@ function SessionRow({
               // admin left the status untouched but moved the date.
               const statusChanged = status !== session.status;
               onSubmit(
-                { date_time: newIso, teacher_id: teacherId, status },
+                {
+                  date_time: newIso,
+                  teacher_id: teacherId,
+                  status,
+                  absent_cause: status === "absent" ? absentCause : undefined,
+                },
                 dateChanged && !statusChanged,
               );
             }}
