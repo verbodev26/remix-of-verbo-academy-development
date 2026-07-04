@@ -4,7 +4,7 @@
 // Everything here is meant to be easy to edit once the real catalog lands.
 // ============================================================================
 
-export type ProductId = "enterprise" | "go" | "international";
+export type ProductId = "enterprise" | "go" | "international" | "vip";
 export type AccessPlanId = "Core" | "Advance" | "Elite" | "Signature";
 export type StudentStatus = "active" | "suspended" | "frozen";
 
