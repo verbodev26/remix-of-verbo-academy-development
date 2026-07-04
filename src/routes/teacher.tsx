@@ -16,6 +16,7 @@ function Layout() {
             { to: "/teacher/materials", label: "Materials" },
           ]}
         />
+        <AnnouncementBanner />
         <main className="mx-auto max-w-7xl px-6 py-10">
           <Outlet />
         </main>
