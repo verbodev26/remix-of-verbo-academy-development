@@ -12,7 +12,12 @@ import {
 import { MetricCard, SectionTitle } from "@/components/verbo/ui";
 import { Star, AlertTriangle, Trophy, X, TrendingUp, SlidersHorizontal } from "lucide-react";
 
-export const Route = createFileRoute("/admin/kpis")({ component: Page });
+export const Route = createFileRoute("/admin/kpis")({
+  component: Page,
+  validateSearch: (s: Record<string, unknown>): { teacher?: string } => ({
+    teacher: typeof s.teacher === "string" ? s.teacher : undefined,
+  }),
+});
 
 // Persistence keys shared with the Teachers view (apply the same overrides so
 // KPIs reflect edits made there).
