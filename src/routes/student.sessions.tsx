@@ -575,20 +575,26 @@ function PastRow({ s }: { s: CalEvent }) {
 
 // ---------- Modal ----------
 function EventModal({
-  event, onClose, onCancelOneOnOne, onConfirmClub, onCancelClub, blocked, cancelCount,
+  event, onClose, onCancelOneOnOne, onConfirmClub, onCancelClub, bookingBlockReason, insightStrikes, bookClubStrikes,
 }: {
   event: CalEvent;
   onClose: () => void;
   onCancelOneOnOne: () => void;
   onConfirmClub: () => void;
   onCancelClub: () => void;
-  blocked: boolean;
-  cancelCount: number;
+  bookingBlockReason: string | null;
+  insightStrikes: number;
+  bookClubStrikes: number;
 }) {
   const teacher = event.teacher_id ? userById(event.teacher_id) : undefined;
   const isClub = event.kind !== "one-on-one";
   const full = (event.spots_booked ?? 0) >= (event.spots_total ?? 4);
   const live = liveState(event);
+  const kindStrikes = event.kind === "verbo-insights" ? insightStrikes
+    : event.kind === "book-club" ? bookClubStrikes : null;
+  const kindStrikeLabel = event.kind === "verbo-insights" ? "Insights"
+    : event.kind === "book-club" ? "Book Clubs" : null;
+  const bookingLocked = !!bookingBlockReason && !event.user_booked;
 
   return (
     <div onClick={onClose} className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
