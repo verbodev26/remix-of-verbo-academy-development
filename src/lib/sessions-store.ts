@@ -63,6 +63,83 @@ export function subscribeSessions(cb: () => void): () => void {
   };
 }
 
+/** All sessions that belong to a given Focus Workshop cohort. */
+export function sessionsForCohort(cohortId: string): ExtSession[] {
+  return loadSessions().filter(
+    (s) => s.origin === "workshop" && s.workshop_cohort_id === cohortId,
+  );
+}
+
+/** Adds one workshop session record to the shared sessions store. */
+export function addWorkshopSession(input: {
+  cohortId: string;
+  templateId: string;
+  teacherId: string;
+  teamsLink: string;
+  dateISO?: string;
+  durationMinutes?: number;
+  topic?: string;
+}): ExtSession {
+  const s: ExtSession = {
+    id: `ws-${input.cohortId}-${Math.random().toString(36).slice(2, 8)}`,
+    student_id: input.cohortId, // sentinel; workshop cohorts hold the roster
+    teacher_id: input.teacherId,
+    date_time: input.dateISO ?? "",
+    duration_minutes: input.durationMinutes ?? 60,
+    teams_link: input.teamsLink,
+    status: "scheduled",
+    origin: "workshop",
+    workshop_cohort_id: input.cohortId,
+    workshop_template_id: input.templateId,
+    workshop_topic: input.topic,
+  };
+  persistSessions([s, ...loadSessions()]);
+  return s;
+}
+
+export function updateWorkshopSession(id: string, patch: Partial<ExtSession>) {
+  const next = loadSessions().map((s) => (s.id === id ? { ...s, ...patch } : s));
+  persistSessions(next);
+}
+
+export function removeWorkshopSession(id: string) {
+  persistSessions(loadSessions().filter((s) => s.id !== id));
+}
+
+/** Cascade update: when a cohort's teacher or shared link changes, keep
+ *  future/non-completed sessions in sync so admin.sessions and the cohort
+ *  view stay consistent without manual re-entry. */
+export function syncCohortFieldsToSessions(
+  cohortId: string,
+  patch: { teacher_id?: string; teams_link?: string },
+) {
+  const next = loadSessions().map((s) => {
+    if (s.origin !== "workshop" || s.workshop_cohort_id !== cohortId) return s;
+    if (s.status === "completed" || s.status === "absent" || s.status === "no_show") return s;
+    return { ...s, ...patch };
+  });
+  persistSessions(next);
+}
+
+export const WORKSHOP_STATUS_META: Record<
+  ExtSessionStatus,
+  { label: string; bg: string; color: string }
+> = {
+  scheduled: { label: "Scheduled", bg: "#f1f5f9", color: "#475569" },
+  ready: { label: "Ready", bg: "#ede9fe", color: "#7c3aed" },
+  completed: { label: "Completed", bg: "#dcfce7", color: "#15803d" },
+  absent: { label: "Absent", bg: "#fee2e2", color: "#dc2626" },
+  cancelled: { label: "Cancelled", bg: "#fce7f3", color: "#be185d" },
+  pending_reschedule: { label: "Pending Reschedule", bg: "#fef3c7", color: "#b45309" },
+  no_show: { label: "No Show", bg: "#334155", color: "#ffffff" },
+  rescheduled: { label: "Rescheduled", bg: "#f1f5f9", color: "#475569" },
+  rearranged: { label: "Rearranged", bg: "#fde68a", color: "#92400e" },
+  delayed: { label: "Delayed", bg: "#fde68a", color: "#92400e" },
+};
+export const WORKSHOP_STATUS_OPTIONS: ExtSessionStatus[] = [
+  "scheduled", "ready", "completed", "absent", "cancelled", "pending_reschedule", "no_show",
+];
+
 
 export function statusTone(s: ExtSessionStatus): "default" | "success" | "warning" | "danger" | "muted" {
   switch (s) {
