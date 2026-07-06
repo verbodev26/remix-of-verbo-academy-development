@@ -38,6 +38,18 @@ export function PlanModal({
   const vipUnits = isVip ? unitsForStudent(student!.id) : [];
   const vipDone = isVip ? vipUnitDoneMap() : {};
 
+  const sessionTypes = isVip
+    ? ALL_SESSION_TYPES.filter((t) => t !== "Syllabus content")
+    : ALL_SESSION_TYPES;
+
+  // VIP students never use the fixed Performance Sessions syllabus, so reset
+  // any stale Syllabus content selection when the modal opens for a VIP.
+  useEffect(() => {
+    if (isVip && type === "Syllabus content") {
+      setType("");
+    }
+  }, [isVip]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const showLevelUnit = type === "Syllabus content" || type === "Evaluation";
   const currentLevel = levels.find((l) => l.id === levelId);
 
