@@ -787,7 +787,7 @@ function StudentFormModal({
 
           {/* STEP 2 — Focus */}
           {product?.hasFocus && (
-            <Step n={3} title="Enfoque">
+            <Step n={3} title="Focus">
               <div className="flex flex-wrap gap-2">
                 {focusesForProduct(f.product).map((focus) => {
                   const active = f.focus === focus.name;
@@ -808,7 +808,7 @@ function StudentFormModal({
 
           {/* STEP 3 — Contracted levels */}
           {f.product && (
-            <Step n={product?.hasFocus ? 4 : 3} title="Niveles contratados (roadmap)">
+            <Step n={product?.hasFocus ? 4 : 3} title="Contracted levels (roadmap)">
               <div className="flex flex-wrap gap-2">
                 {productLevels.map((lvl) => {
                   const active = f.contracted_levels.includes(lvl);
@@ -830,7 +830,7 @@ function StudentFormModal({
 
           {/* STEP 4 — Access plan */}
           {f.product && (
-            <Step n={product?.hasFocus ? 5 : 4} title="Plan de acceso">
+            <Step n={product?.hasFocus ? 5 : 4} title="Access plan">
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {ACCESS_PLAN_IDS.map((id) => {
                   const active = f.access_plan === id;
@@ -874,16 +874,16 @@ function StudentFormModal({
             <div />
 
             {/* Cadence */}
-            <Field label="Sesiones por semana" icon={<Repeat className="h-3.5 w-3.5" />}>
+            <Field label="Sessions per week" icon={<Repeat className="h-3.5 w-3.5" />}>
               <input type="number" min={1} value={f.sessions_per_week} onChange={(e) => changePerWeek(Number(e.target.value))} className={inputCls} />
             </Field>
-            <Field label="Duración por sesión (min)" icon={<Clock className="h-3.5 w-3.5" />}>
+            <Field label="Session duration (min)" icon={<Clock className="h-3.5 w-3.5" />}>
               <input type="number" min={15} step={5} value={f.session_duration} onChange={(e) => set("session_duration", Number(e.target.value))} className={inputCls} />
-              <p className="mt-1 text-[10.5px] text-muted-foreground">{f.sessions_per_week * f.session_duration} min/semana en total.</p>
+              <p className="mt-1 text-[10.5px] text-muted-foreground">{f.sessions_per_week * f.session_duration} min/week total.</p>
             </Field>
 
             {/* Reschedule policy */}
-            <Field label="Política de reagendamiento" icon={<CalendarDays className="h-3.5 w-3.5" />} className="md:col-span-2">
+            <Field label="Reschedule policy" icon={<CalendarDays className="h-3.5 w-3.5" />} className="md:col-span-2">
               <select value={f.reschedule_policy} onChange={(e) => set("reschedule_policy", e.target.value)} className={`${inputCls} cursor-pointer`}>
                 <option value="">Select a policy</option>
                 {RESCHEDULE_PRESETS.map((p) => <option key={p} value={p}>{p}</option>)}
@@ -892,28 +892,28 @@ function StudentFormModal({
             </Field>
             {isCustomReschedule && (
               <>
-                <Field label="Horas mínimas de anticipación">
+                <Field label="Minimum hours of notice">
                   <input type="number" min={0} value={f.reschedule_custom_hours} onChange={(e) => set("reschedule_custom_hours", Number(e.target.value))} className={inputCls} />
                 </Field>
-                <Field label="% máximo de sesiones del mes">
+                <Field label="Max % of monthly sessions">
                   <input type="number" min={0} max={100} value={f.reschedule_custom_pct} onChange={(e) => set("reschedule_custom_pct", Number(e.target.value))} className={inputCls} />
                 </Field>
               </>
             )}
 
             {/* Payment */}
-            <Field label="Día de pago (1–31)" icon={<CreditCard className="h-3.5 w-3.5" />}>
+            <Field label="Payment day (1–31)" icon={<CreditCard className="h-3.5 w-3.5" />}>
               <input type="number" min={1} max={31} value={f.payment_day} onChange={(e) => set("payment_day", Number(e.target.value))} className={inputCls} />
             </Field>
-            <Field label="Inicio del ciclo" icon={<CalendarDays className="h-3.5 w-3.5" />}>
+            <Field label="Cycle start" icon={<CalendarDays className="h-3.5 w-3.5" />}>
               <input type="date" value={f.cycle_start} onChange={(e) => set("cycle_start", e.target.value)} className={inputCls} />
-              {nextPayPreview && <p className="mt-1 text-[10.5px] text-muted-foreground">Próximo pago: {nextPayPreview.toLocaleDateString()}</p>}
+              {nextPayPreview && <p className="mt-1 text-[10.5px] text-muted-foreground">Next payment: {nextPayPreview.toLocaleDateString()}</p>}
             </Field>
 
             {/* Video call link */}
             <Field label="Video Call Link" icon={<Video className="h-3.5 w-3.5" />} className="md:col-span-2">
               <input type="url" value={f.video_call_link} onChange={(e) => set("video_call_link", e.target.value)} placeholder="https://teams.microsoft.com/..." className={inputCls} />
-              <p className="mt-1 text-[10.5px] text-muted-foreground">Este link se usará para todas las sesiones del alumno hasta que un admin lo modifique.</p>
+              <p className="mt-1 text-[10.5px] text-muted-foreground">This link will be used for all of the student's sessions until an admin changes it.</p>
             </Field>
 
             {/* Teacher */}
@@ -1056,7 +1056,7 @@ function StudentDetailModal({
   const saveFreeze = () => {
     if (freezeStart && freezeEnd) {
       const days = daysUntil(new Date(freezeEnd), new Date(freezeStart));
-      if (days > 15) { alert("La congelación no puede exceder 15 días."); return; }
+      if (days > 15) { alert("Freeze cannot exceed 15 days."); return; }
       // TODO: validate max 1 freeze per completed level once level-completion logic exists.
     }
     patch({ status: "frozen", freeze_start: freezeStart || undefined, freeze_end: freezeEnd || undefined });
@@ -1114,7 +1114,7 @@ function StudentDetailModal({
                 <Info label="Email" value={student.email} />
                 <Info label="CEFR Level" value={student.current_level ?? "—"} />
                 <Info label="Product" value={product?.name ?? "—"} />
-                <Info label="Focus (Enfoque)" value={student.focus ?? "—"} />
+                <Info label="Focus" value={student.focus ?? "—"} />
                 <Info label="Access Plan" value={student.access_plan ?? "—"} />
                 <Info label="Current roadmap level" value={student.current_roadmap_level ?? "—"} />
                 <Info label="Sessions" value={`${student.remaining_sessions ?? 0} remaining / ${student.hired_sessions ?? 0} total`} />

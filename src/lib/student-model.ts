@@ -82,10 +82,10 @@ export interface FocusDef {
 }
 
 export const FOCUSES: FocusDef[] = [
-  { id: "go-global", name: "Experiencia Global", product: "go", suggestedLevels: 2 },
-  { id: "go-hobby", name: "Hobby y Cultura", product: "go", suggestedLevels: 2 },
-  { id: "intl-survival", name: "Supervivencia", product: "international", suggestedLevels: 2 },
-  { id: "intl-mastery", name: "Dominio", product: "international", suggestedLevels: 4 },
+  { id: "go-global", name: "Global Experience", product: "go", suggestedLevels: 2 },
+  { id: "go-hobby", name: "Hobby & Culture", product: "go", suggestedLevels: 2 },
+  { id: "intl-survival", name: "Survival", product: "international", suggestedLevels: 2 },
+  { id: "intl-mastery", name: "Mastery", product: "international", suggestedLevels: 4 },
 ];
 
 export function focusesForProduct(product?: string | null): FocusDef[] {
@@ -111,28 +111,28 @@ export const ACCESS_PLANS: AccessPlanDef[] = [
   {
     id: "Core",
     blurb: "Core incluye 1 Insight/mes no acumulable y ventana de reagendamiento de 24h.",
-    reschedulePolicy: "24h de anticipación, máx. 25% de sesiones del mes",
+    reschedulePolicy: "24h notice, max 25% of monthly sessions",
     rescheduleHours: 24,
     reschedulePct: 25,
   },
   {
     id: "Advance",
     blurb: "Advance incluye 2 Insights/mes no acumulables y ventana de reagendamiento de 12h.",
-    reschedulePolicy: "12h de anticipación, máx. 40% de sesiones del mes",
+    reschedulePolicy: "12h notice, max 40% of monthly sessions",
     rescheduleHours: 12,
     reschedulePct: 40,
   },
   {
     id: "Elite",
     blurb: "Elite incluye 4 Insights/mes no acumulables y ventana de reagendamiento de 6h.",
-    reschedulePolicy: "6h de anticipación, máx. 70% de sesiones del mes",
+    reschedulePolicy: "6h notice, max 70% of monthly sessions",
     rescheduleHours: 6,
     reschedulePct: 70,
   },
   {
     id: "Signature",
-    blurb: "Signature incluye Insights ilimitados y reagendamiento sin restricción.",
-    reschedulePolicy: "Sin restricción",
+    blurb: "Signature includes unlimited Insights and unrestricted rescheduling.",
+    reschedulePolicy: "No restriction",
     rescheduleHours: null,
     reschedulePct: null,
   },
