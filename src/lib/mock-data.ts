@@ -33,6 +33,7 @@ export interface User {
   video_call_link?: string;
   status?: "active" | "suspended" | "frozen";
   insights_strikes?: number;
+  bookclub_strikes?: number;
   sessions_auto?: boolean; // false once sessions were edited manually
   admin_notes?: string;
   freeze_start?: string;
