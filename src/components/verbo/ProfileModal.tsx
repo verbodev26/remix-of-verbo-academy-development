@@ -20,25 +20,25 @@ const CATALOG = [
     key: "longevity",
     icon: Crown,
     title: "Longevity (Loyalty)",
-    unlock: "Desbloqueado al cumplir meses activos entrenando en Verbo.",
+    unlock: "Unlocked by staying active training in Verbo for months.",
   },
   {
     key: "conqueror",
     icon: Trophy,
     title: "Level Conqueror",
-    unlock: "Desbloqueado al completar el 100% de un nivel de idioma.",
+    unlock: "Unlocked by completing 100% of a language level.",
   },
   {
     key: "streak",
     icon: Flame,
     title: "Streak Master",
-    unlock: "Desbloqueado al ligar 3 o más puntuaciones perfectas en actividades.",
+    unlock: "Unlocked by chaining 3 or more perfect scores in activities.",
   },
   {
     key: "scholar",
     icon: Award,
     title: "Verbo Scholar",
-    unlock: "Desbloqueado al completar 25 sesiones con calificación perfecta.",
+    unlock: "Unlocked by completing 25 sessions with a perfect rating.",
   },
 ];
 
