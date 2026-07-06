@@ -16,6 +16,12 @@ import {
   type WorkshopUnit, isUnitOpenFor, loadWorkshops, newCohort, newTemplate,
   newUnit, persistWorkshops, subscribeWorkshops,
 } from "@/lib/workshops-store";
+import {
+  type ExtSession, type ExtSessionStatus,
+  addWorkshopSession, removeWorkshopSession, sessionsForCohort,
+  subscribeSessions, syncCohortFieldsToSessions, updateWorkshopSession,
+  WORKSHOP_STATUS_META, WORKSHOP_STATUS_OPTIONS,
+} from "@/lib/sessions-store";
 import { hydrateStudents } from "@/lib/students-store";
 
 export const Route = createFileRoute("/admin/workshops")({ component: Page });
