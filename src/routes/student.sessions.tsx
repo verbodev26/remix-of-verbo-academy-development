@@ -466,8 +466,9 @@ function Page() {
             onCancelOneOnOne={() => cancelOneOnOne(selected)}
             onConfirmClub={() => confirmClub(selected)}
             onCancelClub={() => cancelClub(selected)}
-            blocked={blocked}
-            cancelCount={cancelCount}
+            bookingBlockReason={bookingBlockReason(selected)}
+            insightStrikes={insightStrikes}
+            bookClubStrikes={bookClubStrikes}
           />
         )}
 
