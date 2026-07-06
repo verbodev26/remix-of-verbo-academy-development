@@ -305,17 +305,27 @@ function makeEntry(): Entry {
   return { id: Math.random().toString(36).slice(2), type: "New word", term: "", explanation: "" };
 }
 
-function ReportModal({ session, perf, onClose, onSubmit }: { session: Session; perf: PerformanceRating; onClose: () => void; onSubmit: (id: string, status: SessionStatus, perf: PerformanceRating) => void }) {
+type Attendance = "present" | "delayed" | "absent";
+function ReportModal({ session, perf, subskills, onClose, onSubmit }: {
+  session: Session;
+  perf: PerformanceRating;
+  subskills: Record<string, number>;
+  onClose: () => void;
+  onSubmit: (id: string, attendance: Attendance, perf: PerformanceRating, subskills: Record<string, number>, absentCause?: "student" | "teacher") => void;
+}) {
   const student = userById(session.student_id);
-  const [status, setStatus] = useState<SessionStatus>("completed");
+  const [attendance, setAttendance] = useState<Attendance>("present");
+  // Only meaningful when attendance is "absent" — reused from the Admin
+  // Sessions engine's canonical absent_cause selector.
+  const [absentCause, setAbsentCause] = useState<"student" | "teacher">("student");
   const [notes, setNotes] = useState("");
   const [entries, setEntries] = useState<Entry[]>(() => Array.from({ length: MIN_ENTRIES }, makeEntry));
   const [submitted, setSubmitted] = useState(false);
 
-  const bgFor = (opt: SessionStatus) => opt === "completed" ? "#22c55e" : opt === "absent" ? "#ef4444" : "#f38934";
+  const bgFor = (opt: Attendance) => opt === "present" ? "#22c55e" : opt === "absent" ? "#ef4444" : "#f38934";
 
   const filledCount = entries.filter((e) => e.term.trim().length > 0 && e.explanation.trim().length > 0).length;
-  const isAbsent = status === "absent";
+  const isAbsent = attendance === "absent";
   const notesFilled = notes.trim().length > 0;
   const canSubmit = isAbsent
     ? notesFilled
@@ -329,7 +339,7 @@ function ReportModal({ session, perf, onClose, onSubmit }: { session: Session; p
   const handleSubmit = () => {
     if (!canSubmit) return;
     setSubmitted(true);
-    onSubmit(session.id, status === "absent" ? "absent" : "completed", perf);
+    onSubmit(session.id, attendance, perf, subskills, isAbsent ? absentCause : undefined);
   };
 
   return (
@@ -360,26 +370,55 @@ function ReportModal({ session, perf, onClose, onSubmit }: { session: Session; p
             <div className="mt-6">
               <label className="text-xs font-medium text-foreground">Attendance</label>
               <div className="mt-2 grid grid-cols-3 gap-2">
-                {(["completed", "absent", "delayed"] as SessionStatus[]).map((opt) => {
-                  const selected = status === opt;
+                {(["present", "absent", "delayed"] as Attendance[]).map((opt) => {
+                  const selected = attendance === opt;
                   return (
                     <button
                       key={opt}
-                      onClick={() => setStatus(opt)}
+                      onClick={() => setAttendance(opt)}
                       style={selected ? { backgroundColor: bgFor(opt) } : undefined}
                       className={`rounded-lg border px-3 py-2 text-sm capitalize transition-colors ${
                         selected ? "border-transparent text-white" : "border-border text-foreground hover:bg-secondary"
                       }`}
                     >
-                      {opt === "completed" ? "Present" : opt}
+                      {opt === "present" ? "Present" : opt === "delayed" ? "Delayed" : "Absent"}
                     </button>
                   );
                 })}
               </div>
+              {attendance === "delayed" && (
+                <p className="mt-2 text-[11px] text-muted-foreground">
+                  "Delayed" no es un estado de sesión: la sesión termina en <strong>Completed</strong>
+                  con una marca de asistencia tardía para KPIs.
+                </p>
+              )}
             </div>
 
             {isAbsent ? (
-              <div className="mt-5">
+              <div className="mt-5 space-y-4">
+                <div>
+                  <label className="text-xs font-medium text-foreground">Absent cause <span className="text-red-600">*</span></label>
+                  <div className="mt-2 grid grid-cols-2 gap-2">
+                    {(["student", "teacher"] as const).map((cause) => (
+                      <button
+                        key={cause}
+                        onClick={() => setAbsentCause(cause)}
+                        className={`rounded-lg border px-3 py-2 text-sm capitalize transition-colors ${
+                          absentCause === cause
+                            ? "border-transparent bg-[#01304a] text-white"
+                            : "border-border text-foreground hover:bg-secondary"
+                        }`}
+                      >
+                        {cause}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    Reusa la misma sub-causa del motor de Admin &gt; Sessions. Solo las ausencias con causa Student
+                    penalizan la asistencia del alumno.
+                  </p>
+                </div>
+                <div>
                 <label className="text-xs font-medium text-foreground">Teacher's comments <span className="text-muted-foreground">(required)</span></label>
                 <textarea
                   value={notes}
@@ -388,6 +427,7 @@ function ReportModal({ session, perf, onClose, onSubmit }: { session: Session; p
                   placeholder="Justification, follow-up plan, communication with the student…"
                   className="mt-2 w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 />
+                </div>
               </div>
             ) : (
               <>
