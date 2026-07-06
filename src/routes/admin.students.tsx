@@ -545,44 +545,93 @@ function StudentFormModal({
     ? nextPaymentDate(f.payment_day, f.cycle_start ? new Date(f.cycle_start) : new Date())
     : null;
 
-  const isValid = f.name.trim() && f.email.trim() && f.password.trim() && f.product &&
-    f.video_call_link.trim() && (!isEnterprise || f.company.trim());
+  const baseValid = f.name.trim() && f.email.trim() && f.password.trim();
+  const isValid = f.product_type === "performance"
+    ? (baseValid && f.product && f.video_call_link.trim() && (!isEnterprise || f.company.trim()))
+    : f.product_type === "workshops"
+      ? baseValid // participants can be added later, but a cohort selection is recommended
+      : baseValid; // insights standalone
+
+  const pickProductType = (pt: FormState["product_type"]) => {
+    setF((prev) => {
+      if (pt === "performance") return { ...prev, product_type: pt };
+      // Switching to a standalone branch — clear Performance-only fields so
+      // downstream displays don't show stale product/plan/teacher badges.
+      return {
+        ...prev,
+        product_type: pt,
+        product: "",
+        focus: "",
+        company: "",
+        contracted_levels: [],
+        access_plan: "",
+        current_level: "",
+        hired_sessions: 0,
+        remaining_sessions: 0,
+        sessions_auto: true,
+        reschedule_policy: "",
+        payment_day: 1,
+        cycle_start: "",
+        video_call_link: "",
+        teacher_id: "",
+        addon_insights_per_month: pt === "insights" ? (prev.addon_insights_per_month || 1) : 0,
+        addon_bookclubs_per_month: 0,
+        addon_spotlight_per_month: 0,
+        addon_workshops_enabled: pt === "workshops",
+      };
+    });
+  };
 
   const handleSave = () => {
     if (!isValid) return;
     const accessPlan = (f.access_plan || undefined) as AccessPlanId | undefined;
+    const id = initial?.id ?? `u${Date.now()}`;
+    const isPerf = f.product_type === "performance";
     const u: User = {
-      id: initial?.id ?? `u${Date.now()}`,
+      id,
       name: f.name.trim(),
       email: f.email.trim(),
       password: f.password,
       role: "student",
-      company: isEnterprise ? f.company.trim() || undefined : undefined,
-      product: f.product as ProductId,
-      focus: isEnterprise ? undefined : f.focus || undefined,
-      access_plan: accessPlan,
-      hired_plan: accessPlan, // legacy display alias
-      contracted_levels: f.contracted_levels,
-      current_roadmap_level: initial?.current_roadmap_level ?? f.contracted_levels[0],
-      current_level: f.current_level || undefined,
+      product_type: f.product_type,
+      company: isPerf && isEnterprise ? f.company.trim() || undefined : undefined,
+      product: isPerf ? (f.product as ProductId) : undefined,
+      focus: isPerf && !isEnterprise ? f.focus || undefined : undefined,
+      access_plan: isPerf ? accessPlan : undefined,
+      hired_plan: isPerf ? accessPlan : undefined, // legacy display alias
+      contracted_levels: isPerf ? f.contracted_levels : [],
+      current_roadmap_level: isPerf ? (initial?.current_roadmap_level ?? f.contracted_levels[0]) : undefined,
+      current_level: isPerf ? (f.current_level || undefined) : undefined,
       member_since: f.member_since || undefined,
-      hired_sessions: Number(f.hired_sessions) || 0,
-      remaining_sessions: Number(f.remaining_sessions) || 0,
-      sessions_auto: f.sessions_auto,
-      sessions_per_week: Number(f.sessions_per_week) || 1,
-      session_duration: Number(f.session_duration) || 60,
-      reschedule_policy: f.reschedule_policy || undefined,
-      reschedule_custom_hours: isCustomReschedule ? Number(f.reschedule_custom_hours) : undefined,
-      reschedule_custom_pct: isCustomReschedule ? Number(f.reschedule_custom_pct) : undefined,
-      payment_day: Number(f.payment_day) || undefined,
-      cycle_start: f.cycle_start || undefined,
-      video_call_link: f.video_call_link.trim(),
+      hired_sessions: isPerf ? (Number(f.hired_sessions) || 0) : 0,
+      remaining_sessions: isPerf ? (Number(f.remaining_sessions) || 0) : 0,
+      sessions_auto: isPerf ? f.sessions_auto : undefined,
+      sessions_per_week: isPerf ? (Number(f.sessions_per_week) || 1) : undefined,
+      session_duration: isPerf ? (Number(f.session_duration) || 60) : undefined,
+      reschedule_policy: isPerf ? (f.reschedule_policy || undefined) : undefined,
+      reschedule_custom_hours: isPerf && isCustomReschedule ? Number(f.reschedule_custom_hours) : undefined,
+      reschedule_custom_pct: isPerf && isCustomReschedule ? Number(f.reschedule_custom_pct) : undefined,
+      payment_day: isPerf ? (Number(f.payment_day) || undefined) : undefined,
+      cycle_start: isPerf ? (f.cycle_start || undefined) : undefined,
+      video_call_link: isPerf ? f.video_call_link.trim() : undefined,
       status: initial?.status ?? "active",
       insights_strikes: initial?.insights_strikes ?? 0,
       admin_notes: initial?.admin_notes,
       next_payment: initial?.next_payment,
+      addon_insights_per_month: Number(f.addon_insights_per_month) || 0,
+      addon_bookclubs_per_month: isPerf ? (Number(f.addon_bookclubs_per_month) || 0) : 0,
+      addon_spotlight_per_month: isPerf ? (Number(f.addon_spotlight_per_month) || 0) : 0,
+      addon_workshops_enabled: f.product_type === "workshops" ? true : (isPerf && f.addon_workshops_enabled),
     };
-    onSave(u, f.teacher_id || undefined);
+
+    // Sync cohort memberships against workshops store (source of truth).
+    const wantsCohorts = u.product_type === "workshops" || (u.product_type === "performance" && u.addon_workshops_enabled);
+    const targetIds = new Set(wantsCohorts ? f.selected_cohort_ids : []);
+    const currentIds = new Set(cohortsForStudent(id).map((x) => x.cohort.id));
+    for (const cid of currentIds) if (!targetIds.has(cid)) removeParticipantFromCohort(cid, id);
+    for (const cid of targetIds) if (!currentIds.has(cid)) addStudentToCohort(cid, id, u.name);
+
+    onSave(u, isPerf ? (f.teacher_id || undefined) : undefined);
   };
 
   return (
