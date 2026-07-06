@@ -410,6 +410,9 @@ function ClubFormPanel({
   const [date, setDate] = useState(initial?.date?.slice(0, 16) ?? "");
   const [duration, setDuration] = useState(initial?.duration_minutes ?? 60);
   const [spotsTotal, setSpotsTotal] = useState(initial?.spots_total ?? (type === "book" ? 4 : 30));
+  const [teacherPayment, setTeacherPayment] = useState<string>(
+    initial?.teacher_payment != null ? String(initial.teacher_payment) : "",
+  );
 
   const teachers = useMemo(() => USERS.filter((u) => u.role === "teacher"), []);
 
@@ -430,6 +433,7 @@ function ClubFormPanel({
       date: new Date(date).toISOString(),
       duration_minutes: duration,
       spots_total: spotsTotal,
+      teacher_payment: teacherPayment.trim() === "" ? undefined : Math.max(0, parseFloat(teacherPayment) || 0),
     });
   };
 
@@ -543,6 +547,18 @@ function ClubFormPanel({
               <input type="number" min={1} value={spotsTotal} onChange={(e) => setSpotsTotal(parseInt(e.target.value) || 1)} className={fieldCls} />
             </Field>
           </div>
+
+          <Field label="Teacher Payment (MXN)" help="Optional — how much the teacher earns for delivering this club. Used as the default penalty when an admin approves a release request.">
+            <input
+              type="number"
+              min={0}
+              step="0.01"
+              value={teacherPayment}
+              onChange={(e) => setTeacherPayment(e.target.value)}
+              placeholder="e.g. 350"
+              className={fieldCls}
+            />
+          </Field>
         </form>
 
         <div className="flex items-center justify-end gap-2 border-t border-border bg-secondary/30 px-6 py-4">
