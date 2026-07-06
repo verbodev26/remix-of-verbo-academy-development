@@ -358,7 +358,7 @@ function ReportModal({ session, perf, subskills, onClose, onSubmit }: {
           <ReportPreview
             studentName={student?.name ?? ""}
             dateLabel={fmt(session.date_time)}
-            status={status}
+            status={attendance === "absent" ? "absent" : attendance === "delayed" ? "delayed" : "completed"}
             notes={notes}
             entries={entries
               .filter((e) => e.term.trim().length > 0 && e.explanation.trim().length > 0)
