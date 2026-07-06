@@ -648,7 +648,17 @@ function EventModal({
             <GhostButton className="w-full" onClick={() => alert("Pre-club material download would start now.")}>
               <Download className="h-4 w-4" /> Download Pre-Club Material
             </GhostButton>
-            <p className="text-[11px] text-muted-foreground">Cancellations used: {cancelCount}/{CANCEL_LIMIT}</p>
+            {kindStrikes !== null && kindStrikeLabel && (
+              <p className="text-[11px] text-muted-foreground">
+                Late cancellations used ({kindStrikeLabel}): {kindStrikes}/{CANCEL_LIMIT}
+              </p>
+            )}
+            {bookingLocked && (
+              <div className="flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-[11px] text-amber-800 ring-1 ring-amber-200">
+                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                <span>{bookingBlockReason}</span>
+              </div>
+            )}
           </div>
         )}
 
@@ -667,8 +677,14 @@ function EventModal({
 
           {isClub && (
             <>
-              <PrimaryButton className="flex-1" disabled={event.user_booked || full || blocked} onClick={onConfirmClub}>
-                {full && !event.user_booked ? "Fully Booked" : event.user_booked ? "Confirmed" : "Confirm Attendance"}
+              <PrimaryButton className="flex-1" disabled={event.user_booked || full || bookingLocked} onClick={onConfirmClub}>
+                {full && !event.user_booked
+                  ? "Fully Booked"
+                  : event.user_booked
+                    ? "Confirmed"
+                    : bookingLocked
+                      ? "Booking Closed"
+                      : "Confirm Attendance"}
               </PrimaryButton>
               <GhostButton className="flex-1" disabled={!event.user_booked} onClick={onCancelClub}>
                 Can't Attend
