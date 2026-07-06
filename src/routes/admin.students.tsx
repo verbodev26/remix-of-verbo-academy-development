@@ -17,8 +17,13 @@ import {
   Plus, X, Eye, EyeOff, KeyRound, Mail, Building2, CalendarDays, GraduationCap,
   Users, Briefcase, Compass, Globe, Crown, Copy, Check, Snowflake, Ban, Play, Unlock,
   Sparkles, Wand2, Pencil, Video, Repeat, Clock, CreditCard, ShieldAlert,
-  Search, ArrowUpDown, Filter,
+  Search, ArrowUpDown, Filter, Gauge, GraduationCap as GraduationCapIcon, Lightbulb, Layers,
 } from "lucide-react";
+import {
+  type WorkshopCohort, type WorkshopTemplate,
+  addStudentToCohort, cohortsForStudent, loadWorkshops,
+  removeParticipantFromCohort, subscribeWorkshops,
+} from "@/lib/workshops-store";
 
 export const Route = createFileRoute("/admin/students")({
   component: Page,
