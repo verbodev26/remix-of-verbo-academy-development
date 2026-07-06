@@ -549,7 +549,7 @@ function ReportPreview({ studentName, dateLabel, status, notes, entries, onClose
         <div className="flex items-start justify-between border-b border-border pb-4">
           <div>
             <div className="text-[10px] font-semibold uppercase tracking-[0.18em]" style={{ color: "#01304a" }}>Verbo Language Solutions</div>
-            <h3 className="mt-1 text-lg font-semibold tracking-tight text-foreground text-slate-50">Final Session Report</h3>
+            <h3 className="mt-1 text-lg font-semibold tracking-tight text-foreground">Final Session Report</h3>
           </div>
           <div className="text-right text-xs text-muted-foreground">
             <div>{dateLabel}</div>

@@ -110,7 +110,7 @@ function Page() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground text-slate-50">Calendar</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Calendar</h1>
         <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
           All of your assigned events in one place: Performance Sessions, Focus Workshops,
           Verbo Insights, Book Clubs and Spotlight Sessions. Click a Scheduled session to plan it.
