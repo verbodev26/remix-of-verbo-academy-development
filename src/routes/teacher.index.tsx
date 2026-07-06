@@ -433,8 +433,8 @@ function ReportModal({ session, perf, subskills, onClose, onSubmit }: {
                     ))}
                   </div>
                   <p className="mt-1 text-[11px] text-muted-foreground">
-                    Reusa la misma sub-causa del motor de Admin &gt; Sessions. Solo las ausencias con causa Student
-                    penalizan la asistencia del alumno.
+                    Reuses the same sub-cause from Admin &gt; Sessions. Only absences with Student cause
+                    penalize the student's attendance.
                   </p>
                 </div>
                 <div>
