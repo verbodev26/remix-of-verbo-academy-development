@@ -19,6 +19,7 @@ function Layout() {
     { to: "/teacher/students", label: "My Students" },
     { to: "/teacher/materials", label: "Materials" },
     { to: "/teacher/workshops", label: "Focus Workshops" },
+    { to: "/teacher/clubs", label: "Clubs" },
     ...(hasVipStudent ? [{ to: "/teacher/vip", label: "Course Builder VIP" }] : []),
   ];
   return (
