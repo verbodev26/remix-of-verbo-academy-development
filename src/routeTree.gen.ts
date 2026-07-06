@@ -20,7 +20,6 @@ import { Route as StudentIndexRouteImport } from './routes/student.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as TeacherWorkshopsRouteImport } from './routes/teacher.workshops'
 import { Route as TeacherVipRouteImport } from './routes/teacher.vip'
-import { Route as TeacherClubsRouteImport } from './routes/teacher.clubs'
 import { Route as TeacherStudentsRouteImport } from './routes/teacher.students'
 import { Route as TeacherMaterialsRouteImport } from './routes/teacher.materials'
 import { Route as TeacherClubsRouteImport } from './routes/teacher.clubs'
@@ -93,11 +92,6 @@ const TeacherWorkshopsRoute = TeacherWorkshopsRouteImport.update({
 const TeacherVipRoute = TeacherVipRouteImport.update({
   id: '/vip',
   path: '/vip',
-  getParentRoute: () => TeacherRoute,
-} as any)
-const TeacherClubsRoute = TeacherClubsRouteImport.update({
-  id: '/clubs',
-  path: '/clubs',
   getParentRoute: () => TeacherRoute,
 } as any)
 const TeacherStudentsRoute = TeacherStudentsRouteImport.update({
