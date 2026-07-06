@@ -413,6 +413,7 @@ function Tag({ children, className = "" }: { children: React.ReactNode; classNam
 type FormState = {
   name: string; email: string; password: string; member_since: string;
   company: string;
+  product_type: "performance" | "workshops" | "insights";
   product: ProductId | "";
   focus: string;
   contracted_levels: string[];
@@ -424,6 +425,12 @@ type FormState = {
   payment_day: number; cycle_start: string;
   video_call_link: string;
   teacher_id: string;
+  // Add-ons
+  addon_insights_per_month: number;
+  addon_bookclubs_per_month: number;
+  addon_spotlight_per_month: number;
+  addon_workshops_enabled: boolean;
+  selected_cohort_ids: string[];
 };
 
 function StudentFormModal({
