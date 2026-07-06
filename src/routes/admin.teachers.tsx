@@ -560,7 +560,7 @@ function TeacherDetailModal({
                 <p className="rounded-lg bg-muted px-3 py-2 text-[11px] text-muted-foreground">No pending change requests.</p>
               )}
 
-              <p className="text-[11px] text-muted-foreground">ℹ El teacher solo puede solicitar cambios de disponibilidad una vez cada {AVAILABILITY_CHANGE_DAYS} días.</p>
+              <p className="text-[11px] text-muted-foreground">ℹ Teachers can only request availability changes once every {AVAILABILITY_CHANGE_DAYS} days.</p>
             </div>
           )}
 
@@ -762,10 +762,10 @@ function FinancialTab({ t, onPersist, onAddAdjustment }: { t: User; onPersist: (
       {bonusEligible && (
         <div className="rounded-xl border border-success/40 bg-success/10 p-4">
           <div className="flex items-center gap-2 text-sm font-semibold text-success">
-            <Trophy className="h-4 w-4" /> 🎉 Bono autorizado según KPIs de este periodo
+            <Trophy className="h-4 w-4" /> 🎉 Bonus authorized based on this period's KPIs
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
-            Este teacher superó el umbral de Composite Score. Captura el monto del bono y agrégalo a los ajustes.
+            This teacher exceeded the Composite Score threshold. Enter the bonus amount and add it to the adjustments.
           </p>
           <div className="mt-3 flex flex-wrap items-end gap-2">
             <div>
@@ -924,10 +924,10 @@ function AddAdjustmentModal({ onClose, onSave }: { onClose: () => void; onSave: 
               <span className="pl-3 text-sm text-muted-foreground">$</span>
               <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="e.g. 500 or -200" className="w-full bg-transparent px-2 py-2 text-sm text-foreground focus:outline-none" />
             </div>
-            <p className="mt-1 text-[10.5px] text-muted-foreground">Usa un número positivo para bonos, negativo para descuentos.</p>
+            <p className="mt-1 text-[10.5px] text-muted-foreground">Use a positive number for bonuses, negative for deductions.</p>
           </Field>
           <Field label="Reason">
-            <textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={4} placeholder="Motivo del ajuste…" className={inputCls} />
+            <textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={4} placeholder="Reason for the adjustment…" className={inputCls} />
           </Field>
         </div>
         <div className="flex items-center justify-end gap-2 border-t border-border bg-secondary/30 px-6 py-4">
@@ -1055,7 +1055,7 @@ function TeacherFormModal({
                 {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
-            <p className="mt-1 text-[10.5px] text-muted-foreground">El teacher deberá cambiarla en su primer inicio de sesión.</p>
+            <p className="mt-1 text-[10.5px] text-muted-foreground">The teacher will be required to change it on their first sign-in.</p>
           </Field>
           <Field label="Hourly rate (MXN)">
             <div className="flex items-center rounded-lg border border-input bg-background">
