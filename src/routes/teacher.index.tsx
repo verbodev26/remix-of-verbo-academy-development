@@ -688,13 +688,28 @@ function PerformanceEvaluationModal({
 }: {
   session: Session;
   onClose: () => void;
-  onContinue: (perf: PerformanceRating) => void;
+  onContinue: (perf: PerformanceRating, subskills: Record<string, number>) => void;
 }) {
   const student = userById(session.student_id);
   const [scores, setScores] = useState<ScoresMap>({});
   const [activeMacro, setActiveMacro] = useState<MacroSkillDef | null>(null);
 
-  const handleContinue = () => onContinue(buildPerformanceRating(scores));
+  const handleContinue = () => {
+    // Raw per-subskill map (0-100) — this is the record that gets written
+    // to performance-store via saveSubskillEvaluation, feeding the exact
+    // same data source consumed by the student's "Linguistic Asset
+    // Performance" widget and the teacher's "Overall Skills" summary.
+    const rawSubskills: Record<string, number> = {};
+    for (const m of MACRO_SKILLS) {
+      for (const s of m.subs) {
+        const v = scores[subKey(m.key, s.name)];
+        if (typeof v === "number") {
+          rawSubskills[sharedSkillKey(m.key as any, s.name)] = v;
+        }
+      }
+    }
+    onContinue(buildPerformanceRating(scores), rawSubskills);
+  };
 
   return (
     <div
