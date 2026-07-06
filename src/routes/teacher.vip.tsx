@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { ASSIGNMENTS, USERS } from "@/lib/mock-data";
 import { hydrateStudents, subscribeStudents } from "@/lib/students-store";
 import {
-  loadVipUnits, unitsForStudent, addVipUnit, updateVipUnit, removeVipUnit,
+  unitsForStudent, addVipUnit, updateVipUnit, removeVipUnit,
   subscribeVipUnits, subscribeVipUnitCompletion, vipUnitDoneMap, type VipUnit,
 } from "@/lib/vip-courses-store";
 import { loadSessions, subscribeSessions } from "@/lib/sessions-store";
