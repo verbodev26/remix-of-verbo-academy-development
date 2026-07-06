@@ -232,15 +232,15 @@ function Page() {
       if (used >= cap) {
         const label = ev.kind === "verbo-insights" ? "Insights"
           : ev.kind === "book-club" ? "Book Clubs" : "Spotlight Sessions";
-        return `Has alcanzado tu límite mensual de ${label} (${used}/${cap}).`;
+        return `You've reached your monthly ${label} limit (${used}/${cap}).`;
       }
     } else if (cap === 0) {
       const label = ev.kind === "verbo-insights" ? "Insights"
         : ev.kind === "book-club" ? "Book Clubs" : "Spotlight Sessions";
-      return `No tienes acceso a ${label} en tu plan actual.`;
+      return `You don't have access to ${label} on your current plan.`;
     }
     if (hoursUntil(ev.date) < BOOKING_LOCKOUT_HOURS) {
-      return `Las reservas cierran ${BOOKING_LOCKOUT_HOURS}h antes del inicio.`;
+      return `Bookings close ${BOOKING_LOCKOUT_HOURS}h before the start time.`;
     }
     return null;
   };

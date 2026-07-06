@@ -458,7 +458,7 @@ function ClubFormPanel({
               <div className="mt-2 flex items-start gap-2 rounded-lg border border-warning/40 bg-warning/15 px-3 py-2 text-xs text-foreground">
                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
                 <span>
-                  Ya se impartió un tema similar: <strong>"{similarMatch.title}"</strong> el {formatDay(similarMatch.date)}. Puedes continuar si quieres repetirlo.
+                  A similar topic was already taught: <strong>"{similarMatch.title}"</strong> on {formatDay(similarMatch.date)}. You can continue if you want to repeat it.
                 </span>
               </div>
             )}
@@ -468,7 +468,7 @@ function ClubFormPanel({
             <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} placeholder="What students will learn or discuss." className={`${fieldCls} resize-none`} />
           </Field>
 
-          <Field label="Cover image" help="Portada que verán los alumnos en su calendario.">
+          <Field label="Cover image" help="Cover image students will see on their calendar.">
             <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-secondary/30 p-8 text-center">
               <ImageIcon className="h-7 w-7 text-muted-foreground" />
               <div className="mt-2 text-sm font-medium text-foreground">{cover || "Drag & drop or choose an image"}</div>

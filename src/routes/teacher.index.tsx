@@ -407,8 +407,8 @@ function ReportModal({ session, perf, subskills, onClose, onSubmit }: {
               </div>
               {attendance === "delayed" && (
                 <p className="mt-2 text-[11px] text-muted-foreground">
-                  "Delayed" no es un estado de sesión: la sesión termina en <strong>Completed</strong>
-                  con una marca de asistencia tardía para KPIs.
+                  "Delayed" is not a session status: the session still ends as <strong>Completed</strong>
+                  with a late-attendance marker used for KPIs.
                 </p>
               )}
             </div>
