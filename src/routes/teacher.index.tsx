@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useSearch, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { SESSIONS, studentsOfTeacher, userById, type Session, type SessionStatus, type Level } from "@/lib/mock-data";
@@ -12,7 +12,14 @@ import { loadLevels, subscribeLevels } from "@/lib/courses-store";
 import { loadLessonPlans, saveLessonPlan, subscribeLessonPlans, type LessonPlan } from "@/lib/lesson-plans-store";
 import type { ExtSession } from "@/lib/sessions-store";
 
-export const Route = createFileRoute("/teacher/")({ component: TeacherDashboard });
+export const Route = createFileRoute("/teacher/")({
+  // Optional deep-link from the Calendar page → auto-open the Session Report
+  // for a given session id. `report` maps to a session in `sessions`.
+  validateSearch: (search: Record<string, unknown>) => ({
+    report: typeof search.report === "string" ? (search.report as string) : undefined,
+  }),
+  component: TeacherDashboard,
+});
 
 function fmt(iso: string) {
   return new Date(iso).toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -24,6 +31,8 @@ type LocalSession = Session & { _noReport?: boolean };
 
 function TeacherDashboard() {
   const { user } = useAuth();
+  const { report: reportId } = useSearch({ from: "/teacher/" });
+  const navigate = useNavigate();
   const [now, setNow] = useState(Date.now());
   const [sessions, setSessions] = useState<LocalSession[]>(() => SESSIONS.map((s) => ({ ...s })));
   const [evaluating, setEvaluating] = useState<Session | null>(null);
@@ -45,6 +54,16 @@ function TeacherDashboard() {
     const u2 = subscribeLessonPlans(() => setPlans(loadLessonPlans()));
     return () => { u1(); u2(); };
   }, []);
+
+  // If we arrived with ?report=<id>, auto-open Step 1 for that session
+  // (or Step 2 if we've already been through Step 1). We clear the search
+  // so refresh doesn't re-open the modal after cancel.
+  useEffect(() => {
+    if (!reportId) return;
+    const s = sessions.find((x) => x.id === reportId);
+    if (s && !evaluating && !editing) setEvaluating(s);
+    navigate({ to: "/teacher", search: {} as never, replace: true });
+  }, [reportId, sessions]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-lock overdue sessions: flip to completed-without-report
   useEffect(() => {
