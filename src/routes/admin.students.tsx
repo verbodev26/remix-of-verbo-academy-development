@@ -5,7 +5,7 @@ import {
 } from "@/lib/mock-data";
 import {
   PRODUCTS, FOCUSES, ACCESS_PLANS, ACCESS_PLAN_IDS, RESCHEDULE_PRESETS,
-  SESSIONS_PER_LEVEL, MAX_INSIGHT_STRIKES,
+  SESSIONS_PER_LEVEL, MAX_INSIGHT_STRIKES, MAX_BOOKCLUB_STRIKES,
   getProduct, focusesForProduct, getFocus, getAccessPlan,
   suggestDuration, nextPaymentDate, daysUntil,
   type ProductId, type AccessPlanId,
@@ -343,6 +343,9 @@ function StudentCard({ student: s, onOpen }: { student: User; onOpen: () => void
   const product = getProduct(s.product);
   const strikes = s.insights_strikes ?? 0;
   const blocked = strikes >= MAX_INSIGHT_STRIKES;
+  const bcStrikes = s.bookclub_strikes ?? 0;
+  const bcBlocked = bcStrikes >= MAX_BOOKCLUB_STRIKES;
+  const hasBookClubs = (s.addon_bookclubs_per_month ?? 0) > 0;
   const hired = s.hired_sessions ?? 0;
   const remaining = s.remaining_sessions ?? 0;
   const done = Math.max(0, hired - remaining);
@@ -444,6 +447,11 @@ function StudentCard({ student: s, onOpen }: { student: User; onOpen: () => void
         <Tag className={blocked ? "bg-destructive/10 text-destructive" : "bg-secondary text-secondary-foreground"}>
           {blocked ? <>Insights Blocked</> : <>Insights {strikes}/{MAX_INSIGHT_STRIKES}</>}
         </Tag>
+        {hasBookClubs && (
+          <Tag className={bcBlocked ? "bg-destructive/10 text-destructive" : "bg-secondary text-secondary-foreground"}>
+            {bcBlocked ? <>Book Clubs Blocked</> : <>Book Clubs {bcStrikes}/{MAX_BOOKCLUB_STRIKES}</>}
+          </Tag>
+        )}
       </div>
     </button>
   );
@@ -1020,6 +1028,9 @@ function StudentDetailModal({
   const accessPlan = getAccessPlan(student.access_plan);
   const strikes = student.insights_strikes ?? 0;
   const blocked = strikes >= MAX_INSIGHT_STRIKES;
+  const bcStrikes = student.bookclub_strikes ?? 0;
+  const bcBlocked = bcStrikes >= MAX_BOOKCLUB_STRIKES;
+  const hasBookClubs = (student.addon_bookclubs_per_month ?? 0) > 0;
   const nextPay = computeNextPayment(student);
 
   const patch = (p: Partial<User>) => onUpdate({ ...student, ...p });
@@ -1210,6 +1221,16 @@ function StudentDetailModal({
           >
             <Unlock className="h-3.5 w-3.5" /> Unlock Insights ({strikes}/{MAX_INSIGHT_STRIKES})
           </button>
+          {hasBookClubs && (
+            <button
+              onClick={() => bcBlocked && patch({ bookclub_strikes: 0 })}
+              disabled={!bcBlocked}
+              className="inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-all enabled:hover:brightness-110 disabled:opacity-40"
+              style={{ backgroundColor: "#0f766e" }}
+            >
+              <Unlock className="h-3.5 w-3.5" /> Unlock Book Clubs ({bcStrikes}/{MAX_BOOKCLUB_STRIKES})
+            </button>
+          )}
           <button
             onClick={markPaid}
             className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-success px-3 py-1.5 text-xs font-semibold text-success-foreground shadow-sm transition-opacity hover:opacity-90"

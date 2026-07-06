@@ -11,6 +11,7 @@ export type StudentStatus = "active" | "suspended" | "frozen";
 // Roughly one live session per unit; a level block = 30 units = 30 sessions.
 export const SESSIONS_PER_LEVEL = 30;
 export const MAX_INSIGHT_STRIKES = 3;
+export const MAX_BOOKCLUB_STRIKES = 3;
 
 // ----------------------------------------------------------------------------
 // PRODUCTS — audience + content roadmap. `icon` maps to a lucide-react name.

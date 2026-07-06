@@ -115,26 +115,27 @@ function sessionToEvent(s: Session): CalEvent {
 }
 
 const CANCEL_LIMIT = 3;
-const CANCEL_KEY_OLD = "verbo:club-cancels";
-const CANCEL_KEY = "verbo:club-cancels-v2";
+const BOOKING_LOCKOUT_HOURS = 24;
+// Per-kind strike storage: { [userId]: { insights: n, "book-club": n } }
+const STRIKE_KEY = "verbo:club-strikes-v3";
+type StrikeKind = "verbo-insights" | "book-club";
+type StrikeMap = Record<string, Partial<Record<StrikeKind, number>>>;
 
-function readCancels(userId?: string): Record<string, number> {
+function readStrikes(): StrikeMap {
   if (typeof window === "undefined") return {};
-  try {
-    const raw = localStorage.getItem(CANCEL_KEY);
-    if (raw) return JSON.parse(raw);
-    const oldRaw = localStorage.getItem(CANCEL_KEY_OLD);
-    if (oldRaw && userId) {
-      const n = Number(oldRaw);
-      localStorage.removeItem(CANCEL_KEY_OLD);
-      return { [userId]: n };
-    }
-    return {};
-  } catch { return {}; }
+  try { return JSON.parse(localStorage.getItem(STRIKE_KEY) || "{}"); } catch { return {}; }
+}
+function persistStrikes(map: StrikeMap) {
+  if (typeof window !== "undefined") localStorage.setItem(STRIKE_KEY, JSON.stringify(map));
 }
 
-function persistCancels(map: Record<string, number>) {
-  if (typeof window !== "undefined") localStorage.setItem(CANCEL_KEY, JSON.stringify(map));
+function hoursUntil(iso: string): number {
+  return (new Date(iso).getTime() - Date.now()) / 36e5;
+}
+
+function sameMonth(iso: string, ref = new Date()): boolean {
+  const d = new Date(iso);
+  return d.getFullYear() === ref.getFullYear() && d.getMonth() === ref.getMonth();
 }
 
 function Page() {
@@ -165,9 +166,17 @@ function Page() {
   const [events, setEvents] = useState<CalEvent[]>(initial);
   useEffect(() => setEvents(initial), [initial]);
 
-  const [cancelMap, setCancelMap] = useState<Record<string, number>>(() => readCancels(user?.id));
-  const cancelCount = cancelMap[user?.id ?? "guest"] ?? 0;
-  const blocked = cancelCount >= CANCEL_LIMIT;
+  const uid = user?.id ?? "guest";
+  const [strikeMap, setStrikeMap] = useState<StrikeMap>(() => readStrikes());
+  const insightStrikes = strikeMap[uid]?.["verbo-insights"] ?? 0;
+  const bookClubStrikes = strikeMap[uid]?.["book-club"] ?? 0;
+  const insightsBlocked = insightStrikes >= CANCEL_LIMIT;
+  const bookClubBlocked = bookClubStrikes >= CANCEL_LIMIT;
+
+  // Monthly caps sourced from admin-set fields on the user record.
+  const capInsights = user?.addon_insights_per_month ?? 0;
+  const capBookClubs = user?.addon_bookclubs_per_month ?? 0;
+  const capSpotlight = user?.addon_spotlight_per_month ?? 0;
 
   const [cursor, setCursor] = useState(() => { const d = new Date(); d.setDate(1); return d; });
   const [selected, setSelected] = useState<CalEvent | null>(null);
@@ -193,9 +202,54 @@ function Page() {
     setSelected(null);
   };
 
+  // Monthly usage per kind — counted from events the user has booked this month.
+  const monthlyBooked = (kind: EventKind) =>
+    events.filter((e) => e.kind === kind && e.user_booked && sameMonth(e.date)).length;
+
+  const capForKind = (kind: EventKind): number | null => {
+    if (kind === "verbo-insights") return capInsights;
+    if (kind === "book-club") return capBookClubs;
+    if (kind === "spotlights") return capSpotlight;
+    return null;
+  };
+
+  const strikeBlockedFor = (kind: EventKind): boolean => {
+    if (kind === "verbo-insights") return insightsBlocked;
+    if (kind === "book-club") return bookClubBlocked;
+    return false;
+  };
+
+  // Returns null when booking is allowed, or a user-facing reason string when blocked.
+  const bookingBlockReason = (ev: CalEvent): string | null => {
+    if (ev.kind === "one-on-one" || ev.kind === "focus-workshop") return null;
+    if (strikeBlockedFor(ev.kind)) {
+      const label = ev.kind === "book-club" ? "Book Clubs" : "Insights";
+      return `${label} bookings are temporarily blocked (3/3 late cancellations). Contact your admin.`;
+    }
+    const cap = capForKind(ev.kind);
+    if (cap !== null && cap > 0) {
+      const used = monthlyBooked(ev.kind);
+      if (used >= cap) {
+        const label = ev.kind === "verbo-insights" ? "Insights"
+          : ev.kind === "book-club" ? "Book Clubs" : "Spotlight Sessions";
+        return `Has alcanzado tu límite mensual de ${label} (${used}/${cap}).`;
+      }
+    } else if (cap === 0) {
+      const label = ev.kind === "verbo-insights" ? "Insights"
+        : ev.kind === "book-club" ? "Book Clubs" : "Spotlight Sessions";
+      return `No tienes acceso a ${label} en tu plan actual.`;
+    }
+    if (hoursUntil(ev.date) < BOOKING_LOCKOUT_HOURS) {
+      return `Las reservas cierran ${BOOKING_LOCKOUT_HOURS}h antes del inicio.`;
+    }
+    return null;
+  };
+
   const confirmClub = (ev: CalEvent) => {
     if (ev.user_booked) return;
     if ((ev.spots_booked ?? 0) >= (ev.spots_total ?? 4)) { alert("This club is fully booked. Please choose another session."); return; }
+    const reason = bookingBlockReason(ev);
+    if (reason) { alert(reason); return; }
     const ok = window.confirm("By reserving your spot, you commit to attending. Space is highly limited for corporate teams.");
     if (!ok) return;
     updateEvent(ev.id, { user_booked: true, spots_booked: (ev.spots_booked ?? 0) + 1 });
@@ -207,13 +261,25 @@ function Page() {
     const freedSpots = Math.max(0, (ev.spots_booked ?? 1) - 1);
     updateEvent(ev.id, { user_booked: false, spots_booked: freedSpots });
     setSelected({ ...ev, user_booked: false, spots_booked: freedSpots });
-    if (blocked) return;
-    const next = cancelCount + 1;
-    const nextMap = { ...cancelMap, [user?.id ?? "guest"]: next };
-    setCancelMap(nextMap);
-    persistCancels(nextMap);
-    if (next >= CANCEL_LIMIT) alert("You have reached your cancellation limit (3/3). You have been excluded from booking further club sessions. Please contact your organization's administrator.");
-    else alert(`Cancellation ${next} of ${CANCEL_LIMIT}. Please remember that club spots are highly limited for your team.`);
+
+    // Strikes: only for Insights and Book Clubs, only when cancelled <24h ahead.
+    // Spotlights and Focus Workshops carry no strike penalty.
+    if (ev.kind !== "verbo-insights" && ev.kind !== "book-club") return;
+    if (hoursUntil(ev.date) >= 24) return;
+    if (strikeBlockedFor(ev.kind)) return;
+
+    const current = strikeMap[uid]?.[ev.kind] ?? 0;
+    const next = current + 1;
+    const nextMap: StrikeMap = { ...strikeMap, [uid]: { ...(strikeMap[uid] ?? {}), [ev.kind]: next } };
+    setStrikeMap(nextMap);
+    persistStrikes(nextMap);
+
+    const label = ev.kind === "book-club" ? "Book Clubs" : "Insights";
+    if (next >= CANCEL_LIMIT) {
+      alert(`You have reached your late-cancellation limit for ${label} (${CANCEL_LIMIT}/${CANCEL_LIMIT}). ${label} bookings are temporarily disabled — please contact your organization's administrator.`);
+    } else {
+      alert(`Late cancellation ${next} of ${CANCEL_LIMIT} for ${label}. Please remember that spots are highly limited for your team.`);
+    }
   };
 
   const grid = useMemo(() => buildMonthGrid(cursor), [cursor]);
@@ -267,12 +333,16 @@ function Page() {
           </div>
         </div>
 
-        {blocked && (
+        {(insightsBlocked || bookClubBlocked) && (
           <Card className="border-destructive/40 bg-destructive/5">
             <div className="flex items-start gap-3">
               <AlertTriangle className="mt-0.5 h-5 w-5 text-destructive" />
               <div className="text-sm text-foreground">
-                You have exceeded your cancellation limit (3/3). Club bookings are temporarily disabled — please contact your organization's administrator.
+                {insightsBlocked && bookClubBlocked
+                  ? "You have reached the late-cancellation limit (3/3) for Insights and Book Clubs. Bookings for both are temporarily disabled — please contact your organization's administrator."
+                  : insightsBlocked
+                    ? "You have reached the late-cancellation limit (3/3) for Insights. Insights bookings are temporarily disabled — please contact your organization's administrator."
+                    : "You have reached the late-cancellation limit (3/3) for Book Clubs. Book Club bookings are temporarily disabled — please contact your organization's administrator."}
               </div>
             </div>
           </Card>
@@ -396,8 +466,9 @@ function Page() {
             onCancelOneOnOne={() => cancelOneOnOne(selected)}
             onConfirmClub={() => confirmClub(selected)}
             onCancelClub={() => cancelClub(selected)}
-            blocked={blocked}
-            cancelCount={cancelCount}
+            bookingBlockReason={bookingBlockReason(selected)}
+            insightStrikes={insightStrikes}
+            bookClubStrikes={bookClubStrikes}
           />
         )}
 
@@ -504,20 +575,26 @@ function PastRow({ s }: { s: CalEvent }) {
 
 // ---------- Modal ----------
 function EventModal({
-  event, onClose, onCancelOneOnOne, onConfirmClub, onCancelClub, blocked, cancelCount,
+  event, onClose, onCancelOneOnOne, onConfirmClub, onCancelClub, bookingBlockReason, insightStrikes, bookClubStrikes,
 }: {
   event: CalEvent;
   onClose: () => void;
   onCancelOneOnOne: () => void;
   onConfirmClub: () => void;
   onCancelClub: () => void;
-  blocked: boolean;
-  cancelCount: number;
+  bookingBlockReason: string | null;
+  insightStrikes: number;
+  bookClubStrikes: number;
 }) {
   const teacher = event.teacher_id ? userById(event.teacher_id) : undefined;
   const isClub = event.kind !== "one-on-one";
   const full = (event.spots_booked ?? 0) >= (event.spots_total ?? 4);
   const live = liveState(event);
+  const kindStrikes = event.kind === "verbo-insights" ? insightStrikes
+    : event.kind === "book-club" ? bookClubStrikes : null;
+  const kindStrikeLabel = event.kind === "verbo-insights" ? "Insights"
+    : event.kind === "book-club" ? "Book Clubs" : null;
+  const bookingLocked = !!bookingBlockReason && !event.user_booked;
 
   return (
     <div onClick={onClose} className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
@@ -571,7 +648,17 @@ function EventModal({
             <GhostButton className="w-full" onClick={() => alert("Pre-club material download would start now.")}>
               <Download className="h-4 w-4" /> Download Pre-Club Material
             </GhostButton>
-            <p className="text-[11px] text-muted-foreground">Cancellations used: {cancelCount}/{CANCEL_LIMIT}</p>
+            {kindStrikes !== null && kindStrikeLabel && (
+              <p className="text-[11px] text-muted-foreground">
+                Late cancellations used ({kindStrikeLabel}): {kindStrikes}/{CANCEL_LIMIT}
+              </p>
+            )}
+            {bookingLocked && (
+              <div className="flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-[11px] text-amber-800 ring-1 ring-amber-200">
+                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                <span>{bookingBlockReason}</span>
+              </div>
+            )}
           </div>
         )}
 
@@ -590,8 +677,14 @@ function EventModal({
 
           {isClub && (
             <>
-              <PrimaryButton className="flex-1" disabled={event.user_booked || full || blocked} onClick={onConfirmClub}>
-                {full && !event.user_booked ? "Fully Booked" : event.user_booked ? "Confirmed" : "Confirm Attendance"}
+              <PrimaryButton className="flex-1" disabled={event.user_booked || full || bookingLocked} onClick={onConfirmClub}>
+                {full && !event.user_booked
+                  ? "Fully Booked"
+                  : event.user_booked
+                    ? "Confirmed"
+                    : bookingLocked
+                      ? "Booking Closed"
+                      : "Confirm Attendance"}
               </PrimaryButton>
               <GhostButton className="flex-1" disabled={!event.user_booked} onClick={onCancelClub}>
                 Can't Attend
