@@ -87,6 +87,16 @@ export interface Session {
   review_status?: "pending" | "reviewed"; // admin review state for low ratings
   review_note?: string; // admin resolution note
   notes?: string;
+  // Origin of this session — course-style 1:1 by default, or a Focus Workshop
+  // cohort session. Workshop sessions carry the cohort/template reference so
+  // the Focus Workshops tab can render them without duplicating any state.
+  // For workshop sessions, `student_id` stores the cohort id (participants
+  // are read from the workshop cohort itself) and teacher hours accrue via
+  // `teacher_id` like any other session.
+  origin?: "course" | "workshop";
+  workshop_cohort_id?: string;
+  workshop_template_id?: string;
+  workshop_topic?: string;
 }
 
 export interface Unit {
