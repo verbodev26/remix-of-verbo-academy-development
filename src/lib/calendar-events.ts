@@ -15,7 +15,7 @@
 
 import type { ExtSession, ExtSessionStatus } from "./sessions-store";
 import { loadSessions } from "./sessions-store";
-import { CLUB_SEED, type Club, type ClubType, type TimeStatus } from "./clubs-store";
+import { loadClubs, type Club, type ClubType, type TimeStatus } from "./clubs-store";
 
 export type CalendarEventKind =
   | "class"        // 1:1 Performance Session (course)
@@ -85,7 +85,7 @@ export function teacherCalendarEvents(teacherId: string, opts?: {
   }
 
   // Clubs — Insights + Book Clubs the teacher has claimed / been assigned.
-  for (const c of CLUB_SEED) {
+  for (const c of loadClubs()) {
     if (c.teacher_id === teacherId) events.push(clubEvent(c));
   }
 

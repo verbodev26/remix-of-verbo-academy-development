@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Card, GhostButton, Pill, PrimaryButton, SectionTitle } from "@/components/verbo/ui";
-import { USERS } from "@/lib/mock-data";
+import { USERS, type User } from "@/lib/mock-data";
 import {
-  type Club, type ClubType, type TimeStatus,
-  CLUB_SEED, assignmentOf, clubTeacherName as teacherName,
+  type Club, type ClubType, type TimeStatus, type ClubReleaseRequest,
+  assignmentOf, clubTeacherName as teacherName,
+  loadClubs, persistClubs, subscribeClubs, updateClub, releaseClub,
+  loadReleaseRequests, subscribeReleaseRequests, removeReleaseRequest,
 } from "@/lib/clubs-store";
 import {
   Sparkles,
@@ -25,6 +27,8 @@ import {
   ChevronLeft,
   ChevronRight,
   User as UserIcon,
+  Inbox,
+  Check,
 } from "lucide-react";
 
 export const Route = createFileRoute("/admin/clubs")({
@@ -75,10 +79,19 @@ type ViewMode = "list" | "calendar" | "history";
 function Page() {
   const { new: openNew } = Route.useSearch();
   const navigate = Route.useNavigate();
-  const [clubs, setClubs] = useState<Club[]>(CLUB_SEED);
+  const [clubs, setClubs] = useState<Club[]>(() => loadClubs());
+  const [requests, setRequests] = useState<ClubReleaseRequest[]>(() => loadReleaseRequests());
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Club | null>(null);
   const [view, setView] = useState<ViewMode>("list");
+
+  useEffect(() => {
+    setClubs(loadClubs());
+    setRequests(loadReleaseRequests());
+    const u1 = subscribeClubs(() => setClubs(loadClubs()));
+    const u2 = subscribeReleaseRequests(() => setRequests(loadReleaseRequests()));
+    return () => { u1(); u2(); };
+  }, []);
 
   // Open the create modal when arriving from a Quick Action (?new=1).
   useEffect(() => {
@@ -91,17 +104,17 @@ function Page() {
 
   const onCreate = () => { setEditing(null); setOpen(true); };
   const onEdit = (c: Club) => { setEditing(c); setOpen(true); };
-  const onDelete = (id: string) => setClubs((p) => p.filter((c) => c.id !== id));
+  const onDelete = (id: string) => {
+    const next = loadClubs().filter((c) => c.id !== id);
+    persistClubs(next);
+  };
 
   const onSave = (data: Omit<Club, "id" | "spots_taken" | "status">) => {
-    if (editing) {
-      setClubs((p) => p.map((c) => (c.id === editing.id ? { ...c, ...data } : c)));
-    } else {
-      setClubs((p) => [
-        { id: `c${Date.now()}`, spots_taken: 0, status: "upcoming", ...data },
-        ...p,
-      ]);
-    }
+    const current = loadClubs();
+    const next = editing
+      ? current.map((c) => (c.id === editing.id ? { ...c, ...data } : c))
+      : [{ id: `c${Date.now()}`, spots_taken: 0, status: "upcoming" as TimeStatus, ...data }, ...current];
+    persistClubs(next);
     setOpen(false);
   };
 
@@ -139,6 +152,8 @@ function Page() {
       {view === "list" && <ListView clubs={clubs} onEdit={onEdit} onDelete={onDelete} />}
       {view === "calendar" && <CalendarView clubs={clubs} onEdit={onEdit} />}
       {view === "history" && <TopicHistory clubs={clubs} />}
+
+      <ReleaseRequestsPanel requests={requests} clubs={clubs} />
 
       {open && <ClubFormPanel initial={editing} clubs={clubs} onClose={() => setOpen(false)} onSave={onSave} />}
     </div>
@@ -395,6 +410,9 @@ function ClubFormPanel({
   const [date, setDate] = useState(initial?.date?.slice(0, 16) ?? "");
   const [duration, setDuration] = useState(initial?.duration_minutes ?? 60);
   const [spotsTotal, setSpotsTotal] = useState(initial?.spots_total ?? (type === "book" ? 4 : 30));
+  const [teacherPayment, setTeacherPayment] = useState<string>(
+    initial?.teacher_payment != null ? String(initial.teacher_payment) : "",
+  );
 
   const teachers = useMemo(() => USERS.filter((u) => u.role === "teacher"), []);
 
@@ -415,6 +433,7 @@ function ClubFormPanel({
       date: new Date(date).toISOString(),
       duration_minutes: duration,
       spots_total: spotsTotal,
+      teacher_payment: teacherPayment.trim() === "" ? undefined : Math.max(0, parseFloat(teacherPayment) || 0),
     });
   };
 
@@ -528,6 +547,18 @@ function ClubFormPanel({
               <input type="number" min={1} value={spotsTotal} onChange={(e) => setSpotsTotal(parseInt(e.target.value) || 1)} className={fieldCls} />
             </Field>
           </div>
+
+          <Field label="Teacher Payment (MXN)" help="Optional — how much the teacher earns for delivering this club. Used as the default penalty when an admin approves a release request.">
+            <input
+              type="number"
+              min={0}
+              step="0.01"
+              value={teacherPayment}
+              onChange={(e) => setTeacherPayment(e.target.value)}
+              placeholder="e.g. 350"
+              className={fieldCls}
+            />
+          </Field>
         </form>
 
         <div className="flex items-center justify-end gap-2 border-t border-border bg-secondary/30 px-6 py-4">
@@ -547,6 +578,172 @@ function Field({ label, help, children }: { label: string; help?: string; childr
       <label className="text-xs font-medium text-foreground">{label}</label>
       {help && <p className="mt-0.5 text-[11px] text-muted-foreground">{help}</p>}
       <div className="mt-1.5">{children}</div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Release Requests — Admin side of the "Request Release" flow
+// ---------------------------------------------------------------------------
+const PROFILE_KEY = "verbo:teacher-profile-overrides";
+
+function appendTeacherAdjustment(teacherId: string, amount: number, reason: string) {
+  const teacher = USERS.find((u) => u.id === teacherId);
+  if (!teacher) return;
+  const adj = { id: `adj${Date.now()}`, date: new Date().toISOString(), amount, reason };
+  teacher.adjustments = [...(teacher.adjustments ?? []), adj];
+  try {
+    const raw = localStorage.getItem(PROFILE_KEY);
+    const overrides: Record<string, Partial<User>> = raw ? JSON.parse(raw) : {};
+    const { id: _id, role: _role, ...rest } = teacher;
+    overrides[teacher.id] = rest;
+    localStorage.setItem(PROFILE_KEY, JSON.stringify(overrides));
+  } catch { /* noop */ }
+}
+
+function ReleaseRequestsPanel({ requests, clubs }: { requests: ClubReleaseRequest[]; clubs: Club[] }) {
+  const [approving, setApproving] = useState<ClubReleaseRequest | null>(null);
+
+  const rows = useMemo(() => requests.map((r) => {
+    const club = clubs.find((c) => c.id === r.club_id);
+    const teacher = USERS.find((u) => u.id === r.teacher_id);
+    return { r, club, teacher };
+  }), [requests, clubs]);
+
+  return (
+    <Card className="!p-0">
+      <div className="flex items-center justify-between border-b border-border px-6 py-4">
+        <SectionTitle>
+          <span className="inline-flex items-center gap-2">
+            <Inbox className="h-4 w-4" /> Release Requests
+            <span className="ml-1 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-warning/20 px-1.5 text-[11px] font-semibold text-warning-foreground">
+              {requests.length}
+            </span>
+          </span>
+        </SectionTitle>
+      </div>
+      {rows.length === 0 ? (
+        <div className="px-6 py-8 text-center text-sm text-muted-foreground">No pending release requests.</div>
+      ) : (
+        <table className="w-full text-sm">
+          <thead className="text-left text-xs uppercase tracking-wider text-muted-foreground">
+            <tr className="border-b border-border">
+              <th className="px-6 py-3 font-medium">Teacher</th>
+              <th className="px-6 py-3 font-medium">Club</th>
+              <th className="px-6 py-3 font-medium">Reason</th>
+              <th className="px-6 py-3 font-medium text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(({ r, club, teacher }) => (
+              <tr key={r.id} className="border-b border-border last:border-0 align-top">
+                <td className="px-6 py-4 text-foreground">{teacher?.name ?? "—"}</td>
+                <td className="px-6 py-4">
+                  {club ? (
+                    <>
+                      <div className="font-medium text-foreground">
+                        <span className={`mr-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${club.type === "insight" ? "bg-accent/15 text-accent" : "bg-primary/10 text-primary"}`}>
+                          {club.type === "insight" ? <Sparkles className="h-3 w-3" /> : <BookOpen className="h-3 w-3" />}
+                          {club.type === "insight" ? "Insight" : "Book Club"}
+                        </span>
+                        {club.title}
+                      </div>
+                      <div className="text-xs text-muted-foreground">{formatDate(club.date)}</div>
+                    </>
+                  ) : <span className="italic text-muted-foreground">Club deleted</span>}
+                </td>
+                <td className="px-6 py-4 text-muted-foreground">{r.reason || <span className="italic">No reason provided</span>}</td>
+                <td className="px-6 py-4">
+                  <div className="flex justify-end gap-2">
+                    <GhostButton onClick={() => removeReleaseRequest(r.id)}>
+                      <X className="h-3.5 w-3.5" /> Reject
+                    </GhostButton>
+                    <PrimaryButton onClick={() => setApproving(r)}>
+                      <Check className="h-3.5 w-3.5" /> Approve
+                    </PrimaryButton>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      {approving && (
+        <ApproveReleaseModal
+          request={approving}
+          club={clubs.find((c) => c.id === approving.club_id) ?? null}
+          onClose={() => setApproving(null)}
+          onConfirm={(amount) => {
+            const club = clubs.find((c) => c.id === approving.club_id);
+            if (club) {
+              const label = club.type === "insight" ? "Insight" : "Book Club";
+              const dateStr = new Date(club.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+              appendTeacherAdjustment(
+                approving.teacher_id,
+                -Math.abs(amount),
+                `Club release penalty — ${label}: ${club.title} on ${dateStr}`,
+              );
+              releaseClub(club.id);
+            }
+            removeReleaseRequest(approving.id);
+            setApproving(null);
+          }}
+        />
+      )}
+    </Card>
+  );
+}
+
+function ApproveReleaseModal({
+  request, club, onClose, onConfirm,
+}: {
+  request: ClubReleaseRequest;
+  club: Club | null;
+  onClose: () => void;
+  onConfirm: (amount: number) => void;
+}) {
+  const [amount, setAmount] = useState<string>(
+    club?.teacher_payment != null ? String(club.teacher_payment) : "",
+  );
+  const valid = amount.trim() !== "" && !isNaN(parseFloat(amount)) && parseFloat(amount) >= 0;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md rounded-2xl bg-background shadow-2xl">
+        <div className="border-b border-border px-6 py-4">
+          <h2 className="text-base font-semibold text-foreground">Approve release</h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            The club will return to “Created” and a negative adjustment will be recorded in the teacher’s Financial tab.
+          </p>
+        </div>
+        <div className="space-y-4 px-6 py-5">
+          {club && (
+            <div className="rounded-lg bg-secondary/40 px-3 py-2 text-xs text-muted-foreground">
+              <div className="font-medium text-foreground">{club.title}</div>
+              <div>{club.type === "insight" ? "Insight" : "Book Club"} · {formatDate(club.date)}</div>
+            </div>
+          )}
+          <Field label="Penalty amount (MXN)" help={club?.teacher_payment == null ? "This club has no Teacher Payment configured — enter the amount manually." : "Pre-filled from the club’s Teacher Payment. Adjust if needed."}>
+            <input
+              type="number"
+              min={0}
+              step="0.01"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="e.g. 350"
+              className={fieldCls}
+              autoFocus
+            />
+          </Field>
+        </div>
+        <div className="flex justify-end gap-2 border-t border-border bg-secondary/30 px-6 py-4">
+          <GhostButton onClick={onClose}>Cancel</GhostButton>
+          <PrimaryButton disabled={!valid} onClick={() => onConfirm(parseFloat(amount))}>
+            Confirm approval
+          </PrimaryButton>
+        </div>
+      </div>
     </div>
   );
 }
