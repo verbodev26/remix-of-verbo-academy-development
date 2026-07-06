@@ -115,26 +115,27 @@ function sessionToEvent(s: Session): CalEvent {
 }
 
 const CANCEL_LIMIT = 3;
-const CANCEL_KEY_OLD = "verbo:club-cancels";
-const CANCEL_KEY = "verbo:club-cancels-v2";
+const BOOKING_LOCKOUT_HOURS = 24;
+// Per-kind strike storage: { [userId]: { insights: n, "book-club": n } }
+const STRIKE_KEY = "verbo:club-strikes-v3";
+type StrikeKind = "verbo-insights" | "book-club";
+type StrikeMap = Record<string, Partial<Record<StrikeKind, number>>>;
 
-function readCancels(userId?: string): Record<string, number> {
+function readStrikes(): StrikeMap {
   if (typeof window === "undefined") return {};
-  try {
-    const raw = localStorage.getItem(CANCEL_KEY);
-    if (raw) return JSON.parse(raw);
-    const oldRaw = localStorage.getItem(CANCEL_KEY_OLD);
-    if (oldRaw && userId) {
-      const n = Number(oldRaw);
-      localStorage.removeItem(CANCEL_KEY_OLD);
-      return { [userId]: n };
-    }
-    return {};
-  } catch { return {}; }
+  try { return JSON.parse(localStorage.getItem(STRIKE_KEY) || "{}"); } catch { return {}; }
+}
+function persistStrikes(map: StrikeMap) {
+  if (typeof window !== "undefined") localStorage.setItem(STRIKE_KEY, JSON.stringify(map));
 }
 
-function persistCancels(map: Record<string, number>) {
-  if (typeof window !== "undefined") localStorage.setItem(CANCEL_KEY, JSON.stringify(map));
+function hoursUntil(iso: string): number {
+  return (new Date(iso).getTime() - Date.now()) / 36e5;
+}
+
+function sameMonth(iso: string, ref = new Date()): boolean {
+  const d = new Date(iso);
+  return d.getFullYear() === ref.getFullYear() && d.getMonth() === ref.getMonth();
 }
 
 function Page() {
