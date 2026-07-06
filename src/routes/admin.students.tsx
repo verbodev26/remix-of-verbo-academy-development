@@ -450,6 +450,7 @@ function StudentFormModal({
     password: initial?.password ?? "",
     member_since: initial?.member_since ?? "",
     company: initial?.company ?? "",
+    product_type: (initial?.product_type as FormState["product_type"]) ?? "performance",
     product: (initial?.product as ProductId) ?? "",
     focus: initial?.focus ?? "",
     contracted_levels: initial?.contracted_levels ?? [],
@@ -467,6 +468,11 @@ function StudentFormModal({
     cycle_start: initial?.cycle_start ?? "",
     video_call_link: initial?.video_call_link ?? "",
     teacher_id: existingTeacher,
+    addon_insights_per_month: initial?.addon_insights_per_month ?? 0,
+    addon_bookclubs_per_month: initial?.addon_bookclubs_per_month ?? 0,
+    addon_spotlight_per_month: initial?.addon_spotlight_per_month ?? 0,
+    addon_workshops_enabled: initial?.addon_workshops_enabled ?? false,
+    selected_cohort_ids: initial ? cohortsForStudent(initial.id).map((x) => x.cohort.id) : [],
   }));
   const [showPassword, setShowPassword] = useState(false);
   const prevPerWeek = useRef(f.sessions_per_week);
