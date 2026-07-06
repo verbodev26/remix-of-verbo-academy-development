@@ -104,7 +104,6 @@ function TeacherDashboard() {
     // student calendars reflect the plan being locked in.
     updateSession(plan.session_id, { status: "ready" as any });
     setPlans((prev) => ({ ...prev, [plan.session_id]: plan }));
-    setSessions((prev) => prev.map((s) => (s.id === plan.session_id && s.status === "scheduled") ? { ...s, status: "completed" as any === "completed" ? s.status : s.status } : s));
     setPlanning(null);
   };
 
@@ -253,8 +252,8 @@ function TeacherDashboard() {
         <PerformanceEvaluationModal
           session={evaluating}
           onClose={() => setEvaluating(null)}
-          onContinue={(perf) => {
-            setEditing({ session: evaluating, perf });
+          onContinue={(perf, subskills) => {
+            setEditing({ session: evaluating, perf, subskills });
             setEvaluating(null);
           }}
         />
@@ -263,6 +262,7 @@ function TeacherDashboard() {
         <ReportModal
           session={editing.session}
           perf={editing.perf}
+          subskills={editing.subskills}
           onClose={() => setEditing(null)}
           onSubmit={handleSubmit}
         />
