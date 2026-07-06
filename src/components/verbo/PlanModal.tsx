@@ -127,7 +127,7 @@ export function PlanModal({
             <label className="text-xs font-medium text-foreground">Session Type</label>
             <select value={type} onChange={(e) => setType(e.target.value as LessonSessionType)} className={`${inputCls} cursor-pointer`}>
               <option value="" disabled>— Pick a type —</option>
-              {SESSION_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+              {sessionTypes.map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
             <p className="mt-1 text-[11px] text-muted-foreground">
               Pick every time. There is no default: it is your professional autonomy to step off the syllabus when that adds more value.
