@@ -70,7 +70,7 @@ export function PlanModal({
           <X className="h-4 w-4" />
         </button>
 
-        <h3 className="text-lg font-semibold tracking-tight text-foreground text-slate-50">Lesson Plan</h3>
+        <h3 className="text-lg font-semibold tracking-tight text-foreground">Lesson Plan</h3>
         <p className="mt-0.5 text-xs text-muted-foreground">
           Performance Sessions · {student?.access_plan ? `Access Plan ${student.access_plan}` : "Access Plan"}
           {" — "}prepare the pedagogical plan. Saved plans move the session from

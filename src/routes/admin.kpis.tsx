@@ -92,7 +92,7 @@ function Page() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-50">KPIs</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">KPIs</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Punctuality, reliability and student ratings — with a composite score driving bonus eligibility.
         </p>

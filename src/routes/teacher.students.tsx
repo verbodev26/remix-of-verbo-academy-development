@@ -95,7 +95,7 @@ function Page() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-50">My Students</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">My Students</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Read-only view of the {myStudents.length} students assigned to you.
         </p>
