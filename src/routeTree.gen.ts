@@ -19,6 +19,7 @@ import { Route as TeacherIndexRouteImport } from './routes/teacher.index'
 import { Route as StudentIndexRouteImport } from './routes/student.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as TeacherWorkshopsRouteImport } from './routes/teacher.workshops'
+import { Route as TeacherVipRouteImport } from './routes/teacher.vip'
 import { Route as TeacherStudentsRouteImport } from './routes/teacher.students'
 import { Route as TeacherMaterialsRouteImport } from './routes/teacher.materials'
 import { Route as TeacherCalendarRouteImport } from './routes/teacher.calendar'
@@ -85,6 +86,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
 const TeacherWorkshopsRoute = TeacherWorkshopsRouteImport.update({
   id: '/workshops',
   path: '/workshops',
+  getParentRoute: () => TeacherRoute,
+} as any)
+const TeacherVipRoute = TeacherVipRouteImport.update({
+  id: '/vip',
+  path: '/vip',
   getParentRoute: () => TeacherRoute,
 } as any)
 const TeacherStudentsRoute = TeacherStudentsRouteImport.update({
@@ -197,6 +203,7 @@ export interface FileRoutesByFullPath {
   '/teacher/calendar': typeof TeacherCalendarRoute
   '/teacher/materials': typeof TeacherMaterialsRoute
   '/teacher/students': typeof TeacherStudentsRoute
+  '/teacher/vip': typeof TeacherVipRoute
   '/teacher/workshops': typeof TeacherWorkshopsRoute
   '/admin/': typeof AdminIndexRoute
   '/student/': typeof StudentIndexRoute
@@ -223,6 +230,7 @@ export interface FileRoutesByTo {
   '/teacher/calendar': typeof TeacherCalendarRoute
   '/teacher/materials': typeof TeacherMaterialsRoute
   '/teacher/students': typeof TeacherStudentsRoute
+  '/teacher/vip': typeof TeacherVipRoute
   '/teacher/workshops': typeof TeacherWorkshopsRoute
   '/admin': typeof AdminIndexRoute
   '/student': typeof StudentIndexRoute
@@ -253,6 +261,7 @@ export interface FileRoutesById {
   '/teacher/calendar': typeof TeacherCalendarRoute
   '/teacher/materials': typeof TeacherMaterialsRoute
   '/teacher/students': typeof TeacherStudentsRoute
+  '/teacher/vip': typeof TeacherVipRoute
   '/teacher/workshops': typeof TeacherWorkshopsRoute
   '/admin/': typeof AdminIndexRoute
   '/student/': typeof StudentIndexRoute
@@ -284,6 +293,7 @@ export interface FileRouteTypes {
     | '/teacher/calendar'
     | '/teacher/materials'
     | '/teacher/students'
+    | '/teacher/vip'
     | '/teacher/workshops'
     | '/admin/'
     | '/student/'
@@ -310,6 +320,7 @@ export interface FileRouteTypes {
     | '/teacher/calendar'
     | '/teacher/materials'
     | '/teacher/students'
+    | '/teacher/vip'
     | '/teacher/workshops'
     | '/admin'
     | '/student'
@@ -339,6 +350,7 @@ export interface FileRouteTypes {
     | '/teacher/calendar'
     | '/teacher/materials'
     | '/teacher/students'
+    | '/teacher/vip'
     | '/teacher/workshops'
     | '/admin/'
     | '/student/'
@@ -424,6 +436,13 @@ declare module '@tanstack/react-router' {
       path: '/workshops'
       fullPath: '/teacher/workshops'
       preLoaderRoute: typeof TeacherWorkshopsRouteImport
+      parentRoute: typeof TeacherRoute
+    }
+    '/teacher/vip': {
+      id: '/teacher/vip'
+      path: '/vip'
+      fullPath: '/teacher/vip'
+      preLoaderRoute: typeof TeacherVipRouteImport
       parentRoute: typeof TeacherRoute
     }
     '/teacher/students': {
@@ -601,6 +620,7 @@ interface TeacherRouteChildren {
   TeacherCalendarRoute: typeof TeacherCalendarRoute
   TeacherMaterialsRoute: typeof TeacherMaterialsRoute
   TeacherStudentsRoute: typeof TeacherStudentsRoute
+  TeacherVipRoute: typeof TeacherVipRoute
   TeacherWorkshopsRoute: typeof TeacherWorkshopsRoute
   TeacherIndexRoute: typeof TeacherIndexRoute
 }
@@ -609,6 +629,7 @@ const TeacherRouteChildren: TeacherRouteChildren = {
   TeacherCalendarRoute: TeacherCalendarRoute,
   TeacherMaterialsRoute: TeacherMaterialsRoute,
   TeacherStudentsRoute: TeacherStudentsRoute,
+  TeacherVipRoute: TeacherVipRoute,
   TeacherWorkshopsRoute: TeacherWorkshopsRoute,
   TeacherIndexRoute: TeacherIndexRoute,
 }
