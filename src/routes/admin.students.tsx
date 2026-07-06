@@ -665,8 +665,36 @@ function StudentFormModal({
             </Field>
           </div>
 
-          {/* STEP 1 — Product */}
-          <Step n={1} title="Product">
+          {/* STEP 0 — Product Type */}
+          <Step n={1} title="Product Type">
+            <div className="grid grid-cols-3 gap-3">
+              {PRODUCT_TYPE_OPTIONS.map((opt) => {
+                const Icon = opt.icon;
+                const active = f.product_type === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => pickProductType(opt.id)}
+                    className={`flex flex-col items-center gap-2 rounded-xl border-2 px-3 py-4 text-center transition-all ${active ? "border-accent bg-accent/10" : "border-border bg-background hover:border-accent/40"}`}
+                  >
+                    <span className={`flex h-12 w-12 items-center justify-center rounded-full ${active ? "bg-accent text-accent-foreground" : "bg-secondary text-muted-foreground"}`}>
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    <span className={`text-sm font-semibold ${active ? "text-accent" : "text-foreground"}`}>{opt.name}</span>
+                    <span className="text-[10.5px] leading-tight text-muted-foreground">{opt.blurb}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </Step>
+
+          {/* ============================================================
+              BRANCH: PERFORMANCE SESSIONS — original stepped flow intact
+          ============================================================ */}
+          {f.product_type === "performance" && (
+          <>
+          <Step n={2} title="Product">
             <div className="grid grid-cols-3 gap-3">
               {PRODUCTS.map((p) => {
                 const Icon = PRODUCT_ICON[p.icon];
@@ -699,7 +727,7 @@ function StudentFormModal({
 
           {/* STEP 2 — Focus */}
           {product?.hasFocus && (
-            <Step n={2} title="Enfoque">
+            <Step n={3} title="Enfoque">
               <div className="flex flex-wrap gap-2">
                 {focusesForProduct(f.product).map((focus) => {
                   const active = f.focus === focus.name;
@@ -720,7 +748,7 @@ function StudentFormModal({
 
           {/* STEP 3 — Contracted levels */}
           {f.product && (
-            <Step n={product?.hasFocus ? 3 : 2} title="Niveles contratados (roadmap)">
+            <Step n={product?.hasFocus ? 4 : 3} title="Niveles contratados (roadmap)">
               <div className="flex flex-wrap gap-2">
                 {productLevels.map((lvl) => {
                   const active = f.contracted_levels.includes(lvl);
@@ -742,7 +770,7 @@ function StudentFormModal({
 
           {/* STEP 4 — Access plan */}
           {f.product && (
-            <Step n={product?.hasFocus ? 4 : 3} title="Plan de acceso">
+            <Step n={product?.hasFocus ? 5 : 4} title="Plan de acceso">
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {ACCESS_PLAN_IDS.map((id) => {
                   const active = f.access_plan === id;
@@ -837,6 +865,68 @@ function StudentFormModal({
               {f.product && <p className="mt-1 text-[10.5px] text-muted-foreground">Solo se muestran teachers calificados para {getProduct(f.product)?.name}.</p>}
             </Field>
           </div>
+
+          {/* Add-on Access (Performance branch only) */}
+          <Step n={99} title="Add-on Access">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <Field label="Insights (per month)" icon={<Lightbulb className="h-3.5 w-3.5" />}>
+                <input type="number" min={0} value={f.addon_insights_per_month} onChange={(e) => set("addon_insights_per_month", Number(e.target.value))} className={inputCls} />
+              </Field>
+              <Field label="Book Clubs (per month)" icon={<Users className="h-3.5 w-3.5" />}>
+                <input type="number" min={0} value={f.addon_bookclubs_per_month} onChange={(e) => set("addon_bookclubs_per_month", Number(e.target.value))} className={inputCls} />
+              </Field>
+              <Field label="Spotlight Sessions (per month)" icon={<Sparkles className="h-3.5 w-3.5" />}>
+                <input type="number" min={0} value={f.addon_spotlight_per_month} onChange={(e) => set("addon_spotlight_per_month", Number(e.target.value))} className={inputCls} />
+              </Field>
+            </div>
+            <div className="mt-4">
+              <label className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <Layers className="h-3.5 w-3.5" /> Workshops
+              </label>
+              <div className="inline-flex rounded-lg border border-border bg-secondary/40 p-1">
+                <button type="button" onClick={() => set("addon_workshops_enabled", true)} className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${f.addon_workshops_enabled ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>Yes</button>
+                <button type="button" onClick={() => { set("addon_workshops_enabled", false); set("selected_cohort_ids", []); }} className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${!f.addon_workshops_enabled ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>No</button>
+              </div>
+              {f.addon_workshops_enabled && (
+                <div className="mt-3">
+                  <CohortChipsPicker
+                    selectedIds={f.selected_cohort_ids}
+                    currentUserId={initial?.id}
+                    onChange={(ids) => set("selected_cohort_ids", ids)}
+                  />
+                  <p className="mt-1 text-[10.5px] text-muted-foreground">Cohorts are created in Admin → Focus Workshops. A student can be enrolled in multiple cohorts over time.</p>
+                </div>
+              )}
+            </div>
+          </Step>
+          </>
+          )}
+
+          {/* ============================================================
+              BRANCH: FOCUS WORKSHOPS — standalone (no Performance fields)
+          ============================================================ */}
+          {f.product_type === "workshops" && (
+            <Step n={2} title="Workshop Cohorts">
+              <p className="mb-3 text-[11px] text-muted-foreground">Standalone workshop customer. Add them to one or more cohorts from the Focus Workshops tab.</p>
+              <CohortChipsPicker
+                selectedIds={f.selected_cohort_ids}
+                currentUserId={initial?.id}
+                onChange={(ids) => set("selected_cohort_ids", ids)}
+              />
+            </Step>
+          )}
+
+          {/* ============================================================
+              BRANCH: INSIGHTS — standalone (no Performance fields)
+          ============================================================ */}
+          {f.product_type === "insights" && (
+            <Step n={2} title="Insights Access">
+              <p className="mb-3 text-[11px] text-muted-foreground">Standalone Insights customer. Set the monthly cap for this person.</p>
+              <Field label="Insights (per month)" icon={<Lightbulb className="h-3.5 w-3.5" />}>
+                <input type="number" min={0} value={f.addon_insights_per_month} onChange={(e) => set("addon_insights_per_month", Number(e.target.value))} className={inputCls} />
+              </Field>
+            </Step>
+          )}
         </div>
 
         <div className="flex items-center justify-end gap-2 border-t border-border bg-secondary/30 px-6 py-4">
