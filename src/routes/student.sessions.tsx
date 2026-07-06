@@ -333,12 +333,16 @@ function Page() {
           </div>
         </div>
 
-        {blocked && (
+        {(insightsBlocked || bookClubBlocked) && (
           <Card className="border-destructive/40 bg-destructive/5">
             <div className="flex items-start gap-3">
               <AlertTriangle className="mt-0.5 h-5 w-5 text-destructive" />
               <div className="text-sm text-foreground">
-                You have exceeded your cancellation limit (3/3). Club bookings are temporarily disabled — please contact your organization's administrator.
+                {insightsBlocked && bookClubBlocked
+                  ? "You have reached the late-cancellation limit (3/3) for Insights and Book Clubs. Bookings for both are temporarily disabled — please contact your organization's administrator."
+                  : insightsBlocked
+                    ? "You have reached the late-cancellation limit (3/3) for Insights. Insights bookings are temporarily disabled — please contact your organization's administrator."
+                    : "You have reached the late-cancellation limit (3/3) for Book Clubs. Book Club bookings are temporarily disabled — please contact your organization's administrator."}
               </div>
             </div>
           </Card>
