@@ -17,8 +17,13 @@ import {
   Plus, X, Eye, EyeOff, KeyRound, Mail, Building2, CalendarDays, GraduationCap,
   Users, Briefcase, Compass, Globe, Crown, Copy, Check, Snowflake, Ban, Play, Unlock,
   Sparkles, Wand2, Pencil, Video, Repeat, Clock, CreditCard, ShieldAlert,
-  Search, ArrowUpDown, Filter,
+  Search, ArrowUpDown, Filter, Gauge, Lightbulb, Layers,
 } from "lucide-react";
+import {
+  type WorkshopCohort, type WorkshopTemplate,
+  addStudentToCohort, cohortsForStudent, loadWorkshops,
+  removeParticipantFromCohort, subscribeWorkshops,
+} from "@/lib/workshops-store";
 
 export const Route = createFileRoute("/admin/students")({
   component: Page,
@@ -59,6 +64,17 @@ const LEVEL_OPTIONS = [
 ];
 
 const PRODUCT_ICON = { briefcase: Briefcase, compass: Compass, globe: Globe, crown: Crown } as const;
+
+const PRODUCT_TYPE_OPTIONS: {
+  id: "performance" | "workshops" | "insights";
+  name: string;
+  blurb: string;
+  icon: React.ComponentType<{ className?: string }>;
+}[] = [
+  { id: "performance", name: "Performance Sessions", blurb: "Live 1:1 English program (Enterprise, GO, International, VIP).", icon: Gauge },
+  { id: "workshops", name: "Focus Workshops", blurb: "Short-form workshops only. No live 1:1 sessions.", icon: Layers },
+  { id: "insights", name: "Insights", blurb: "Insights access only. No live sessions or workshops.", icon: Lightbulb },
+];
 
 function initials(name: string) {
   return name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
@@ -340,6 +356,45 @@ function StudentCard({ student: s, onOpen }: { student: User; onOpen: () => void
     : s.status === "frozen" ? { cls: "bg-blue-500/10 text-blue-600", label: "Frozen" }
     : { cls: "bg-success/10 text-success", label: "Active" };
 
+  const productType = s.product_type ?? "performance";
+  // Insights strike badge stays for anyone with Insights access — Performance
+  // students (kept as before) and standalone Insights customers.
+  const showInsightsBadge = productType === "performance" || productType === "insights";
+
+  if (productType !== "performance") {
+    const typeLabel = productType === "workshops" ? "Focus Workshops" : "Insights";
+    return (
+      <button
+        onClick={onOpen}
+        className="group relative flex flex-col rounded-2xl border border-border bg-card p-5 text-left shadow-soft transition-all hover:-translate-y-1 hover:shadow-elevated"
+      >
+        <div className="flex items-center gap-3">
+          {avatar ? (
+            <img src={avatar} alt={s.name} className="h-12 w-12 rounded-full object-cover" />
+          ) : (
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
+              {initials(s.name)}
+            </div>
+          )}
+          <div className="min-w-0">
+            <div className="truncate font-semibold text-foreground">{s.name}</div>
+            <div className="truncate text-xs text-muted-foreground">{s.email}</div>
+          </div>
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center gap-1.5">
+          <Tag className="bg-primary/10 text-primary">{typeLabel}</Tag>
+          <Tag className={statusBadge.cls}>{statusBadge.label}</Tag>
+          {showInsightsBadge && (
+            <Tag className={blocked ? "bg-destructive/10 text-destructive" : "bg-secondary text-secondary-foreground"}>
+              {blocked ? <>Insights Blocked</> : <>Insights {strikes}/{MAX_INSIGHT_STRIKES}</>}
+            </Tag>
+          )}
+        </div>
+      </button>
+    );
+  }
+
   return (
     <button
       onClick={onOpen}
@@ -408,6 +463,7 @@ function Tag({ children, className = "" }: { children: React.ReactNode; classNam
 type FormState = {
   name: string; email: string; password: string; member_since: string;
   company: string;
+  product_type: "performance" | "workshops" | "insights";
   product: ProductId | "";
   focus: string;
   contracted_levels: string[];
@@ -419,6 +475,12 @@ type FormState = {
   payment_day: number; cycle_start: string;
   video_call_link: string;
   teacher_id: string;
+  // Add-ons
+  addon_insights_per_month: number;
+  addon_bookclubs_per_month: number;
+  addon_spotlight_per_month: number;
+  addon_workshops_enabled: boolean;
+  selected_cohort_ids: string[];
 };
 
 function StudentFormModal({
@@ -438,6 +500,7 @@ function StudentFormModal({
     password: initial?.password ?? "",
     member_since: initial?.member_since ?? "",
     company: initial?.company ?? "",
+    product_type: (initial?.product_type as FormState["product_type"]) ?? "performance",
     product: (initial?.product as ProductId) ?? "",
     focus: initial?.focus ?? "",
     contracted_levels: initial?.contracted_levels ?? [],
@@ -455,6 +518,11 @@ function StudentFormModal({
     cycle_start: initial?.cycle_start ?? "",
     video_call_link: initial?.video_call_link ?? "",
     teacher_id: existingTeacher,
+    addon_insights_per_month: initial?.addon_insights_per_month ?? 0,
+    addon_bookclubs_per_month: initial?.addon_bookclubs_per_month ?? 0,
+    addon_spotlight_per_month: initial?.addon_spotlight_per_month ?? 0,
+    addon_workshops_enabled: initial?.addon_workshops_enabled ?? false,
+    selected_cohort_ids: initial ? cohortsForStudent(initial.id).map((x) => x.cohort.id) : [],
   }));
   const [showPassword, setShowPassword] = useState(false);
   const prevPerWeek = useRef(f.sessions_per_week);
@@ -527,44 +595,93 @@ function StudentFormModal({
     ? nextPaymentDate(f.payment_day, f.cycle_start ? new Date(f.cycle_start) : new Date())
     : null;
 
-  const isValid = f.name.trim() && f.email.trim() && f.password.trim() && f.product &&
-    f.video_call_link.trim() && (!isEnterprise || f.company.trim());
+  const baseValid = f.name.trim() && f.email.trim() && f.password.trim();
+  const isValid = f.product_type === "performance"
+    ? (baseValid && f.product && f.video_call_link.trim() && (!isEnterprise || f.company.trim()))
+    : f.product_type === "workshops"
+      ? baseValid // participants can be added later, but a cohort selection is recommended
+      : baseValid; // insights standalone
+
+  const pickProductType = (pt: FormState["product_type"]) => {
+    setF((prev) => {
+      if (pt === "performance") return { ...prev, product_type: pt };
+      // Switching to a standalone branch — clear Performance-only fields so
+      // downstream displays don't show stale product/plan/teacher badges.
+      return {
+        ...prev,
+        product_type: pt,
+        product: "",
+        focus: "",
+        company: "",
+        contracted_levels: [],
+        access_plan: "",
+        current_level: "",
+        hired_sessions: 0,
+        remaining_sessions: 0,
+        sessions_auto: true,
+        reschedule_policy: "",
+        payment_day: 1,
+        cycle_start: "",
+        video_call_link: "",
+        teacher_id: "",
+        addon_insights_per_month: pt === "insights" ? (prev.addon_insights_per_month || 1) : 0,
+        addon_bookclubs_per_month: 0,
+        addon_spotlight_per_month: 0,
+        addon_workshops_enabled: pt === "workshops",
+      };
+    });
+  };
 
   const handleSave = () => {
     if (!isValid) return;
     const accessPlan = (f.access_plan || undefined) as AccessPlanId | undefined;
+    const id = initial?.id ?? `u${Date.now()}`;
+    const isPerf = f.product_type === "performance";
     const u: User = {
-      id: initial?.id ?? `u${Date.now()}`,
+      id,
       name: f.name.trim(),
       email: f.email.trim(),
       password: f.password,
       role: "student",
-      company: isEnterprise ? f.company.trim() || undefined : undefined,
-      product: f.product as ProductId,
-      focus: isEnterprise ? undefined : f.focus || undefined,
-      access_plan: accessPlan,
-      hired_plan: accessPlan, // legacy display alias
-      contracted_levels: f.contracted_levels,
-      current_roadmap_level: initial?.current_roadmap_level ?? f.contracted_levels[0],
-      current_level: f.current_level || undefined,
+      product_type: f.product_type,
+      company: isPerf && isEnterprise ? f.company.trim() || undefined : undefined,
+      product: isPerf ? (f.product as ProductId) : undefined,
+      focus: isPerf && !isEnterprise ? f.focus || undefined : undefined,
+      access_plan: isPerf ? accessPlan : undefined,
+      hired_plan: isPerf ? accessPlan : undefined, // legacy display alias
+      contracted_levels: isPerf ? f.contracted_levels : [],
+      current_roadmap_level: isPerf ? (initial?.current_roadmap_level ?? f.contracted_levels[0]) : undefined,
+      current_level: isPerf ? (f.current_level || undefined) : undefined,
       member_since: f.member_since || undefined,
-      hired_sessions: Number(f.hired_sessions) || 0,
-      remaining_sessions: Number(f.remaining_sessions) || 0,
-      sessions_auto: f.sessions_auto,
-      sessions_per_week: Number(f.sessions_per_week) || 1,
-      session_duration: Number(f.session_duration) || 60,
-      reschedule_policy: f.reschedule_policy || undefined,
-      reschedule_custom_hours: isCustomReschedule ? Number(f.reschedule_custom_hours) : undefined,
-      reschedule_custom_pct: isCustomReschedule ? Number(f.reschedule_custom_pct) : undefined,
-      payment_day: Number(f.payment_day) || undefined,
-      cycle_start: f.cycle_start || undefined,
-      video_call_link: f.video_call_link.trim(),
+      hired_sessions: isPerf ? (Number(f.hired_sessions) || 0) : 0,
+      remaining_sessions: isPerf ? (Number(f.remaining_sessions) || 0) : 0,
+      sessions_auto: isPerf ? f.sessions_auto : undefined,
+      sessions_per_week: isPerf ? (Number(f.sessions_per_week) || 1) : undefined,
+      session_duration: isPerf ? (Number(f.session_duration) || 60) : undefined,
+      reschedule_policy: isPerf ? (f.reschedule_policy || undefined) : undefined,
+      reschedule_custom_hours: isPerf && isCustomReschedule ? Number(f.reschedule_custom_hours) : undefined,
+      reschedule_custom_pct: isPerf && isCustomReschedule ? Number(f.reschedule_custom_pct) : undefined,
+      payment_day: isPerf ? (Number(f.payment_day) || undefined) : undefined,
+      cycle_start: isPerf ? (f.cycle_start || undefined) : undefined,
+      video_call_link: isPerf ? f.video_call_link.trim() : undefined,
       status: initial?.status ?? "active",
       insights_strikes: initial?.insights_strikes ?? 0,
       admin_notes: initial?.admin_notes,
       next_payment: initial?.next_payment,
+      addon_insights_per_month: Number(f.addon_insights_per_month) || 0,
+      addon_bookclubs_per_month: isPerf ? (Number(f.addon_bookclubs_per_month) || 0) : 0,
+      addon_spotlight_per_month: isPerf ? (Number(f.addon_spotlight_per_month) || 0) : 0,
+      addon_workshops_enabled: f.product_type === "workshops" ? true : (isPerf && f.addon_workshops_enabled),
     };
-    onSave(u, f.teacher_id || undefined);
+
+    // Sync cohort memberships against workshops store (source of truth).
+    const wantsCohorts = u.product_type === "workshops" || (u.product_type === "performance" && u.addon_workshops_enabled);
+    const targetIds = new Set(wantsCohorts ? f.selected_cohort_ids : []);
+    const currentIds = new Set(cohortsForStudent(id).map((x) => x.cohort.id));
+    for (const cid of currentIds) if (!targetIds.has(cid)) removeParticipantFromCohort(cid, id);
+    for (const cid of targetIds) if (!currentIds.has(cid)) addStudentToCohort(cid, id, u.name);
+
+    onSave(u, isPerf ? (f.teacher_id || undefined) : undefined);
   };
 
   return (
@@ -598,8 +715,36 @@ function StudentFormModal({
             </Field>
           </div>
 
-          {/* STEP 1 — Product */}
-          <Step n={1} title="Product">
+          {/* STEP 0 — Product Type */}
+          <Step n={1} title="Product Type">
+            <div className="grid grid-cols-3 gap-3">
+              {PRODUCT_TYPE_OPTIONS.map((opt) => {
+                const Icon = opt.icon;
+                const active = f.product_type === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => pickProductType(opt.id)}
+                    className={`flex flex-col items-center gap-2 rounded-xl border-2 px-3 py-4 text-center transition-all ${active ? "border-accent bg-accent/10" : "border-border bg-background hover:border-accent/40"}`}
+                  >
+                    <span className={`flex h-12 w-12 items-center justify-center rounded-full ${active ? "bg-accent text-accent-foreground" : "bg-secondary text-muted-foreground"}`}>
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    <span className={`text-sm font-semibold ${active ? "text-accent" : "text-foreground"}`}>{opt.name}</span>
+                    <span className="text-[10.5px] leading-tight text-muted-foreground">{opt.blurb}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </Step>
+
+          {/* ============================================================
+              BRANCH: PERFORMANCE SESSIONS — original stepped flow intact
+          ============================================================ */}
+          {f.product_type === "performance" && (
+          <>
+          <Step n={2} title="Product">
             <div className="grid grid-cols-3 gap-3">
               {PRODUCTS.map((p) => {
                 const Icon = PRODUCT_ICON[p.icon];
@@ -632,7 +777,7 @@ function StudentFormModal({
 
           {/* STEP 2 — Focus */}
           {product?.hasFocus && (
-            <Step n={2} title="Enfoque">
+            <Step n={3} title="Enfoque">
               <div className="flex flex-wrap gap-2">
                 {focusesForProduct(f.product).map((focus) => {
                   const active = f.focus === focus.name;
@@ -653,7 +798,7 @@ function StudentFormModal({
 
           {/* STEP 3 — Contracted levels */}
           {f.product && (
-            <Step n={product?.hasFocus ? 3 : 2} title="Niveles contratados (roadmap)">
+            <Step n={product?.hasFocus ? 4 : 3} title="Niveles contratados (roadmap)">
               <div className="flex flex-wrap gap-2">
                 {productLevels.map((lvl) => {
                   const active = f.contracted_levels.includes(lvl);
@@ -675,7 +820,7 @@ function StudentFormModal({
 
           {/* STEP 4 — Access plan */}
           {f.product && (
-            <Step n={product?.hasFocus ? 4 : 3} title="Plan de acceso">
+            <Step n={product?.hasFocus ? 5 : 4} title="Plan de acceso">
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {ACCESS_PLAN_IDS.map((id) => {
                   const active = f.access_plan === id;
@@ -770,6 +915,72 @@ function StudentFormModal({
               {f.product && <p className="mt-1 text-[10.5px] text-muted-foreground">Solo se muestran teachers calificados para {getProduct(f.product)?.name}.</p>}
             </Field>
           </div>
+
+          {/* Add-on Access (Performance branch only) */}
+          <div>
+            <div className="mb-3 flex items-center gap-2">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent/15 text-accent"><Sparkles className="h-3.5 w-3.5" /></span>
+              <h3 className="text-sm font-semibold text-foreground">Add-on Access</h3>
+            </div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <Field label="Insights (per month)" icon={<Lightbulb className="h-3.5 w-3.5" />}>
+                <input type="number" min={0} value={f.addon_insights_per_month} onChange={(e) => set("addon_insights_per_month", Number(e.target.value))} className={inputCls} />
+              </Field>
+              <Field label="Book Clubs (per month)" icon={<Users className="h-3.5 w-3.5" />}>
+                <input type="number" min={0} value={f.addon_bookclubs_per_month} onChange={(e) => set("addon_bookclubs_per_month", Number(e.target.value))} className={inputCls} />
+              </Field>
+              <Field label="Spotlight Sessions (per month)" icon={<Sparkles className="h-3.5 w-3.5" />}>
+                <input type="number" min={0} value={f.addon_spotlight_per_month} onChange={(e) => set("addon_spotlight_per_month", Number(e.target.value))} className={inputCls} />
+              </Field>
+            </div>
+            <div className="mt-4">
+              <label className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <Layers className="h-3.5 w-3.5" /> Workshops
+              </label>
+              <div className="inline-flex rounded-lg border border-border bg-secondary/40 p-1">
+                <button type="button" onClick={() => set("addon_workshops_enabled", true)} className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${f.addon_workshops_enabled ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>Yes</button>
+                <button type="button" onClick={() => { set("addon_workshops_enabled", false); set("selected_cohort_ids", []); }} className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${!f.addon_workshops_enabled ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>No</button>
+              </div>
+              {f.addon_workshops_enabled && (
+                <div className="mt-3">
+                  <CohortChipsPicker
+                    selectedIds={f.selected_cohort_ids}
+                    currentUserId={initial?.id}
+                    onChange={(ids) => set("selected_cohort_ids", ids)}
+                  />
+                  <p className="mt-1 text-[10.5px] text-muted-foreground">Cohorts are created in Admin → Focus Workshops. A student can be enrolled in multiple cohorts over time.</p>
+                </div>
+              )}
+            </div>
+          </div>
+          </>
+          )}
+
+          {/* ============================================================
+              BRANCH: FOCUS WORKSHOPS — standalone (no Performance fields)
+          ============================================================ */}
+          {f.product_type === "workshops" && (
+            <Step n={2} title="Workshop Cohorts">
+              <p className="mb-3 text-[11px] text-muted-foreground">Standalone workshop customer. Add them to one or more cohorts from the Focus Workshops tab.</p>
+              <CohortChipsPicker
+                selectedIds={f.selected_cohort_ids}
+                currentUserId={initial?.id}
+                onChange={(ids) => set("selected_cohort_ids", ids)}
+              />
+            </Step>
+          )}
+
+          {/* ============================================================
+              BRANCH: INSIGHTS — standalone (no Performance fields)
+          ============================================================ */}
+          {f.product_type === "insights" && (
+            <Step n={2} title="Insights Access">
+              <p className="mb-3 text-[11px] text-muted-foreground">Standalone Insights customer. Set the monthly cap for this person.</p>
+              <Field label="Insights (per month)" icon={<Lightbulb className="h-3.5 w-3.5" />}>
+                <input type="number" min={0} value={f.addon_insights_per_month} onChange={(e) => set("addon_insights_per_month", Number(e.target.value))} className={inputCls} />
+              </Field>
+            </Step>
+          )}
         </div>
 
         <div className="flex items-center justify-end gap-2 border-t border-border bg-secondary/30 px-6 py-4">
@@ -1100,6 +1311,81 @@ function Field({
         {icon}{label}
       </label>
       {children}
+    </div>
+  );
+}
+
+// ===========================================================================
+// Cohort chips picker — READS the workshops store (source of truth) and
+// returns the selected cohort ids to the parent form. It never persists on
+// its own; the parent syncs memberships on save.
+// ===========================================================================
+function CohortChipsPicker({ selectedIds, currentUserId, onChange }: {
+  selectedIds: string[];
+  currentUserId?: string;
+  onChange: (ids: string[]) => void;
+}) {
+  const [templates, setTemplates] = useState<WorkshopTemplate[]>(loadWorkshops);
+  useEffect(() => {
+    setTemplates(loadWorkshops());
+    return subscribeWorkshops(() => setTemplates(loadWorkshops()));
+  }, []);
+
+  const all = useMemo(() => {
+    const list: { id: string; label: string; cohort: WorkshopCohort; full: boolean }[] = [];
+    for (const t of templates) {
+      for (const c of t.cohorts) {
+        const includesMe = !!currentUserId && c.participants.some((p) => p.id === currentUserId);
+        const full = !includesMe && c.participants.length >= 4;
+        list.push({ id: c.id, label: `${t.name} — ${c.name || "Untitled cohort"}`, cohort: c, full });
+      }
+    }
+    return list;
+  }, [templates, currentUserId]);
+
+  const selectedSet = new Set(selectedIds);
+  const available = all.filter((x) => !selectedSet.has(x.id));
+
+  return (
+    <div className="space-y-2">
+      {selectedIds.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {selectedIds.map((id) => {
+            const item = all.find((x) => x.id === id);
+            const label = item ? item.label : id;
+            return (
+              <span key={id} className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-medium text-primary">
+                {label}
+                <button type="button" onClick={() => onChange(selectedIds.filter((x) => x !== id))} className="ml-1 opacity-70 hover:opacity-100" aria-label="Remove cohort">
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            );
+          })}
+        </div>
+      )}
+      {all.length === 0 ? (
+        <p className="text-xs text-muted-foreground">No cohorts yet. Create one in Admin → Focus Workshops.</p>
+      ) : available.length === 0 ? (
+        <p className="text-xs text-muted-foreground">This person is already enrolled in every available cohort.</p>
+      ) : (
+        <select
+          value=""
+          onChange={(e) => {
+            const v = e.target.value;
+            if (!v) return;
+            onChange([...selectedIds, v]);
+          }}
+          className={`${inputCls} cursor-pointer`}
+        >
+          <option value="">Add cohort…</option>
+          {available.map((x) => (
+            <option key={x.id} value={x.id} disabled={x.full}>
+              {x.label}{x.full ? " · full" : ""}
+            </option>
+          ))}
+        </select>
+      )}
     </div>
   );
 }
