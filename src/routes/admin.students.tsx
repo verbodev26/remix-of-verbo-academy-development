@@ -17,7 +17,7 @@ import {
   Plus, X, Eye, EyeOff, KeyRound, Mail, Building2, CalendarDays, GraduationCap,
   Users, Briefcase, Compass, Globe, Crown, Copy, Check, Snowflake, Ban, Play, Unlock,
   Sparkles, Wand2, Pencil, Video, Repeat, Clock, CreditCard, ShieldAlert,
-  Search, ArrowUpDown, Filter, Gauge, GraduationCap as GraduationCapIcon, Lightbulb, Layers,
+  Search, ArrowUpDown, Filter, Gauge, Lightbulb, Layers,
 } from "lucide-react";
 import {
   type WorkshopCohort, type WorkshopTemplate,
@@ -917,7 +917,11 @@ function StudentFormModal({
           </div>
 
           {/* Add-on Access (Performance branch only) */}
-          <Step n={99} title="Add-on Access">
+          <div>
+            <div className="mb-3 flex items-center gap-2">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent/15 text-accent"><Sparkles className="h-3.5 w-3.5" /></span>
+              <h3 className="text-sm font-semibold text-foreground">Add-on Access</h3>
+            </div>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <Field label="Insights (per month)" icon={<Lightbulb className="h-3.5 w-3.5" />}>
                 <input type="number" min={0} value={f.addon_insights_per_month} onChange={(e) => set("addon_insights_per_month", Number(e.target.value))} className={inputCls} />
@@ -948,7 +952,7 @@ function StudentFormModal({
                 </div>
               )}
             </div>
-          </Step>
+          </div>
           </>
           )}
 
