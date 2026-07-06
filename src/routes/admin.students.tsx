@@ -343,6 +343,9 @@ function StudentCard({ student: s, onOpen }: { student: User; onOpen: () => void
   const product = getProduct(s.product);
   const strikes = s.insights_strikes ?? 0;
   const blocked = strikes >= MAX_INSIGHT_STRIKES;
+  const bcStrikes = s.bookclub_strikes ?? 0;
+  const bcBlocked = bcStrikes >= MAX_BOOKCLUB_STRIKES;
+  const hasBookClubs = (s.addon_bookclubs_per_month ?? 0) > 0;
   const hired = s.hired_sessions ?? 0;
   const remaining = s.remaining_sessions ?? 0;
   const done = Math.max(0, hired - remaining);
@@ -444,6 +447,11 @@ function StudentCard({ student: s, onOpen }: { student: User; onOpen: () => void
         <Tag className={blocked ? "bg-destructive/10 text-destructive" : "bg-secondary text-secondary-foreground"}>
           {blocked ? <>Insights Blocked</> : <>Insights {strikes}/{MAX_INSIGHT_STRIKES}</>}
         </Tag>
+        {hasBookClubs && (
+          <Tag className={bcBlocked ? "bg-destructive/10 text-destructive" : "bg-secondary text-secondary-foreground"}>
+            {bcBlocked ? <>Book Clubs Blocked</> : <>Book Clubs {bcStrikes}/{MAX_BOOKCLUB_STRIKES}</>}
+          </Tag>
+        )}
       </div>
     </button>
   );
