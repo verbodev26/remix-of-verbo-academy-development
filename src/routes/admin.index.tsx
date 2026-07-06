@@ -57,6 +57,8 @@ function Overview() {
     const reviews = readLS<Record<string, Partial<Session>>>(T_REVIEW_KEY, {});
     SESSIONS.forEach((s) => { if (reviews[s.id]) Object.assign(s, reviews[s.id]); });
     forceTick((n) => n + 1);
+    const unsub = subscribeClubs(() => forceTick((n) => n + 1));
+    return unsub;
   }, []);
 
   const students = USERS.filter((u) => u.role === "student");
