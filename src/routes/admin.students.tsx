@@ -83,7 +83,9 @@ function initials(name: string) {
 function computeNextPayment(u: User): Date | null {
   if (u.next_payment) return new Date(u.next_payment);
   if (!u.payment_day) return null;
-  return nextPaymentDate(u.payment_day, new Date(u.cycle_start || Date.now()));
+  // Always compute from today so the "next" payment stays forward-looking
+  // even when cycle_start is old and the student has never been marked paid.
+  return nextPaymentDate(u.payment_day, new Date());
 }
 
 // ===========================================================================
