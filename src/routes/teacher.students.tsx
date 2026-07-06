@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { ASSIGNMENTS, USERS, type User } from "@/lib/mock-data";
 import {
   MAX_INSIGHT_STRIKES, MAX_BOOKCLUB_STRIKES,
-  getProduct, nextPaymentDate, daysUntil,
+  getProduct,
 } from "@/lib/student-model";
 import { hydrateStudents, subscribeStudents } from "@/lib/students-store";
 import {
@@ -15,33 +15,32 @@ import {
 import {
   getCoverageNote, setCoverageNote, subscribeCoverageNotes,
 } from "@/lib/coverage-notes-store";
+import {
+  attendanceFor, attendancePct, attendanceAlert, attendanceTotal,
+  type StudentAttendance,
+} from "@/lib/attendance-store";
+import { addStudentReport } from "@/lib/student-reports-store";
+import {
+  PerformanceAnalyticsModal, useComputedMacros,
+} from "@/components/verbo/PerformanceAnalytics";
 import { useAvatar } from "@/lib/avatar-store";
 import { Card } from "@/components/verbo/ui";
 import {
-  Search, X, Filter, CreditCard, Crown, Users as UsersIcon, Building2,
+  Search, X, Filter, Crown, Users as UsersIcon,
   GraduationCap, Layers, Lightbulb, Video, Clock, Repeat, NotebookPen,
-  BookOpenCheck, Lock,
+  BookOpenCheck, Lock, CalendarCheck, Flag, Mic, PenLine, Ear, BookOpen,
+  type LucideIcon,
 } from "lucide-react";
 
 export const Route = createFileRoute("/teacher/students")({ component: Page });
 
-// Same "payment due within 3 days" derivation used by Admin > Students, so
-// both surfaces reflect the exact same status.
-function computeNextPayment(u: User): Date | null {
-  if (u.next_payment) return new Date(u.next_payment);
-  if (!u.payment_day) return null;
-  return nextPaymentDate(u.payment_day, new Date());
-}
+// NOTE (Teacher Panel-wide rule): teachers must never see any financial
+// data about students — payment status, plan pricing, invoices, etc.
+// Any such fields live exclusively in the Admin Panel.
 
-type PayStatus = { tone: "success" | "warning" | "danger"; label: string };
-function paymentStatus(u: User): PayStatus | null {
-  const nextPay = computeNextPayment(u);
-  if (!nextPay) return null;
-  const d = daysUntil(nextPay);
-  if (d < 0) return { tone: "danger", label: "Vencido" };
-  if (d <= 3) return { tone: "warning", label: "Próximo a vencer" };
-  return { tone: "success", label: "Al día" };
-}
+const SKILL_ICONS: Record<string, LucideIcon> = {
+  Speaking: Mic, Writing: PenLine, Listening: Ear, Reading: BookOpen,
+};
 
 function initials(name: string) {
   return name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
@@ -187,10 +186,18 @@ function StudentCard({ student: s, onOpen }: { student: User; onOpen: () => void
   const remaining = s.remaining_sessions ?? 0;
   const done = Math.max(0, hired - remaining);
   const pct = hired > 0 ? (done / hired) * 100 : 0;
-  const pay = paymentStatus(s);
   const productType = s.product_type ?? "performance";
   const showInsightsBadge = productType === "performance" || productType === "insights";
   const isVip = s.product === "vip";
+
+  // Attendance (mock — schema matches Admin > Sessions so real data plugs in later).
+  const attendance = attendanceFor(s.id);
+  const attPct = attendancePct(attendance);
+  const attAlert = attendanceAlert(attendance);
+
+  // Overall 4-skill scores (shared component / same source as student dashboard).
+  const macros = useComputedMacros();
+  const anySkillLow = macros.some((m) => m.overall !== null && m.overall < 70);
 
   // Standalone Workshops / Insights students (no performance sessions) get
   // the same compact treatment used in Admin > Students.
@@ -228,11 +235,13 @@ function StudentCard({ student: s, onOpen }: { student: User; onOpen: () => void
     );
   }
 
-  const payDue = pay?.tone === "warning" || pay?.tone === "danger";
   return (
-    <button
+    <div
       onClick={onOpen}
-      className={`group relative flex flex-col rounded-2xl border border-border bg-card p-5 text-left shadow-soft transition-all hover:-translate-y-1 hover:shadow-elevated ${payDue ? "verbo-pay-glow" : ""}`}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpen(); } }}
+      className="group relative flex cursor-pointer flex-col rounded-2xl border border-border bg-card p-5 text-left shadow-soft transition-all hover:-translate-y-1 hover:shadow-elevated"
     >
       {isVip && (
         <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-600">
@@ -283,17 +292,42 @@ function StudentCard({ student: s, onOpen }: { student: User; onOpen: () => void
             {bcBlocked ? <>Book Clubs Blocked</> : <>Book Clubs {bcStrikes}/{MAX_BOOKCLUB_STRIKES}</>}
           </Tag>
         )}
-        {pay && (
-          <Tag className={
-            pay.tone === "success" ? "bg-success/10 text-success"
-            : pay.tone === "warning" ? "bg-warning/20 text-foreground"
-            : "bg-destructive/10 text-destructive"
-          }>
-            <CreditCard className="mr-1 h-3 w-3" /> {pay.label}
-          </Tag>
-        )}
+        <Tag className={attAlert ? "bg-destructive/10 text-destructive verbo-pay-glow" : "bg-secondary text-secondary-foreground"}>
+          <CalendarCheck className="mr-1 h-3 w-3" /> Attendance {attPct}%
+        </Tag>
       </div>
-    </button>
+
+      {/* Compact 4-tile skill summary — clicking opens the shared Advanced
+          Performance Analytics modal (same modal used by the student). */}
+      <div
+        className={`mt-4 rounded-xl border p-2.5 transition-all ${anySkillLow ? "verbo-pay-glow border-destructive/40" : "border-border"}`}
+      >
+        <div className="mb-1.5 flex items-center justify-between px-1">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Overall Skills
+          </span>
+          <span className="text-[10px] text-muted-foreground">Click for detail</span>
+        </div>
+        <div className="grid grid-cols-4 gap-1.5">
+          {macros.map((m) => {
+            const Icon = SKILL_ICONS[m.key] ?? Mic;
+            const low = m.overall !== null && m.overall < 70;
+            return (
+              <div
+                key={m.key}
+                className={`flex flex-col items-center rounded-lg px-1 py-1.5 ${low ? "bg-destructive/5" : "bg-background"}`}
+                title={m.key}
+              >
+                <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="mt-0.5 text-[11px] font-bold tabular-nums" style={{ color: "#01304a" }}>
+                  {m.overall === null ? "--" : `${m.overall}%`}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -318,7 +352,18 @@ function StudentDetailModal({
   const product = getProduct(s.product);
   const isVip = s.product === "vip";
   const productType = s.product_type ?? "performance";
-  const pay = paymentStatus(s);
+
+  // Attendance breakdown (mock, matches Admin > Sessions status schema).
+  const attendance = attendanceFor(s.id);
+  const attPct = attendancePct(attendance);
+  const attAlert = attendanceAlert(attendance);
+
+  // Shared Advanced Performance Analytics modal.
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  // Report modal.
+  const [showReport, setShowReport] = useState(false);
+  const macros = useComputedMacros();
+  const anySkillLow = macros.some((m) => m.overall !== null && m.overall < 70);
 
   // Coverage notes — persisted per (titular teacher, student) pair.
   const [note, setNote] = useState<string>(() => getCoverageNote(teacherId, s.id));
@@ -394,16 +439,65 @@ function StudentDetailModal({
           </section>
         )}
 
-        {/* --- Cadence & payment --- */}
-        <section className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {/* --- Cadence (payment info intentionally hidden from teachers) --- */}
+        <section className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <MiniStat icon={Repeat} label="Sesiones/semana" value={s.sessions_per_week ? String(s.sessions_per_week) : "—"} />
           <MiniStat icon={Clock} label="Duración" value={s.session_duration ? `${s.session_duration} min` : "—"} />
-          <MiniStat
-            icon={CreditCard}
-            label="Estado de pago"
-            value={pay?.label ?? "—"}
-            tone={pay?.tone}
-          />
+        </section>
+
+        {/* --- Overall Attendance --- */}
+        <section className={`mt-4 rounded-xl border p-5 ${attAlert ? "border-destructive/50 verbo-pay-glow" : "border-border"} bg-background`}>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <CalendarCheck className="h-3.5 w-3.5" /> Overall Attendance
+            </div>
+            <span className="text-2xl font-bold tabular-nums" style={{ color: "#01304a" }}>{attPct}%</span>
+          </div>
+          <div className="mt-3 grid grid-cols-3 gap-3">
+            <Stat label="Asistió" value={String(attendance.present)} />
+            <Stat label="Tarde" value={String(attendance.late)} />
+            <Stat label="Canceló-Faltó" value={String(attendance.absentOrNoShow)} />
+          </div>
+          <p className="mt-3 text-[11px] text-muted-foreground">
+            "Canceló-Faltó" agrupa Absent, No Show y Cancelled con causa Student. Ausencias con causa Teacher
+            no cuentan en contra del alumno. Datos mock hasta que el Session Report real esté conectado.
+          </p>
+        </section>
+
+        {/* --- Overall Skills (opens shared Advanced Performance Analytics modal) --- */}
+        <section className="mt-4">
+          <button
+            type="button"
+            onClick={() => setShowAnalytics(true)}
+            className={`w-full rounded-xl border p-4 text-left transition-all hover:bg-secondary/40 ${anySkillLow ? "border-destructive/40 verbo-pay-glow" : "border-border"} bg-background`}
+          >
+            <div className="mb-2 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <Layers className="h-3.5 w-3.5" /> Overall Skills
+              </div>
+              <span className="text-[11px] font-semibold" style={{ color: "#f38934" }}>View Detailed Analytics →</span>
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {macros.map((m) => {
+                const Icon = SKILL_ICONS[m.key] ?? Mic;
+                const low = m.overall !== null && m.overall < 70;
+                return (
+                  <div
+                    key={m.key}
+                    className={`flex items-center gap-2 rounded-lg px-2 py-2 ${low ? "bg-destructive/5" : "bg-secondary/40"}`}
+                  >
+                    <Icon className="h-4 w-4 text-muted-foreground" />
+                    <div className="min-w-0">
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{m.key}</div>
+                      <div className="text-sm font-bold tabular-nums" style={{ color: "#01304a" }}>
+                        {m.overall === null ? "--" : `${m.overall}%`}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </button>
         </section>
 
         {/* --- Video call link (read only) --- */}
@@ -468,8 +562,17 @@ function StudentDetailModal({
 
         {/* --- Coverage notes (editable) --- */}
         <section className="mt-6">
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            <NotebookPen className="h-3.5 w-3.5" /> Notas de cobertura
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <NotebookPen className="h-3.5 w-3.5" /> Notas de cobertura
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowReport(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-destructive/40 bg-destructive/5 px-2.5 py-1 text-xs font-semibold text-destructive transition-colors hover:bg-destructive/10"
+            >
+              <Flag className="h-3.5 w-3.5" /> Reportar
+            </button>
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
             Contexto para cualquier teacher que llegue a cubrir una sesión de este alumno.
@@ -517,6 +620,93 @@ function StudentDetailModal({
             </div>
           </section>
         )}
+      </div>
+
+      {showAnalytics && (
+        <PerformanceAnalyticsModal
+          planTier={s.hired_plan ?? s.access_plan ?? "—"}
+          onClose={() => setShowAnalytics(false)}
+        />
+      )}
+      {showReport && (
+        <ReportModal
+          student={s}
+          teacherId={teacherId}
+          onClose={() => setShowReport(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// REPORT MODAL — free-text report about a student.
+//
+// Persists (student + teacher + timestamp + text) via student-reports-store.
+// TODO: conectar destino del reporte (canal de chat interno o notificación
+// por WhatsApp — decisión pendiente).
+// ============================================================================
+function ReportModal({
+  student, teacherId, onClose,
+}: {
+  student: User;
+  teacherId: string;
+  onClose: () => void;
+}) {
+  const [text, setText] = useState("");
+  const [saved, setSaved] = useState(false);
+
+  const handleSave = () => {
+    if (!text.trim()) return;
+    addStudentReport({ studentId: student.id, teacherId, text });
+    setSaved(true);
+    setTimeout(() => { onClose(); }, 900);
+  };
+
+  return (
+    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-foreground/50 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-floating">
+        <div className="flex items-start justify-between">
+          <div>
+            <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Reporte</div>
+            <h3 className="mt-1 text-lg font-semibold tracking-tight text-foreground">
+              Reportar situación · {student.name}
+            </h3>
+          </div>
+          <button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <p className="mt-3 text-xs text-muted-foreground">
+          Describe una situación observada sobre este alumno. El reporte quedará registrado en
+          la base de datos ligado a ti como teacher titular.
+        </p>
+
+        <textarea
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          rows={6}
+          placeholder="Ej.: llegó desmotivado por temas del trabajo, cambios en el objetivo original, etc."
+          className="mt-3 w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+        />
+
+        <div className="mt-4 flex items-center justify-end gap-2">
+          {saved && <span className="text-xs text-success">Reporte guardado</span>}
+          <button
+            onClick={onClose}
+            className="rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={!text.trim() || saved}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-destructive px-3 py-1.5 text-xs font-semibold text-destructive-foreground shadow-sm transition-opacity hover:opacity-90 disabled:opacity-50"
+          >
+            <Flag className="h-3.5 w-3.5" /> Guardar reporte
+          </button>
+        </div>
       </div>
     </div>
   );
