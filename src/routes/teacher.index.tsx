@@ -4,8 +4,9 @@ import { useAuth } from "@/lib/auth";
 import { SESSIONS, studentsOfTeacher, userById, type Session, type SessionStatus, type Level } from "@/lib/mock-data";
 import { Card, GhostButton, MetricCard, Pill, PrimaryButton, SectionTitle } from "@/components/verbo/ui";
 import { CalendarClock, FileEdit, X, Lock, Plus, Trash2, Download, CheckCircle2, Mic, PenLine, Ear, BookOpen, ChevronRight, Video, type LucideIcon } from "lucide-react";
-import { savePerformance, saveSubskillEvaluation, type PerformanceRating } from "@/lib/performance-store";
+import { savePerformance, type PerformanceRating } from "@/lib/performance-store";
 import { MACRO_SKILLS as SHARED_MACRO_SKILLS, skillKey as sharedSkillKey, type BaseKey as SharedBaseKey } from "@/lib/skills-taxonomy";
+import { submitSessionReport, updateSession } from "@/lib/sessions-store";
 import { PlanModal } from "@/components/verbo/PlanModal";
 import { loadLevels, subscribeLevels } from "@/lib/courses-store";
 import { loadLessonPlans, saveLessonPlan, subscribeLessonPlans, type LessonPlan } from "@/lib/lesson-plans-store";
@@ -26,7 +27,7 @@ function TeacherDashboard() {
   const [now, setNow] = useState(Date.now());
   const [sessions, setSessions] = useState<LocalSession[]>(() => SESSIONS.map((s) => ({ ...s })));
   const [evaluating, setEvaluating] = useState<Session | null>(null);
-  const [editing, setEditing] = useState<{ session: Session; perf: PerformanceRating } | null>(null);
+  const [editing, setEditing] = useState<{ session: Session; perf: PerformanceRating; subskills: Record<string, number> } | null>(null);
   const [planning, setPlanning] = useState<Session | null>(null);
   const [levels, setLevels] = useState<Level[]>([]);
   const [plans, setPlans] = useState<Record<string, LessonPlan>>({});
@@ -66,15 +67,44 @@ function TeacherDashboard() {
   const recent = mySessions.filter((s) => s.status !== "scheduled").slice(0, 5);
   const toPlan = upcoming.slice(0, 3);
 
-  const handleSubmit = (sessionId: string, status: SessionStatus, perf: PerformanceRating) => {
-    setSessions((prev) => prev.map((s) => (s.id === sessionId ? { ...s, status, _noReport: false } : s)));
-    if (status !== "absent") savePerformance(sessionId, perf);
+  const handleSubmit = (
+    sessionId: string,
+    attendance: "present" | "delayed" | "absent",
+    perf: PerformanceRating,
+    subskills: Record<string, number>,
+    absentCause?: "student" | "teacher",
+  ) => {
+    if (!user) return;
+    const session = sessions.find((s) => s.id === sessionId);
+    // 1. Local dashboard mirror (Session interface only stores 4 statuses).
+    setSessions((prev) => prev.map((s) => {
+      if (s.id !== sessionId) return s;
+      const status: SessionStatus = attendance === "absent" ? "absent" : "completed";
+      return { ...s, status, _noReport: false };
+    }));
+    // 2. Canonical shared sessions-store: status + attendance metadata +
+    //    real subskill scores + coverage-note auto-clear (all inside helper).
+    submitSessionReport({
+      sessionId,
+      teacherId: user.id,
+      studentId: session?.student_id ?? "",
+      attendance,
+      absentCause,
+      subskills,
+    });
+    // 3. Legacy back-compat: some seed sessions never touched sessions-store
+    //    yet; savePerformance keeps the 4-base map warm for them.
+    if (attendance !== "absent") savePerformance(sessionId, perf);
     setEditing(null);
   };
 
   const handleSavePlan = (plan: LessonPlan) => {
     saveLessonPlan(plan);
+    // Promote the shared session record to Ready so both the teacher and
+    // student calendars reflect the plan being locked in.
+    updateSession(plan.session_id, { status: "ready" as any });
     setPlans((prev) => ({ ...prev, [plan.session_id]: plan }));
+    setSessions((prev) => prev.map((s) => (s.id === plan.session_id && s.status === "scheduled") ? { ...s, status: "completed" as any === "completed" ? s.status : s.status } : s));
     setPlanning(null);
   };
 
