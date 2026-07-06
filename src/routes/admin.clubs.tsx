@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Card, GhostButton, Pill, PrimaryButton, SectionTitle } from "@/components/verbo/ui";
-import { USERS } from "@/lib/mock-data";
+import { USERS, type User } from "@/lib/mock-data";
 import {
-  type Club, type ClubType, type TimeStatus,
-  CLUB_SEED, assignmentOf, clubTeacherName as teacherName,
+  type Club, type ClubType, type TimeStatus, type ClubReleaseRequest,
+  assignmentOf, clubTeacherName as teacherName,
+  loadClubs, persistClubs, subscribeClubs, updateClub, releaseClub,
+  loadReleaseRequests, subscribeReleaseRequests, removeReleaseRequest,
 } from "@/lib/clubs-store";
 import {
   Sparkles,
@@ -25,6 +27,8 @@ import {
   ChevronLeft,
   ChevronRight,
   User as UserIcon,
+  Inbox,
+  Check,
 } from "lucide-react";
 
 export const Route = createFileRoute("/admin/clubs")({
@@ -75,10 +79,19 @@ type ViewMode = "list" | "calendar" | "history";
 function Page() {
   const { new: openNew } = Route.useSearch();
   const navigate = Route.useNavigate();
-  const [clubs, setClubs] = useState<Club[]>(CLUB_SEED);
+  const [clubs, setClubs] = useState<Club[]>(() => loadClubs());
+  const [requests, setRequests] = useState<ClubReleaseRequest[]>(() => loadReleaseRequests());
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Club | null>(null);
   const [view, setView] = useState<ViewMode>("list");
+
+  useEffect(() => {
+    setClubs(loadClubs());
+    setRequests(loadReleaseRequests());
+    const u1 = subscribeClubs(() => setClubs(loadClubs()));
+    const u2 = subscribeReleaseRequests(() => setRequests(loadReleaseRequests()));
+    return () => { u1(); u2(); };
+  }, []);
 
   // Open the create modal when arriving from a Quick Action (?new=1).
   useEffect(() => {
@@ -91,17 +104,17 @@ function Page() {
 
   const onCreate = () => { setEditing(null); setOpen(true); };
   const onEdit = (c: Club) => { setEditing(c); setOpen(true); };
-  const onDelete = (id: string) => setClubs((p) => p.filter((c) => c.id !== id));
+  const onDelete = (id: string) => {
+    const next = loadClubs().filter((c) => c.id !== id);
+    persistClubs(next);
+  };
 
   const onSave = (data: Omit<Club, "id" | "spots_taken" | "status">) => {
-    if (editing) {
-      setClubs((p) => p.map((c) => (c.id === editing.id ? { ...c, ...data } : c)));
-    } else {
-      setClubs((p) => [
-        { id: `c${Date.now()}`, spots_taken: 0, status: "upcoming", ...data },
-        ...p,
-      ]);
-    }
+    const current = loadClubs();
+    const next = editing
+      ? current.map((c) => (c.id === editing.id ? { ...c, ...data } : c))
+      : [{ id: `c${Date.now()}`, spots_taken: 0, status: "upcoming" as TimeStatus, ...data }, ...current];
+    persistClubs(next);
     setOpen(false);
   };
 
@@ -139,6 +152,8 @@ function Page() {
       {view === "list" && <ListView clubs={clubs} onEdit={onEdit} onDelete={onDelete} />}
       {view === "calendar" && <CalendarView clubs={clubs} onEdit={onEdit} />}
       {view === "history" && <TopicHistory clubs={clubs} />}
+
+      <ReleaseRequestsPanel requests={requests} clubs={clubs} />
 
       {open && <ClubFormPanel initial={editing} clubs={clubs} onClose={() => setOpen(false)} onSave={onSave} />}
     </div>
