@@ -406,8 +406,9 @@ function UnitModal({ editingUnit, onClose, onCreate, onUpdate }: {
 /* ============================================================
    Cohort row (compact card in list)
 ============================================================ */
-function CohortRow({ cohort, units, onEdit, onDelete, onChange }: {
+function CohortRow({ cohort, template, units, onEdit, onDelete, onChange }: {
   cohort: WorkshopCohort;
+  template: WorkshopTemplate;
   units: WorkshopUnit[];
   onEdit: () => void;
   onDelete: () => void;
@@ -425,17 +426,6 @@ function CohortRow({ cohort, units, onEdit, onDelete, onChange }: {
     const nextPer = { ...(cohort.per_participant_open ?? {}) };
     nextPer[pid] = { ...(nextPer[pid] ?? {}), [unitId]: !current };
     onChange({ ...cohort, per_participant_open: nextPer });
-  };
-
-  const addSession = () => {
-    const id = `ws-s-${Math.random().toString(36).slice(2, 8)}`;
-    onChange({ ...cohort, sessions: [...cohort.sessions, { id, date: "", note: "" }] });
-  };
-  const updateSession = (id: string, patch: Partial<{ date: string; note: string }>) => {
-    onChange({ ...cohort, sessions: cohort.sessions.map((s) => (s.id === id ? { ...s, ...patch } : s)) });
-  };
-  const removeSession = (id: string) => {
-    onChange({ ...cohort, sessions: cohort.sessions.filter((s) => s.id !== id) });
   };
 
   return (
