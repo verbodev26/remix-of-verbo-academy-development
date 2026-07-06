@@ -9,9 +9,8 @@ import { MACRO_SKILLS as SHARED_MACRO_SKILLS, skillKey as sharedSkillKey, type B
 import { submitSessionReport, updateSession } from "@/lib/sessions-store";
 import { PlanModal } from "@/components/verbo/PlanModal";
 import { loadLevels, subscribeLevels } from "@/lib/courses-store";
-import { loadLessonPlans, saveLessonPlan, subscribeLessonPlans, type LessonPlan } from "@/lib/lesson-plans-store";
+import { loadLessonPlans, saveLessonPlan, subscribeLessonPlans, getLessonPlan, type LessonPlan } from "@/lib/lesson-plans-store";
 import type { ExtSession } from "@/lib/sessions-store";
-import { getLessonPlan } from "@/lib/lesson-plans-store";
 import { markVipUnitDone, clearVipUnitDoneForSession } from "@/lib/vip-courses-store";
 
 export const Route = createFileRoute("/teacher/")({
