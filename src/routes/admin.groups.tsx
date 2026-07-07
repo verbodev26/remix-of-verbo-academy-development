@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
   Plus, X, Users as UsersIcon, Building2, CreditCard, Trash2, RotateCcw,
-  ArrowRightLeft, Archive, ChevronRight, ShieldAlert,
+  ArrowRightLeft, Archive, ChevronRight, ShieldAlert, CalendarClock,
 } from "lucide-react";
 import { toast } from "sonner";
 import { USERS, ASSIGNMENTS, userById, type User } from "@/lib/mock-data";
@@ -20,6 +20,8 @@ import {
   groupById, type Group, type GroupMember,
 } from "@/lib/groups-store";
 import { Card, GhostButton, PrimaryButton } from "@/components/verbo/ui";
+import { loadSessions, type ExtSession } from "@/lib/sessions-store";
+import { RescheduleModal } from "@/components/verbo/RescheduleModal";
 
 export const Route = createFileRoute("/admin/groups")({ component: Page });
 
