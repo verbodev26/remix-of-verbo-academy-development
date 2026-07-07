@@ -12,9 +12,14 @@ import {
 import { isBonusEligible } from "@/lib/teacher-kpis";
 import { useAvatar } from "@/lib/avatar-store";
 import {
+  activeStrikeCount, recentStrikes, justifyStrike, subscribeStrikes,
+  CANCEL_REASON_LABEL, JUSTIFICATION_LABEL, type JustificationCause, type Strike,
+} from "@/lib/strikes-store";
+import {
   Plus, X, Eye, EyeOff, Star, Users, Clock, KeyRound, Snowflake, Ban, Play,
   Pencil, Search, Filter, ArrowUpDown, Check, AlertTriangle, Mail, ShieldAlert,
   CheckCircle2, CalendarClock, ChevronRight, UserX, Wallet, FileDown, CircleDollarSign, Trophy,
+  ShieldCheck,
 } from "lucide-react";
 
 export const Route = createFileRoute("/admin/teachers")({
