@@ -394,6 +394,28 @@ function RegisterGroupModal({ onClose, onSaved }: { onClose: () => void; onSaved
   );
 }
 
+function GroupRescheduleButton({ groupId }: { groupId: string }) {
+  const [session, setSession] = useState<ExtSession | null>(null);
+  const [open, setOpen] = useState(false);
+  const nextSession = loadSessions()
+    .filter((s) => s.group_id === groupId && ["scheduled", "ready", "rescheduled", "rearranged"].includes(s.status))
+    .sort((a, b) => +new Date(a.date_time) - +new Date(b.date_time))[0];
+
+  return (
+    <>
+      <GhostButton
+        onClick={() => { if (nextSession) { setSession(nextSession); setOpen(true); } }}
+        className="!py-1.5"
+      >
+        <CalendarClock className="h-3.5 w-3.5" /> Request Reschedule
+      </GhostButton>
+      {open && session && (
+        <RescheduleModal session={session} kind="group" onClose={() => { setOpen(false); setSession(null); }} />
+      )}
+    </>
+  );
+}
+
 // -----------------------------------------------------------------------------
 // Group Detail Modal — edit shared fields + roster management
 // -----------------------------------------------------------------------------
