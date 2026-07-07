@@ -16,6 +16,12 @@ import {
   CANCEL_REASON_LABEL, JUSTIFICATION_LABEL, type JustificationCause, type Strike,
 } from "@/lib/strikes-store";
 import {
+  listChangeRequests, approveChangeRequest, rejectChangeRequest,
+  getAvailability, subscribeAvailability,
+  DAY_KEYS, DAY_LABELS, minutesToTime,
+  type AvailabilityChangeRequest, type Weekly,
+} from "@/lib/availability-store";
+import {
   Plus, X, Eye, EyeOff, Star, Users, Clock, KeyRound, Snowflake, Ban, Play,
   Pencil, Search, Filter, ArrowUpDown, Check, AlertTriangle, Mail, ShieldAlert,
   CheckCircle2, CalendarClock, ChevronRight, UserX, Wallet, FileDown, CircleDollarSign, Trophy,
