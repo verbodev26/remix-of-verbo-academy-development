@@ -393,6 +393,9 @@ function MyBalancePage() {
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           {signals.map((s) => <KpiBar key={s.key} label={s.label} value={s.value} sub={s.sub} />)}
         </div>
+        <p className="mt-4 rounded-lg border border-accent/30 bg-accent/5 p-3 text-xs text-foreground">
+          Teachers with strong, consistent performance get priority for new sessions and schedule requests — one more reason to keep your KPIs healthy.
+        </p>
       </Card>
 
       {/* Report an Issue (visual only) */}
