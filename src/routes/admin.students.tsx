@@ -1133,6 +1133,28 @@ function StudentDetailModal({
                 <Info label="Cadence" value={`${student.sessions_per_week ?? "—"}×/week · ${student.session_duration ?? "—"} min`} />
                 <Info label="Reschedule policy" value={student.reschedule_policy ?? accessPlan?.reschedulePolicy ?? "—"} />
                 <Info label="Next payment" value={nextPay ? nextPay.toLocaleDateString() : "—"} />
+                {groupInfo && <Info label="Group" value={groupInfo.group.name} />}
+                {(groupInfo?.group.company_client || student.company) && (
+                  <Info label="Company" value={groupInfo?.group.company_client ?? student.company ?? "—"} />
+                )}
+              </div>
+
+              {/* Clubs access — add-on entitlements */}
+              <div>
+                <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Clubs access</div>
+                {(() => {
+                  const tags: React.ReactNode[] = [];
+                  const ins = student.addon_insights_per_month ?? 0;
+                  const bc = student.addon_bookclubs_per_month ?? 0;
+                  const sp = student.addon_spotlight_per_month ?? 0;
+                  if (ins > 0) tags.push(<Tag key="ins" className="bg-primary/10 text-primary">Insights · {ins}/month</Tag>);
+                  if (bc > 0) tags.push(<Tag key="bc" className="bg-accent/10 text-accent">Book Clubs · {bc}/month</Tag>);
+                  if (sp > 0) tags.push(<Tag key="sp" className="bg-secondary text-secondary-foreground">Spotlight · {sp}/month</Tag>);
+                  if (student.addon_workshops_enabled) tags.push(<Tag key="ws" className="bg-muted text-muted-foreground">Workshops</Tag>);
+                  return tags.length > 0
+                    ? <div className="flex flex-wrap gap-2">{tags}</div>
+                    : <p className="text-sm text-muted-foreground">No clubs access</p>;
+                })()}
               </div>
 
               {/* Contracted levels progress */}
