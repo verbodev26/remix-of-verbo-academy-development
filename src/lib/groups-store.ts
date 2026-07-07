@@ -234,8 +234,8 @@ function propagateGroupToMembers(before: Group, after: Group) {
       const value = after[gk] as unknown;
       const keys = Array.isArray(uk) ? uk : [uk];
       for (const k of keys) {
-        (u as Record<string, unknown>)[k as string] = value;
-        (patch as Record<string, unknown>)[k as string] = value;
+        (u as unknown as Record<string, unknown>)[k as string] = value;
+        (patch as unknown as Record<string, unknown>)[k as string] = value;
       }
     }
     overrides[sid] = { ...(overrides[sid] ?? {}), ...patch };
