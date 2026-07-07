@@ -24,7 +24,7 @@ import {
   addStudentToCohort, cohortsForStudent, loadWorkshops,
   removeParticipantFromCohort, subscribeWorkshops,
 } from "@/lib/workshops-store";
-import { groupsByStudentId, groupOfStudent, removeMember, subscribeGroups } from "@/lib/groups-store";
+import { groupsByStudentId, groupOfStudent, removeMember, subscribeGroups, effectiveSessionCounts } from "@/lib/groups-store";
 
 export const Route = createFileRoute("/admin/students")({
   component: Page,
@@ -355,8 +355,9 @@ function StudentCard({ student: s, onOpen }: { student: User; onOpen: () => void
   const bcStrikes = s.bookclub_strikes ?? 0;
   const bcBlocked = bcStrikes >= MAX_BOOKCLUB_STRIKES;
   const hasBookClubs = (s.addon_bookclubs_per_month ?? 0) > 0;
-  const hired = s.hired_sessions ?? 0;
-  const remaining = s.remaining_sessions ?? 0;
+  const counts = effectiveSessionCounts(s.id, { hired: s.hired_sessions, remaining: s.remaining_sessions });
+  const hired = counts.hired;
+  const remaining = counts.remaining;
   const done = Math.max(0, hired - remaining);
   const pct = hired > 0 ? (done / hired) * 100 : 0;
 
@@ -1129,7 +1130,10 @@ function StudentDetailModal({
                 <Info label="Focus" value={student.focus ?? "—"} />
                 <Info label="Access Plan" value={student.access_plan ?? "—"} />
                 <Info label="Current roadmap level" value={student.current_roadmap_level ?? "—"} />
-                <Info label="Sessions" value={`${student.remaining_sessions ?? 0} remaining / ${student.hired_sessions ?? 0} total`} />
+                {(() => {
+                  const c = effectiveSessionCounts(student.id, { hired: student.hired_sessions, remaining: student.remaining_sessions });
+                  return <Info label="Sessions" value={`${c.remaining} remaining / ${c.hired} total`} />;
+                })()}
                 <Info label="Cadence" value={`${student.sessions_per_week ?? "—"}×/week · ${student.session_duration ?? "—"} min`} />
                 <Info label="Reschedule policy" value={student.reschedule_policy ?? accessPlan?.reschedulePolicy ?? "—"} />
                 <Info label="Next payment" value={nextPay ? nextPay.toLocaleDateString() : "—"} />
