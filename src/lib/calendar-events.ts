@@ -16,6 +16,7 @@
 import type { ExtSession, ExtSessionStatus } from "./sessions-store";
 import { loadSessions } from "./sessions-store";
 import { loadClubs, type Club, type ClubType, type TimeStatus } from "./clubs-store";
+import { groupsByStudentId } from "./groups-store";
 
 export type CalendarEventKind =
   | "class"        // 1:1 Performance Session (course)
@@ -33,6 +34,11 @@ export interface CalendarEvent {
   subtitle?: string;
   status?: ExtSessionStatus | TimeStatus;
   origin?: "course" | "workshop";
+  // ---- Group indicator (Performance Sessions groups) ----
+  // When true, the event pill renders a "G" badge instead of the default
+  // "1:1" badge, and the title is the Group Name.
+  is_group?: boolean;
+  group_id?: string;
   // Passthrough refs so click handlers can open the right modal / route.
   session?: ExtSession;
   club?: Club;
@@ -48,6 +54,8 @@ function sessionEvent(s: ExtSession, title: string): CalendarEvent {
     subtitle: s.workshop_topic,
     status: s.status,
     origin: s.origin ?? "course",
+    is_group: !!s.group_id,
+    group_id: s.group_id,
     session: s,
   };
 }
@@ -71,6 +79,7 @@ export function teacherCalendarEvents(teacherId: string, opts?: {
   cohortNameOf?: (id: string) => string | undefined;
 }): CalendarEvent[] {
   const events: CalendarEvent[] = [];
+  const gMap = groupsByStudentId();
 
   // Sessions — classes + workshop live sessions live in the same store.
   for (const s of loadSessions()) {
@@ -79,7 +88,11 @@ export function teacherCalendarEvents(teacherId: string, opts?: {
       const name = opts?.cohortNameOf?.(s.workshop_cohort_id ?? "") ?? "Workshop cohort";
       events.push(sessionEvent(s, name));
     } else {
-      const name = opts?.studentNameOf?.(s.student_id) ?? "Student";
+      // Group session: use the shared Group Name instead of a single student.
+      const g = s.group_id
+        ? (gMap.get(s.student_id) ?? null)
+        : null;
+      const name = g ? g.name : (opts?.studentNameOf?.(s.student_id) ?? "Student");
       events.push(sessionEvent(s, name));
     }
   }
