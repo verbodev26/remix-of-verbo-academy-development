@@ -1,53 +1,42 @@
 
-# Group members in /admin/students + Overview enhancements
+# Reflect group-level session counts on grouped students
 
-Small, purely presentational patch to `src/routes/admin.students.tsx`. No new stores, no data-model changes. Reuses `groups-store.ts` (already tracks memberships) and the existing add-on fields on the `User` model to describe Clubs access.
+Right now `hired_sessions` / `remaining_sessions` are read from the `User` record, which is `0` for members of a group because those numbers live on the `Group` (e.g. Tilin — FEMSA belongs to a group with 10 hired sessions, but her user record has 0). Fix: whenever we display or gate on these two numbers, prefer the group's values when the student is in a group.
 
-## 1. Stop filtering group members out of the list
+## 1. New helper — `effectiveSessionCounts(student)`
 
-Currently `filteredStudents` excludes anyone whose id appears in `groupsByStudentId()` (line 147: `!groupMap.has(s.id)`). Remove that exclusion so students belonging to a group show up as their own individual `StudentCard`, mixed in with individuals. Ordering, search, company filter and the "Individual / Groups" chips remain unchanged; the Groups tab (`/admin/groups`) is untouched.
+Add to `src/lib/groups-store.ts`:
 
-## 2. Detect "grouped" students inside the card + modal
+```ts
+export function effectiveSessionCounts(studentId: string, fallback: { hired?: number; remaining?: number }) {
+  const info = groupOfStudent(studentId);
+  if (info) {
+    return {
+      hired: info.group.hired_sessions ?? 0,
+      remaining: info.group.remaining_sessions ?? 0,
+      source: "group" as const,
+    };
+  }
+  return { hired: fallback.hired ?? 0, remaining: fallback.remaining ?? 0, source: "individual" as const };
+}
+```
 
-Add a helper `useGroupInfo(studentId)` that reads `groupOfStudent(studentId)` from `groups-store` and subscribes via `subscribeGroups` so changes propagate live. Returns `{ group, member } | null`.
+## 2. Apply in `src/routes/admin.students.tsx`
 
-Use it in both `StudentCard` (for a small badge — see §3) and `StudentDetailOverlay` (to gate footer buttons + inject Overview info).
+- **StudentCard** (lines 357–360): replace direct reads with `effectiveSessionCounts(s.id, { hired: s.hired_sessions, remaining: s.remaining_sessions })` so the "Sessions x/y" bar shows the group's totals for grouped members.
+- **Overview modal** (line 1132): same swap in the `Info label="Sessions"` row.
+- No change to the Register/Edit form fields for individual students; those still edit the user record. For grouped students, editing hired/remaining on the user record is a no-op display-wise since we always fall back to the group — no UX regression.
 
-## 3. StudentCard — mark grouped students visually
+## 3. Apply in `src/routes/admin.sessions.tsx`
 
-- Add a subtle tag `Group: {group.name}` next to the existing product/plan/level tags so admins can spot them without opening the card.
-- No behavior change on the card itself; click still opens the same `StudentDetailOverlay`.
+- **Student cards grid** (line 119): use `effectiveSessionCounts(s.id, { hired: s.hired_sessions }).hired` as the "hired" total so the "Scheduled X / hired" and "Remaining" numbers reflect the group contract.
+- **BulkScheduler validation** (line 207): use the same helper to compute `remaining`, so the "0 hours remaining" warning stops firing incorrectly for group members whose group has capacity.
 
-## 4. StudentDetailOverlay — tailored footer for grouped students
-
-When `useGroupInfo` returns a group:
-
-- **Remove "Mark as paid" button** (line 1245–1250). Payment lives on the Group card in `/admin/groups` for these students.
-- **Rewire the "Suspend" button** (line 1225) to call `removeMember(student.id)` from `groups-store` and close the overlay. Label stays exactly `Suspend` per the request. If the member is already `pending_removal`/`archived`, show the button as disabled with the same styling (edge case; auth already blocks login).
-- All other footer actions (Edit profile, Reset password, Reassign teacher, Freeze, Unlock Insights, Unlock Book Clubs) stay identical — rules, metrics and evaluations apply the same way as individual students.
-
-For non-grouped students the footer is unchanged (Mark as paid + Suspend behave exactly as today).
-
-## 5. Overview tab — new info fields
-
-Add to the Overview grid (around line 1119–1130), only when applicable:
-
-- **Group** — `group.name` (only if grouped). Rendered as an `<Info>` row.
-- **Company** — `group.company_client` when grouped, otherwise fall back to `student.company` when present (so enterprise individuals also see it here). Rendered as an `<Info>` row.
-- **Clubs access** — always shown. A new sub-section under the grid titled `Clubs access` that lists, as Tags:
-  - `Insights · N/month` when `addon_insights_per_month > 0`
-  - `Book Clubs · N/month` when `addon_bookclubs_per_month > 0`
-  - `Spotlight · N/month` when `addon_spotlight_per_month > 0`
-  - `Workshops` when `addon_workshops_enabled === true`
-  - When none of the above are set, render `No clubs access` in muted text.
-
-  This is the natural read of "how many and which clubs they can access" given the current data model — the add-on entitlements. No per-club attendance tracking is introduced.
-
-## 6. Language sweep
-
-All new strings in English, matching existing convention: `Group`, `Company`, `Clubs access`, `Insights`, `Book Clubs`, `Spotlight`, `Workshops`, `/month`, `No clubs access`.
+Scheduled-count logic stays as-is (`sessions.filter(...student_id===s.id...)`). This fixes the visible "0" that blocks scheduling. A dedicated group-shared session model (one event covers all members) is out of scope for this patch — noted in the earlier Groups plan.
 
 ## Files touched
-- `src/routes/admin.students.tsx` — remove group-exclusion filter, add `useGroupInfo` hook, add Group tag on card, adjust Overview grid + add Clubs access section, gate footer buttons for grouped students (drop Mark as paid, rewire Suspend to `removeMember`).
+- `src/lib/groups-store.ts` — export `effectiveSessionCounts`.
+- `src/routes/admin.students.tsx` — read via helper in StudentCard + Overview.
+- `src/routes/admin.sessions.tsx` — read via helper in student cards grid + BulkScheduler.
 
-Nothing else changes — `groups-store`, `admin.groups.tsx`, sessions, teacher panel, KPIs and Financial are all untouched.
+Nothing else changes.
