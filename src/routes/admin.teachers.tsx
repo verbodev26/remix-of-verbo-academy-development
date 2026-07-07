@@ -532,6 +532,8 @@ function TeacherDetailModal({
               </div>
               <p className="rounded-lg bg-muted px-3 py-2 text-[11px] text-muted-foreground">Full breakdown and history live in the global <span className="font-medium text-foreground">KPIs</span> page.</p>
 
+              <StrikesSection teacherId={t.id} />
+
               <div>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                   <AlertTriangle className="h-3.5 w-3.5 text-destructive" /> Flagged reviews ({flagged.length})
