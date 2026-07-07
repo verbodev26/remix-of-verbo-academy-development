@@ -1,53 +1,84 @@
 
-# Fully editable Group cards, with propagation to linked places
+# Group Admin nav tabs under dropdown menus
 
-The Group Detail modal today only edits ~8 of the ~18 fields captured at registration and never syncs shared fields back to member User records. This patch (a) exposes every registration field in the detail modal, and (b) automatically propagates the fields that are shared with members whenever the Group is edited — so admin/teacher/student surfaces stay in sync.
+Consolidates 11 flat tabs into 6 top-level items, each single-item entry stays a plain link and each multi-item entry becomes a hover/click dropdown. Rename "Overview" → "Dashboard". Add a new placeholder "The Money Lab" page under Financial.
 
-## 1. Extend `GroupDetailModal` in `src/routes/admin.groups.tsx`
+## Final nav structure
 
-Add the missing fields to the shared-fields grid (line 425), keeping the same order/layout as the Register modal for consistency:
+```text
+Dashboard                → /admin
+Students   ▾             → Students, Groups, Sessions
+Teachers   ▾             → Teachers, KPIs
+Content    ▾             → Performance Sessions, Focus Workshops, Challenges, Material Complementario
+Clubs                    → /admin/clubs   (single item → plain link, label "Clubs")
+Financial  ▾             → The Money Lab
+```
 
-- Product (`select`, VIP excluded) — resets `contracted_levels` + `current_roadmap_level` when it changes.
-- Initial English Level (`select` from `getProduct(product).levels`) → writes `current_roadmap_level`.
-- Sessions per Week (`number ≥ 1`) → `sessions_per_week`.
-- Session Duration (`number ≥ 15`) → `session_duration`.
-- Rescheduling Policy (`select` over `RESCHEDULE_PRESETS`) → `reschedule_policy`.
-- Cycle Start (`date`) → `cycle_start`.
-- Assign Teacher (`select`, filtered by `teachersForProduct(product)`) → `teacher_id`.
-- Add-on Access block (3 numeric inputs matching the Register modal): `addon_insights_per_month`, `addon_bookclubs_per_month`, `addon_spotlight_per_month`.
+Active state for a parent tab lights up when any of its child routes is active (matches by prefix), so opening `/admin/sessions` highlights "Students".
 
-Existing fields (Group Name, Company / Client, Max Capacity, Access Plan, Hired Sessions, Remaining Sessions, Payment Day, Video Call Link) stay as they are. `hired_sessions` continues to be freely editable; if a user lowers it below `remaining_sessions`, clamp `remaining_sessions` down in the same `updateGroup` call.
+## Files changed
 
-## 2. Auto-propagate shared fields — update `updateGroup` in `src/lib/groups-store.ts`
+### 1. `src/routes/admin.tsx` — replace flat `TABS` with a grouped `NAV_GROUPS` model
 
-Currently `updateGroup` just persists the group. Rewrite so that after persisting, if any of the following fields changed it also mirrors them onto every non-archived member's `User` record (mutating `USERS`, writing `verbo:student-profile-overrides`, dispatching `verbo:students-updated`):
+```ts
+type NavItem = { to: string; label: string; exact?: boolean };
+type NavGroup = { label: string; items: NavItem[] }; // single item = plain link
+```
 
-| Group field | Mirrored to User field |
-|---|---|
-| `product` | `product` |
-| `focus` | `focus` |
-| `access_plan` | `access_plan` + `hired_plan` |
-| `contracted_levels` | `contracted_levels` |
-| `current_roadmap_level` | `current_roadmap_level` |
-| `company_client` | `company` |
-| `video_call_link` | `video_call_link` |
-| `addon_insights_per_month` | `addon_insights_per_month` |
-| `addon_bookclubs_per_month` | `addon_bookclubs_per_month` |
-| `addon_spotlight_per_month` | `addon_spotlight_per_month` |
-| `addon_workshops_enabled` | `addon_workshops_enabled` |
+Build a small `<NavTab>` component:
+- If `items.length === 1` → render a `<Link>` exactly like today (single tap, no dropdown).
+- Otherwise → render a button that toggles a dropdown panel. Dropdown:
+  - Opens on hover AND on click (click also toggles, so it works on touch).
+  - Closes on outside click, `Escape`, and on navigation.
+  - Uses `<Link>` for each child so preloading and active-state still work.
+  - The parent button gets `data-status="active"` styling when the current pathname starts with any child `to`.
 
-If `teacher_id` changed, upsert `ASSIGNMENTS` for every active member so `/admin/students`, `/admin/sessions`, teacher panel and calendar all reflect the new teacher. If `teacher_id` is cleared, remove those assignments.
+Groups:
+```ts
+const NAV_GROUPS: NavGroup[] = [
+  { label: "Dashboard", items: [{ to: "/admin", label: "Dashboard", exact: true }] },
+  { label: "Students", items: [
+    { to: "/admin/students", label: "Students" },
+    { to: "/admin/groups",   label: "Groups" },
+    { to: "/admin/sessions", label: "Sessions" },
+  ]},
+  { label: "Teachers", items: [
+    { to: "/admin/teachers", label: "Teachers" },
+    { to: "/admin/kpis",     label: "KPIs" },
+  ]},
+  { label: "Content", items: [
+    { to: "/admin/courses",    label: "Performance Sessions" },
+    { to: "/admin/workshops",  label: "Focus Workshops" },
+    { to: "/admin/challenges", label: "Challenges" },
+    { to: "/admin/materials",  label: "Material Complementario" },
+  ]},
+  { label: "Clubs", items: [{ to: "/admin/clubs", label: "Clubs" }] },
+  { label: "Financial", items: [
+    { to: "/admin/financial/money-lab", label: "The Money Lab" },
+  ]},
+];
+```
 
-Group-level-only fields (`name`, `max_capacity`, `hired_sessions`, `remaining_sessions`, `sessions_per_week`, `session_duration`, `reschedule_policy`, `payment_day`, `cycle_start`, `next_payment`, `last_paid_at`) are NOT copied to members — they live only on the Group and are already read from the Group via `effectiveSessionCounts` and Group Detail elsewhere.
+Visual: same underlined-tab styling as today. Dropdown panel is an absolutely-positioned card (`rounded-xl border bg-card shadow-elevated`) with vertical link stack, matching the existing muted-foreground/foreground hover treatment. `overflow-x-auto` on the nav row stays for narrow viewports.
 
-Broadcast both `verbo:groups-updated` (already done) and `verbo:students-updated` so the Students list, Sessions page, teacher panel and calendar re-render immediately.
+### 2. New placeholder route — `src/routes/admin.financial.money-lab.tsx`
 
-## 3. No changes to the RegisterGroupModal
+Route id: `/admin/financial/money-lab`. Minimal page shell reusing `SectionTitle` / `Card` from `@/components/verbo/ui`:
 
-Registration flow (`registerGroupWithMembers`) already writes the initial values onto member Users. This patch only adds edit-time parity.
+- H1: "The Money Lab"
+- Muted subtitle: "Financial workspace — coming soon."
+- Empty-state card with a wallet icon and a short "Placeholder — content pending" message.
+- `head()` with a distinct title/description so it isn't the template default.
+
+No new store, no data — pure placeholder.
+
+### 3. Nothing else moves
+
+All existing routes (`admin.index`, `admin.students`, `admin.groups`, `admin.sessions`, `admin.teachers`, `admin.kpis`, `admin.courses`, `admin.workshops`, `admin.challenges`, `admin.materials`, `admin.clubs`) stay at their current URLs — this is a nav-only regrouping so no deep links break.
+
+## Language sweep
+All new strings in English: `Dashboard`, `Students`, `Teachers`, `Content`, `Clubs`, `Financial`, `The Money Lab`, `Coming soon`, `Placeholder`.
 
 ## Files touched
-- `src/lib/groups-store.ts` — extend `updateGroup` with the propagation step (mutate USERS + persist profile overrides + upsert ASSIGNMENTS + broadcast students event).
-- `src/routes/admin.groups.tsx` — expand `GroupDetailModal` with the missing fields and the level/product cascade behavior; clamp remaining when hired lowers.
-
-Nothing else in the codebase needs to change: `admin.students.tsx` already reads live values from `USERS` and `groups-store` through the helpers added earlier, and `/admin/sessions`, teacher calendar, and teacher panel already read those same singletons.
+- `src/routes/admin.tsx` — grouped nav model + dropdown component + rename.
+- `src/routes/admin.financial.money-lab.tsx` — new placeholder page.
