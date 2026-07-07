@@ -1164,6 +1164,84 @@ function BigStat({ label, value }: { label: string; value: string }) {
   );
 }
 
+// ===========================================================================
+// STRIKES SECTION (KPIs tab)
+// ===========================================================================
+function StrikesSection({ teacherId }: { teacherId: string }) {
+  const [, forceTick] = useState(0);
+  const [openFor, setOpenFor] = useState<string | null>(null);
+  const list = recentStrikes(teacherId);
+  const active = list.filter((s) => !s.justified).length;
+  return (
+    <div>
+      <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <ShieldAlert className="h-3.5 w-3.5 text-destructive" /> Cancellations / No-Shows — {Math.min(3, active)}/3 Strikes (6 months)
+      </div>
+      {list.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No cancellations in the last 6 months.</p>
+      ) : (
+        <div className="space-y-2">
+          {list.map((s: Strike) => (
+            <div key={s.id} className={`rounded-lg border px-3 py-2.5 ${s.justified ? "border-border bg-background opacity-70" : "border-destructive/30 bg-destructive/5"}`}>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="text-sm font-medium text-foreground">
+                    {CANCEL_REASON_LABEL[s.reason]}
+                    {s.needs_substitute && !s.substitute_found && (
+                      <span className="ml-2 rounded-full bg-warning/20 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">Needs Substitute</span>
+                    )}
+                    {s.justified && s.justification_cause && (
+                      <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-success/15 px-1.5 py-0.5 text-[10px] font-semibold text-success">
+                        <ShieldCheck className="h-3 w-3" /> {JUSTIFICATION_LABEL[s.justification_cause]}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground">
+                    {new Date(s.created_at).toLocaleString()}
+                    {s.medical_note_name ? ` · Medical Note: ${s.medical_note_name}` : ""}
+                    {s.note ? ` · ${s.note}` : ""}
+                  </div>
+                </div>
+                {!s.justified && (
+                  <div className="flex items-center gap-1.5">
+                    {openFor === s.id ? (
+                      <>
+                        <select
+                          id={`jc-${s.id}`}
+                          defaultValue=""
+                          className="rounded-md border border-input bg-background px-2 py-1 text-xs"
+                        >
+                          <option value="" disabled>— Justify with —</option>
+                          {(Object.keys(JUSTIFICATION_LABEL) as JustificationCause[]).map((c) => (
+                            <option key={c} value={c}>{JUSTIFICATION_LABEL[c]}</option>
+                          ))}
+                        </select>
+                        <PrimaryBtn onClick={() => {
+                          const el = document.getElementById(`jc-${s.id}`) as HTMLSelectElement | null;
+                          if (el?.value) {
+                            justifyStrike(s.id, el.value as JustificationCause);
+                            setOpenFor(null);
+                            forceTick((n) => n + 1);
+                          }
+                        }}>Apply</PrimaryBtn>
+                        <GhostBtn onClick={() => setOpenFor(null)}>Cancel</GhostBtn>
+                      </>
+                    ) : (
+                      <GhostBtn onClick={() => setOpenFor(s.id)}>
+                        <ShieldCheck className="h-3.5 w-3.5" /> Mark as Justified
+                      </GhostBtn>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const inputCls = "w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring";
 const selectCls = `${inputCls} cursor-pointer`;
 
