@@ -173,6 +173,61 @@ export function submitSessionReport(input: {
   return updated;
 }
 
+// -----------------------------------------------------------------------------
+// Group Session Report — one shared class, per-member attendance & evaluation.
+// Called by the Session Report modal when the session has a `group_id` set.
+// -----------------------------------------------------------------------------
+export function submitGroupSessionReport(input: {
+  sessionId: string;
+  teacherId: string;
+  groupId: string;
+  perMember: Array<{
+    studentId: string;
+    attendance: "present" | "delayed" | "absent";
+    absentCause?: "student" | "teacher";
+    subskills: Record<string, number>;
+  }>;
+}): ExtSession | null {
+  let updated: ExtSession | null = null;
+  const memberStatuses: Record<string, ExtSessionStatus> = {};
+  const memberAbsentCause: Record<string, "student" | "teacher"> = {};
+  for (const m of input.perMember) {
+    memberStatuses[m.studentId] = m.attendance === "absent" ? "absent" : "completed";
+    if (m.attendance === "absent") memberAbsentCause[m.studentId] = m.absentCause ?? "student";
+  }
+  // The top-level session status is "completed" if any member attended.
+  const anyPresent = input.perMember.some((m) => m.attendance !== "absent");
+  const nextTop: ExtSessionStatus = anyPresent ? "completed" : "absent";
+
+  const next = loadSessions().map((s) => {
+    if (s.id !== input.sessionId) return s;
+    updated = {
+      ...s,
+      status: nextTop,
+      member_statuses: memberStatuses,
+      member_absent_cause: memberAbsentCause,
+      report_submitted_at: new Date().toISOString(),
+    };
+    return updated;
+  });
+  persistSessions(next);
+
+  // Individual per-member effects: skills recorded per student, coverage
+  // notes cleared per student. PDF/report generation reuses the same
+  // per-student store so each Completed member gets their own record.
+  for (const m of input.perMember) {
+    if (m.attendance !== "absent" && Object.keys(m.subskills).length > 0) {
+      saveSubskillEvaluation(input.sessionId, m.subskills);
+    }
+    setCoverageNote(input.teacherId, m.studentId, "");
+  }
+
+  // Group progress advances exactly once (not per member).
+  decrementGroupRemaining(input.groupId);
+
+  return updated;
+}
+
 /** Cascade update: when a cohort's teacher or shared link changes, keep
  *  future/non-completed sessions in sync so admin.sessions and the cohort
  *  view stay consistent without manual re-entry. */
