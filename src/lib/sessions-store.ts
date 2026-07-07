@@ -27,6 +27,14 @@ export interface ExtSession extends Omit<Session, "status"> {
   group_id?: string;
   member_statuses?: Record<string, ExtSessionStatus>;
   member_absent_cause?: Record<string, "student" | "teacher">;
+  // ---- Teacher "Can't Attend" cancellation ----
+  cancellation_reason?: "illness" | "personal" | "major_issue" | "other";
+  cancellation_note?: string;
+  /** True when a teacher cancelled with <24h notice — Admin needs to find
+   *  a substitute manually (the matching engine is a future phase). */
+  needs_substitute?: boolean;
+  /** Free-text comments left by the teacher in the Session Report. */
+  report_comments?: string;
 }
 
 export const SESSIONS_KEY = "verbo:sessions";
