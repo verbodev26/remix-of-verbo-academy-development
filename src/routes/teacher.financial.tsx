@@ -328,7 +328,7 @@ function MyBalancePage() {
                       <td className="px-3 py-2.5 text-muted-foreground">
                         {new Date(a.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                       </td>
-                      <td className="px-3 py-2.5 text-foreground">{a.reason}</td>
+                      <td className="px-3 py-2.5 text-foreground">{adjustmentType(a.reason)}</td>
                       <td className={`px-3 py-2.5 text-right font-semibold ${a.amount < 0 ? "text-destructive" : "text-success"}`}>
                         {a.amount >= 0 ? "+" : "−"}{money(Math.abs(a.amount))}
                       </td>
