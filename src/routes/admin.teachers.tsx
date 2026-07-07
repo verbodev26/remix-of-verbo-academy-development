@@ -1262,6 +1262,101 @@ function Field({ label, icon, children, className }: { label: React.ReactNode; i
   );
 }
 
+// ---------------------------------------------------------------------------
+// Availability Change Requests (pending queue) — collapsible sub-section.
+// ---------------------------------------------------------------------------
+function AvailabilityChangeRequestsSection() {
+  const [, tick] = useState(0);
+  const [open, setOpen] = useState(false);
+  useEffect(() => subscribeAvailability(() => tick((n) => n + 1)), []);
+  const pending = listChangeRequests("pending");
+
+  return (
+    <div className="rounded-2xl border border-border bg-card shadow-sm">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between px-5 py-3 text-left"
+      >
+        <div className="flex items-center gap-2">
+          <CalendarClock className="h-4 w-4 text-accent" />
+          <span className="text-sm font-semibold text-foreground">Availability Change Requests</span>
+          {pending.length > 0 && (
+            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
+              {pending.length} pending
+            </span>
+          )}
+        </div>
+        <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${open ? "rotate-90" : ""}`} />
+      </button>
+      {open && (
+        <div className="border-t border-border px-5 py-4">
+          {pending.length === 0 ? (
+            <p className="py-4 text-center text-xs text-muted-foreground">No pending requests.</p>
+          ) : (
+            <div className="space-y-4">
+              {pending.map((r) => <ChangeRequestRow key={r.id} req={r} />)}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function summarizeWeekly(w: Weekly): string {
+  const parts: string[] = [];
+  for (const d of DAY_KEYS) {
+    const blocks = w[d];
+    if (!blocks || blocks.length === 0) continue;
+    parts.push(`${DAY_LABELS[d].slice(0, 3)} ${blocks.map((b) => `${minutesToTime(b.startMin)}–${minutesToTime(b.endMin)}`).join(", ")}`);
+  }
+  return parts.length ? parts.join(" · ") : "No availability set";
+}
+
+function ChangeRequestRow({ req }: { req: AvailabilityChangeRequest }) {
+  const teacher = userById(req.teacherId);
+  const current = getAvailability(req.teacherId).weekly;
+  return (
+    <div className="rounded-xl border border-border p-4">
+      <div className="mb-3 flex items-center justify-between">
+        <div>
+          <div className="text-sm font-semibold text-foreground">{teacher?.name ?? req.teacherId}</div>
+          <div className="text-[11px] text-muted-foreground">Submitted {new Date(req.createdAt).toLocaleString()}</div>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => { approveChangeRequest(req.id); }}
+            className="rounded-lg bg-success px-3 py-1.5 text-xs font-medium text-success-foreground hover:opacity-90"
+          >
+            Approve
+          </button>
+          <button
+            onClick={() => { rejectChangeRequest(req.id); }}
+            className="rounded-lg border border-destructive px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10"
+          >
+            Reject
+          </button>
+        </div>
+      </div>
+      <div className="grid gap-2 text-xs md:grid-cols-2">
+        <div className="rounded-lg bg-secondary/40 p-3">
+          <div className="mb-1 text-[10px] font-semibold uppercase text-muted-foreground">Current</div>
+          <div className="text-foreground">{summarizeWeekly(current)}</div>
+        </div>
+        <div className="rounded-lg bg-accent/5 p-3">
+          <div className="mb-1 text-[10px] font-semibold uppercase text-muted-foreground">Proposed</div>
+          <div className="text-foreground">{summarizeWeekly(req.proposed)}</div>
+        </div>
+      </div>
+      {req.reason && (
+        <div className="mt-2 text-xs text-muted-foreground">
+          <span className="font-medium text-foreground">Reason:</span> {req.reason}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function PrimaryBtn({ children, className = "", ...rest }: React.ButtonHTMLAttributes<HTMLButtonElement>) {
   return <button {...rest} className={`inline-flex items-center justify-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-accent-foreground shadow-sm transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed ${className}`}>{children}</button>;
 }
