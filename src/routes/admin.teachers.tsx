@@ -12,9 +12,14 @@ import {
 import { isBonusEligible } from "@/lib/teacher-kpis";
 import { useAvatar } from "@/lib/avatar-store";
 import {
+  activeStrikeCount, recentStrikes, justifyStrike, subscribeStrikes,
+  CANCEL_REASON_LABEL, JUSTIFICATION_LABEL, type JustificationCause, type Strike,
+} from "@/lib/strikes-store";
+import {
   Plus, X, Eye, EyeOff, Star, Users, Clock, KeyRound, Snowflake, Ban, Play,
   Pencil, Search, Filter, ArrowUpDown, Check, AlertTriangle, Mail, ShieldAlert,
   CheckCircle2, CalendarClock, ChevronRight, UserX, Wallet, FileDown, CircleDollarSign, Trophy,
+  ShieldCheck,
 } from "lucide-react";
 
 export const Route = createFileRoute("/admin/teachers")({
@@ -68,6 +73,8 @@ function Page() {
     const reviews = read<Record<string, Partial<Session>>>(REVIEW_KEY, {});
     SESSIONS.forEach((s) => { if (reviews[s.id]) Object.assign(s, reviews[s.id]); });
     forceTick((n) => n + 1);
+    const unsub = subscribeStrikes(() => forceTick((n) => n + 1));
+    return () => unsub();
   }, []);
 
   // Deep-link from the Admin Overview snapshot (open a teacher profile).
@@ -255,12 +262,19 @@ function TeacherCard({ teacher: t, onOpen }: { teacher: User; onOpen: () => void
   const meta = STATUS_META[status];
   const dim = status === "removed";
   const glow = pending > 0 && status !== "removed";
+  const strikes = activeStrikeCount(t.id);
+  const frozenByStrikes = strikes >= 3;
 
   return (
     <button
       onClick={onOpen}
       className={`group relative flex flex-col rounded-2xl border border-border bg-card p-5 text-left shadow-soft transition-all hover:-translate-y-1 hover:shadow-elevated ${glow ? "verbo-review-glow" : ""} ${dim ? "opacity-60" : ""}`}
     >
+      {frozenByStrikes && (
+        <div className="mb-3 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-[11px] font-semibold text-destructive">
+          🚨 Frozen — 3 Unjustified Strikes. Urgent substitute needed for this teacher's groups.
+        </div>
+      )}
       {glow && (
         <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-semibold text-destructive">
           <AlertTriangle className="h-3 w-3" /> Needs Review ({pending})
@@ -292,7 +306,12 @@ function TeacherCard({ teacher: t, onOpen }: { teacher: User; onOpen: () => void
       </div>
 
       <div className="mt-4">
-        <Tag className={meta.cls}>{meta.label}</Tag>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <Tag className={meta.cls}>{meta.label}</Tag>
+          <Tag className={strikes >= 3 ? "bg-destructive/15 text-destructive" : strikes >= 1 ? "bg-warning/20 text-amber-700" : "bg-secondary text-muted-foreground"}>
+            {Math.min(3, strikes)}/3 Strikes (6 months)
+          </Tag>
+        </div>
       </div>
     </button>
   );
@@ -512,6 +531,8 @@ function TeacherDetailModal({
                 <BigStat label="Hours this month" value={`${t.hours_month ?? 0}h`} />
               </div>
               <p className="rounded-lg bg-muted px-3 py-2 text-[11px] text-muted-foreground">Full breakdown and history live in the global <span className="font-medium text-foreground">KPIs</span> page.</p>
+
+              <StrikesSection teacherId={t.id} />
 
               <div>
                 <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -1139,6 +1160,84 @@ function BigStat({ label, value }: { label: string; value: string }) {
     <div className="rounded-xl border border-border bg-background p-4 text-center">
       <div className="text-2xl font-semibold text-foreground">{value}</div>
       <div className="mt-1 text-[10.5px] font-medium uppercase tracking-wider text-muted-foreground">{label}</div>
+    </div>
+  );
+}
+
+// ===========================================================================
+// STRIKES SECTION (KPIs tab)
+// ===========================================================================
+function StrikesSection({ teacherId }: { teacherId: string }) {
+  const [, forceTick] = useState(0);
+  const [openFor, setOpenFor] = useState<string | null>(null);
+  const list = recentStrikes(teacherId);
+  const active = list.filter((s) => !s.justified).length;
+  return (
+    <div>
+      <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <ShieldAlert className="h-3.5 w-3.5 text-destructive" /> Cancellations / No-Shows — {Math.min(3, active)}/3 Strikes (6 months)
+      </div>
+      {list.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No cancellations in the last 6 months.</p>
+      ) : (
+        <div className="space-y-2">
+          {list.map((s: Strike) => (
+            <div key={s.id} className={`rounded-lg border px-3 py-2.5 ${s.justified ? "border-border bg-background opacity-70" : "border-destructive/30 bg-destructive/5"}`}>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="text-sm font-medium text-foreground">
+                    {CANCEL_REASON_LABEL[s.reason]}
+                    {s.needs_substitute && !s.substitute_found && (
+                      <span className="ml-2 rounded-full bg-warning/20 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">Needs Substitute</span>
+                    )}
+                    {s.justified && s.justification_cause && (
+                      <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-success/15 px-1.5 py-0.5 text-[10px] font-semibold text-success">
+                        <ShieldCheck className="h-3 w-3" /> {JUSTIFICATION_LABEL[s.justification_cause]}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground">
+                    {new Date(s.created_at).toLocaleString()}
+                    {s.medical_note_name ? ` · Medical Note: ${s.medical_note_name}` : ""}
+                    {s.note ? ` · ${s.note}` : ""}
+                  </div>
+                </div>
+                {!s.justified && (
+                  <div className="flex items-center gap-1.5">
+                    {openFor === s.id ? (
+                      <>
+                        <select
+                          id={`jc-${s.id}`}
+                          defaultValue=""
+                          className="rounded-md border border-input bg-background px-2 py-1 text-xs"
+                        >
+                          <option value="" disabled>— Justify with —</option>
+                          {(Object.keys(JUSTIFICATION_LABEL) as JustificationCause[]).map((c) => (
+                            <option key={c} value={c}>{JUSTIFICATION_LABEL[c]}</option>
+                          ))}
+                        </select>
+                        <PrimaryBtn onClick={() => {
+                          const el = document.getElementById(`jc-${s.id}`) as HTMLSelectElement | null;
+                          if (el?.value) {
+                            justifyStrike(s.id, el.value as JustificationCause);
+                            setOpenFor(null);
+                            forceTick((n) => n + 1);
+                          }
+                        }}>Apply</PrimaryBtn>
+                        <GhostBtn onClick={() => setOpenFor(null)}>Cancel</GhostBtn>
+                      </>
+                    ) : (
+                      <GhostBtn onClick={() => setOpenFor(s.id)}>
+                        <ShieldCheck className="h-3.5 w-3.5" /> Mark as Justified
+                      </GhostBtn>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

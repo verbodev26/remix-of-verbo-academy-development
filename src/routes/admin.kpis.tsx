@@ -224,6 +224,7 @@ function TeacherKpiCard({
         <KpiBar label="Planning punctuality" value={kpis.planningPunctuality} />
         <KpiBar label="Report punctuality" value={kpis.reportPunctuality} />
         <KpiBar label="Session completion rate" value={kpis.completionRate} />
+        <KpiBar label="Cancellations / No-Shows" value={kpis.cancellationScore} sub={`${Math.min(3, kpis.activeStrikes)}/3 (last 6 months)`} />
         <KpiBar label="Teacher-caused absence rate" value={kpis.teacherAbsenceRate} invert />
       </div>
     </div>
@@ -238,11 +239,14 @@ function barColor(value: number, invert: boolean) {
   return "#ef4444";
 }
 
-function KpiBar({ label, value, invert = false }: { label: string; value: number; invert?: boolean }) {
+function KpiBar({ label, value, invert = false, sub }: { label: string; value: number; invert?: boolean; sub?: string }) {
   return (
     <div>
       <div className="mb-1 flex justify-between text-xs">
-        <span className="text-muted-foreground">{label}</span>
+        <span className="text-muted-foreground">
+          {label}
+          {sub && <span className="ml-2 text-[10px] text-muted-foreground/70">{sub}</span>}
+        </span>
         <span className="font-semibold text-foreground">{value}%</span>
       </div>
       <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">

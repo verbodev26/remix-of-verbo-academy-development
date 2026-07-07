@@ -50,7 +50,7 @@ function adjustmentType(reason: string): string {
 }
 
 // KPI signal shape shared with the Performance card + badges.
-type KpiSignal = { key: string; label: string; value: number };
+type KpiSignal = { key: string; label: string; value: number; sub?: string };
 
 const KPI_GOOD = 85;
 const KPI_CRITICAL = 70;
@@ -157,11 +157,13 @@ function MyBalancePage() {
 
   // ----- KPI signals (5) -----
   const signals: KpiSignal[] = kpis ? [
-    { key: "connection", label: "Connection punctuality", value: kpis.connectionPunctuality },
-    { key: "planning",   label: "Planning punctuality",   value: kpis.planningPunctuality },
-    { key: "report",     label: "Report punctuality",     value: kpis.reportPunctuality },
-    { key: "completion", label: "Session completion rate", value: kpis.completionRate },
-    { key: "rating",     label: "Student rating",         value: kpis.ratingNormalized },
+    { key: "connection",   label: "Connection punctuality",   value: kpis.connectionPunctuality },
+    { key: "planning",     label: "Planning punctuality",     value: kpis.planningPunctuality },
+    { key: "report",       label: "Report punctuality",       value: kpis.reportPunctuality },
+    { key: "completion",   label: "Session completion rate",  value: kpis.completionRate },
+    { key: "rating",       label: "Student rating",           value: kpis.ratingNormalized },
+    { key: "cancellation", label: "Cancellations / No-Shows", value: kpis.cancellationScore,
+      sub: `${Math.min(3, kpis.activeStrikes)}/3 (last 6 months)` },
   ] : [];
 
   const belowTarget = signals.filter((s) => s.value < KPI_GOOD);
@@ -363,7 +365,7 @@ function MyBalancePage() {
             </div>
           </div>
           <div className="space-y-3">
-            {signals.map((s) => <KpiBar key={s.key} label={s.label} value={s.value} />)}
+            {signals.map((s) => <KpiBar key={s.key} label={s.label} value={s.value} sub={s.sub} />)}
           </div>
           <div className="mt-4 rounded-lg border border-border bg-secondary/30 p-3 text-xs text-muted-foreground">
             {kpis.bonusEligible
@@ -389,7 +391,7 @@ function MyBalancePage() {
           </div>
         </div>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          {signals.map((s) => <KpiBar key={s.key} label={s.label} value={s.value} />)}
+          {signals.map((s) => <KpiBar key={s.key} label={s.label} value={s.value} sub={s.sub} />)}
         </div>
       </Card>
 
@@ -436,12 +438,15 @@ function TotalCard({ label, value }: { label: string; value: string }) {
   );
 }
 
-function KpiBar({ label, value }: { label: string; value: number }) {
+function KpiBar({ label, value, sub }: { label: string; value: number; sub?: string }) {
   const color = signalColor(value);
   return (
     <div>
       <div className="mb-1 flex justify-between text-xs">
-        <span className="text-muted-foreground">{label}</span>
+        <span className="text-muted-foreground">
+          {label}
+          {sub && <span className="ml-2 text-[10px] text-muted-foreground/70">{sub}</span>}
+        </span>
         <span className="font-semibold text-foreground">{value}%</span>
       </div>
       <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
