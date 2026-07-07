@@ -174,6 +174,8 @@ function Page() {
         </button>
       </div>
 
+      <TeachersSubTabs />
+
       {/* Filters */}
       <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 shadow-sm sm:flex-row sm:items-center">
         <div className="relative flex-1">
