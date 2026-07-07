@@ -143,7 +143,7 @@ function NavTab({ group }: { group: NavGroup }) {
         aria-label={group.label}
         hidden={!open}
         onKeyDown={onMenuKeyDown}
-        className="absolute left-0 top-full z-40 min-w-[220px] rounded-xl border border-border bg-card p-1.5 shadow-elevated"
+        className="absolute left-0 top-full z-40 mt-1 min-w-[220px] rounded-xl border border-border bg-card p-1.5 shadow-elevated before:absolute before:-top-2 before:left-0 before:h-2 before:w-full before:content-['']"
       >
         {group.items.map((it) => (
           <Link
@@ -167,7 +167,7 @@ function Layout() {
       <div className="min-h-screen bg-background">
         <TopNav items={[{ to: "/admin", label: "Admin Panel" }]} />
         <div className="border-b border-border bg-background">
-          <nav aria-label="Admin sections" className="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-6">
+          <nav aria-label="Admin sections" className="mx-auto flex max-w-7xl flex-wrap gap-1 px-6">
             {NAV_GROUPS.map((g) => <NavTab key={g.label} group={g} />)}
           </nav>
         </div>
