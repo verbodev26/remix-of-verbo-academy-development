@@ -349,6 +349,7 @@ function Page() {
 function StudentCard({ student: s, onOpen }: { student: User; onOpen: () => void }) {
   const avatar = useAvatar(s.id);
   const product = getProduct(s.product);
+  const groupInfo = groupOfStudent(s.id);
   const strikes = s.insights_strikes ?? 0;
   const blocked = strikes >= MAX_INSIGHT_STRIKES;
   const bcStrikes = s.bookclub_strikes ?? 0;
@@ -437,6 +438,9 @@ function StudentCard({ student: s, onOpen }: { student: User; onOpen: () => void
         {product && <Tag className="bg-primary/10 text-primary">{product.name}</Tag>}
         {s.access_plan && <Tag className="bg-accent/10 text-accent">{s.access_plan}</Tag>}
         {s.focus && <Tag className="bg-secondary text-secondary-foreground">{s.focus}</Tag>}
+        {groupInfo && (
+          <Tag className="bg-blue-500/10 text-blue-600">Group: {groupInfo.group.name}</Tag>
+        )}
       </div>
 
       <div className="mt-4">
