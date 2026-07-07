@@ -73,6 +73,8 @@ function Page() {
     const reviews = read<Record<string, Partial<Session>>>(REVIEW_KEY, {});
     SESSIONS.forEach((s) => { if (reviews[s.id]) Object.assign(s, reviews[s.id]); });
     forceTick((n) => n + 1);
+    const unsub = subscribeStrikes(() => forceTick((n) => n + 1));
+    return () => unsub();
   }, []);
 
   // Deep-link from the Admin Overview snapshot (open a teacher profile).
