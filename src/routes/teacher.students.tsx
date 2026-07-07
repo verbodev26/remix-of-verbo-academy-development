@@ -7,6 +7,7 @@ import {
   getProduct,
 } from "@/lib/student-model";
 import { hydrateStudents, subscribeStudents } from "@/lib/students-store";
+import { groupOfStudent, subscribeGroups } from "@/lib/groups-store";
 import {
   loadChallenges, subscribeChallenges, challengesFor, categoryColor,
   DIFFICULTY_META, DIFFICULTY_ORDER,
@@ -61,7 +62,8 @@ function Page() {
     hydrateStudents();
     tick((n) => n + 1);
     const unsub = subscribeStudents(() => tick((n) => n + 1));
-    return unsub;
+    const unsubG = subscribeGroups(() => tick((n) => n + 1));
+    return () => { unsub(); unsubG(); };
   }, []);
 
   if (!user) return null;
@@ -271,6 +273,12 @@ function StudentCard({ student: s, onOpen }: { student: User; onOpen: () => void
         {product && <Tag className="bg-primary/10 text-primary">{product.name}</Tag>}
         {s.access_plan && <Tag className="bg-accent/10 text-accent">{s.access_plan}</Tag>}
         {s.focus && <Tag className="bg-secondary text-secondary-foreground">{s.focus}</Tag>}
+        {(() => {
+          const gi = groupOfStudent(s.id);
+          return gi ? (
+            <Tag className="bg-[#01304a] text-white">Group: {gi.group.name}</Tag>
+          ) : null;
+        })()}
       </div>
 
       <div className="mt-4">

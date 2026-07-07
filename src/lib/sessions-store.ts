@@ -2,6 +2,7 @@
 import { SESSIONS as SEED_SESSIONS, type Session } from "./mock-data";
 import { setCoverageNote } from "./coverage-notes-store";
 import { saveSubskillEvaluation } from "./performance-store";
+import { decrementGroupRemaining } from "./groups-store";
 
 export type ExtSessionStatus =
   | "scheduled"
@@ -17,6 +18,15 @@ export type ExtSessionStatus =
 
 export interface ExtSession extends Omit<Session, "status"> {
   status: ExtSessionStatus;
+  // ---- Group session support ----
+  // When set, this session represents ONE shared live class attended by
+  // multiple students belonging to the same Group (see groups-store). The
+  // top-level `student_id` still points at the primary/first member (for
+  // legacy consumers), but `member_statuses` is the source of truth for
+  // per-member attendance / report submission.
+  group_id?: string;
+  member_statuses?: Record<string, ExtSessionStatus>;
+  member_absent_cause?: Record<string, "student" | "teacher">;
 }
 
 export const SESSIONS_KEY = "verbo:sessions";
@@ -159,6 +169,61 @@ export function submitSessionReport(input: {
 
   // Auto-clear coverage note (Fase 1 TODO hook).
   setCoverageNote(input.teacherId, input.studentId, "");
+
+  return updated;
+}
+
+// -----------------------------------------------------------------------------
+// Group Session Report — one shared class, per-member attendance & evaluation.
+// Called by the Session Report modal when the session has a `group_id` set.
+// -----------------------------------------------------------------------------
+export function submitGroupSessionReport(input: {
+  sessionId: string;
+  teacherId: string;
+  groupId: string;
+  perMember: Array<{
+    studentId: string;
+    attendance: "present" | "delayed" | "absent";
+    absentCause?: "student" | "teacher";
+    subskills: Record<string, number>;
+  }>;
+}): ExtSession | null {
+  let updated: ExtSession | null = null;
+  const memberStatuses: Record<string, ExtSessionStatus> = {};
+  const memberAbsentCause: Record<string, "student" | "teacher"> = {};
+  for (const m of input.perMember) {
+    memberStatuses[m.studentId] = m.attendance === "absent" ? "absent" : "completed";
+    if (m.attendance === "absent") memberAbsentCause[m.studentId] = m.absentCause ?? "student";
+  }
+  // The top-level session status is "completed" if any member attended.
+  const anyPresent = input.perMember.some((m) => m.attendance !== "absent");
+  const nextTop: ExtSessionStatus = anyPresent ? "completed" : "absent";
+
+  const next = loadSessions().map((s) => {
+    if (s.id !== input.sessionId) return s;
+    updated = {
+      ...s,
+      status: nextTop,
+      member_statuses: memberStatuses,
+      member_absent_cause: memberAbsentCause,
+      report_submitted_at: new Date().toISOString(),
+    };
+    return updated;
+  });
+  persistSessions(next);
+
+  // Individual per-member effects: skills recorded per student, coverage
+  // notes cleared per student. PDF/report generation reuses the same
+  // per-student store so each Completed member gets their own record.
+  for (const m of input.perMember) {
+    if (m.attendance !== "absent" && Object.keys(m.subskills).length > 0) {
+      saveSubskillEvaluation(input.sessionId, m.subskills);
+    }
+    setCoverageNote(input.teacherId, m.studentId, "");
+  }
+
+  // Group progress advances exactly once (not per member).
+  decrementGroupRemaining(input.groupId);
 
   return updated;
 }
