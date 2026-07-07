@@ -50,7 +50,7 @@ function adjustmentType(reason: string): string {
 }
 
 // KPI signal shape shared with the Performance card + badges.
-type KpiSignal = { key: string; label: string; value: number };
+type KpiSignal = { key: string; label: string; value: number; sub?: string };
 
 const KPI_GOOD = 85;
 const KPI_CRITICAL = 70;
