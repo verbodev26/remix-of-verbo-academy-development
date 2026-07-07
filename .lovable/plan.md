@@ -1,84 +1,22 @@
+## Problema
 
-# Group Admin nav tabs under dropdown menus
+El menú desplegable sí se abre, pero no se ve. La causa es el `overflow-x-auto` en el `<nav>` de `src/routes/admin.tsx` (línea ~192): ese contenedor recorta cualquier elemento posicionado absolutamente que se salga de sus límites, incluyendo el panel del dropdown que cuelga debajo del botón.
 
-Consolidates 11 flat tabs into 6 top-level items, each single-item entry stays a plain link and each multi-item entry becomes a hover/click dropdown. Rename "Overview" → "Dashboard". Add a new placeholder "The Money Lab" page under Financial.
+## Cambios propuestos (solo `src/routes/admin.tsx`)
 
-## Final nav structure
+1. **Quitar el clipping del `<nav>`**
+   - Reemplazar `overflow-x-auto` en el `<nav>` por `flex-wrap` (o simplemente sin overflow) para que el menú pueda desbordar verticalmente sin ser recortado.
+   - Si se quiere conservar scroll horizontal en móviles muy angostos, envolver el nav en un wrapper distinto y mantener `overflow-visible` en el que contiene los dropdowns. Propuesta por defecto: `flex flex-wrap` — más simple y suficiente para 6 grupos.
 
-```text
-Dashboard                → /admin
-Students   ▾             → Students, Groups, Sessions
-Teachers   ▾             → Teachers, KPIs
-Content    ▾             → Performance Sessions, Focus Workshops, Challenges, Material Complementario
-Clubs                    → /admin/clubs   (single item → plain link, label "Clubs")
-Financial  ▾             → The Money Lab
-```
+2. **Asegurar visibilidad del menú al hacer hover/clic**
+   - El panel ya usa `absolute top-full left-0 z-40`; con el clipping resuelto aparecerá correctamente.
+   - Añadir un pequeño "puente" invisible entre botón y menú (`pt-1` en el panel + `-mt-1`) para que mover el ratón del botón al menú no dispare el cierre por `mouseleave`.
+   - Mantener el `setTimeout` de 120 ms ya existente como red de seguridad.
 
-Active state for a parent tab lights up when any of its child routes is active (matches by prefix), so opening `/admin/sessions` highlights "Students".
+3. **Sin cambios de comportamiento ni de accesibilidad**
+   - Se conservan `role="menu"`, `aria-haspopup`, `aria-controls`, `aria-expanded`, navegación por teclado (Arrow, Home/End, Escape, Tab) y cierre por click afuera.
+   - No se toca el modelo `NAV_GROUPS`, ni rutas, ni otros archivos.
 
-## Files changed
+## Archivos afectados
 
-### 1. `src/routes/admin.tsx` — replace flat `TABS` with a grouped `NAV_GROUPS` model
-
-```ts
-type NavItem = { to: string; label: string; exact?: boolean };
-type NavGroup = { label: string; items: NavItem[] }; // single item = plain link
-```
-
-Build a small `<NavTab>` component:
-- If `items.length === 1` → render a `<Link>` exactly like today (single tap, no dropdown).
-- Otherwise → render a button that toggles a dropdown panel. Dropdown:
-  - Opens on hover AND on click (click also toggles, so it works on touch).
-  - Closes on outside click, `Escape`, and on navigation.
-  - Uses `<Link>` for each child so preloading and active-state still work.
-  - The parent button gets `data-status="active"` styling when the current pathname starts with any child `to`.
-
-Groups:
-```ts
-const NAV_GROUPS: NavGroup[] = [
-  { label: "Dashboard", items: [{ to: "/admin", label: "Dashboard", exact: true }] },
-  { label: "Students", items: [
-    { to: "/admin/students", label: "Students" },
-    { to: "/admin/groups",   label: "Groups" },
-    { to: "/admin/sessions", label: "Sessions" },
-  ]},
-  { label: "Teachers", items: [
-    { to: "/admin/teachers", label: "Teachers" },
-    { to: "/admin/kpis",     label: "KPIs" },
-  ]},
-  { label: "Content", items: [
-    { to: "/admin/courses",    label: "Performance Sessions" },
-    { to: "/admin/workshops",  label: "Focus Workshops" },
-    { to: "/admin/challenges", label: "Challenges" },
-    { to: "/admin/materials",  label: "Material Complementario" },
-  ]},
-  { label: "Clubs", items: [{ to: "/admin/clubs", label: "Clubs" }] },
-  { label: "Financial", items: [
-    { to: "/admin/financial/money-lab", label: "The Money Lab" },
-  ]},
-];
-```
-
-Visual: same underlined-tab styling as today. Dropdown panel is an absolutely-positioned card (`rounded-xl border bg-card shadow-elevated`) with vertical link stack, matching the existing muted-foreground/foreground hover treatment. `overflow-x-auto` on the nav row stays for narrow viewports.
-
-### 2. New placeholder route — `src/routes/admin.financial.money-lab.tsx`
-
-Route id: `/admin/financial/money-lab`. Minimal page shell reusing `SectionTitle` / `Card` from `@/components/verbo/ui`:
-
-- H1: "The Money Lab"
-- Muted subtitle: "Financial workspace — coming soon."
-- Empty-state card with a wallet icon and a short "Placeholder — content pending" message.
-- `head()` with a distinct title/description so it isn't the template default.
-
-No new store, no data — pure placeholder.
-
-### 3. Nothing else moves
-
-All existing routes (`admin.index`, `admin.students`, `admin.groups`, `admin.sessions`, `admin.teachers`, `admin.kpis`, `admin.courses`, `admin.workshops`, `admin.challenges`, `admin.materials`, `admin.clubs`) stay at their current URLs — this is a nav-only regrouping so no deep links break.
-
-## Language sweep
-All new strings in English: `Dashboard`, `Students`, `Teachers`, `Content`, `Clubs`, `Financial`, `The Money Lab`, `Coming soon`, `Placeholder`.
-
-## Files touched
-- `src/routes/admin.tsx` — grouped nav model + dropdown component + rename.
-- `src/routes/admin.financial.money-lab.tsx` — new placeholder page.
+- `src/routes/admin.tsx` — 2 ediciones puntuales (clase del `<nav>` y clase del panel del menú).
