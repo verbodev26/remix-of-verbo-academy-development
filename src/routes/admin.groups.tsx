@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
   Plus, X, Users as UsersIcon, Building2, CreditCard, Trash2, RotateCcw,
-  ArrowRightLeft, Archive, ChevronRight, ShieldAlert,
+  ArrowRightLeft, Archive, ChevronRight, ShieldAlert, CalendarClock,
 } from "lucide-react";
 import { toast } from "sonner";
 import { USERS, ASSIGNMENTS, userById, type User } from "@/lib/mock-data";
@@ -20,6 +20,8 @@ import {
   groupById, type Group, type GroupMember,
 } from "@/lib/groups-store";
 import { Card, GhostButton, PrimaryButton } from "@/components/verbo/ui";
+import { loadSessions, type ExtSession } from "@/lib/sessions-store";
+import { RescheduleModal } from "@/components/verbo/RescheduleModal";
 
 export const Route = createFileRoute("/admin/groups")({ component: Page });
 
@@ -392,6 +394,28 @@ function RegisterGroupModal({ onClose, onSaved }: { onClose: () => void; onSaved
   );
 }
 
+function GroupRescheduleButton({ groupId }: { groupId: string }) {
+  const [session, setSession] = useState<ExtSession | null>(null);
+  const [open, setOpen] = useState(false);
+  const nextSession = loadSessions()
+    .filter((s) => s.group_id === groupId && ["scheduled", "ready", "rescheduled", "rearranged"].includes(s.status))
+    .sort((a, b) => +new Date(a.date_time) - +new Date(b.date_time))[0];
+
+  return (
+    <>
+      <GhostButton
+        onClick={() => { if (nextSession) { setSession(nextSession); setOpen(true); } }}
+        className="!py-1.5"
+      >
+        <CalendarClock className="h-3.5 w-3.5" /> Request Reschedule
+      </GhostButton>
+      {open && session && (
+        <RescheduleModal session={session} kind="group" onClose={() => { setOpen(false); setSession(null); }} />
+      )}
+    </>
+  );
+}
+
 // -----------------------------------------------------------------------------
 // Group Detail Modal — edit shared fields + roster management
 // -----------------------------------------------------------------------------
@@ -519,9 +543,12 @@ function GroupDetailModal({ groupId, onClose }: { groupId: string; onClose: () =
           <Card className="!p-4">
             <div className="mb-2 flex items-center justify-between">
               <div className="text-xs font-semibold text-muted-foreground">Progress</div>
-              <PrimaryButton onClick={() => { markGroupAsPaid(groupId); toast.success("Group marked as paid"); }}>
-                <CreditCard className="h-4 w-4" /> Mark as Paid
-              </PrimaryButton>
+              <div className="flex gap-2">
+                <GroupRescheduleButton groupId={groupId} />
+                <PrimaryButton onClick={() => { markGroupAsPaid(groupId); toast.success("Group marked as paid"); }}>
+                  <CreditCard className="h-4 w-4" /> Mark as Paid
+                </PrimaryButton>
+              </div>
             </div>
             <div className="mb-1 flex items-center justify-between text-[11px] text-muted-foreground">
               <span>Sessions</span>
