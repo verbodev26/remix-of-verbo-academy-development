@@ -39,6 +39,7 @@ import { Route as AdminGroupsRouteImport } from './routes/admin.groups'
 import { Route as AdminCoursesRouteImport } from './routes/admin.courses'
 import { Route as AdminClubsRouteImport } from './routes/admin.clubs'
 import { Route as AdminChallengesRouteImport } from './routes/admin.challenges'
+import { Route as AdminFinancialMoneyLabRouteImport } from './routes/admin.financial.money-lab'
 
 const TeacherRoute = TeacherRouteImport.update({
   id: '/teacher',
@@ -190,6 +191,11 @@ const AdminChallengesRoute = AdminChallengesRouteImport.update({
   path: '/challenges',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminFinancialMoneyLabRoute = AdminFinancialMoneyLabRouteImport.update({
+  id: '/financial/money-lab',
+  path: '/financial/money-lab',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -222,6 +228,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/student/': typeof StudentIndexRoute
   '/teacher/': typeof TeacherIndexRoute
+  '/admin/financial/money-lab': typeof AdminFinancialMoneyLabRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -251,6 +258,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/student': typeof StudentIndexRoute
   '/teacher': typeof TeacherIndexRoute
+  '/admin/financial/money-lab': typeof AdminFinancialMoneyLabRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -284,6 +292,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/student/': typeof StudentIndexRoute
   '/teacher/': typeof TeacherIndexRoute
+  '/admin/financial/money-lab': typeof AdminFinancialMoneyLabRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -318,6 +327,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/student/'
     | '/teacher/'
+    | '/admin/financial/money-lab'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -347,6 +357,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/student'
     | '/teacher'
+    | '/admin/financial/money-lab'
   id:
     | '__root__'
     | '/'
@@ -379,6 +390,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/student/'
     | '/teacher/'
+    | '/admin/financial/money-lab'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -602,6 +614,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminChallengesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/financial/money-lab': {
+      id: '/admin/financial/money-lab'
+      path: '/financial/money-lab'
+      fullPath: '/admin/financial/money-lab'
+      preLoaderRoute: typeof AdminFinancialMoneyLabRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
@@ -617,6 +636,7 @@ interface AdminRouteChildren {
   AdminTeachersRoute: typeof AdminTeachersRoute
   AdminWorkshopsRoute: typeof AdminWorkshopsRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminFinancialMoneyLabRoute: typeof AdminFinancialMoneyLabRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
@@ -631,6 +651,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminTeachersRoute: AdminTeachersRoute,
   AdminWorkshopsRoute: AdminWorkshopsRoute,
   AdminIndexRoute: AdminIndexRoute,
+  AdminFinancialMoneyLabRoute: AdminFinancialMoneyLabRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
