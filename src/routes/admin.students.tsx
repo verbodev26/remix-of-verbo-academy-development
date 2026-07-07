@@ -24,7 +24,7 @@ import {
   addStudentToCohort, cohortsForStudent, loadWorkshops,
   removeParticipantFromCohort, subscribeWorkshops,
 } from "@/lib/workshops-store";
-import { groupsByStudentId, subscribeGroups } from "@/lib/groups-store";
+import { groupsByStudentId, groupOfStudent, removeMember, subscribeGroups } from "@/lib/groups-store";
 
 export const Route = createFileRoute("/admin/students")({
   component: Page,
@@ -122,8 +122,8 @@ function Page() {
   }, [openNew, focusStudent]);
 
   const allStudents = USERS.filter((u) => u.role === "student");
-  // Group members are managed under the Groups tab — hide them from the
-  // Individual students list to avoid duplication.
+  // Group members also appear here as their own cards (read/manage individually);
+  // creating/registering group members still happens under the Groups tab.
   const groupMap = groupsByStudentId();
   const teachers = USERS.filter((u) => u.role === "teacher");
 
@@ -144,7 +144,7 @@ function Page() {
   }, [allStudents]);
 
   const filteredStudents = useMemo(() => {
-    let list = allStudents.filter((s) => !groupMap.has(s.id));
+    let list = allStudents.slice();
 
     // search by name
     if (searchQuery.trim()) {
@@ -349,6 +349,7 @@ function Page() {
 function StudentCard({ student: s, onOpen }: { student: User; onOpen: () => void }) {
   const avatar = useAvatar(s.id);
   const product = getProduct(s.product);
+  const groupInfo = groupOfStudent(s.id);
   const strikes = s.insights_strikes ?? 0;
   const blocked = strikes >= MAX_INSIGHT_STRIKES;
   const bcStrikes = s.bookclub_strikes ?? 0;
@@ -437,6 +438,9 @@ function StudentCard({ student: s, onOpen }: { student: User; onOpen: () => void
         {product && <Tag className="bg-primary/10 text-primary">{product.name}</Tag>}
         {s.access_plan && <Tag className="bg-accent/10 text-accent">{s.access_plan}</Tag>}
         {s.focus && <Tag className="bg-secondary text-secondary-foreground">{s.focus}</Tag>}
+        {groupInfo && (
+          <Tag className="bg-blue-500/10 text-blue-600">Group: {groupInfo.group.name}</Tag>
+        )}
       </div>
 
       <div className="mt-4">
@@ -1034,6 +1038,8 @@ function StudentDetailModal({
   const avatar = useAvatar(student.id);
   const product = getProduct(student.product);
   const accessPlan = getAccessPlan(student.access_plan);
+  const groupInfo = groupOfStudent(student.id);
+  const isGrouped = !!groupInfo;
   const strikes = student.insights_strikes ?? 0;
   const blocked = strikes >= MAX_INSIGHT_STRIKES;
   const bcStrikes = student.bookclub_strikes ?? 0;
@@ -1127,6 +1133,28 @@ function StudentDetailModal({
                 <Info label="Cadence" value={`${student.sessions_per_week ?? "—"}×/week · ${student.session_duration ?? "—"} min`} />
                 <Info label="Reschedule policy" value={student.reschedule_policy ?? accessPlan?.reschedulePolicy ?? "—"} />
                 <Info label="Next payment" value={nextPay ? nextPay.toLocaleDateString() : "—"} />
+                {groupInfo && <Info label="Group" value={groupInfo.group.name} />}
+                {(groupInfo?.group.company_client || student.company) && (
+                  <Info label="Company" value={groupInfo?.group.company_client ?? student.company ?? "—"} />
+                )}
+              </div>
+
+              {/* Clubs access — add-on entitlements */}
+              <div>
+                <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Clubs access</div>
+                {(() => {
+                  const tags: React.ReactNode[] = [];
+                  const ins = student.addon_insights_per_month ?? 0;
+                  const bc = student.addon_bookclubs_per_month ?? 0;
+                  const sp = student.addon_spotlight_per_month ?? 0;
+                  if (ins > 0) tags.push(<Tag key="ins" className="bg-primary/10 text-primary">Insights · {ins}/month</Tag>);
+                  if (bc > 0) tags.push(<Tag key="bc" className="bg-accent/10 text-accent">Book Clubs · {bc}/month</Tag>);
+                  if (sp > 0) tags.push(<Tag key="sp" className="bg-secondary text-secondary-foreground">Spotlight · {sp}/month</Tag>);
+                  if (student.addon_workshops_enabled) tags.push(<Tag key="ws" className="bg-muted text-muted-foreground">Workshops</Tag>);
+                  return tags.length > 0
+                    ? <div className="flex flex-wrap gap-2">{tags}</div>
+                    : <p className="text-sm text-muted-foreground">No clubs access</p>;
+                })()}
               </div>
 
               {/* Contracted levels progress */}
@@ -1222,7 +1250,20 @@ function StudentDetailModal({
           {student.status === "suspended" ? (
             <GhostButton onClick={() => patch({ status: "active" })} className="!py-1.5 !text-xs"><Play className="h-3.5 w-3.5" /> Reactivate</GhostButton>
           ) : (
-            <GhostButton onClick={() => patch({ status: "suspended" })} className="!py-1.5 !text-xs"><Ban className="h-3.5 w-3.5" /> Suspend</GhostButton>
+            <GhostButton
+              onClick={() => {
+                if (isGrouped) {
+                  removeMember(student.id);
+                  onClose();
+                } else {
+                  patch({ status: "suspended" });
+                }
+              }}
+              disabled={isGrouped && groupInfo?.member.status !== "active"}
+              className="!py-1.5 !text-xs"
+            >
+              <Ban className="h-3.5 w-3.5" /> Suspend
+            </GhostButton>
           )}
           <button
             onClick={() => blocked && patch({ insights_strikes: 0 })}
@@ -1242,12 +1283,14 @@ function StudentDetailModal({
               <Unlock className="h-3.5 w-3.5" /> Unlock Book Clubs ({bcStrikes}/{MAX_BOOKCLUB_STRIKES})
             </button>
           )}
-          <button
-            onClick={markPaid}
-            className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-success px-3 py-1.5 text-xs font-semibold text-success-foreground shadow-sm transition-opacity hover:opacity-90"
-          >
-            <CreditCard className="h-3.5 w-3.5" /> Mark as paid
-          </button>
+          {!isGrouped && (
+            <button
+              onClick={markPaid}
+              className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-success px-3 py-1.5 text-xs font-semibold text-success-foreground shadow-sm transition-opacity hover:opacity-90"
+            >
+              <CreditCard className="h-3.5 w-3.5" /> Mark as paid
+            </button>
+          )}
         </div>
       </div>
     </Overlay>
