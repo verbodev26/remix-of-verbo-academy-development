@@ -146,7 +146,7 @@ export function buildActivityLog(): ActivityEntry[] {
         action: "No Show",
         detail,
         timestamp: s.date_time,
-        actorId: null, actorName: "System", actorRole: "system",
+        actorId: null, actorName: "Admin", actorRole: "admin",
         personId: s.student_id,
       });
     }
