@@ -9,6 +9,7 @@ export interface User {
   password: string;
   role: Role;
   current_level?: string;
+  admin_type?: AdminType; // only meaningful when role === "admin"
   attendance_percentage?: number;
   avatar?: string;
   // Corporate profile (students)
