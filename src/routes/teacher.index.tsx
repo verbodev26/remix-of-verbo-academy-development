@@ -355,6 +355,20 @@ function TeacherDashboard() {
     .sort((a, b) => +new Date(b.date_time) - +new Date(a.date_time))
     .slice(0, 6);
 
+  // ---- Recent Activity: Club Reports (Insight / Book Club / Spotlight) ----
+  // Each submitted Club Report renders as its own row so the activity feed
+  // stays complete without any Performance-Session-only assumptions.
+  const eventById = new Map(allTeacherEvents.map((e) => [e.id, e]));
+  const clubReportOriginLabel: Record<string, string> = {
+    insight: "Insight",
+    book: "Book Club",
+    spotlight: "Spotlight Session",
+  };
+  const recentClubReports = Object.values(clubReports)
+    .filter((r) => r.teacher_id === user.id)
+    .sort((a, b) => +new Date(b.submitted_at) - +new Date(a.submitted_at))
+    .slice(0, 6);
+
   const handleSubmit = (
     sessionId: string,
     attendance: "present" | "delayed" | "absent",
