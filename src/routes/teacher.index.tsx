@@ -300,10 +300,102 @@ function TeacherDashboard() {
         <h1 className="mt-1 text-3xl font-semibold tracking-tight text-black">{user.name}</h1>
       </header>
 
-      <section className="grid gap-4 md:grid-cols-3">
-        <MetricCard label="Assigned students" value={String(students.length)} />
-        <MetricCard label="Upcoming sessions" value={String(upcoming.length)} sub="next 7 days" />
-        <MetricCard label="Avg rating" value="4.7★" sub="last 30 days" />
+      <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <MetricCard label="Assigned Students" value={String(students.length)} />
+        <MetricCard label="Upcoming Sessions" value={String(upcoming7d.length)} sub="next 7 days" />
+        <MetricCard
+          label="Avg Rating"
+          value={avgRating30 != null ? `${avgRating30.toFixed(1)}★` : "—"}
+          sub="last 30 days"
+        />
+        <Link
+          to="/teacher/financial"
+          className="group block rounded-2xl border border-border bg-card p-6 shadow-soft transition-shadow hover:shadow-floating"
+        >
+          <div className="flex items-start justify-between gap-2">
+            <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Performance</div>
+            <div className="flex flex-wrap justify-end gap-1">
+              {kpis?.bonusEligible && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-semibold text-success">
+                  <Trophy className="h-3 w-3" /> Bonus Eligible
+                </span>
+              )}
+              {warningLevel === "yellow" && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-warning/20 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                  <AlertTriangle className="h-3 w-3" /> 1 KPI Below Target
+                </span>
+              )}
+              {warningLevel === "red" && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-semibold text-destructive">
+                  <AlertTriangle className="h-3 w-3" /> {belowTarget} KPIs Below Target
+                </span>
+              )}
+              {strikes > 0 && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-semibold text-destructive">
+                  {Math.min(3, strikes)}/3 Strikes (6 months)
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="mt-3 text-3xl font-semibold tracking-tight text-black">{kpis?.composite ?? 0}%</div>
+          <div className="mt-1 flex items-center gap-1.5 text-xs">
+            <span
+              className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-semibold"
+              style={{ backgroundColor: rating30Band.bg, color: rating30Band.fg }}
+            >
+              <Star className="h-3 w-3 fill-current" /> {avgRating30 != null ? avgRating30.toFixed(1) : "—"}
+            </span>
+            <span className="text-muted-foreground">Composite Score · view balance</span>
+          </div>
+        </Link>
+      </section>
+
+      {/* Needs Your Attention */}
+      <section>
+        <SectionTitle>Needs Your Attention</SectionTitle>
+        <Card className="!p-0">
+          {attention.length === 0 ? (
+            <div className="flex items-center gap-2 px-6 py-6 text-sm text-muted-foreground">
+              <CheckCircle2 className="h-4 w-4 text-success" /> You're all caught up.
+            </div>
+          ) : (
+            <ul className="divide-y divide-border">
+              {attention.map((it) => {
+                const Icon = it.icon;
+                const tone =
+                  it.tone === "danger" ? "text-destructive"
+                  : it.tone === "warning" ? "text-amber-600"
+                  : "text-accent";
+                return (
+                  <li key={it.id} className="flex flex-wrap items-center gap-3 px-6 py-3.5">
+                    <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-secondary ${tone}`}>
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0 flex-1 text-sm text-foreground">{it.text}</div>
+                    {it.cta && (
+                      it.cta.to ? (
+                        <Link
+                          to={it.cta.to}
+                          search={it.cta.search as never}
+                          className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary"
+                        >
+                          {it.cta.label} <ChevronRight className="h-3 w-3" />
+                        </Link>
+                      ) : (
+                        <button
+                          onClick={it.cta.onClick}
+                          className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary"
+                        >
+                          {it.cta.label} <ChevronRight className="h-3 w-3" />
+                        </button>
+                      )
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </Card>
       </section>
 
       <section className="grid gap-6 md:grid-cols-2">
