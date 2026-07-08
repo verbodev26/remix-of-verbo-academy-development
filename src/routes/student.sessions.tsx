@@ -278,7 +278,7 @@ function CantAttendRouter({
     if (isGroup) {
       const res = applyGroupMemberCancellation(session.id, user.id, "cancelled");
       toast(
-        res.unanimous
+        res.outcome.kind === "unanimous_cancel"
           ? "All members cancelled — the group session has been cancelled."
           : "You've cancelled this group session. Credit forfeited. The class continues for the remaining members.",
       );
