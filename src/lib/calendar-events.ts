@@ -51,7 +51,7 @@ export interface CalendarEvent {
   club?: Club;
 }
 
-function sessionEvent(s: ExtSession, title: string): CalendarEvent {
+function sessionEvent(s: ExtSession, title: string, subStatus?: AttendanceSubStatus): CalendarEvent {
   return {
     id: s.id,
     kind: s.origin === "workshop" ? "workshop" : "class",
@@ -63,6 +63,7 @@ function sessionEvent(s: ExtSession, title: string): CalendarEvent {
     origin: s.origin ?? "course",
     is_group: !!s.group_id,
     group_id: s.group_id,
+    sub_status: subStatus ?? s.attendance_sub_status,
     session: s,
   };
 }
