@@ -153,6 +153,10 @@ export const CALENDAR_STATUS_META: Record<ExtSessionStatus, { label: string; col
   rescheduled:        { label: "Rescheduled",        color: "#94a3b8" },
   rearranged:         { label: "Rearranged",         color: "#eab308" },
   delayed:            { label: "Delayed",            color: "#eab308" },
+  // New status: student replaced a regular 1:1 with a Spotlight in the same
+  // slot. Distinct indigo so it never reads as Cancelled (pink) or Completed
+  // (green) in any panel.
+  converted_to_spotlight: { label: "Converted to Spotlight", color: "#4f46e5" },
 };
 
 export const CANONICAL_STATUS_ORDER: ExtSessionStatus[] = [
