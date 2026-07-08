@@ -30,7 +30,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { USERS, userById } from "@/lib/mock-data";
 import {
-  loadSessions, subscribeSessions, updateSession,
+  loadSessions, subscribeSessions, updateSession, applyGroupMemberCancellation,
   type ExtSession, type ExtSessionStatus,
 } from "@/lib/sessions-store";
 import { CalendarView } from "@/components/verbo/CalendarView";
