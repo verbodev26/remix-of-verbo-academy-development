@@ -13,9 +13,11 @@
 //   c) enough notice + quota OK  → Session Cancellation modal with two
 //      actions: Reschedule (opens Reschedule Request flow) or
 //      Cancel Without Rescheduling.
-//   d) Groups: same 4-branch logic applied individually per member. This
-//      component only shows the acting student's decision — no cross-member
-//      confirmations.
+//   d) Groups: strict unanimity — a member's decision only affects THEIR
+//      `member_statuses[studentId]` and always counts against their monthly
+//      quota. The class keeps running for the remaining members. The session
+//      only auto-cancels top-level when every roster member has cancelled or
+//      requested a reschedule (handled inside `applyGroupMemberCancellation`).
 //
 // The Spotlight Session flow ("Request a Spotlight Session") is a separate
 // modal chain: explainer (5s Understood delay) → slot picker + context text
