@@ -75,6 +75,8 @@ function MyBalancePage() {
   const [expanded, setExpanded] = useState<Record<"sessions" | "adjustments" | "bonus", boolean>>({
     sessions: false, adjustments: false, bonus: false,
   });
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportSent, setReportSent] = useState(false);
 
   useEffect(() => subscribeSessions(bump), []);
 
