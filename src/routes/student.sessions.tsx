@@ -503,8 +503,8 @@ function RescheduleRequestModal({ session, onClose }: { session: ExtSession; onC
     if (isGroup) {
       const res = applyGroupMemberCancellation(session.id, actingStudentId, "pending_reschedule");
       toast.success(
-        res.unanimous
-          ? "All members reschedule requested — the group session has been cancelled."
+        res.outcome.kind === "unanimous_reschedule"
+          ? "All members requested a reschedule — the group session will be moved."
           : "Reschedule Request published. The group session continues for the remaining members.",
       );
     } else {
