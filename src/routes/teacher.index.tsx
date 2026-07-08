@@ -374,13 +374,13 @@ function TeacherDashboard() {
                     <div className="min-w-0 flex-1 text-sm text-foreground">{it.text}</div>
                     {it.cta && (
                       it.cta.to ? (
-                        <Link
-                          to={it.cta.to}
-                          {...(it.cta.search ? { search: it.cta.search as never } : {})}
+                        <a
+                          href={it.cta.to + (it.cta.search ? `?${new URLSearchParams(it.cta.search).toString()}` : "")}
+                          onClick={(e) => { e.preventDefault(); navigate({ to: it.cta!.to as any, search: (it.cta!.search ?? {}) as never }); }}
                           className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary"
                         >
                           {it.cta.label} <ChevronRight className="h-3 w-3" />
-                        </Link>
+                        </a>
                       ) : (
                         <button
                           onClick={it.cta.onClick}
