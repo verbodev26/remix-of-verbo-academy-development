@@ -31,13 +31,18 @@ interface CalEvent {
 }
 
 const COLORS: Record<string, string> = {
-  scheduled: "#8b5cf6",
+  // Aligned with Admin > Sessions and Teacher > Calendar so the same status
+  // reads with the same color across all three panels.
+  scheduled: "#94a3b8",
   ready: "#8b5cf6",
   completed: "#16a34a",
   absent: "#dc2626",
-  cancelled: "#94a3b8",
-  "pending-reschedule": "#eab308",
+  cancelled: "#be185d",
+  "pending-reschedule": "#b45309",
+  rescheduled: "#94a3b8",
+  rearranged: "#eab308",
   delayed: "#eab308",
+  no_show: "#334155",
   "verbo-insights": "#f38934",
   "book-club": "#0f766e",
   spotlights: "#06b6d4",          // electric cyan
@@ -45,7 +50,7 @@ const COLORS: Record<string, string> = {
 };
 
 function eventColor(ev: CalEvent): string {
-  if (ev.kind === "one-on-one") return COLORS[ev.status] ?? "#8b5cf6";
+  if (ev.kind === "one-on-one") return COLORS[ev.status] ?? "#94a3b8";
   return COLORS[ev.kind];
 }
 
