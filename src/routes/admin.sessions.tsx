@@ -77,6 +77,9 @@ function Page() {
         </p>
       </div>
 
+      <UnclaimedRequestsBanner />
+
+
       {/* Bulk schedule panel */}
       <Card className="!p-0 overflow-hidden">
         <button
