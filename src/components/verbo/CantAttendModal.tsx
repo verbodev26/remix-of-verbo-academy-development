@@ -7,12 +7,13 @@
 // so all downstream effects (session → cancelled, strike ledger, auto-freeze
 // at 3 strikes, Needs Substitute flag when <24h) stay in one place.
 import { useMemo, useState } from "react";
-import { X, AlertTriangle } from "lucide-react";
+import { X, AlertTriangle, NotebookPen } from "lucide-react";
 import { GhostButton, PrimaryButton } from "@/components/verbo/ui";
 import type { ExtSession } from "@/lib/sessions-store";
 import {
   cancelSessionByTeacher, CANCEL_REASON_LABEL, type CancelReason,
 } from "@/lib/strikes-store";
+import { getCoverageNote, setCoverageNote } from "@/lib/coverage-notes-store";
 
 export function CantAttendModal({
   session, teacherId, onClose, onDone,
@@ -32,14 +33,28 @@ export function CantAttendModal({
     [session.date_time],
   );
 
+  // Coverage Notes — reused from My Students. Required (non-empty) when the
+  // cancellation lands ≥24h out (reschedulable → Cancelled cause Teacher),
+  // so any substitute picking up the reschedule has context on the student.
+  const studentId = session.student_id;
+  const requireCoverage = hoursUntil >= 24;
+  const [coverage, setCoverage] = useState<string>(
+    () => getCoverageNote(teacherId, studentId),
+  );
+  const coverageValid = !requireCoverage || coverage.trim().length > 0;
+
   const step1Valid =
-    (reason === "illness" && !!file) ||
-    (reason === "other" && note.trim().length > 0) ||
-    reason === "personal" ||
-    reason === "major_issue";
+    ((reason === "illness" && !!file) ||
+      (reason === "other" && note.trim().length > 0) ||
+      reason === "personal" ||
+      reason === "major_issue") &&
+    coverageValid;
 
   const confirmCancel = () => {
     if (!reason) return;
+    // Persist coverage note first so it is available to the substitute the
+    // moment the cancellation lands (Lesson Plan + Session Details callout).
+    if (requireCoverage) setCoverageNote(teacherId, studentId, coverage.trim());
     const { needsSubstitute } = cancelSessionByTeacher({
       sessionId: session.id,
       teacherId,
@@ -115,6 +130,31 @@ export function CantAttendModal({
                     placeholder="Optional note…"
                   />
                 </p>
+              )}
+
+              {requireCoverage && (
+                <div className="rounded-lg border border-accent/40 bg-accent/5 px-3 py-3">
+                  <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-accent">
+                    <NotebookPen className="h-3.5 w-3.5" /> Coverage Notes (required)
+                  </div>
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    Context for the substitute teacher covering this student: real level,
+                    sensitive topics, preferences, what they're working on now. Reused from
+                    My Students and auto-cleared once the covered session is completed.
+                  </p>
+                  <textarea
+                    value={coverage}
+                    onChange={(e) => setCoverage(e.target.value)}
+                    rows={4}
+                    placeholder="e.g. Working on past-tense fluency; avoid politics; prefers business scenarios…"
+                    className="mt-2 w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                  {!coverage.trim() && (
+                    <p className="mt-1.5 text-[11px] font-medium text-destructive">
+                      Coverage Notes must be filled in before you can confirm the cancellation.
+                    </p>
+                  )}
+                </div>
               )}
             </div>
             <div className="flex justify-end gap-2 border-t border-border bg-secondary/30 px-5 py-3">

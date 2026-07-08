@@ -26,6 +26,7 @@ import { subscribeStrikes } from "@/lib/strikes-store";
 import { addReleaseRequest, type Club } from "@/lib/clubs-store";
 import { ClubReportModal, type ClubReportEventInput } from "@/components/verbo/ClubReportModal";
 import { getClubReport, subscribeClubReports } from "@/lib/club-reports-store";
+import { getCoverageNoteForStudent } from "@/lib/coverage-notes-store";
 
 export const Route = createFileRoute("/teacher/calendar")({ component: Page });
 
@@ -233,6 +234,7 @@ function Page() {
           plan={plans[detailsFor.session.id]}
           title={detailsFor.title}
           mode={detailsFor.mode}
+          coverageNote={getCoverageNoteForStudent(detailsFor.session.student_id)}
           onClose={() => setDetailsFor(null)}
           onCantAttend={() => { const s = detailsFor.session; setDetailsFor(null); setCancelling(s); }}
           onEditPlan={() => { const s = detailsFor.session; setDetailsFor(null); setPlanning(s); }}
