@@ -49,7 +49,9 @@ export type NotificationKind =
   | "needs_substitute"
   | "release_request"
   | "avail_change_request"
-  | "teacher_three_strikes";
+  | "teacher_three_strikes"
+  | "student_report_filed"
+  | "financial_issue_reported";
 
 export interface Notification {
   id: string;
