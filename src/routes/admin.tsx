@@ -35,6 +35,7 @@ const NAV_GROUPS: NavGroup[] = [
     { to: "/admin/financial/money-lab", label: "The Money Lab" },
   ]},
   { label: "Users", items: [{ to: "/admin/users", label: "User Management" }] },
+  { label: "Activity", items: [{ to: "/admin/activity-logs", label: "Activity Logs" }] },
 ];
 
 const tabCls =
@@ -175,7 +176,7 @@ function Layout() {
   const visibleGroups = useMemo(() => {
     if (!adminType) return [] as NavGroup[];
     return NAV_GROUPS.filter((g) => {
-      if (g.label === "Users") return adminType === "super_admin";
+      if (g.label === "Users" || g.label === "Activity") return adminType === "super_admin";
       // A group is visible if any of its items is allowed for this admin type.
       return g.items.some((it) => canAccessAdminPath(adminType, it.to));
     }).map((g) => ({
