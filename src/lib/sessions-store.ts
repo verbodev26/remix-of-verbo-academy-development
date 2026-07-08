@@ -220,17 +220,19 @@ export function submitGroupSessionReport(input: {
     studentId: string;
     attendance: "present" | "delayed" | "absent";
     absentCause?: "student" | "teacher";
+    subStatus?: AttendanceSubStatus | null;
     subskills: Record<string, number>;
   }>;
 }): ExtSession | null {
   let updated: ExtSession | null = null;
   const memberStatuses: Record<string, ExtSessionStatus> = {};
   const memberAbsentCause: Record<string, "student" | "teacher"> = {};
+  const memberSubStatuses: Record<string, AttendanceSubStatus> = {};
   for (const m of input.perMember) {
     memberStatuses[m.studentId] = m.attendance === "absent" ? "absent" : "completed";
     if (m.attendance === "absent") memberAbsentCause[m.studentId] = m.absentCause ?? "student";
+    if (m.attendance === "absent" && m.subStatus) memberSubStatuses[m.studentId] = m.subStatus;
   }
-  // The top-level session status is "completed" if any member attended.
   const anyPresent = input.perMember.some((m) => m.attendance !== "absent");
   const nextTop: ExtSessionStatus = anyPresent ? "completed" : "absent";
 
@@ -241,7 +243,9 @@ export function submitGroupSessionReport(input: {
       status: nextTop,
       member_statuses: memberStatuses,
       member_absent_cause: memberAbsentCause,
+      member_sub_statuses: memberSubStatuses,
       report_submitted_at: new Date().toISOString(),
+      report_locked: true,
     };
     return updated;
   });
