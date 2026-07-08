@@ -76,7 +76,7 @@ export function buildActivityLog(): ActivityEntry[] {
     const student = userName(s.student_id);
     const detail = `${teacher} → ${student} · ${fmtDate(s.date_time)}`;
 
-    // Scheduled / rescheduled
+    // Scheduled / rescheduled — a human admin action.
     if (s.status === "scheduled" || s.status === "ready") {
       out.push({
         id: `sess-sched:${s.id}`,
@@ -84,7 +84,7 @@ export function buildActivityLog(): ActivityEntry[] {
         action: "Session scheduled",
         detail,
         timestamp: s.date_time,
-        actorId: null, actorName: "System", actorRole: "system",
+        actorId: null, actorName: "Admin", actorRole: "admin",
         personId: s.teacher_id,
       });
     }
@@ -95,7 +95,7 @@ export function buildActivityLog(): ActivityEntry[] {
         action: "Session rescheduled",
         detail,
         timestamp: s.date_time,
-        actorId: null, actorName: "System", actorRole: "system",
+        actorId: null, actorName: "Admin", actorRole: "admin",
         personId: s.teacher_id,
       });
     }
