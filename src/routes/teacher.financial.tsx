@@ -14,6 +14,7 @@ import {
 import {
   computeTeacherKpis, ratingBand, getBonusThreshold,
 } from "@/lib/teacher-kpis";
+import { addFinancialIssue } from "@/lib/financial-issues-store";
 import { Card, SectionTitle, Pill } from "@/components/verbo/ui";
 
 export const Route = createFileRoute("/teacher/financial")({
