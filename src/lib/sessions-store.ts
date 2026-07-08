@@ -180,6 +180,7 @@ export function submitSessionReport(input: {
   studentId: string;
   attendance: "present" | "delayed" | "absent";
   absentCause?: "student" | "teacher";
+  subStatus?: AttendanceSubStatus | null;
   subskills: Record<string, number>;
 }): ExtSession | null {
   const status: ExtSessionStatus = input.attendance === "absent" ? "absent" : "completed";
@@ -191,7 +192,10 @@ export function submitSessionReport(input: {
       status,
       absent_cause: status === "absent" ? (input.absentCause ?? "student") : undefined,
       attendance_delayed: input.attendance === "delayed",
+      attendance_sub_status:
+        status === "absent" && input.subStatus ? input.subStatus : undefined,
       report_submitted_at: new Date().toISOString(),
+      report_locked: true,
     };
     return updated;
   });
@@ -200,10 +204,7 @@ export function submitSessionReport(input: {
   if (status !== "absent" && Object.keys(input.subskills).length > 0) {
     saveSubskillEvaluation(input.sessionId, input.subskills);
   }
-
-  // Auto-clear coverage note (Fase 1 TODO hook).
   setCoverageNote(input.teacherId, input.studentId, "");
-
   return updated;
 }
 
