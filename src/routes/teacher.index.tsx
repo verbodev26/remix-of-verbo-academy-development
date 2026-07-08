@@ -376,7 +376,7 @@ function TeacherDashboard() {
                       it.cta.to ? (
                         <Link
                           to={it.cta.to}
-                          search={it.cta.search as never}
+                          {...(it.cta.search ? { search: it.cta.search as never } : {})}
                           className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary"
                         >
                           {it.cta.label} <ChevronRight className="h-3 w-3" />
