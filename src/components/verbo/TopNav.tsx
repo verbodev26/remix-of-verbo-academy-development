@@ -6,6 +6,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { ProfileModal } from "./ProfileModal";
 import { AdminProfileModal } from "./AdminProfileModal";
 import { useAvatar } from "@/lib/avatar-store";
+import { NotificationsBell } from "./NotificationsBell";
 
 export interface NavItem { to: string; label: string }
 export interface NavGroup { label: string; items: NavItem[] }
@@ -193,6 +194,7 @@ export function TopNav({ items, variant = "light" }: { items: NavEntry[]; varian
             <div className={`text-sm font-medium ${isDark ? "text-white" : "text-foreground"}`}>{user?.name}</div>
             <div className={`text-xs capitalize ${isDark ? "text-[#94a3b8]" : "text-muted-foreground"}`}>{user?.role}</div>
           </div>
+          {user && user.role !== "student" && <NotificationsBell variant={variant} />}
           <button
             type="button"
             onClick={() => canEditProfile && setProfileOpen(true)}
