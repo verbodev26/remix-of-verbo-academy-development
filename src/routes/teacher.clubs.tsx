@@ -343,3 +343,90 @@ function RequestReleaseModal({ club, onClose, onSubmit }: { club: Club; onClose:
     </div>
   );
 }
+
+// ---------------------------------------------------------------------------
+// Reschedule / Spotlight Requests — student-originated queues.
+// ---------------------------------------------------------------------------
+function StudentRequestsSection({
+  kind, teacherId, requests, onClaim,
+}: {
+  kind: "reschedule" | "spotlight";
+  teacherId: string;
+  requests: StudentRequest[];
+  onClaim: (id: string) => void;
+}) {
+  const list = useMemo(
+    () => requests
+      .filter((r) => r.kind === kind && (r.status === "open" || r.status === "escalated"))
+      .sort((a, b) => {
+        // Own-student first, then earliest requested_at.
+        const aOwn = a.assigned_teacher_id === teacherId ? 0 : 1;
+        const bOwn = b.assigned_teacher_id === teacherId ? 0 : 1;
+        if (aOwn !== bOwn) return aOwn - bOwn;
+        return +new Date(a.requested_at) - +new Date(b.requested_at);
+      }),
+    [requests, teacherId, kind],
+  );
+
+  if (list.length === 0) {
+    return (
+      <Card><p className="text-sm text-muted-foreground">No {kind === "reschedule" ? "Reschedule" : "Spotlight"} Requests waiting to be claimed.</p></Card>
+    );
+  }
+
+  const accent = kind === "reschedule" ? "#f38934" : "#0d9488";
+  const KindIcon = kind === "reschedule" ? CalendarClock : Sparkles;
+
+  return (
+    <div className="space-y-3">
+      <SectionTitle>{kind === "reschedule" ? "Reschedule Requests" : "Spotlight Requests"}</SectionTitle>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {list.map((r) => {
+          const student = userById(r.student_id);
+          const yourStudent = r.assigned_teacher_id === teacherId;
+          const escalated = r.status === "escalated";
+          return (
+            <Card key={r.id} className="!p-0 overflow-hidden flex flex-col">
+              <div className="flex items-center justify-between border-b border-border px-4 py-3" style={{ background: `${accent}15` }}>
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold" style={{ color: accent }}>
+                  <KindIcon className="h-3.5 w-3.5" />
+                  {kind === "reschedule" ? "Reschedule" : "Spotlight"}
+                </span>
+                {yourStudent && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-[#01304a] px-2 py-0.5 text-[10px] font-bold text-white">
+                    <User className="h-3 w-3" /> Your Student
+                  </span>
+                )}
+                {escalated && !yourStudent && (
+                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">Unclaimed 8h+</span>
+                )}
+              </div>
+              <div className="flex flex-1 flex-col gap-2 p-4 text-sm">
+                <div className="font-semibold text-foreground">{student?.name ?? "Student"}</div>
+                <div className="text-xs text-muted-foreground">
+                  {new Date(r.proposed_datetime).toLocaleString([], { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })} · {r.duration_minutes} min
+                </div>
+                {kind === "spotlight" && r.spotlight_context && (
+                  <div className="rounded-lg bg-secondary/50 px-3 py-2 text-[11px] text-foreground">
+                    <div className="mb-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Student's context</div>
+                    {r.spotlight_context}
+                  </div>
+                )}
+                {r.last_report_summary && (
+                  <div className="text-[11px] text-muted-foreground">
+                    <span className="font-semibold">Last covered:</span> {r.last_report_summary}
+                  </div>
+                )}
+                <div className="mt-auto pt-3">
+                  <PrimaryButton className="w-full justify-center" onClick={() => onClaim(r.id)}>
+                    Claim
+                  </PrimaryButton>
+                </div>
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
