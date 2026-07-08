@@ -1,7 +1,7 @@
 import { createFileRoute, Navigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { UserPlus, Pencil, X, ShieldCheck, ShieldAlert } from "lucide-react";
-import { USERS, type User, type Role, type AdminType } from "@/lib/mock-data";
+import { USERS, type User, type AdminType } from "@/lib/mock-data";
 import { Card, SectionTitle, PrimaryButton, GhostButton, Pill } from "@/components/verbo/ui";
 import { useAuth } from "@/lib/auth";
 import {
