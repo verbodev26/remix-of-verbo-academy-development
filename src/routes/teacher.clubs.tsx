@@ -35,13 +35,14 @@ function typeBadge(t: ClubType) {
     : { label: "Book Club", cls: "bg-primary/10 text-primary", Icon: BookOpen };
 }
 
-type SubView = "available" | "mine";
+type SubView = "available" | "mine" | "reschedule_requests" | "spotlight_requests";
 type Filter = "all" | ClubType;
 
 function Page() {
   const { user } = useAuth();
   const [clubs, setClubs] = useState<Club[]>([]);
   const [requests, setRequests] = useState<ClubReleaseRequest[]>([]);
+  const [studentReqs, setStudentReqs] = useState<StudentRequest[]>([]);
   const [sub, setSub] = useState<SubView>("available");
   const [filter, setFilter] = useState<Filter>("all");
   // Live "Release" banner state (last claim by this teacher in this tab).
@@ -52,9 +53,11 @@ function Page() {
   useEffect(() => {
     setClubs(loadClubs());
     setRequests(loadReleaseRequests());
+    setStudentReqs(loadStudentRequests());
     const u1 = subscribeClubs(() => setClubs(loadClubs()));
     const u2 = subscribeReleaseRequests(() => setRequests(loadReleaseRequests()));
-    return () => { u1(); u2(); };
+    const u3 = subscribeStudentRequests(() => setStudentReqs(loadStudentRequests()));
+    return () => { u1(); u2(); u3(); };
   }, []);
 
   // Tick every second while banner is active.
