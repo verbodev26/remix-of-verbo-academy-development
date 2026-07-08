@@ -382,6 +382,8 @@ export function useActivityLog(): ActivityEntry[] {
 export const ACTIVITY_KIND_LABELS: Record<ActivityKind, string> = {
   session_scheduled: "Session scheduled",
   session_rescheduled: "Session rescheduled",
+  session_cancelled: "Session cancelled",
+  group_session_auto_cancelled: "Group session auto-cancelled",
   session_report_submitted: "Session Report submitted",
   club_report_submitted: "Club Report submitted",
   financial_adjustment: "Financial adjustment",
