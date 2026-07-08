@@ -130,6 +130,26 @@ export function teacherCalendarEvents(teacherId: string, opts?: {
   return events;
 }
 
+/** Every event a student should see on their calendar. Mirrors the teacher
+ *  adapter but scoped to the student's own sessions + booked clubs. */
+export function studentCalendarEvents(studentId: string, opts?: {
+  teacherNameOf?: (id: string) => string | undefined;
+}): CalendarEvent[] {
+  const events: CalendarEvent[] = [];
+  for (const s of loadSessions()) {
+    // A student sees any session where they are the direct student, plus
+    // group sessions where they're a member (member_statuses).
+    const isMember = !!s.member_statuses && Object.keys(s.member_statuses).includes(studentId);
+    if (s.student_id !== studentId && !isMember) continue;
+    if (s.origin === "workshop") continue; // workshops surface in their own tab
+    const teacherName = opts?.teacherNameOf?.(s.teacher_id) ?? "Teacher";
+    const ev = sessionEvent(s, `Session with ${teacherName}`);
+    events.push(ev);
+  }
+  return events;
+}
+
+
 /** Meta a chip/legend can render for each supported event kind. */
 export const EVENT_KIND_META: Record<CalendarEventKind, { label: string; color: string; short: string }> = {
   class:      { label: "1:1 Class",      color: "#01304a", short: "1:1" },
