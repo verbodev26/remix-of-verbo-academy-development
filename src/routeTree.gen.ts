@@ -29,7 +29,11 @@ import { Route as TeacherAvailabilityRouteImport } from './routes/teacher.availa
 import { Route as StudentSessionsRouteImport } from './routes/student.sessions'
 import { Route as StudentResourcesRouteImport } from './routes/student.resources'
 import { Route as StudentPerformanceRouteImport } from './routes/student.performance'
+import { Route as StudentMyWorkshopRouteImport } from './routes/student.my-workshop'
+import { Route as StudentMyCourseRouteImport } from './routes/student.my-course'
+import { Route as StudentInsightsRouteImport } from './routes/student.insights'
 import { Route as StudentCoursesRouteImport } from './routes/student.courses'
+import { Route as StudentChallengesRouteImport } from './routes/student.challenges'
 import { Route as StudentBoostRouteImport } from './routes/student.boost'
 import { Route as AdminWorkshopsRouteImport } from './routes/admin.workshops'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
@@ -145,9 +149,29 @@ const StudentPerformanceRoute = StudentPerformanceRouteImport.update({
   path: '/performance',
   getParentRoute: () => StudentRoute,
 } as any)
+const StudentMyWorkshopRoute = StudentMyWorkshopRouteImport.update({
+  id: '/my-workshop',
+  path: '/my-workshop',
+  getParentRoute: () => StudentRoute,
+} as any)
+const StudentMyCourseRoute = StudentMyCourseRouteImport.update({
+  id: '/my-course',
+  path: '/my-course',
+  getParentRoute: () => StudentRoute,
+} as any)
+const StudentInsightsRoute = StudentInsightsRouteImport.update({
+  id: '/insights',
+  path: '/insights',
+  getParentRoute: () => StudentRoute,
+} as any)
 const StudentCoursesRoute = StudentCoursesRouteImport.update({
   id: '/courses',
   path: '/courses',
+  getParentRoute: () => StudentRoute,
+} as any)
+const StudentChallengesRoute = StudentChallengesRouteImport.update({
+  id: '/challenges',
+  path: '/challenges',
   getParentRoute: () => StudentRoute,
 } as any)
 const StudentBoostRoute = StudentBoostRouteImport.update({
@@ -241,7 +265,11 @@ export interface FileRoutesByFullPath {
   '/admin/users': typeof AdminUsersRoute
   '/admin/workshops': typeof AdminWorkshopsRoute
   '/student/boost': typeof StudentBoostRoute
+  '/student/challenges': typeof StudentChallengesRoute
   '/student/courses': typeof StudentCoursesRoute
+  '/student/insights': typeof StudentInsightsRoute
+  '/student/my-course': typeof StudentMyCourseRoute
+  '/student/my-workshop': typeof StudentMyWorkshopRoute
   '/student/performance': typeof StudentPerformanceRoute
   '/student/resources': typeof StudentResourcesRoute
   '/student/sessions': typeof StudentSessionsRoute
@@ -275,7 +303,11 @@ export interface FileRoutesByTo {
   '/admin/users': typeof AdminUsersRoute
   '/admin/workshops': typeof AdminWorkshopsRoute
   '/student/boost': typeof StudentBoostRoute
+  '/student/challenges': typeof StudentChallengesRoute
   '/student/courses': typeof StudentCoursesRoute
+  '/student/insights': typeof StudentInsightsRoute
+  '/student/my-course': typeof StudentMyCourseRoute
+  '/student/my-workshop': typeof StudentMyWorkshopRoute
   '/student/performance': typeof StudentPerformanceRoute
   '/student/resources': typeof StudentResourcesRoute
   '/student/sessions': typeof StudentSessionsRoute
@@ -313,7 +345,11 @@ export interface FileRoutesById {
   '/admin/users': typeof AdminUsersRoute
   '/admin/workshops': typeof AdminWorkshopsRoute
   '/student/boost': typeof StudentBoostRoute
+  '/student/challenges': typeof StudentChallengesRoute
   '/student/courses': typeof StudentCoursesRoute
+  '/student/insights': typeof StudentInsightsRoute
+  '/student/my-course': typeof StudentMyCourseRoute
+  '/student/my-workshop': typeof StudentMyWorkshopRoute
   '/student/performance': typeof StudentPerformanceRoute
   '/student/resources': typeof StudentResourcesRoute
   '/student/sessions': typeof StudentSessionsRoute
@@ -352,7 +388,11 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin/workshops'
     | '/student/boost'
+    | '/student/challenges'
     | '/student/courses'
+    | '/student/insights'
+    | '/student/my-course'
+    | '/student/my-workshop'
     | '/student/performance'
     | '/student/resources'
     | '/student/sessions'
@@ -386,7 +426,11 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin/workshops'
     | '/student/boost'
+    | '/student/challenges'
     | '/student/courses'
+    | '/student/insights'
+    | '/student/my-course'
+    | '/student/my-workshop'
     | '/student/performance'
     | '/student/resources'
     | '/student/sessions'
@@ -423,7 +467,11 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin/workshops'
     | '/student/boost'
+    | '/student/challenges'
     | '/student/courses'
+    | '/student/insights'
+    | '/student/my-course'
+    | '/student/my-workshop'
     | '/student/performance'
     | '/student/resources'
     | '/student/sessions'
@@ -592,11 +640,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudentPerformanceRouteImport
       parentRoute: typeof StudentRoute
     }
+    '/student/my-workshop': {
+      id: '/student/my-workshop'
+      path: '/my-workshop'
+      fullPath: '/student/my-workshop'
+      preLoaderRoute: typeof StudentMyWorkshopRouteImport
+      parentRoute: typeof StudentRoute
+    }
+    '/student/my-course': {
+      id: '/student/my-course'
+      path: '/my-course'
+      fullPath: '/student/my-course'
+      preLoaderRoute: typeof StudentMyCourseRouteImport
+      parentRoute: typeof StudentRoute
+    }
+    '/student/insights': {
+      id: '/student/insights'
+      path: '/insights'
+      fullPath: '/student/insights'
+      preLoaderRoute: typeof StudentInsightsRouteImport
+      parentRoute: typeof StudentRoute
+    }
     '/student/courses': {
       id: '/student/courses'
       path: '/courses'
       fullPath: '/student/courses'
       preLoaderRoute: typeof StudentCoursesRouteImport
+      parentRoute: typeof StudentRoute
+    }
+    '/student/challenges': {
+      id: '/student/challenges'
+      path: '/challenges'
+      fullPath: '/student/challenges'
+      preLoaderRoute: typeof StudentChallengesRouteImport
       parentRoute: typeof StudentRoute
     }
     '/student/boost': {
@@ -738,7 +814,11 @@ const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface StudentRouteChildren {
   StudentBoostRoute: typeof StudentBoostRoute
+  StudentChallengesRoute: typeof StudentChallengesRoute
   StudentCoursesRoute: typeof StudentCoursesRoute
+  StudentInsightsRoute: typeof StudentInsightsRoute
+  StudentMyCourseRoute: typeof StudentMyCourseRoute
+  StudentMyWorkshopRoute: typeof StudentMyWorkshopRoute
   StudentPerformanceRoute: typeof StudentPerformanceRoute
   StudentResourcesRoute: typeof StudentResourcesRoute
   StudentSessionsRoute: typeof StudentSessionsRoute
@@ -747,7 +827,11 @@ interface StudentRouteChildren {
 
 const StudentRouteChildren: StudentRouteChildren = {
   StudentBoostRoute: StudentBoostRoute,
+  StudentChallengesRoute: StudentChallengesRoute,
   StudentCoursesRoute: StudentCoursesRoute,
+  StudentInsightsRoute: StudentInsightsRoute,
+  StudentMyCourseRoute: StudentMyCourseRoute,
+  StudentMyWorkshopRoute: StudentMyWorkshopRoute,
   StudentPerformanceRoute: StudentPerformanceRoute,
   StudentResourcesRoute: StudentResourcesRoute,
   StudentSessionsRoute: StudentSessionsRoute,
