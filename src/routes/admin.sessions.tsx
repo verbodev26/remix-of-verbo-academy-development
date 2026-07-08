@@ -32,6 +32,7 @@ const STATUS_META: Record<ExtSessionStatus, { label: string; bg: string; color: 
   rescheduled: { label: "Rescheduled", bg: "#f1f5f9", color: "#475569" },
   rearranged: { label: "Rearranged", bg: "#fde68a", color: "#92400e" },
   delayed: { label: "Delayed", bg: "#fde68a", color: "#92400e" },
+  converted_to_spotlight: { label: "Converted to Spotlight", bg: "#e0e7ff", color: "#4f46e5" },
 };
 
 // The 7 statuses offered in the edit dropdown.
