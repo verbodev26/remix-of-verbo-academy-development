@@ -23,6 +23,7 @@ import { loadWorkshops } from "@/lib/workshops-store";
 import { loadClubReports, subscribeClubReports, type ClubReport } from "@/lib/club-reports-store";
 import { ClubReportModal, type ClubReportEventInput } from "@/components/verbo/ClubReportModal";
 import { RatingTrendModal } from "@/components/verbo/RatingTrendModal";
+import { getCoverageNoteForStudent } from "@/lib/coverage-notes-store";
 
 export const Route = createFileRoute("/teacher/")({
   // Optional deep-link from the Calendar page → auto-open the Session Report
