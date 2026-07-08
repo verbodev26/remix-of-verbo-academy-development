@@ -13,6 +13,8 @@ import { loadClubReports, CLUB_REPORTS_EVENT } from "./club-reports-store";
 import { loadStrikes, STRIKES_EVENT } from "./strikes-store";
 import { listChangeRequests, AVAIL_EVENT } from "./availability-store";
 import { teacherStatus } from "./teacher-model";
+import { loadStudentReports, REPORTS_EVENT } from "./student-reports-store";
+import { loadFinancialIssues, FIN_ISSUES_EVENT } from "./financial-issues-store";
 
 export type ActivityKind =
   | "session_scheduled"
@@ -31,7 +33,8 @@ export type ActivityKind =
   | "strike_justified"
   | "avail_request_approved"
   | "avail_request_rejected"
-  | "release_request_submitted";
+  | "release_request_submitted"
+  | "report_filed";
 
 export type ActorRole = "admin" | "teacher" | "student" | "system";
 
@@ -297,6 +300,37 @@ export function buildActivityLog(): ActivityEntry[] {
     });
   }
 
+  // ---- Student reports (Teacher > Panel > Report) ---------------------
+  for (const r of loadStudentReports()) {
+    const teacher = userName(r.teacher_id);
+    const student = userName(r.student_id);
+    const preview = r.text.length > 80 ? `${r.text.slice(0, 80)}…` : r.text;
+    out.push({
+      id: `student-report:${r.id}`,
+      kind: "report_filed",
+      action: "Student report filed",
+      detail: `${teacher} → ${student}${preview ? ` — "${preview}"` : ""}`,
+      timestamp: r.created_at,
+      actorId: r.teacher_id, actorName: teacher, actorRole: "teacher",
+      personId: r.student_id,
+    });
+  }
+
+  // ---- Financial issues (Teacher > Financial > Report) ----------------
+  for (const f of loadFinancialIssues()) {
+    const teacher = userName(f.teacher_id);
+    const preview = f.text.length > 80 ? `${f.text.slice(0, 80)}…` : f.text;
+    out.push({
+      id: `fin-issue:${f.id}`,
+      kind: "report_filed",
+      action: "Financial issue reported",
+      detail: `${teacher}${preview ? ` — "${preview}"` : ""}`,
+      timestamp: f.created_at,
+      actorId: f.teacher_id, actorName: teacher, actorRole: "teacher",
+      personId: f.teacher_id,
+    });
+  }
+
   // Sort newest first, de-dupe by id (defensive).
   const seen = new Set<string>();
   return out
@@ -310,6 +344,7 @@ export function buildActivityLog(): ActivityEntry[] {
 const SOURCE_EVENTS = [
   SESSIONS_EVENT, CLUBS_EVENT, RELEASE_REQUESTS_EVENT,
   CLUB_REPORTS_EVENT, STRIKES_EVENT, AVAIL_EVENT,
+  REPORTS_EVENT, FIN_ISSUES_EVENT,
 ];
 
 function subscribe(cb: () => void): () => void {
@@ -360,6 +395,7 @@ export const ACTIVITY_KIND_LABELS: Record<ActivityKind, string> = {
   avail_request_approved: "Availability approved",
   avail_request_rejected: "Availability rejected",
   release_request_submitted: "Release request",
+  report_filed: "Report filed",
 };
 
 export const ACTOR_ROLE_LABELS: Record<ActorRole, string> = {

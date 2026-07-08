@@ -1,32 +1,30 @@
-## Diagnóstico
+## Findings
 
-En tu captura del chat el badge dice **"Super Admin"**; en la pestaña nueva dice **"Admin"**. Ese string ("Admin" así, sin más) **ya no existe en el código actual** — `roleLabel()` en `TopNav.tsx` solo devuelve `"Super Admin"`, `"Coordinator · Operations"`, `"Coordinator · Financial"`, `"Teacher"` o `"Student"`. Conclusión: la pestaña nueva está corriendo un **bundle JS viejo cacheado**, no el build actual.
+### Point 1 — Admin > Performance Sessions Unit Modal (`src/routes/admin.courses.tsx`, `UnitModal` ~line 299)
 
-Dos causas posibles y ambas se resuelven:
+**(a) Cápsula toggle:** already present as a two-button grid but with two rough edges:
+- The right button is labeled **"Upload Video"**, not **"Upload File"** — inconsistent with the toggle names in VIP and Money Lab.
+- The disabled tooltip + fallback text both say `"Available after the Supabase migration"`. Internal rule: never say "Supabase" in user-facing copy.
 
-1. **Caché del navegador / service worker viejo** en esa pestaña.
-2. **`localStorage` con un objeto `user` de forma antigua** (guardado antes de que existieran los nuevos roles). Aunque el bundle sea nuevo, si el user persistido tiene forma vieja, algunos labels/permisos pueden verse raros hasta el próximo login.
+**(b) Pre/Post-Session Activities:** already separated. This modal only owns Title / Unit Number / Video / PDF. Activities are opened via a separate `ActivityModal` (`src/components/verbo/course-modals.tsx`) that has an explicit `Pre-Session / Post-Session` toggle and a listing grouped `PhaseGroup("Pre-Session")` + `PhaseGroup("Post-Session")`. No fusion.
 
-## Paso 1 — Acción inmediata (sin código)
+**Fixes for Point 1:**
+1. In `admin.courses.tsx` `UnitModal`: rename button label `"Upload Video"` → `"Upload File"`.
+2. Same modal: replace the two "Supabase migration" strings with `"Available after the Cloud storage migration"` (matches VIP wording).
 
-En la pestaña nueva:
-- **Hard refresh:** Cmd/Ctrl + Shift + R (fuerza recarga sin caché).
-- Si sigue igual, abrir DevTools → Application → Storage → **Clear site data** y recargar. Volver a hacer login.
+### Point 2 — Activity Logs miss report events
 
-Con eso el bundle correcto se sirve y el `localStorage` se regenera con la forma nueva. Confirma si el badge ya dice "Super Admin".
+`src/lib/activity-logs-store.ts` currently derives from sessions, clubs, club-reports, strikes, availability, release-requests — but **not** from `student-reports-store` or `financial-issues-store`. So filing a report shows up in the bell but not in Admin > Activity Logs.
 
-## Paso 2 — Endurecer el código para que esto no vuelva a pasar
+**Fixes for Point 2:**
+1. In `activity-logs-store.ts`:
+   - Add `ActivityKind` value `"report_filed"`.
+   - Import `readStudentReportsRaw` pattern + `REPORTS_EVENT` from `student-reports-store`, and `loadFinancialIssues` + `FIN_ISSUES_EVENT` from `financial-issues-store`.
+   - Add two derivation branches in `buildActivityLog()` that both push entries with `kind: "report_filed"`:
+     - Student report → `action: "Student report filed"`, actor = teacher, personId = student, detail = `Teacher → Student — "text preview"`.
+     - Financial issue → `action: "Financial issue reported"`, actor = teacher, detail = `Teacher — "text preview"`.
+   - Extend `SOURCE_EVENTS` with `REPORTS_EVENT` and `FIN_ISSUES_EVENT` so the log recomputes when a report is filed.
+   - Add `report_filed: "Report filed"` to `ACTIVITY_KIND_LABELS` so the Event type filter in `admin.activity-logs.tsx` picks it up automatically (that page reads the labels map to build the dropdown).
+2. No changes needed in `admin.activity-logs.tsx` — its filter is auto-populated from `ACTIVITY_KIND_LABELS`.
 
-Aunque el caché lo cause el navegador/CDN, podemos hacer que un `localStorage` viejo no rompa la UI:
-
-**Cambios en `src/lib/auth.tsx`:**
-
-- Al hidratar (`useEffect` inicial), después de leer `raw` de `localStorage`, buscar el usuario por `id` en `USERS` y **re-hidratar** el objeto guardado con la versión canónica (mantiene `role`, `admin_type`, etc. al día). Si el `id` ya no existe en `USERS`, limpiar el `localStorage` y quedar como logged-out.
-- Bumpear la clave de storage: `const KEY = "verbo.auth.user.v2"` y, al hidratar, migrar/borrar `"verbo.auth.user"` viejo. Esto invalida sesiones con forma anterior de una sola vez.
-
-**Resultado:** cualquier navegador con la sesión vieja obtiene automáticamente la forma actualizada (o pasa por login) sin tener que limpiar storage manualmente.
-
-## Fuera de alcance
-
-- No toco `TopNav.tsx` — el label ya está correcto en el código.
-- No republico nada (los cambios ya están en el preview; para que la URL **pública** `.lovable.app` los muestre haría falta un Publish aparte, pero tu pregunta fue sobre la pestaña de preview).
+Files touched: `src/routes/admin.courses.tsx`, `src/lib/activity-logs-store.ts`.

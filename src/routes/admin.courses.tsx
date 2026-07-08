@@ -337,17 +337,17 @@ function UnitModal({ level, editingUnit, onClose, onCreate, onUpdate }: {
             <button
               type="button"
               disabled
-              title="Available after the Supabase migration"
+              title="Available after the Cloud storage migration"
               className="flex cursor-not-allowed items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-secondary/40 px-3 py-2 text-sm font-medium text-muted-foreground opacity-70"
             >
-              <Lock className="h-4 w-4" /> Upload Video
+              <Lock className="h-4 w-4" /> Upload File
             </button>
           </div>
           {videoSource === "url" ? (
             <input value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} className={`${inputCls} mt-2`} placeholder="e.g., https://youtube.com/watch?v=... or vimeo link" />
           ) : (
             <div className="mt-2 rounded-lg border border-dashed border-border bg-secondary/40 px-3 py-3 text-xs text-muted-foreground">
-              Available after the Supabase migration.
+              Available after the Cloud storage migration.
             </div>
           )}
         </Field>
