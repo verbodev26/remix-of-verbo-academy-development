@@ -1,17 +1,23 @@
-import { createFileRoute, useSearch, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useSearch, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
-import { SESSIONS, studentsOfTeacher, userById, type Session, type SessionStatus, type Level } from "@/lib/mock-data";
+import { SESSIONS, ASSIGNMENTS, USERS, studentsOfTeacher, userById, type Session, type SessionStatus, type Level } from "@/lib/mock-data";
 import { Card, GhostButton, MetricCard, Pill, PrimaryButton, SectionTitle } from "@/components/verbo/ui";
-import { CalendarClock, FileEdit, X, Lock, Plus, Trash2, Download, CheckCircle2, Mic, PenLine, Ear, BookOpen, ChevronRight, Video, type LucideIcon } from "lucide-react";
+import { CalendarClock, FileEdit, X, Lock, Plus, Trash2, Download, CheckCircle2, Mic, PenLine, Ear, BookOpen, ChevronRight, Video, Star, AlertTriangle, Trophy, ClipboardList, CalendarDays, Users2, Wallet, Sparkles as SparklesIcon, GraduationCap, type LucideIcon } from "lucide-react";
 import { savePerformance, type PerformanceRating } from "@/lib/performance-store";
 import { MACRO_SKILLS as SHARED_MACRO_SKILLS, skillKey as sharedSkillKey, type BaseKey as SharedBaseKey } from "@/lib/skills-taxonomy";
-import { submitSessionReport, updateSession } from "@/lib/sessions-store";
+import { submitSessionReport, updateSession, loadSessions, subscribeSessions, type ExtSession } from "@/lib/sessions-store";
 import { PlanModal } from "@/components/verbo/PlanModal";
 import { loadLevels, subscribeLevels } from "@/lib/courses-store";
 import { loadLessonPlans, saveLessonPlan, subscribeLessonPlans, getLessonPlan, type LessonPlan } from "@/lib/lesson-plans-store";
-import type { ExtSession } from "@/lib/sessions-store";
 import { markVipUnitDone, clearVipUnitDoneForSession } from "@/lib/vip-courses-store";
+import { computeTeacherKpis, getBonusThreshold, ratingBand } from "@/lib/teacher-kpis";
+import { avgRating } from "@/lib/teacher-model";
+import { activeStrikeCount } from "@/lib/strikes-store";
+import { listChangeRequests, isTeacherAvailableAt, subscribeAvailability } from "@/lib/availability-store";
+import { loadClubs, subscribeClubs, type Club } from "@/lib/clubs-store";
+import { groupById } from "@/lib/groups-store";
+import { SessionDetailsModal } from "@/components/verbo/SessionDetailsModal";
 
 export const Route = createFileRoute("/teacher/")({
   // Optional deep-link from the Calendar page → auto-open the Session Report
