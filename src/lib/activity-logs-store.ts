@@ -22,6 +22,8 @@ export type ActivityKind =
   | "session_cancelled"
   | "group_session_auto_cancelled"
   | "session_report_submitted"
+  | "session_report_amended"
+  | "student_flagged_illness"
   | "club_report_submitted"
   | "financial_adjustment"
   | "rating_submitted"
