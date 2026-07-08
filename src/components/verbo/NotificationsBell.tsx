@@ -152,8 +152,6 @@ export function NotificationsBell({ variant = "light" }: { variant?: "light" | "
           )}
         </div>
       )}
-      {/* Silence unused import if Link is stripped in dead-code — kept for future in-menu links */}
-      <Link to="/teacher" className="hidden" aria-hidden="true" />
     </div>
   );
 }
