@@ -131,6 +131,31 @@ export function CantAttendModal({
                   />
                 </p>
               )}
+
+              {requireCoverage && (
+                <div className="rounded-lg border border-accent/40 bg-accent/5 px-3 py-3">
+                  <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-accent">
+                    <NotebookPen className="h-3.5 w-3.5" /> Coverage Notes (required)
+                  </div>
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    Context for the substitute teacher covering this student: real level,
+                    sensitive topics, preferences, what they're working on now. Reused from
+                    My Students and auto-cleared once the covered session is completed.
+                  </p>
+                  <textarea
+                    value={coverage}
+                    onChange={(e) => setCoverage(e.target.value)}
+                    rows={4}
+                    placeholder="e.g. Working on past-tense fluency; avoid politics; prefers business scenarios…"
+                    className="mt-2 w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                  {!coverage.trim() && (
+                    <p className="mt-1.5 text-[11px] font-medium text-destructive">
+                      Coverage Notes must be filled in before you can confirm the cancellation.
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
             <div className="flex justify-end gap-2 border-t border-border bg-secondary/30 px-5 py-3">
               <GhostButton onClick={onClose}>Cancel</GhostButton>
