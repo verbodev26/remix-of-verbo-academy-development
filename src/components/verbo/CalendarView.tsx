@@ -247,12 +247,22 @@ function DayList({
             {e.subtitle && <div className="truncate text-xs text-muted-foreground">{e.subtitle}</div>}
           </div>
           {e.status && (e.kind === "class" || e.kind === "workshop") && (
-            <span
-              className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold text-white"
-              style={{ background: CALENDAR_STATUS_META[e.status as ExtSessionStatus]?.color ?? "#94a3b8" }}
-            >
-              {CALENDAR_STATUS_META[e.status as ExtSessionStatus]?.label ?? e.status}
-            </span>
+            e.sub_status ? (
+              <span
+                className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold text-white"
+                style={{ background: SUB_STATUS_META[e.sub_status].color }}
+                title={SUB_STATUS_META[e.sub_status].label}
+              >
+                {SUB_STATUS_META[e.sub_status].initials}
+              </span>
+            ) : (
+              <span
+                className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold text-white"
+                style={{ background: CALENDAR_STATUS_META[e.status as ExtSessionStatus]?.color ?? "#94a3b8" }}
+              >
+                {CALENDAR_STATUS_META[e.status as ExtSessionStatus]?.label ?? e.status}
+              </span>
+            )
           )}
           {e.origin === "workshop" && (
             <span className="rounded-md border border-border px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">WS</span>
