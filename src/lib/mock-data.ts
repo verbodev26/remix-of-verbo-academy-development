@@ -1,5 +1,6 @@
 // Mock database — replace with Lovable Cloud later.
 export type Role = "student" | "teacher" | "admin";
+export type AdminType = "super_admin" | "coordinator_ops" | "coordinator_fin";
 
 export interface User {
   id: string;
