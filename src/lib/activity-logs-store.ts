@@ -6,7 +6,7 @@
 // stores. Every entry has a stable id so filtering & pagination are cheap.
 // ============================================================================
 import { useSyncExternalStore } from "react";
-import { USERS, SESSIONS, type Role } from "./mock-data";
+import { USERS, type Role } from "./mock-data";
 import { loadSessions, SESSIONS_EVENT } from "./sessions-store";
 import { loadClubs, loadReleaseRequests, CLUBS_EVENT, RELEASE_REQUESTS_EVENT } from "./clubs-store";
 import { loadClubReports, CLUB_REPORTS_EVENT } from "./club-reports-store";
