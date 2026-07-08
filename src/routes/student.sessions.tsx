@@ -412,9 +412,15 @@ function SessionCancellationModal({
 // declared availability with ≥24h notice.
 // ---------------------------------------------------------------------------
 function RescheduleRequestModal({ session, onClose }: { session: ExtSession; onClose: () => void }) {
+  const { user } = useAuth();
   const [dt, setDt] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const studentUser = userById(session.student_id);
+  const isGroup = Boolean(session.group_id);
+  // For group sessions, the acting student is the logged-in user (each member
+  // has their own quota + member_status). For 1:1, fall back to the top-level
+  // student_id so the flow keeps working outside a session context.
+  const actingStudentId = isGroup && user ? user.id : session.student_id;
+  const studentUser = userById(actingStudentId);
   const product = studentUser?.product;
 
   const qualifiedTeachers = useMemo(() => {
@@ -430,17 +436,28 @@ function RescheduleRequestModal({ session, onClose }: { session: ExtSession; onC
     if (!anyAvail) { setError("No qualified teacher has that slot open. Please pick another time."); return; }
     addStudentRequest({
       kind: "reschedule",
-      student_id: session.student_id,
+      student_id: actingStudentId,
       assigned_teacher_id: session.teacher_id,
       origin_session_id: session.id,
       proposed_datetime: iso,
       duration_minutes: session.duration_minutes,
     });
-    // Mark original as pending_reschedule until claimed.
-    updateSession(session.id, { status: "pending_reschedule" });
-    toast.success("Reschedule Request published. Teachers have been notified.");
+    if (isGroup) {
+      // Group: mutate only THIS member's status. Session top-level only flips
+      // to cancelled if the whole roster has left (unanimity).
+      const res = applyGroupMemberCancellation(session.id, actingStudentId, "pending_reschedule");
+      toast.success(
+        res.unanimous
+          ? "All members reschedule requested — the group session has been cancelled."
+          : "Reschedule Request published. The group session continues for the remaining members.",
+      );
+    } else {
+      updateSession(session.id, { status: "pending_reschedule" });
+      toast.success("Reschedule Request published. Teachers have been notified.");
+    }
     onClose();
   };
+
 
   return (
     <div onClick={onClose} className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
