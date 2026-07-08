@@ -42,6 +42,7 @@ import { Route as AdminGroupsRouteImport } from './routes/admin.groups'
 import { Route as AdminCoursesRouteImport } from './routes/admin.courses'
 import { Route as AdminClubsRouteImport } from './routes/admin.clubs'
 import { Route as AdminChallengesRouteImport } from './routes/admin.challenges'
+import { Route as AdminActivityLogsRouteImport } from './routes/admin.activity-logs'
 import { Route as AdminFinancialMoneyLabRouteImport } from './routes/admin.financial.money-lab'
 
 const TeacherRoute = TeacherRouteImport.update({
@@ -209,6 +210,11 @@ const AdminChallengesRoute = AdminChallengesRouteImport.update({
   path: '/challenges',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminActivityLogsRoute = AdminActivityLogsRouteImport.update({
+  id: '/activity-logs',
+  path: '/activity-logs',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminFinancialMoneyLabRoute = AdminFinancialMoneyLabRouteImport.update({
   id: '/financial/money-lab',
   path: '/financial/money-lab',
@@ -222,6 +228,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/student': typeof StudentRouteWithChildren
   '/teacher': typeof TeacherRouteWithChildren
+  '/admin/activity-logs': typeof AdminActivityLogsRoute
   '/admin/challenges': typeof AdminChallengesRoute
   '/admin/clubs': typeof AdminClubsRoute
   '/admin/courses': typeof AdminCoursesRoute
@@ -255,6 +262,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
+  '/admin/activity-logs': typeof AdminActivityLogsRoute
   '/admin/challenges': typeof AdminChallengesRoute
   '/admin/clubs': typeof AdminClubsRoute
   '/admin/courses': typeof AdminCoursesRoute
@@ -292,6 +300,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/student': typeof StudentRouteWithChildren
   '/teacher': typeof TeacherRouteWithChildren
+  '/admin/activity-logs': typeof AdminActivityLogsRoute
   '/admin/challenges': typeof AdminChallengesRoute
   '/admin/clubs': typeof AdminClubsRoute
   '/admin/courses': typeof AdminCoursesRoute
@@ -330,6 +339,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/student'
     | '/teacher'
+    | '/admin/activity-logs'
     | '/admin/challenges'
     | '/admin/clubs'
     | '/admin/courses'
@@ -363,6 +373,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/privacy'
+    | '/admin/activity-logs'
     | '/admin/challenges'
     | '/admin/clubs'
     | '/admin/courses'
@@ -399,6 +410,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/student'
     | '/teacher'
+    | '/admin/activity-logs'
     | '/admin/challenges'
     | '/admin/clubs'
     | '/admin/courses'
@@ -671,6 +683,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminChallengesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/activity-logs': {
+      id: '/admin/activity-logs'
+      path: '/activity-logs'
+      fullPath: '/admin/activity-logs'
+      preLoaderRoute: typeof AdminActivityLogsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/financial/money-lab': {
       id: '/admin/financial/money-lab'
       path: '/financial/money-lab'
@@ -682,6 +701,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminRouteChildren {
+  AdminActivityLogsRoute: typeof AdminActivityLogsRoute
   AdminChallengesRoute: typeof AdminChallengesRoute
   AdminClubsRoute: typeof AdminClubsRoute
   AdminCoursesRoute: typeof AdminCoursesRoute
@@ -698,6 +718,7 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminActivityLogsRoute: AdminActivityLogsRoute,
   AdminChallengesRoute: AdminChallengesRoute,
   AdminClubsRoute: AdminClubsRoute,
   AdminCoursesRoute: AdminCoursesRoute,
