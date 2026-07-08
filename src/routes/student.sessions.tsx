@@ -259,22 +259,44 @@ function CantAttendRouter({
   const hours = hoursUntil(session.date_time);
   const insideLateWindow = hours < policy.noticeHours;
   const quotaExhausted = used >= quota;
+  const isGroup = Boolean(session.group_id);
 
+  // For groups, "Absent" is recorded per-member (top-level stays scheduled
+  // unless the whole roster is out). For 1:1, top-level flips to Absent.
   const confirmAbsent = () => {
-    updateSession(session.id, { status: "absent" });
-    toast("Session marked as Absent.");
+    if (isGroup) {
+      const nextMemberStatuses = { ...(session.member_statuses ?? {}), [user.id]: "absent" as ExtSessionStatus };
+      updateSession(session.id, { member_statuses: nextMemberStatuses });
+      toast("You've been marked Absent. The session continues for the other members.");
+    } else {
+      updateSession(session.id, { status: "absent" });
+      toast("Session marked as Absent.");
+    }
     onClose();
   };
   const confirmCancelNoReschedule = () => {
-    updateSession(session.id, { status: "cancelled" });
-    toast("Session cancelled. Credit forfeited.");
+    if (isGroup) {
+      const res = applyGroupMemberCancellation(session.id, user.id, "cancelled");
+      toast(
+        res.unanimous
+          ? "All members cancelled — the group session has been cancelled."
+          : "You've cancelled this group session. Credit forfeited. The class continues for the remaining members.",
+      );
+    } else {
+      updateSession(session.id, { status: "cancelled" });
+      toast("Session cancelled. Credit forfeited.");
+    }
     onClose();
   };
 
   if (insideLateWindow) {
     return (
       <LateCancellationModal
-        firstLine="Cancellation received with less than the notice required by your plan. The session will be marked as Absent and forfeited. No reschedule is available."
+        firstLine={
+          isGroup
+            ? "Cancellation received with less than the notice required by your plan. You'll be marked Absent for this group session. The class continues for the remaining members. No reschedule is available."
+            : "Cancellation received with less than the notice required by your plan. The session will be marked as Absent and forfeited. No reschedule is available."
+        }
         onClose={onClose}
         onConfirm={confirmAbsent}
       />
@@ -283,7 +305,11 @@ function CantAttendRouter({
   if (quotaExhausted) {
     return (
       <LateCancellationModal
-        firstLine="You've used all the reschedules allowed by your plan this cycle. The session will be marked as Absent and forfeited. No reschedule is available."
+        firstLine={
+          isGroup
+            ? "You've used all the reschedules allowed by your plan this cycle. You'll be marked Absent for this group session. The class continues for the remaining members. No reschedule is available."
+            : "You've used all the reschedules allowed by your plan this cycle. The session will be marked as Absent and forfeited. No reschedule is available."
+        }
         onClose={onClose}
         onConfirm={confirmAbsent}
       />
@@ -294,12 +320,14 @@ function CantAttendRouter({
       policy={policy}
       quota={quota}
       used={used}
+      isGroup={isGroup}
       onClose={onClose}
       onReschedule={onReschedule}
       onCancelNoReschedule={confirmCancelNoReschedule}
     />
   );
 }
+
 
 function LateCancellationModal({
   firstLine, onClose, onConfirm,
