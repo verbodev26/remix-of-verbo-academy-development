@@ -169,20 +169,36 @@ export const CALENDAR_STATUS_META: Record<ExtSessionStatus, { label: string; col
   ready:              { label: "Ready",              color: "#8b5cf6" },
   completed:          { label: "Completed",          color: "#16a34a" },
   absent:             { label: "Absent",             color: "#dc2626" },
-  cancelled:          { label: "Cancelled",          color: "#be185d" },
+  // Cancelled reassigned to a slate blue-gray, distinct from Scheduled's
+  // #94a3b8. The lighter tint used for justified-cancelled variants lives in
+  // SUB_STATUS_META (#cbd5e1).
+  cancelled:          { label: "Cancelled",          color: "#64748B" },
   pending_reschedule: { label: "Pending Reschedule", color: "#b45309" },
   no_show:            { label: "No Show",            color: "#334155" },
-  // Not part of the canonical 7 but tolerated by the type — mapped to a
-  // muted color so any stray legacy value still renders sanely.
   rescheduled:        { label: "Rescheduled",        color: "#94a3b8" },
   rearranged:         { label: "Rearranged",         color: "#eab308" },
   delayed:            { label: "Delayed",            color: "#eab308" },
-  // New status: student replaced a regular 1:1 with a Spotlight in the same
-  // slot. Distinct indigo so it never reads as Cancelled (pink) or Completed
-  // (green) in any panel.
   converted_to_spotlight: { label: "Converted to Spotlight", color: "#4f46e5" },
 };
 
 export const CANONICAL_STATUS_ORDER: ExtSessionStatus[] = [
   "scheduled", "ready", "completed", "absent", "cancelled", "pending_reschedule", "no_show",
 ];
+
+/** Renderer helper: given an event, return the pill color + short label to
+ *  display in the calendar cell. Sub-status wins over base status when set. */
+export function eventPillDisplay(ev: CalendarEvent): { color: string; short: string; cellLabel: string } {
+  if (ev.sub_status) {
+    const meta = SUB_STATUS_META[ev.sub_status];
+    return { color: meta.color, short: meta.initials, cellLabel: meta.initials };
+  }
+  const kind = EVENT_KIND_META[ev.kind];
+  const status = ev.status as ExtSessionStatus | undefined;
+  const color = (ev.kind === "class" || ev.kind === "workshop") && status
+    ? (CALENDAR_STATUS_META[status]?.color ?? kind.color)
+    : kind.color;
+  const cellLabel = status && (status === "absent" || status === "cancelled")
+    ? CALENDAR_STATUS_META[status].label
+    : "";
+  return { color, short: ev.is_group ? "G" : kind.short, cellLabel };
+}
