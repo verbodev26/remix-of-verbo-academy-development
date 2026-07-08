@@ -191,7 +191,7 @@ export function buildActivityLog(): ActivityEntry[] {
       action: `${c.type === "book" ? "Book Club" : "Insight"} created`,
       detail: `${c.title} · ${fmtDate(c.date)}`,
       timestamp: c.date,
-      actorId: null, actorName: "System", actorRole: "system",
+      actorId: null, actorName: "Admin", actorRole: "admin",
     });
     if (c.teacher_id && c.claimed_at) {
       out.push({
