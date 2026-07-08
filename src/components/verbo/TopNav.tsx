@@ -192,7 +192,7 @@ export function TopNav({ items, variant = "light" }: { items: NavEntry[]; varian
         <div className="flex items-center gap-3">
           <div className="hidden text-right md:block">
             <div className={`text-sm font-medium ${isDark ? "text-white" : "text-foreground"}`}>{user?.name}</div>
-            <div className={`text-xs capitalize ${isDark ? "text-[#94a3b8]" : "text-muted-foreground"}`}>{user?.role}</div>
+            <div className={`text-xs ${isDark ? "text-[#94a3b8]" : "text-muted-foreground"}`}>{roleLabel(user)}</div>
           </div>
           {user && user.role !== "student" && <NotificationsBell variant={variant} />}
           <button
