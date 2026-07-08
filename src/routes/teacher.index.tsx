@@ -395,13 +395,30 @@ function TeacherDashboard() {
       </header>
 
       <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <MetricCard label="Assigned Students" value={String(students.length)} />
-        <MetricCard label="Upcoming Sessions" value={String(upcoming7d.length)} sub="next 7 days" />
-        <MetricCard
-          label="Avg Rating"
-          value={avgRating30 != null ? `${avgRating30.toFixed(1)}★` : "—"}
-          sub="last 30 days"
-        />
+        <Link
+          to="/teacher/students"
+          className="block cursor-pointer rounded-2xl border border-border bg-card p-6 shadow-soft transition-shadow hover:shadow-floating"
+        >
+          <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Assigned Students</div>
+          <div className="mt-3 text-3xl font-semibold tracking-tight text-black">{students.length}</div>
+        </Link>
+        <Link
+          to="/teacher/calendar"
+          className="block cursor-pointer rounded-2xl border border-border bg-card p-6 shadow-soft transition-shadow hover:shadow-floating"
+        >
+          <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Upcoming Sessions</div>
+          <div className="mt-3 text-3xl font-semibold tracking-tight text-black">{upcoming7d.length}</div>
+          <div className="mt-1 text-xs text-muted-foreground">next 7 days</div>
+        </Link>
+        <button
+          type="button"
+          onClick={() => setShowRatingTrend(true)}
+          className="block cursor-pointer rounded-2xl border border-border bg-card p-6 text-left shadow-soft transition-shadow hover:shadow-floating"
+        >
+          <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Avg Rating</div>
+          <div className="mt-3 text-3xl font-semibold tracking-tight text-black">{avgRating30 != null ? `${avgRating30.toFixed(1)}★` : "—"}</div>
+          <div className="mt-1 text-xs text-muted-foreground">last 30 days · view trend</div>
+        </button>
         <Link
           to="/teacher/financial"
           className="group block rounded-2xl border border-border bg-card p-6 shadow-soft transition-shadow hover:shadow-floating"
