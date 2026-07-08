@@ -528,15 +528,14 @@ function TeacherDashboard() {
                 const group = s.group_id ? groupById(s.group_id) : null;
                 const student = userById(s.student_id);
                 const label =
-                  s.status === "completed" ? (s.report_submitted_at ? "Completed" : "Completed without report")
+                  s.status === "completed" ? "Completed"
                   : s.status === "absent" ? "Absent"
                   : s.status === "cancelled" ? "Cancelled"
                   : s.status === "no_show" ? "No-show"
                   : s.status === "delayed" ? "Delayed"
                   : s.status.charAt(0).toUpperCase() + s.status.slice(1);
                 const tone =
-                  s.status === "completed" && s.report_submitted_at ? "success"
-                  : s.status === "completed" ? "warning"
+                  s.status === "completed" ? "success"
                   : s.status === "absent" || s.status === "no_show" ? "danger"
                   : s.status === "delayed" ? "warning"
                   : "default";
