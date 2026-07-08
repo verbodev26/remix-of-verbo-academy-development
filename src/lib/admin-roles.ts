@@ -73,6 +73,7 @@ export function canAccessAdminPath(type: AdminType, pathname: string): boolean {
   // coordinator_ops
   if (pathname.startsWith("/admin/financial")) return false;
   if (pathname.startsWith("/admin/users")) return false;
+  if (pathname.startsWith("/admin/activity-logs")) return false;
   return true;
 }
 
