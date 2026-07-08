@@ -165,3 +165,40 @@ export function isTeacherAvailableAt(teacherId: string, dateISO: string, duratio
   });
   return !clash;
 }
+
+// ---------------------------------------------------------------------------
+// Slot finder for student self-service flows (Reschedule / Spotlight).
+//
+// Returns the sorted list of ISO datetimes on `dateYMD` (local YYYY-MM-DD)
+// whose start falls on :00 or :30, that satisfy a ≥24h notice window, and
+// where AT LEAST ONE of the given qualified teachers is available for the
+// required contiguous duration. No arbitrary minute — start times are
+// snapped to the half-hour grid on purpose.
+// ---------------------------------------------------------------------------
+export function findAvailableStartSlots(input: {
+  dateYMD: string;         // "YYYY-MM-DD" in local time
+  durationMin: number;     // 60 / 90 / 120 for reschedule, 60 for spotlight
+  qualifiedTeacherIds: string[];
+  minNoticeHours?: number; // default 24
+}): string[] {
+  const notice = input.minNoticeHours ?? 24;
+  const [y, m, d] = input.dateYMD.split("-").map(Number);
+  if (!y || !m || !d) return [];
+  const now = Date.now();
+  const out: string[] = [];
+  // Iterate the :00 / :30 grid within the school day [MIN_MINUTES, MAX_MINUTES].
+  for (let mins = MIN_MINUTES; mins + input.durationMin <= MAX_MINUTES; mins += 30) {
+    const hh = Math.floor(mins / 60);
+    const mm = mins % 60;
+    const candidate = new Date(y, m - 1, d, hh, mm, 0, 0);
+    const iso = candidate.toISOString();
+    // 24h notice.
+    if ((candidate.getTime() - now) / 36e5 < notice) continue;
+    // Any qualified teacher available for this exact block?
+    const ok = input.qualifiedTeacherIds.some((tid) =>
+      isTeacherAvailableAt(tid, iso, input.durationMin),
+    );
+    if (ok) out.push(iso);
+  }
+  return out;
+}
