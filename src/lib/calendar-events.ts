@@ -141,13 +141,13 @@ export function studentCalendarEvents(studentId: string, opts?: {
 }): CalendarEvent[] {
   const events: CalendarEvent[] = [];
   for (const s of loadSessions()) {
-    // A student sees any session where they are the direct student, plus
-    // group sessions where they're a member (member_statuses).
     const isMember = !!s.member_statuses && Object.keys(s.member_statuses).includes(studentId);
     if (s.student_id !== studentId && !isMember) continue;
-    if (s.origin === "workshop") continue; // workshops surface in their own tab
+    if (s.origin === "workshop") continue;
     const teacherName = opts?.teacherNameOf?.(s.teacher_id) ?? "Teacher";
-    const ev = sessionEvent(s, `Session with ${teacherName}`);
+    // For group sessions the student's own sub-status is the one we render.
+    const memberSub = s.group_id ? s.member_sub_statuses?.[studentId] : undefined;
+    const ev = sessionEvent(s, `Session with ${teacherName}`, memberSub);
     events.push(ev);
   }
   return events;
