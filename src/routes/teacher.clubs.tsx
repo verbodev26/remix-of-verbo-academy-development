@@ -156,22 +156,49 @@ function Page() {
       )}
 
       {/* Sub-view switcher */}
-      <div className="inline-flex rounded-lg border border-border bg-secondary/40 p-1">
+      <div className="inline-flex flex-wrap rounded-lg border border-border bg-secondary/40 p-1">
         {([
           { id: "available" as const, label: "Available Clubs" },
           { id: "mine" as const, label: "My Clubs" },
-        ]).map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setSub(t.id)}
-            className={`rounded-md px-3.5 py-1.5 text-sm font-medium transition-all ${
-              sub === t.id ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
+          { id: "reschedule_requests" as const, label: "Reschedule Requests" },
+          { id: "spotlight_requests" as const, label: "Spotlight Requests" },
+        ]).map((t) => {
+          const badgeCount = t.id === "reschedule_requests"
+            ? studentReqs.filter((r) => r.kind === "reschedule" && (r.status === "open" || r.status === "escalated")).length
+            : t.id === "spotlight_requests"
+              ? studentReqs.filter((r) => r.kind === "spotlight" && (r.status === "open" || r.status === "escalated")).length
+              : 0;
+          return (
+            <button
+              key={t.id}
+              onClick={() => setSub(t.id)}
+              className={`inline-flex items-center gap-1.5 rounded-md px-3.5 py-1.5 text-sm font-medium transition-all ${
+                sub === t.id ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {t.label}
+              {badgeCount > 0 && (
+                <span className="rounded-full bg-[#f38934] px-1.5 text-[10px] font-bold text-white">{badgeCount}</span>
+              )}
+            </button>
+          );
+        })}
       </div>
+
+      {(sub === "reschedule_requests" || sub === "spotlight_requests") && user && (
+        <StudentRequestsSection
+          kind={sub === "reschedule_requests" ? "reschedule" : "spotlight"}
+          teacherId={user.id}
+          requests={studentReqs}
+          onClaim={(id) => {
+            const claimed = claimStudentRequest(id, user.id);
+            if (!claimed) toast.error("This request was just claimed by another teacher");
+            else toast.success("Request claimed and added to your calendar");
+            setStudentReqs(loadStudentRequests());
+          }}
+        />
+      )}
+
 
       {sub === "available" && (
         <>
