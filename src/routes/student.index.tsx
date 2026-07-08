@@ -565,7 +565,7 @@ function StudentDashboard() {
             metrics and will be recorded as your {ordinal(cancelCount + 1)} canceled session.
           </div>
           <DialogFooter className="gap-2 sm:gap-2">
-            <GhostButton onClick={confirmCancel}>Confirm Cancelation</GhostButton>
+            <GhostButton onClick={confirmCancel}>Confirm Cancellation</GhostButton>
             <PrimaryButton className="verbo-btn-glow" onClick={() => setToCancel(null)}>Return</PrimaryButton>
           </DialogFooter>
         </DialogContent>
