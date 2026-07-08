@@ -211,7 +211,19 @@ function EventDetailsModal({
         {isClass && session && (
           <div className="mt-4 space-y-2 text-sm">
             <Row label="Teacher" value={teacherName ?? "—"} />
-            <Row label="Status" value={statusMeta?.label ?? "—"} accent={statusMeta?.color} />
+            <Row
+              label="Status"
+              value={
+                session.attendance_sub_status
+                  ? `${statusMeta?.label ?? ""} · ${SUB_STATUS_META[session.attendance_sub_status].label}`.trim().replace(/^·\s*/, "")
+                  : (statusMeta?.label ?? "—")
+              }
+              accent={
+                session.attendance_sub_status
+                  ? SUB_STATUS_META[session.attendance_sub_status].color
+                  : statusMeta?.color
+              }
+            />
             {session.teams_link && <Row label="Video Call" value="Ready" />}
           </div>
         )}
