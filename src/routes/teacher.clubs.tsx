@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Sparkles, BookOpen, MessageCircle, X, Undo2 } from "lucide-react";
+import { Sparkles, BookOpen, MessageCircle, X, Undo2, CalendarClock, User } from "lucide-react";
 import { Card, GhostButton, PrimaryButton, SectionTitle } from "@/components/verbo/ui";
 import { useAuth } from "@/lib/auth";
 import {
@@ -10,6 +10,11 @@ import {
   loadReleaseRequests, subscribeReleaseRequests, addReleaseRequest,
   FREE_RELEASE_WINDOW_MS,
 } from "@/lib/clubs-store";
+import {
+  loadStudentRequests, subscribeStudentRequests, claimStudentRequest,
+  type StudentRequest,
+} from "@/lib/student-requests-store";
+import { userById } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/teacher/clubs")({ component: Page });
 
