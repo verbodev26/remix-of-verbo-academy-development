@@ -765,6 +765,20 @@ function TeacherDashboard() {
           onClose={() => setViewing(null)}
         />
       )}
+      {reportingClub && user && (
+        <ClubReportModal
+          event={reportingClub}
+          teacherId={user.id}
+          onClose={() => setReportingClub(null)}
+        />
+      )}
+      {showRatingTrend && user && (
+        <RatingTrendModal
+          teacherId={user.id}
+          sessions={liveSessions}
+          onClose={() => setShowRatingTrend(false)}
+        />
+      )}
     </div>
   );
 }
