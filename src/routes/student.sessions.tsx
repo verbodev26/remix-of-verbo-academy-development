@@ -362,11 +362,12 @@ function LateCancellationModal({
 }
 
 function SessionCancellationModal({
-  policy, quota, used, onClose, onReschedule, onCancelNoReschedule,
+  policy, quota, used, isGroup, onClose, onReschedule, onCancelNoReschedule,
 }: {
   policy: { noticeHours: number; maxPct: number };
   quota: number;
   used: number;
+  isGroup?: boolean;
   onClose: () => void;
   onReschedule: () => void;
   onCancelNoReschedule: () => void;
@@ -382,6 +383,11 @@ function SessionCancellationModal({
           Your membership allows you to cancel or reschedule up to <strong>{policy.maxPct}%</strong> of
           your booked sessions without penalty. You've used <strong>{used} of {quota}</strong> reschedules this cycle.
         </p>
+        {isGroup && (
+          <p className="mt-2 rounded-md bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900 ring-1 ring-amber-200">
+            This is a group session. Your decision only affects your seat and counts against your monthly quota — the class will continue for the remaining members unless every member opts out.
+          </p>
+        )}
         <div className="mt-6 flex flex-col gap-2">
           <button
             onClick={onReschedule}
