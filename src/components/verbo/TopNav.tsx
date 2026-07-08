@@ -7,6 +7,18 @@ import { ProfileModal } from "./ProfileModal";
 import { AdminProfileModal } from "./AdminProfileModal";
 import { useAvatar } from "@/lib/avatar-store";
 import { NotificationsBell } from "./NotificationsBell";
+import type { User } from "@/lib/mock-data";
+
+function roleLabel(u?: User | null): string {
+  if (!u) return "";
+  if (u.role === "admin") {
+    if (u.admin_type === "coordinator_ops") return "Coordinator · Operations";
+    if (u.admin_type === "coordinator_fin") return "Coordinator · Financial";
+    return "Super Admin";
+  }
+  if (u.role === "teacher") return "Teacher";
+  return "Student";
+}
 
 export interface NavItem { to: string; label: string }
 export interface NavGroup { label: string; items: NavItem[] }
