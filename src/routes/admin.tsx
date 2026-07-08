@@ -1,8 +1,12 @@
-import { createFileRoute, Outlet, Link, useRouterState } from "@tanstack/react-router";
-import { useEffect, useId, useRef, useState } from "react";
+import { createFileRoute, Outlet, Link, useRouterState, Navigate } from "@tanstack/react-router";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { RoleGuard } from "@/components/verbo/RoleGuard";
 import { TopNav } from "@/components/verbo/TopNav";
+import { useAuth } from "@/lib/auth";
+import {
+  hydrateAdminRoles, getAdminType, canAccessAdminPath, defaultAdminLanding,
+} from "@/lib/admin-roles";
 
 export const Route = createFileRoute("/admin")({ component: Layout });
 
