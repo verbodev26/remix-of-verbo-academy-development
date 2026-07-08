@@ -2,7 +2,7 @@ import { createFileRoute, useSearch, useNavigate, Link } from "@tanstack/react-r
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { SESSIONS, ASSIGNMENTS, USERS, studentsOfTeacher, userById, type Session, type SessionStatus, type Level } from "@/lib/mock-data";
-import { Card, GhostButton, MetricCard, Pill, PrimaryButton, SectionTitle } from "@/components/verbo/ui";
+import { Card, GhostButton, Pill, PrimaryButton, SectionTitle } from "@/components/verbo/ui";
 import { CalendarClock, FileEdit, X, Lock, Plus, Trash2, Download, CheckCircle2, Mic, PenLine, Ear, BookOpen, ChevronRight, Video, Star, AlertTriangle, AlertCircle, Trophy, CalendarDays, Wallet, Sparkles as SparklesIcon, GraduationCap, type LucideIcon } from "lucide-react";
 import { savePerformance, type PerformanceRating } from "@/lib/performance-store";
 import { MACRO_SKILLS as SHARED_MACRO_SKILLS, skillKey as sharedSkillKey, type BaseKey as SharedBaseKey } from "@/lib/skills-taxonomy";
@@ -18,6 +18,11 @@ import { listChangeRequests, isTeacherAvailableAt, subscribeAvailability } from 
 import { loadClubs, subscribeClubs, type Club } from "@/lib/clubs-store";
 import { groupById } from "@/lib/groups-store";
 import { SessionDetailsModal } from "@/components/verbo/SessionDetailsModal";
+import { teacherCalendarEvents, EVENT_KIND_META, type CalendarEvent } from "@/lib/calendar-events";
+import { loadWorkshops } from "@/lib/workshops-store";
+import { loadClubReports, subscribeClubReports, type ClubReport } from "@/lib/club-reports-store";
+import { ClubReportModal, type ClubReportEventInput } from "@/components/verbo/ClubReportModal";
+import { RatingTrendModal } from "@/components/verbo/RatingTrendModal";
 
 export const Route = createFileRoute("/teacher/")({
   // Optional deep-link from the Calendar page → auto-open the Session Report
@@ -57,6 +62,9 @@ function TeacherDashboard() {
   const [clubs, setClubs] = useState<Club[]>([]);
   const [availTick, setAvailTick] = useState(0);
   const [viewing, setViewing] = useState<ExtSession | null>(null);
+  const [clubReports, setClubReports] = useState<Record<string, ClubReport>>({});
+  const [reportingClub, setReportingClub] = useState<ClubReportEventInput | null>(null);
+  const [showRatingTrend, setShowRatingTrend] = useState(false);
 
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000 * 30);
@@ -74,7 +82,9 @@ function TeacherDashboard() {
     const u3 = subscribeSessions(() => setLiveSessions(loadSessions()));
     const u4 = subscribeClubs(() => setClubs(loadClubs()));
     const u5 = subscribeAvailability(() => setAvailTick((n) => n + 1));
-    return () => { u1(); u2(); u3(); u4(); u5(); };
+    setClubReports(loadClubReports());
+    const u6 = subscribeClubReports(() => setClubReports(loadClubReports()));
+    return () => { u1(); u2(); u3(); u4(); u5(); u6(); };
   }, []);
 
   // If we arrived with ?report=<id>, auto-open Step 1 for that session
@@ -145,8 +155,45 @@ function TeacherDashboard() {
     belowTarget === 0 ? "none" : belowTarget >= 2 || anyCritical ? "red" : "yellow";
   const strikes = teacherUser ? activeStrikeCount(teacherUser.id) : 0;
 
+  // ---- Club events (Book Clubs / Insights / Spotlight) closure state ----
+  // Reuse the shared calendar adapter so the enrolled-student roster is
+  // sourced from the same place Calendar shows it — no parallel query.
+  const allTeacherEvents: CalendarEvent[] = user
+    ? teacherCalendarEvents(user.id, {
+        studentNameOf: (id) => userById(id)?.name,
+        cohortNameOf: (cohortId) => {
+          const templates = loadWorkshops();
+          for (const t of templates) {
+            const c = t.cohorts.find((c) => c.id === cohortId);
+            if (c) return `${t.name} · ${c.name}`;
+          }
+          return "Workshop";
+        },
+      })
+    : [];
+  const pendingClubEvents = allTeacherEvents.filter((ev) => {
+    if (ev.kind !== "book_club" && ev.kind !== "insight" && ev.kind !== "spotlight") return false;
+    const end = +new Date(ev.date) + ev.duration_minutes * 60_000;
+    if (end > now) return false;
+    if (clubReports[ev.id]) return false;
+    if (ev.status === "cancelled") return false;
+    return true;
+  });
+  const kindToReportType = (k: CalendarEvent["kind"]): "book" | "insight" | "spotlight" =>
+    k === "book_club" ? "book" : k === "spotlight" ? "spotlight" : "insight";
+  const openClubReport = (ev: CalendarEvent) => {
+    setReportingClub({
+      id: ev.id,
+      type: kindToReportType(ev.kind),
+      title: ev.title,
+      date: ev.date,
+      enrolled_names: ev.enrolled_names ?? [],
+    });
+  };
+
   // ---- Needs Your Attention items ----
-  type AttentionItem = { id: string; icon: LucideIcon; text: string; tone: "warning" | "danger" | "info"; iconClassName?: string; iconWrapClassName?: string; cta?: { label: string; to?: string; onClick?: () => void; search?: Record<string, string> } };
+  type AttentionChip = { label: string; color: string };
+  type AttentionItem = { id: string; icon: LucideIcon; text: string; tone: "warning" | "danger" | "info"; iconClassName?: string; iconWrapClassName?: string; chip?: AttentionChip; cta?: { label: string; to?: string; onClick?: () => void; search?: Record<string, string> } };
   const attention: AttentionItem[] = [];
 
   // (a) Sessions past their end with no report submitted.
@@ -172,9 +219,9 @@ function TeacherDashboard() {
     if (overdue) {
       icon = AlertCircle;
       iconClassName = "text-red-600 animate-report-glow";
-    } else if (remainingMs < 8 * H) {
+    } else if (remainingMs < 2 * H) {
       iconClassName = "text-red-600";
-    } else if (remainingMs < 15 * H) {
+    } else if (remainingMs < 12 * H) {
       iconClassName = "text-amber-500";
     }
     attention.push({
@@ -187,6 +234,38 @@ function TeacherDashboard() {
         ? `Session Report overdue — ${who} (${fmt(s.date_time)})`
         : `Session Report pending — ${who} (${fmt(s.date_time)})`,
       cta: { label: overdue ? "Open Report" : "Fill Report", to: "/teacher", search: { report: s.id } },
+    });
+  }
+
+  // (a2) Club Reports pending / overdue — mirror the Session Report visuals
+  //     with the requested 12h/2h thresholds and add a kind chip.
+  for (const ev of pendingClubEvents.slice(0, 5)) {
+    const end = +new Date(ev.date) + ev.duration_minutes * 60_000;
+    const deadline = end + REPORT_WINDOW_MS;
+    const overdue = now > deadline;
+    const remainingMs = deadline - now;
+    const H = 3_600_000;
+    let icon: LucideIcon = FileEdit;
+    let iconClassName = "text-emerald-600";
+    if (overdue) {
+      icon = AlertCircle;
+      iconClassName = "text-red-600 animate-report-glow";
+    } else if (remainingMs < 2 * H) {
+      iconClassName = "text-red-600";
+    } else if (remainingMs < 12 * H) {
+      iconClassName = "text-amber-500";
+    }
+    const meta = EVENT_KIND_META[ev.kind];
+    attention.push({
+      id: `clubreport-${ev.id}`,
+      icon,
+      iconClassName,
+      tone: overdue ? "danger" : "warning",
+      chip: { label: meta.label, color: meta.color },
+      text: overdue
+        ? `Club Report overdue — ${ev.title} (${fmt(ev.date)})`
+        : `Club Report pending — ${ev.title} (${fmt(ev.date)})`,
+      cta: { label: overdue ? "Open Report" : "Fill Report", onClick: () => openClubReport(ev) },
     });
   }
 
@@ -316,13 +395,30 @@ function TeacherDashboard() {
       </header>
 
       <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <MetricCard label="Assigned Students" value={String(students.length)} />
-        <MetricCard label="Upcoming Sessions" value={String(upcoming7d.length)} sub="next 7 days" />
-        <MetricCard
-          label="Avg Rating"
-          value={avgRating30 != null ? `${avgRating30.toFixed(1)}★` : "—"}
-          sub="last 30 days"
-        />
+        <Link
+          to="/teacher/students"
+          className="block cursor-pointer rounded-2xl border border-border bg-card p-6 shadow-soft transition-shadow hover:shadow-floating"
+        >
+          <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Assigned Students</div>
+          <div className="mt-3 text-3xl font-semibold tracking-tight text-black">{students.length}</div>
+        </Link>
+        <Link
+          to="/teacher/calendar"
+          className="block cursor-pointer rounded-2xl border border-border bg-card p-6 shadow-soft transition-shadow hover:shadow-floating"
+        >
+          <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Upcoming Sessions</div>
+          <div className="mt-3 text-3xl font-semibold tracking-tight text-black">{upcoming7d.length}</div>
+          <div className="mt-1 text-xs text-muted-foreground">next 7 days</div>
+        </Link>
+        <button
+          type="button"
+          onClick={() => setShowRatingTrend(true)}
+          className="block cursor-pointer rounded-2xl border border-border bg-card p-6 text-left shadow-soft transition-shadow hover:shadow-floating"
+        >
+          <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Avg Rating</div>
+          <div className="mt-3 text-3xl font-semibold tracking-tight text-black">{avgRating30 != null ? `${avgRating30.toFixed(1)}★` : "—"}</div>
+          <div className="mt-1 text-xs text-muted-foreground">last 30 days · view trend</div>
+        </button>
         <Link
           to="/teacher/financial"
           className="group block rounded-2xl border border-border bg-card p-6 shadow-soft transition-shadow hover:shadow-floating"
@@ -387,7 +483,17 @@ function TeacherDashboard() {
                     <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-secondary ${it.iconWrapClassName ?? ""}`}>
                       <Icon className={`h-4 w-4 ${glyphClass}`} />
                     </div>
-                    <div className="min-w-0 flex-1 text-sm text-foreground">{it.text}</div>
+                    <div className="min-w-0 flex-1 text-sm text-foreground">
+                      {it.chip && (
+                        <span
+                          className="mr-2 inline-flex items-center rounded-full px-1.5 py-0.5 align-middle text-[10px] font-semibold uppercase tracking-wider text-white"
+                          style={{ background: it.chip.color }}
+                        >
+                          {it.chip.label}
+                        </span>
+                      )}
+                      {it.text}
+                    </div>
                     {it.cta && (
                       it.cta.to ? (
                         <a
@@ -448,7 +554,7 @@ function TeacherDashboard() {
         <div>
           <SectionTitle>Complete your sessions</SectionTitle>
           <div className="space-y-3">
-            {upcoming.length === 0 && (
+            {upcoming.length === 0 && pendingClubEvents.length === 0 && (
               <Card><p className="text-sm text-muted-foreground">No sessions awaiting completion.</p></Card>
             )}
             {upcoming.map((s) => {
@@ -503,6 +609,35 @@ function TeacherDashboard() {
                         </PrimaryButton>
                       )
                     )}
+                  </div>
+                </Card>
+              );
+            })}
+            {pendingClubEvents.map((ev) => {
+              const meta = EVENT_KIND_META[ev.kind];
+              return (
+                <Card key={`club-${ev.id}`} className="flex flex-col gap-3 !p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-secondary">
+                      <SparklesIcon className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span
+                          className="rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white"
+                          style={{ background: meta.color }}
+                        >
+                          {meta.label}
+                        </span>
+                        <span className="truncate text-sm font-medium text-foreground">{ev.title}</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground">{fmt(ev.date)} · {ev.duration_minutes} min</div>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    <PrimaryButton onClick={() => openClubReport(ev)}>
+                      <FileEdit className="h-4 w-4" /> Fill Report
+                    </PrimaryButton>
                   </div>
                 </Card>
               );
@@ -628,6 +763,20 @@ function TeacherDashboard() {
           }
           mode={viewing.status === "completed" || viewing.status === "absent" ? "completed" : "ready"}
           onClose={() => setViewing(null)}
+        />
+      )}
+      {reportingClub && user && (
+        <ClubReportModal
+          event={reportingClub}
+          teacherId={user.id}
+          onClose={() => setReportingClub(null)}
+        />
+      )}
+      {showRatingTrend && user && (
+        <RatingTrendModal
+          teacherId={user.id}
+          sessions={liveSessions}
+          onClose={() => setShowRatingTrend(false)}
         />
       )}
     </div>

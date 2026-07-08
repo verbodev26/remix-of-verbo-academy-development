@@ -24,6 +24,8 @@ import { SessionDetailsModal } from "@/components/verbo/SessionDetailsModal";
 import { CantAttendModal } from "@/components/verbo/CantAttendModal";
 import { subscribeStrikes } from "@/lib/strikes-store";
 import { addReleaseRequest, type Club } from "@/lib/clubs-store";
+import { ClubReportModal, type ClubReportEventInput } from "@/components/verbo/ClubReportModal";
+import { getClubReport, subscribeClubReports } from "@/lib/club-reports-store";
 
 export const Route = createFileRoute("/teacher/calendar")({ component: Page });
 
@@ -43,6 +45,7 @@ function Page() {
   const [cancelling, setCancelling] = useState<ExtSession | null>(null);
   const [clubModal, setClubModal] = useState<Club | null>(null);
   const [releaseFor, setReleaseFor] = useState<Club | null>(null);
+  const [reportingClub, setReportingClub] = useState<ClubReportEventInput | null>(null);
   const [, tick] = useState(0);
 
   useEffect(() => {
@@ -53,9 +56,10 @@ function Page() {
     const u2 = subscribeLessonPlans(() => setPlans(loadLessonPlans()));
     const u3 = subscribeLevels(() => setLevels(loadLevels()));
     const u4 = subscribeStrikes(() => tick((n) => n + 1));
+    const u5 = subscribeClubReports(() => tick((n) => n + 1));
     const onWorkshops = (e: StorageEvent) => { if (e.key === WORKSHOPS_KEY) tick((n) => n + 1); };
     if (typeof window !== "undefined") window.addEventListener("storage", onWorkshops);
-    return () => { u1(); u2(); u3(); u4(); if (typeof window !== "undefined") window.removeEventListener("storage", onWorkshops); };
+    return () => { u1(); u2(); u3(); u4(); u5(); if (typeof window !== "undefined") window.removeEventListener("storage", onWorkshops); };
   }, []);
 
   // Build calendar events (classes + workshops + clubs) via the shared adapter.
@@ -92,10 +96,35 @@ function Page() {
   const handleEventClick = (ev: CalendarEvent) => {
     // Clubs — quick modal (Join Club / Can't Attend).
     if (ev.kind === "insight" || ev.kind === "book_club") {
-      if (ev.club) setClubModal(ev.club);
+      const end = +new Date(ev.date) + ev.duration_minutes * 60_000;
+      const alreadyReported = !!getClubReport(ev.id);
+      const canReport = end <= Date.now() && !alreadyReported && ev.status !== "cancelled";
+      if (canReport) {
+        setReportingClub({
+          id: ev.id,
+          type: ev.kind === "book_club" ? "book" : "insight",
+          title: ev.title,
+          date: ev.date,
+          enrolled_names: ev.enrolled_names ?? [],
+        });
+      } else if (ev.club) {
+        setClubModal(ev.club);
+      }
       return;
     }
-    if (ev.kind === "spotlight") return;
+    if (ev.kind === "spotlight") {
+      const end = +new Date(ev.date) + ev.duration_minutes * 60_000;
+      if (end <= Date.now() && !getClubReport(ev.id)) {
+        setReportingClub({
+          id: ev.id,
+          type: "spotlight",
+          title: ev.title,
+          date: ev.date,
+          enrolled_names: ev.enrolled_names ?? [],
+        });
+      }
+      return;
+    }
 
     if (!ev.session) return;
     const s = ev.session;
@@ -241,6 +270,14 @@ function Page() {
             setReleaseFor(null);
             toast.success("Release request submitted for admin approval");
           }}
+        />
+      )}
+
+      {reportingClub && user && (
+        <ClubReportModal
+          event={reportingClub}
+          teacherId={user.id}
+          onClose={() => setReportingClub(null)}
         />
       )}
     </div>
