@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { SESSIONS, ASSIGNMENTS, USERS, studentsOfTeacher, userById, type Session, type SessionStatus, type Level } from "@/lib/mock-data";
 import { Card, GhostButton, MetricCard, Pill, PrimaryButton, SectionTitle } from "@/components/verbo/ui";
-import { CalendarClock, FileEdit, X, Lock, Plus, Trash2, Download, CheckCircle2, Mic, PenLine, Ear, BookOpen, ChevronRight, Video, Star, AlertTriangle, Trophy, CalendarDays, Wallet, Sparkles as SparklesIcon, GraduationCap, type LucideIcon } from "lucide-react";
+import { CalendarClock, FileEdit, X, Lock, Plus, Trash2, Download, CheckCircle2, Mic, PenLine, Ear, BookOpen, ChevronRight, Video, Star, AlertTriangle, AlertCircle, Trophy, CalendarDays, Wallet, Sparkles as SparklesIcon, GraduationCap, type LucideIcon } from "lucide-react";
 import { savePerformance, type PerformanceRating } from "@/lib/performance-store";
 import { MACRO_SKILLS as SHARED_MACRO_SKILLS, skillKey as sharedSkillKey, type BaseKey as SharedBaseKey } from "@/lib/skills-taxonomy";
 import { submitSessionReport, updateSession, loadSessions, subscribeSessions, type ExtSession } from "@/lib/sessions-store";
@@ -146,7 +146,7 @@ function TeacherDashboard() {
   const strikes = teacherUser ? activeStrikeCount(teacherUser.id) : 0;
 
   // ---- Needs Your Attention items ----
-  type AttentionItem = { id: string; icon: LucideIcon; text: string; tone: "warning" | "danger" | "info"; cta?: { label: string; to?: string; onClick?: () => void; search?: Record<string, string> } };
+  type AttentionItem = { id: string; icon: LucideIcon; text: string; tone: "warning" | "danger" | "info"; iconClassName?: string; iconWrapClassName?: string; cta?: { label: string; to?: string; onClick?: () => void; search?: Record<string, string> } };
   const attention: AttentionItem[] = [];
 
   // (a) Sessions past their end with no report submitted.
@@ -164,9 +164,24 @@ function TeacherDashboard() {
     const deadline = end + REPORT_WINDOW_MS;
     const overdue = now > deadline;
     const who = s.group_id ? groupById(s.group_id)?.name ?? "Group" : userById(s.student_id)?.name ?? "Session";
+    const remainingMs = deadline - now;
+    const H = 3_600_000;
+    let icon: LucideIcon = FileEdit;
+    let iconClassName = "text-emerald-600";
+    let iconWrapClassName: string | undefined;
+    if (overdue) {
+      icon = AlertCircle;
+      iconClassName = "text-red-600 animate-report-glow";
+    } else if (remainingMs < 8 * H) {
+      iconClassName = "text-red-600";
+    } else if (remainingMs < 15 * H) {
+      iconClassName = "text-amber-500";
+    }
     attention.push({
       id: `report-${s.id}`,
-      icon: FileEdit,
+      icon,
+      iconClassName,
+      iconWrapClassName,
       tone: overdue ? "danger" : "warning",
       text: overdue
         ? `Session Report overdue — ${who} (${fmt(s.date_time)})`
@@ -366,10 +381,11 @@ function TeacherDashboard() {
                   it.tone === "danger" ? "text-destructive"
                   : it.tone === "warning" ? "text-amber-600"
                   : "text-accent";
+                const glyphClass = it.iconClassName ?? tone;
                 return (
                   <li key={it.id} className="flex flex-wrap items-center gap-3 px-6 py-3.5">
-                    <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-secondary ${tone}`}>
-                      <Icon className="h-4 w-4" />
+                    <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-secondary ${it.iconWrapClassName ?? ""}`}>
+                      <Icon className={`h-4 w-4 ${glyphClass}`} />
                     </div>
                     <div className="min-w-0 flex-1 text-sm text-foreground">{it.text}</div>
                     {it.cta && (
