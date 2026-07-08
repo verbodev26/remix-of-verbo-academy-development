@@ -149,17 +149,52 @@ export function updateInternalUser(
   return { ok: true };
 }
 
+const T_OVERRIDES_KEY = "verbo:teacher-profile-overrides";
+const S_OVERRIDES_KEY = "verbo:student-profile-overrides";
+
+function writeProfileOverride(key: string, id: string, patch: Record<string, unknown>) {
+  if (typeof window === "undefined") return;
+  try {
+    const raw = localStorage.getItem(key);
+    const map = raw ? JSON.parse(raw) : {};
+    map[id] = { ...(map[id] || {}), ...patch };
+    localStorage.setItem(key, JSON.stringify(map));
+  } catch { /* noop */ }
+}
+
+// A user is "deactivated" when:
+// - teacher whose teacher_status === "frozen" (same freeze used by strikes & Teachers page)
+// - student whose status === "suspended" (same suspend used by Students page)
+// - internal admin flagged in the override map
 export function isUserDeactivated(userId: string): boolean {
+  const u = USERS.find((x) => x.id === userId);
+  if (!u) return false;
+  if (u.role === "teacher") return (u.teacher_status ?? "active") === "frozen";
+  if (u.role === "student") return (u.status ?? "active") === "suspended";
   const st = readStatus();
   return st[userId]?.status === "deactivated";
 }
 
 export function setUserDeactivated(userId: string, deactivated: boolean) {
-  const st = readStatus();
-  if (deactivated) st[userId] = { status: "deactivated" };
-  else delete st[userId];
-  writeStatus(st);
   const u = USERS.find((x) => x.id === userId);
-  if (u) u.status = deactivated ? "suspended" : "active";
+  if (!u) return;
+
+  if (u.role === "teacher") {
+    // Reuse the Teachers freeze/reactivate flow — same field, same override key.
+    const next = deactivated ? "frozen" : "active";
+    u.teacher_status = next;
+    writeProfileOverride(T_OVERRIDES_KEY, userId, { teacher_status: next });
+  } else if (u.role === "student") {
+    // Reuse the Students suspend flow.
+    const next = deactivated ? "suspended" : "active";
+    u.status = next;
+    writeProfileOverride(S_OVERRIDES_KEY, userId, { status: next });
+  } else {
+    // Internal admin — no equivalent freeze page, use the local override map.
+    const st = readStatus();
+    if (deactivated) st[userId] = { status: "deactivated" };
+    else delete st[userId];
+    writeStatus(st);
+  }
   emit();
 }
