@@ -48,6 +48,16 @@ export function SessionDetailsModal({
             <Info icon={<CalendarClock className="h-3.5 w-3.5" />} label="Date" value={fmtDate(session.date_time)} />
             <Info icon={<CalendarClock className="h-3.5 w-3.5" />} label="Time" value={`${fmtTime(session.date_time)} · ${session.duration_minutes} min`} />
           </div>
+          {coverageNote && coverageNote.trim() && (
+            <div className="rounded-lg border border-accent/40 bg-accent/10 px-3 py-2.5">
+              <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-accent">
+                <NotebookPen className="h-3.5 w-3.5" /> Coverage Notes from titular teacher
+              </div>
+              <p className="mt-1.5 whitespace-pre-wrap text-sm text-foreground">
+                {coverageNote}
+              </p>
+            </div>
+          )}
           <div>
             <div className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Comments</div>
             <div className="whitespace-pre-wrap rounded-lg border border-border bg-secondary/40 px-3 py-2.5 text-sm text-foreground">
