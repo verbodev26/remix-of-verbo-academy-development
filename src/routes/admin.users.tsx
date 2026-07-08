@@ -239,7 +239,7 @@ function CreateUserModal({ onClose }: { onClose: () => void }) {
         </div>
         <div className="flex justify-end gap-2 border-t border-border px-5 py-3">
           <GhostButton onClick={onClose}>Cancel</GhostButton>
-          <PrimaryButton onClick={submit}>Create user</PrimaryButton>
+          <PrimaryButton onClick={submit} disabled={!canSubmit}>Create user</PrimaryButton>
         </div>
       </div>
     </div>
