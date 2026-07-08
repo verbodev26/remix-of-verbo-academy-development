@@ -554,7 +554,7 @@ function TeacherDashboard() {
         <div>
           <SectionTitle>Complete your sessions</SectionTitle>
           <div className="space-y-3">
-            {upcoming.length === 0 && (
+            {upcoming.length === 0 && pendingClubEvents.length === 0 && (
               <Card><p className="text-sm text-muted-foreground">No sessions awaiting completion.</p></Card>
             )}
             {upcoming.map((s) => {
