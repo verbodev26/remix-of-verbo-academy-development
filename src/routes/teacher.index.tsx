@@ -811,6 +811,7 @@ function TeacherDashboard() {
             : userById(viewing.student_id)?.name ?? "Session"
           }
           mode={viewing.status === "completed" || viewing.status === "absent" ? "completed" : "ready"}
+          coverageNote={getCoverageNoteForStudent(viewing.student_id)}
           onClose={() => setViewing(null)}
         />
       )}
