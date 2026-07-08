@@ -216,7 +216,7 @@ export function buildActivityLog(): ActivityEntry[] {
         action: `Financial adjustment (${money(a.amount)})`,
         detail: `${t.name} — ${a.reason}`,
         timestamp: a.date,
-        actorId: null, actorName: "System", actorRole: "admin",
+        actorId: null, actorName: "Admin", actorRole: "admin",
         personId: t.id,
       });
     }
