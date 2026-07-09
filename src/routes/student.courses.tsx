@@ -54,6 +54,8 @@ import {
   subscribeEvents,
   type LearningPathEvent,
 } from "@/lib/learning-path-events";
+import { groupsByStudentId } from "@/lib/groups-store";
+
 
 export const Route = createFileRoute("/student/courses")({ component: Page });
 
