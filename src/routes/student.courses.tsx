@@ -119,7 +119,10 @@ function computeLevelStates(
         ...base,
         kind: "locked_not_contracted",
         readOnly: false,
-        message: "Not included in your current plan — contact your advisor to upgrade",
+        message: isGroupMember
+          ? "Not included in your group's plan — contact your admin to expand access"
+          : "Not included in your current plan — contact your advisor to upgrade",
+
       };
     }
     if (completion[i]) {
