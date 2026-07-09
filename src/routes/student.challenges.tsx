@@ -148,17 +148,24 @@ const BADGES: BadgeDef[] = [
 function Page() {
   const { user } = useAuth();
   const [challenges, setChallenges] = useState<Challenge[]>(loadChallenges);
+  const [flashList, setFlashList] = useState<FlashChallenge[]>(loadFlashChallenges);
+  const [flashConfig, setFlashConfig] = useState(loadFlashConfig);
   const [tick, setTick] = useState(0); // re-render on student profile mutations
   const [difficulty, setDifficulty] = useState<DifficultyId | null>(null);
   const [category, setCategory] = useState<string | "all">("all");
   const [open, setOpen] = useState<Challenge | null>(null);
   const [shareFor, setShareFor] = useState<Challenge | null>(null);
+  const [mystery, setMystery] = useState<{ opening: boolean; reveal: FlashChallenge | null; blocked: boolean }>({ opening: false, reveal: null, blocked: false });
 
   useEffect(() => {
     setChallenges(loadChallenges());
+    setFlashList(loadFlashChallenges());
+    setFlashConfig(loadFlashConfig());
     const un1 = subscribeChallenges(() => setChallenges(loadChallenges()));
     const un2 = subscribeStudents(() => setTick((t) => t + 1));
-    return () => { un1(); un2(); };
+    const un3 = subscribeFlashChallenges(() => setFlashList(loadFlashChallenges()));
+    const un4 = subscribeFlashConfig(() => setFlashConfig(loadFlashConfig()));
+    return () => { un1(); un2(); un3(); un4(); };
   }, []);
 
   if (!user) return null;
