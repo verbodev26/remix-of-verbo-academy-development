@@ -87,7 +87,7 @@ function Page() {
       ) : tab === "lightning" ? (
         <LightningTab />
       ) : (
-        <ComingSoon title="Season" />
+        <SeasonTab />
       )}
     </div>
   );
