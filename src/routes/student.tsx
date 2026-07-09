@@ -31,7 +31,7 @@ function StudentLayout() {
       { to: "/student/sessions", label: "Live Sessions" },
       isVIP
         ? { to: "/student/my-course", label: "My Course" }
-        : { to: "/student/courses", label: "Courses" },
+        : { to: "/student/courses", label: "Learning Path" },
       { to: "/student/resources", label: "Resources" },
       { to: "/student/challenges", label: "Challenges" },
     ];
