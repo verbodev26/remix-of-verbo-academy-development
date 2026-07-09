@@ -64,6 +64,10 @@ export interface User {
    *  challenge in the same day. */
   last_lightning_completed_at?: string | null;
   lightning_completions?: number;
+  /** Verbo Flash Seasons — per-season last-open timestamps and completion
+   *  counters, keyed by season.id. Independent from Mystery Box and Lightning. */
+  last_season_opened_at?: Record<string, string>;
+  season_completions?: Record<string, number>;
   // ----- Product-type branch (Register Student flow) -----
   // "performance" is the classic Performance Sessions student. "workshops"
   // and "insights" are standalone customers who only bought that add-on and

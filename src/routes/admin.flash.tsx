@@ -1,8 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Card, GhostButton, PrimaryButton, Pill } from "@/components/verbo/ui";
-import { ComingSoon } from "@/components/verbo/ComingSoon";
-import { Plus, Trash2, X, Pencil, Link2, Lock, Zap, Package, Gift } from "lucide-react";
+import { Plus, Trash2, X, Pencil, Link2, Lock, Zap, Package, Gift, Sparkles } from "lucide-react";
 import {
   type FlashChallenge,
   type FlashProductId,
@@ -23,6 +22,15 @@ import {
   subscribeLightning,
   activateLightning,
   endLightningEarly,
+  type FlashSeason,
+  type FontPreset,
+  FONT_PRESET_ORDER,
+  fontFamilyFor,
+  ensureGoogleFont,
+  loadSeasons,
+  subscribeSeasons,
+  upsertSeason,
+  deleteSeason,
 } from "@/lib/flash-challenges-store";
 import {
   loadCategories,
@@ -79,7 +87,7 @@ function Page() {
       ) : tab === "lightning" ? (
         <LightningTab />
       ) : (
-        <ComingSoon title="Season" />
+        <SeasonTab />
       )}
     </div>
   );
@@ -686,6 +694,254 @@ function LightningTab() {
           onSave={(c) => { save(c); setModal(null); }}
         />
       )}
+    </div>
+  );
+}
+
+/* -------------------- Season tab -------------------- */
+
+function SeasonTab() {
+  const [list, setList] = useState<FlashSeason[]>(loadSeasons);
+  const [modal, setModal] = useState<{ mode: "create" | "edit"; season?: FlashSeason } | null>(null);
+
+  useEffect(() => {
+    setList(loadSeasons());
+    return subscribeSeasons(() => setList(loadSeasons()));
+  }, []);
+
+  // Preload fonts for active seasons so previews render with the right family.
+  useEffect(() => {
+    list.forEach((s) => ensureGoogleFont(fontFamilyFor(s)));
+  }, [list]);
+
+  const del = (s: FlashSeason) => {
+    if (!confirm(`Delete "${s.display_name}"? This cannot be undone.`)) return;
+    deleteSeason(s.id);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-muted-foreground">
+          {list.length} Season{list.length === 1 ? "" : "s"} · {list.filter((s) => s.active).length} active
+        </div>
+        <GhostButton onClick={() => setModal({ mode: "create" })}>
+          <Plus className="h-3.5 w-3.5" /> Create Season
+        </GhostButton>
+      </div>
+
+      {list.length === 0 ? (
+        <Card>
+          <div className="flex flex-col items-center gap-2 py-10 text-center text-sm text-muted-foreground">
+            <Sparkles className="h-8 w-8 text-muted-foreground/60" />
+            No Seasons yet.
+          </div>
+        </Card>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {list.map((s) => (
+            <div key={s.id} className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+              <div
+                className="relative flex h-32 items-center justify-center"
+                style={{
+                  background: s.theme_image_url
+                    ? `center / cover no-repeat url(${s.theme_image_url})`
+                    : s.accent_color
+                    ? `linear-gradient(135deg, ${s.accent_color}, rgba(0,0,0,0.15))`
+                    : "linear-gradient(135deg, #94a3b8, #64748b)",
+                }}
+              >
+                <div className="absolute inset-0 bg-black/25" />
+                <div
+                  className="relative text-xl font-bold tracking-tight text-white drop-shadow"
+                  style={{ fontFamily: `"${fontFamilyFor(s)}", system-ui, sans-serif` }}
+                >
+                  {s.display_name}
+                </div>
+                <span className={`absolute right-3 top-3 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${s.active ? "bg-emerald-500 text-white" : "bg-white/80 text-slate-700"}`}>
+                  {s.active ? "Active" : "Inactive"}
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-2 p-4">
+                <div>
+                  <div className="text-sm font-semibold text-foreground">{s.display_name}</div>
+                  <div className="text-[11px] text-muted-foreground">🏅 {s.badge_name}</div>
+                </div>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setModal({ mode: "edit", season: s })}
+                    className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-[#7e22ce]"
+                    aria-label="Edit"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => del(s)}
+                    className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-destructive"
+                    aria-label="Delete"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {modal && (
+        <SeasonModal
+          editing={modal.mode === "edit" ? modal.season : undefined}
+          onClose={() => setModal(null)}
+          onSave={(s) => { upsertSeason(s); setModal(null); }}
+        />
+      )}
+    </div>
+  );
+}
+
+function SeasonModal({
+  editing,
+  onClose,
+  onSave,
+}: {
+  editing?: FlashSeason;
+  onClose: () => void;
+  onSave: (s: FlashSeason) => void;
+}) {
+  const isEdit = !!editing;
+  const [displayName, setDisplayName] = useState(editing?.display_name ?? "");
+  const [themeImageUrl, setThemeImageUrl] = useState(editing?.theme_image_url ?? "");
+  const [accentColor, setAccentColor] = useState(editing?.accent_color ?? "#7e22ce");
+  const [fontPreset, setFontPreset] = useState<FontPreset>(editing?.font_preset ?? "Festive");
+  const [customFont, setCustomFont] = useState(editing?.custom_font_name ?? "");
+  const [active, setActive] = useState<boolean>(editing?.active ?? false);
+
+  const family = fontFamilyFor({ font_preset: fontPreset, custom_font_name: customFont });
+  useEffect(() => { ensureGoogleFont(family); }, [family]);
+
+  const handleSave = () => {
+    const name = displayName.trim();
+    if (!name) return;
+    const id = editing?.id ?? `season-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}-${Date.now().toString(36)}`;
+    onSave({
+      id,
+      display_name: name,
+      theme_image_url: themeImageUrl.trim() || undefined,
+      accent_color: accentColor || undefined,
+      font_preset: fontPreset,
+      custom_font_name: fontPreset === "Custom" ? customFont.trim() || undefined : undefined,
+      active,
+      badge_name: `${name} Challenger`,
+      created_at: editing?.created_at ?? new Date().toISOString(),
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm" onClick={onClose}>
+      <div className="w-full max-w-xl overflow-hidden rounded-2xl border border-border bg-card shadow-elevated" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="flex items-start justify-between gap-4 p-6 text-white"
+          style={{
+            background: themeImageUrl
+              ? `center / cover no-repeat url(${themeImageUrl}), linear-gradient(135deg, ${accentColor}, #111)`
+              : `linear-gradient(135deg, ${accentColor}, #111827)`,
+          }}
+        >
+          <div>
+            <div className="text-xs uppercase tracking-[0.18em] text-white/80">Verbo Flash · Season</div>
+            <div
+              className="mt-1 text-lg font-semibold tracking-tight drop-shadow"
+              style={{ fontFamily: `"${family}", system-ui, sans-serif` }}
+            >
+              {displayName || (isEdit ? "Edit Season" : "New Season")}
+            </div>
+            <div className="mt-1 text-xs text-white/80">🏅 Badge: {(displayName || "…") + " Challenger"}</div>
+          </div>
+          <button onClick={onClose} className="rounded-md p-1 text-white/80 hover:bg-white/10 hover:text-white"><X className="h-4 w-4" /></button>
+        </div>
+        <div className="space-y-4 p-6">
+          <Field label="Display Name">
+            <input
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              className={inputCls}
+              placeholder="e.g. Halloween"
+              autoFocus
+            />
+            <div className="mt-1 text-[11px] text-muted-foreground">
+              Shown to students exactly as typed — must be in English.
+            </div>
+          </Field>
+
+          <Field label="Theme Image / GIF URL (optional)">
+            <input
+              value={themeImageUrl}
+              onChange={(e) => setThemeImageUrl(e.target.value)}
+              className={inputCls}
+              placeholder="https://... (image or .gif)"
+            />
+          </Field>
+
+          <Field label="Accent Color">
+            <div className="flex items-center gap-3">
+              <input
+                type="color"
+                value={accentColor}
+                onChange={(e) => setAccentColor(e.target.value)}
+                className="h-10 w-16 cursor-pointer rounded-lg border border-border bg-background"
+              />
+              <input
+                value={accentColor}
+                onChange={(e) => setAccentColor(e.target.value)}
+                className={inputCls}
+                placeholder="#7e22ce"
+              />
+            </div>
+          </Field>
+
+          <Field label="Typography">
+            <select
+              value={fontPreset}
+              onChange={(e) => setFontPreset(e.target.value as FontPreset)}
+              className={inputCls}
+            >
+              {FONT_PRESET_ORDER.map((p) => (
+                <option key={p} value={p}>{p}</option>
+              ))}
+            </select>
+            {fontPreset === "Custom" && (
+              <input
+                value={customFont}
+                onChange={(e) => setCustomFont(e.target.value)}
+                className={`${inputCls} mt-2`}
+                placeholder="Google Font name (e.g. Bebas Neue)"
+              />
+            )}
+          </Field>
+
+          <label className="flex items-start gap-3 rounded-lg border border-border bg-secondary/30 px-3 py-2.5 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={active}
+              onChange={(e) => setActive(e.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded border-border text-[#7e22ce] focus:ring-[#7e22ce]"
+            />
+            <span className="flex-1">
+              <span className="block text-xs font-semibold text-foreground">Active</span>
+              <span className="mt-0.5 block text-[11px] text-muted-foreground">
+                Turning this on shows it to students immediately. No countdown — it stays active until you turn it off.
+              </span>
+            </span>
+          </label>
+        </div>
+        <div className="flex items-center justify-end gap-3 border-t border-border bg-secondary/30 p-4">
+          <GhostButton onClick={onClose}>Cancel</GhostButton>
+          <PrimaryButton disabled={!displayName.trim()} onClick={handleSave}>
+            {isEdit ? "Save Changes" : "Save Season"}
+          </PrimaryButton>
+        </div>
+      </div>
     </div>
   );
 }
