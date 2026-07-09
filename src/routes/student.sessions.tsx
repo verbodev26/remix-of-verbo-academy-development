@@ -175,7 +175,16 @@ function Page() {
           onClose={() => setSpotlightOpen(false)}
         />
       )}
+
+      {clubModal && (
+        <ClubReservationModal
+          club={clubModal}
+          studentId={user.id}
+          onClose={() => setClubModal(null)}
+        />
+      )}
     </div>
+
   );
 }
 
