@@ -162,16 +162,22 @@ function Page() {
   const [open, setOpen] = useState<Challenge | null>(null);
   const [shareFor, setShareFor] = useState<Challenge | null>(null);
   const [mystery, setMystery] = useState<{ opening: boolean; reveal: FlashChallenge | null; blocked: boolean }>({ opening: false, reveal: null, blocked: false });
+  const [lightning, setLightning] = useState<LightningState>(loadLightning);
+  const [lightningOpen, setLightningOpen] = useState<FlashChallenge | null>(null);
+  const [nowTick, setNowTick] = useState(Date.now());
 
   useEffect(() => {
     setChallenges(loadChallenges());
     setFlashList(loadFlashChallenges());
     setFlashConfig(loadFlashConfig());
+    setLightning(loadLightning());
     const un1 = subscribeChallenges(() => setChallenges(loadChallenges()));
     const un2 = subscribeStudents(() => setTick((t) => t + 1));
     const un3 = subscribeFlashChallenges(() => setFlashList(loadFlashChallenges()));
     const un4 = subscribeFlashConfig(() => setFlashConfig(loadFlashConfig()));
-    return () => { un1(); un2(); un3(); un4(); };
+    const un5 = subscribeLightning(() => setLightning(loadLightning()));
+    const timer = setInterval(() => setNowTick(Date.now()), 1000);
+    return () => { un1(); un2(); un3(); un4(); un5(); clearInterval(timer); };
   }, []);
 
   if (!user) return null;
