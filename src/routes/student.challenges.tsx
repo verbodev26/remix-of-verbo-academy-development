@@ -1319,3 +1319,157 @@ function LightningRevealModal({
   );
 }
 
+/* -------------------------------------------------------------------------- */
+/* Season — cooldown + reveal modals (skinned per Season)                     */
+/* -------------------------------------------------------------------------- */
+function SeasonCooldownModal({ season, onClose }: { season: FlashSeason; onClose: () => void }) {
+  const accent = season.accent_color || "#7e22ce";
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={onClose}>
+      <div className="w-full max-w-sm overflow-hidden rounded-2xl border border-border bg-card p-6 text-center shadow-elevated" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl text-white"
+          style={{ background: `linear-gradient(135deg, ${accent}, #111)` }}
+        >
+          <Sparkles className="h-7 w-7" />
+        </div>
+        <p className="mt-4 text-sm font-medium text-foreground">
+          You've already opened this Season's challenge today — come back tomorrow!
+        </p>
+        <div className="mt-4 flex justify-center">
+          <GhostButton onClick={onClose}>Got it</GhostButton>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SeasonRevealModal({
+  season,
+  opening,
+  challenge,
+  hasPremiumAccess,
+  chosen,
+  completed,
+  onChoose,
+  onComplete,
+  onClose,
+}: {
+  season: FlashSeason;
+  opening: boolean;
+  challenge: FlashChallenge | null;
+  hasPremiumAccess: boolean;
+  chosen: boolean;
+  completed: boolean;
+  onChoose: () => void;
+  onComplete: () => void;
+  onClose: () => void;
+}) {
+  const locked = !!challenge?.premium && !hasPremiumAccess;
+  const accent = season.accent_color || "#7e22ce";
+  const family = fontFamilyFor(season);
+  const headerBg = season.theme_image_url
+    ? `center / cover no-repeat url(${season.theme_image_url}), linear-gradient(135deg, ${accent}, #111)`
+    : `linear-gradient(135deg, ${accent}, #111827)`;
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+      {challenge && !opening && <Confetti />}
+      <div className="relative w-full max-w-xl overflow-hidden rounded-2xl border border-border bg-card shadow-elevated">
+        <style>{`
+          @keyframes verbo-box-shake {
+            0%, 100% { transform: translateX(0) rotate(0); }
+            20% { transform: translateX(-6px) rotate(-8deg); }
+            40% { transform: translateX(6px) rotate(8deg); }
+            60% { transform: translateX(-4px) rotate(-6deg); }
+            80% { transform: translateX(4px) rotate(6deg); }
+          }
+          @media (prefers-reduced-motion: reduce) { .verbo-box-shake { animation: none !important; } }
+        `}</style>
+        <div className="relative flex items-start justify-between gap-4 p-6 text-white" style={{ background: headerBg }}>
+          <div className="absolute inset-0 bg-black/25" />
+          <div className="relative">
+            <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-white/90">
+              <Sparkles className="h-3.5 w-3.5" /> Verbo Flash · {season.display_name}
+            </div>
+            {challenge && !opening && (
+              <>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <CategoryBadge name={challenge.category} />
+                  {challenge.premium && <PremiumBadge />}
+                </div>
+                <div
+                  className="mt-2 text-base font-semibold tracking-tight drop-shadow"
+                  style={{ fontFamily: `"${family}", system-ui, sans-serif` }}
+                >
+                  {challenge.title}
+                </div>
+              </>
+            )}
+          </div>
+          <button onClick={onClose} className="relative rounded-md p-1 text-white/80 hover:bg-white/10 hover:text-white" aria-label="Close">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {opening || !challenge ? (
+          <div className="flex flex-col items-center justify-center gap-4 p-10">
+            <div
+              className="verbo-box-shake flex h-32 w-32 items-center justify-center rounded-2xl text-white shadow-elevated"
+              style={{ animation: "verbo-box-shake 0.5s ease-in-out infinite", background: `linear-gradient(135deg, ${accent}, #111)` }}
+            >
+              <Sparkles className="h-16 w-16" />
+            </div>
+            <p className="text-sm text-muted-foreground">Opening your {season.display_name} challenge…</p>
+          </div>
+        ) : (
+          <>
+            <div className="relative p-6">
+              <div className={locked ? "pointer-events-none select-none blur-sm" : ""}>
+                <p className="text-sm leading-relaxed text-foreground">
+                  {challenge.description || "No description available."}
+                </p>
+                {challenge.video_url && (
+                  <a
+                    href={challenge.video_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-4 inline-flex items-center gap-2 rounded-lg border border-border bg-secondary/50 px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary"
+                  >
+                    <Play className="h-3.5 w-3.5" /> Watch reference video
+                  </a>
+                )}
+              </div>
+              {locked && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-b-2xl bg-white/70 p-6 text-center backdrop-blur-md">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/15 text-amber-600 ring-2 ring-amber-400/40">
+                    <Lock className="h-6 w-6" />
+                  </span>
+                  <p className="max-w-sm text-sm font-medium text-foreground">
+                    This challenge is for Advance tier+. Upgrade your access level to access them.
+                  </p>
+                  <Link to="/student/access-levels" className="text-xs font-semibold underline underline-offset-4 hover:opacity-80" style={{ color: accent }}>
+                    Learn more
+                  </Link>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center justify-end gap-3 border-t border-border bg-secondary/30 p-4">
+              <GhostButton onClick={onClose}>Close</GhostButton>
+              {locked ? null : completed ? (
+                <Pill tone="success"><CheckCircle2 className="mr-1 h-3 w-3" /> Completed</Pill>
+              ) : chosen ? (
+                <SuccessButton onClick={onComplete}>
+                  <CheckCircle2 className="h-3.5 w-3.5" /> Mark as Completed
+                </SuccessButton>
+              ) : (
+                <PrimaryButton onClick={onChoose}>Let's do it!</PrimaryButton>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
