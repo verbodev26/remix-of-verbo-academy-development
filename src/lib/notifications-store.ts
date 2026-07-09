@@ -26,6 +26,9 @@ import { teacherStatus } from "./teacher-model";
 import { activeAnnouncements, ANN_EVENT } from "./announcements-store";
 import { loadFinancialIssues, FIN_ISSUES_EVENT } from "./financial-issues-store";
 import { REPORTS_KEY, REPORTS_EVENT, type StudentReport } from "./student-reports-store";
+import { ASSIGNMENTS } from "./mock-data";
+import { loadChallenges, CHALLENGES_EVENT } from "./challenges-store";
+import { STUDENTS_EVENT } from "./students-store";
 
 function readStudentReportsRaw(): StudentReport[] {
   if (typeof window === "undefined") return [];
@@ -45,6 +48,7 @@ export type NotificationKind =
   | "kpi_below_threshold"
   | "bonus_eligible"
   | "announcement"
+  | "student_challenge_selected"
   // admin-facing
   | "needs_substitute"
   | "release_request"
