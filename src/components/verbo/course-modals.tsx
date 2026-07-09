@@ -204,6 +204,7 @@ export function ActivityModal({ unitId, unitTitle, onClose }: { unitId: string; 
             </div>
           )}
 
+          {(type === "fill_gaps" || type === "read_complete") && (
             <div className="space-y-4">
               <Field label="Sentence / paragraph" hint="Use [blank] to mark each empty space.">
                 <textarea value={paragraph} onChange={(e) => setParagraph(e.target.value)} className={textareaCls} placeholder="She [blank] to the office every morning." />
