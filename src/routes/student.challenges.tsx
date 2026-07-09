@@ -441,6 +441,33 @@ function Page() {
         />
       )}
 
+      {/* ---------------- Lightning card ---------------- */}
+      {(["enterprise", "go", "international"] as const).includes(productId as FlashProductId)
+        && isLightningVisibleForStudents(lightning)
+        && lightning.product === productId && (() => {
+          const ch = flashList.find((c) => c.id === lightning.challenge_id);
+          if (!ch) return null;
+          const remaining = lightning.expires_at ? +new Date(lightning.expires_at) - nowTick : 0;
+          const isLive = lightning.status === "live" && remaining > 0;
+          const accepted = lightning.accepted_student_ids.includes(student.id);
+          const completed = hasCompletedChallenge(student.id, ch.id);
+          return (
+            <LightningCard
+              challenge={ch}
+              isLive={isLive}
+              remainingMs={remaining}
+              acceptedCount={lightning.accepted_student_ids.length}
+              accepted={accepted}
+              completed={completed}
+              onOpen={() => {
+                if (isLive && !accepted) acceptLightning(student.id);
+                setLightningOpen(ch);
+              }}
+            />
+          );
+        })()}
+
+
       <section>
         <div className="mb-4 flex items-end justify-between">
           <div>
