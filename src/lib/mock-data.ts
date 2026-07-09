@@ -43,7 +43,13 @@ export interface User {
   freeze_end?: string;
   // ----- Challenges (student) -----
   chosen_challenges?: { challenge_id: string; chosen_at: string }[];
-  completed_challenges?: { challenge_id: string; completed_at: string }[];
+  completed_challenges?: {
+    challenge_id: string;
+    completed_at: string;
+    shared_link?: string;
+    /** Timestamp of the FIRST time this result was shared. Persists on edits. */
+    shared_at?: string;
+  }[];
   last_completed_at?: string | null;
   current_streak?: number;
   longest_streak?: number;

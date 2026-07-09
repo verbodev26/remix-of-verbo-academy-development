@@ -108,13 +108,28 @@ export function hasCompletedChallenge(studentId: string, challengeId: string): b
   return (u?.completed_challenges ?? []).some((c) => c.challenge_id === challengeId);
 }
 
-/** Mark a challenge as completed. Idempotent + updates streak counters using
- *  the same "≤14 days keeps the streak alive" rule used elsewhere. */
-export function completeChallenge(studentId: string, challengeId: string): void {
+/** Milliseconds between allowed "Mark as Completed" actions per student. */
+export const COMPLETE_COOLDOWN_MS = 24 * 60 * 60 * 1000;
+
+/** Returns null if the student may complete a challenge now, or the number of
+ *  milliseconds remaining before the 24-hour cooldown expires. */
+export function completeCooldownRemaining(studentId: string): number | null {
   const u = USERS.find((x) => x.id === studentId);
-  if (!u) return;
+  if (!u?.last_completed_at) return null;
+  const elapsed = Date.now() - +new Date(u.last_completed_at);
+  const remaining = COMPLETE_COOLDOWN_MS - elapsed;
+  return remaining > 0 ? remaining : null;
+}
+
+/** Mark a challenge as completed. Idempotent + updates streak counters using
+ *  the same "≤14 days keeps the streak alive" rule used elsewhere. Enforces a
+ *  24-hour cooldown between completions — returns false if blocked. */
+export function completeChallenge(studentId: string, challengeId: string): boolean {
+  const u = USERS.find((x) => x.id === studentId);
+  if (!u) return false;
   const done = u.completed_challenges ?? [];
-  if (done.some((c) => c.challenge_id === challengeId)) return;
+  if (done.some((c) => c.challenge_id === challengeId)) return false;
+  if (completeCooldownRemaining(studentId) !== null) return false;
 
   const now = new Date();
   const nowIso = now.toISOString();
@@ -129,6 +144,38 @@ export function completeChallenge(studentId: string, challengeId: string): void 
     current_streak: nextCurrent,
     longest_streak: nextLongest,
   });
+  return true;
+}
+
+/** Set / update the shared_link on a completed-challenge entry. `shared_at` is
+ *  set exactly ONCE (the first time the link goes from empty → non-empty) and
+ *  is preserved on every subsequent edit so the teacher notification never
+ *  re-fires. */
+export function shareChallengeResult(
+  studentId: string,
+  challengeId: string,
+  link: string,
+): void {
+  const u = USERS.find((x) => x.id === studentId);
+  if (!u) return;
+  const list = u.completed_challenges ?? [];
+  const idx = list.findIndex((c) => c.challenge_id === challengeId);
+  if (idx < 0) return;
+  const trimmed = link.trim();
+  const prev = list[idx];
+  const next = [...list];
+  next[idx] = {
+    ...prev,
+    shared_link: trimmed || undefined,
+    shared_at: prev.shared_at ?? (trimmed ? new Date().toISOString() : undefined),
+  };
+  persistStudentPatch(studentId, { completed_challenges: next });
+}
+
+export function getSharedResult(studentId: string, challengeId: string): string {
+  const u = USERS.find((x) => x.id === studentId);
+  const entry = (u?.completed_challenges ?? []).find((c) => c.challenge_id === challengeId);
+  return entry?.shared_link ?? "";
 }
 
 
