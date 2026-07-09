@@ -49,6 +49,9 @@ import {
   rescheduleQuota,
 } from "@/lib/student-requests-store";
 import { isTeacherAvailableAt, findAvailableStartSlots } from "@/lib/availability-store";
+import { ClubReservationModal } from "@/components/verbo/ClubReservationModal";
+import type { Club } from "@/lib/clubs-store";
+
 
 export const Route = createFileRoute("/student/sessions")({ component: Page });
 
