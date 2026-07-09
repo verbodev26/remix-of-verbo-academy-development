@@ -625,6 +625,35 @@ function Page() {
         />
       )}
 
+      {seasonState?.blocked && (
+        <SeasonCooldownModal
+          season={seasonState.season}
+          onClose={() => setSeasonState(null)}
+        />
+      )}
+      {seasonState && (seasonState.opening || seasonState.reveal) && (
+        <SeasonRevealModal
+          season={seasonState.season}
+          opening={seasonState.opening}
+          challenge={seasonState.reveal}
+          hasPremiumAccess={hasPremiumAccess}
+          chosen={seasonState.reveal ? hasChosenChallenge(student.id, seasonState.reveal.id) : false}
+          completed={seasonState.reveal ? hasCompletedChallenge(student.id, seasonState.reveal.id) : false}
+          onChoose={() => { if (seasonState.reveal) chooseChallenge(student.id, seasonState.reveal.id); }}
+          onComplete={() => {
+            if (!seasonState.reveal) return;
+            const ok = completeSeasonChallenge(student.id, seasonState.reveal.id, seasonState.season.id);
+            if (ok) {
+              const c = seasonState.reveal;
+              setSeasonState(null);
+              setShareFor(c as unknown as Challenge);
+            }
+          }}
+          onClose={() => setSeasonState(null)}
+        />
+      )}
+
+
       {shareFor && (
         <ShareResultModal
           challenge={shareFor}
