@@ -614,11 +614,15 @@ function Page() {
 function VerboFlashSection({
   boxArtUrl,
   available,
+  activeSeasons,
   onOpen,
+  onOpenSeason,
 }: {
   boxArtUrl?: string;
   available: boolean;
+  activeSeasons: FlashSeason[];
   onOpen: () => void;
+  onOpenSeason: (season: FlashSeason) => void;
 }) {
   return (
     <section>
@@ -627,8 +631,8 @@ function VerboFlashSection({
           <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-muted-foreground">
             <Zap className="h-3.5 w-3.5 text-[#7e22ce]" /> Verbo Flash
           </div>
-          <h2 className="mt-1 text-base font-semibold tracking-tight text-foreground">Mystery Box</h2>
-          <p className="mt-1 text-xs text-muted-foreground">A surprise challenge waits inside. One box per day.</p>
+          <h2 className="mt-1 text-base font-semibold tracking-tight text-foreground">Mystery Box{activeSeasons.length > 0 ? " & Seasons" : ""}</h2>
+          <p className="mt-1 text-xs text-muted-foreground">A surprise challenge waits inside. One per day, per box.</p>
         </div>
       </div>
       <style>{`
@@ -668,6 +672,47 @@ function VerboFlashSection({
             </div>
           </div>
         </button>
+
+        {activeSeasons.map((s) => {
+          const accent = s.accent_color || "#7e22ce";
+          const family = fontFamilyFor(s);
+          return (
+            <button
+              key={s.id}
+              type="button"
+              onClick={() => onOpenSeason(s)}
+              className="group relative aspect-square overflow-hidden rounded-2xl border border-white/20 p-6 text-center text-white shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-elevated"
+              style={{
+                background: s.theme_image_url
+                  ? `center / cover no-repeat url(${s.theme_image_url})`
+                  : `linear-gradient(135deg, ${accent}, #111827)`,
+              }}
+            >
+              <div className="absolute inset-0 bg-black/30" />
+              <div className="relative flex h-full flex-col items-center justify-center gap-4">
+                <div
+                  className="verbo-box-wiggle flex h-32 w-32 items-center justify-center rounded-2xl bg-white/15 shadow-inner backdrop-blur-sm"
+                  style={{ animation: "verbo-box-wiggle 3.4s ease-in-out infinite", transformOrigin: "50% 90%" }}
+                >
+                  {s.theme_image_url ? (
+                    <img src={s.theme_image_url} alt={s.display_name} className="h-full w-full rounded-2xl object-cover" />
+                  ) : (
+                    <Sparkles className="h-16 w-16 drop-shadow-md" />
+                  )}
+                </div>
+                <div>
+                  <div
+                    className="text-lg font-semibold tracking-tight drop-shadow"
+                    style={{ fontFamily: `"${family}", system-ui, sans-serif` }}
+                  >
+                    {s.display_name}
+                  </div>
+                  <div className="mt-1 text-xs opacity-90">Tap to open</div>
+                </div>
+              </div>
+            </button>
+          );
+        })}
       </div>
     </section>
   );
