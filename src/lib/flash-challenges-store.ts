@@ -231,3 +231,129 @@ export function isLightningVisibleForStudents(state: LightningState): boolean {
   }
   return false;
 }
+
+/* -------------------- Seasons -------------------- */
+
+export type FontPreset = "Playful" | "Elegant" | "Spooky" | "Festive" | "Minimal" | "Custom";
+
+export interface FlashSeason {
+  id: string;
+  display_name: string; // shown to student, always English
+  theme_image_url?: string;
+  accent_color?: string;
+  font_preset: FontPreset;
+  custom_font_name?: string;
+  active: boolean;
+  badge_name: string; // auto: `${display_name} Challenger`
+  created_at: string;
+}
+
+export const FONT_PRESET_ORDER: FontPreset[] = [
+  "Playful", "Elegant", "Spooky", "Festive", "Minimal", "Custom",
+];
+
+/** Maps a font preset to the Google Font family it loads. Custom uses
+ *  the user-supplied `custom_font_name`. */
+export const FONT_PRESET_FAMILY: Record<Exclude<FontPreset, "Custom">, string> = {
+  Playful: "Fredoka",
+  Elegant: "Playfair Display",
+  Spooky: "Creepster",
+  Festive: "Pacifico",
+  Minimal: "Inter",
+};
+
+export function fontFamilyFor(season: Pick<FlashSeason, "font_preset" | "custom_font_name">): string {
+  if (season.font_preset === "Custom") return (season.custom_font_name || "Inter").trim();
+  return FONT_PRESET_FAMILY[season.font_preset];
+}
+
+const _loadedFonts = new Set<string>();
+export function ensureGoogleFont(family: string) {
+  if (typeof document === "undefined") return;
+  const key = family.trim();
+  if (!key || _loadedFonts.has(key)) return;
+  _loadedFonts.add(key);
+  const href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(key).replace(/%20/g, "+")}:wght@400;600;700&display=swap`;
+  const link = document.createElement("link");
+  link.rel = "stylesheet";
+  link.href = href;
+  link.dataset.verboFont = key;
+  document.head.appendChild(link);
+}
+
+export const SEASONS_KEY = "verbo:flash-seasons";
+export const SEASONS_EVENT = "verbo:flash-seasons-updated";
+
+const SEASON_SEEDS: string[] = [
+  "Halloween",
+  "New Year",
+  "Christmas",
+  "Black Friday",
+  "Thanksgiving",
+  "Independence Day",
+  "Valentine's Day",
+  "Day of the Dead",
+  "Three Kings' Day",
+  "Spring",
+  "Summer",
+  "Fall",
+  "Winter",
+];
+
+function makeSeasonId(name: string): string {
+  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  return `season-${slug}`;
+}
+
+function seedSeasons(): FlashSeason[] {
+  const now = new Date().toISOString();
+  return SEASON_SEEDS.map((name) => ({
+    id: makeSeasonId(name),
+    display_name: name,
+    font_preset: "Festive" as FontPreset,
+    active: false,
+    badge_name: `${name} Challenger`,
+    created_at: now,
+  }));
+}
+
+export function loadSeasons(): FlashSeason[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(SEASONS_KEY);
+    if (raw) return JSON.parse(raw) as FlashSeason[];
+  } catch { /* noop */ }
+  const seeded = seedSeasons();
+  try { localStorage.setItem(SEASONS_KEY, JSON.stringify(seeded)); } catch { /* noop */ }
+  return seeded;
+}
+
+export function persistSeasons(list: FlashSeason[]) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(SEASONS_KEY, JSON.stringify(list));
+    window.dispatchEvent(new CustomEvent(SEASONS_EVENT));
+  } catch { /* noop */ }
+}
+
+export function subscribeSeasons(cb: () => void): () => void {
+  if (typeof window === "undefined") return () => {};
+  const onStorage = (e: StorageEvent) => { if (e.key === SEASONS_KEY) cb(); };
+  window.addEventListener(SEASONS_EVENT, cb);
+  window.addEventListener("storage", onStorage);
+  return () => {
+    window.removeEventListener(SEASONS_EVENT, cb);
+    window.removeEventListener("storage", onStorage);
+  };
+}
+
+export function upsertSeason(s: FlashSeason) {
+  const list = loadSeasons();
+  const idx = list.findIndex((x) => x.id === s.id);
+  const next = idx >= 0 ? [...list.slice(0, idx), s, ...list.slice(idx + 1)] : [...list, s];
+  persistSeasons(next);
+}
+
+export function deleteSeason(id: string) {
+  persistSeasons(loadSeasons().filter((s) => s.id !== id));
+}
