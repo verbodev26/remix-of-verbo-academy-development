@@ -24,6 +24,7 @@ export interface User {
   access_plan?: "Core" | "Advance" | "Elite" | "Signature";
   contracted_levels?: string[]; // commercial level names from the product roadmap
   current_roadmap_level?: string; // level currently in progress
+  reopened_levels?: string[]; // completed levels reopened by admin for read-only review
   sessions_per_week?: number;
   session_duration?: number; // minutes
   reschedule_policy?: string; // preset label or "Custom"
