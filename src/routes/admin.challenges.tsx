@@ -423,6 +423,20 @@ function ChallengeModal({
           </select>
         </Field>
 
+        <label className="flex items-start gap-3 rounded-lg border border-border bg-secondary/30 px-3 py-2.5 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={premium}
+            onChange={(e) => setPremium(e.target.checked)}
+            className="mt-0.5 h-4 w-4 rounded border-border text-[#f38934] focus:ring-[#f38934]"
+          />
+          <span className="flex-1">
+            <span className="block text-xs font-semibold text-foreground">Premium (Advance / Elite only)</span>
+            <span className="mt-0.5 block text-[11px] text-muted-foreground">Restricts this challenge to students on Advance or Elite access plans.</span>
+          </span>
+        </label>
+
+
         <Field label="Attachment (optional)" hint="If left empty, no video is shown on the student's challenge card.">
           <div className="grid grid-cols-2 gap-2">
             <button
