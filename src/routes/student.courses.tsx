@@ -215,10 +215,12 @@ function Page() {
   const levels = product?.levels ?? [];
   const contracted = user?.contracted_levels ?? [];
   const reopened = user?.reopened_levels ?? [];
+  const isGroupMember = !!(user && groupsByStudentId().has(user.id));
   const states = useMemo(
-    () => computeLevelStates(levels, contracted, reopened, user?.id ?? ""),
-    [levels, contracted, reopened, user?.id, rev],
+    () => computeLevelStates(levels, contracted, reopened, user?.id ?? "", isGroupMember),
+    [levels, contracted, reopened, user?.id, rev, isGroupMember],
   );
+
 
   const onUnitCompleted = (levelId: string, unitId: string) => {
     // Record milestone events + potential level completion when unit passes.
