@@ -1031,6 +1031,7 @@ function StudentDetailModal({
   onEdit: () => void;
 }) {
   const [tab, setTab] = useState<Tab>("overview");
+  const [, forceTick] = useState(0);
   const [notes, setNotes] = useState(student.admin_notes ?? "");
   const [showLink, setShowLink] = useState(false);
   const [copied, setCopied] = useState(false);
