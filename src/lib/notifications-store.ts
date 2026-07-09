@@ -426,7 +426,7 @@ export function buildNotifications(role: Role, userId: string): Notification[] {
 const SOURCE_EVENTS = [
   SESSIONS_EVENT, CLUBS_EVENT, RELEASE_REQUESTS_EVENT,
   AVAIL_EVENT, STRIKES_EVENT, ANN_EVENT, NOTIF_EVENT,
-  REPORTS_EVENT, FIN_ISSUES_EVENT,
+  REPORTS_EVENT, FIN_ISSUES_EVENT, STUDENTS_EVENT, CHALLENGES_EVENT,
 ];
 
 function subscribe(cb: () => void): () => void {
