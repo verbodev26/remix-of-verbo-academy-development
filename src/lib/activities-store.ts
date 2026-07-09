@@ -21,6 +21,31 @@ export const EXERCISE_LABELS: Record<ExerciseType, string> = {
   match: "Match",
 };
 
+// ----- Categories (independent from Exercise Type) -----
+export type ActivityCategory = string; // free-string so admin can extend the list.
+
+export const MANDATORY_CATEGORIES = ["vocabulary", "grammar", "practice"] as const;
+export const OPTIONAL_CATEGORIES = ["reading", "writing", "pronunciation"] as const;
+export const DEFAULT_CATEGORIES: ActivityCategory[] = [
+  ...MANDATORY_CATEGORIES,
+  ...OPTIONAL_CATEGORIES,
+];
+export const CATEGORY_LABELS: Record<string, string> = {
+  vocabulary: "Vocabulary",
+  grammar: "Grammar",
+  practice: "Practice",
+  reading: "Reading",
+  writing: "Writing",
+  pronunciation: "Pronunciation",
+};
+export function categoryLabel(id?: ActivityCategory): string {
+  if (!id) return "Uncategorized";
+  return CATEGORY_LABELS[id] ?? id.slice(0, 1).toUpperCase() + id.slice(1);
+}
+export function isMandatoryCategory(id?: ActivityCategory): boolean {
+  return !!id && (MANDATORY_CATEGORIES as readonly string[]).includes(id);
+}
+
 export interface MatchItem {
   text: string;
   key: string;
@@ -33,6 +58,7 @@ export interface Activity {
   unit_id: string;
   name: string;
   type: ExerciseType;
+  category?: ActivityCategory;
   session_phase?: SessionPhase; // defaults to "pre" for legacy activities
   // fill_gaps / read_complete
   paragraph?: string;
@@ -50,6 +76,8 @@ export interface Activity {
 const ACTIVITIES_KEY = "verbo:activities";
 const COMPLETION_KEY = "verbo:unit-completion";
 const ATTEMPTS_KEY = "verbo:unit-attempts";
+const SCORES_KEY = "verbo:activity-scores";
+const MILESTONE_KEY = "verbo:milestone-unlocks";
 
 function safeRead<T>(k: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
@@ -62,9 +90,9 @@ function safeWrite(k: string, v: unknown) {
 }
 
 const SEED: Activity[] = [
-  { id: "act-seed-1", unit_id: "A1-U1", name: "Greeting basics", type: "fill_gaps", paragraph: "Hello, my [blank] is Sarah.", answer: "name" },
-  { id: "act-seed-2", unit_id: "A1-U1", name: "Pick the greeting", type: "read_select", prompt: "Morning at the office.", question: "Which greeting fits best?", options: ["Good night", "Good morning", "See you", "Bye"], correctIndex: 1 },
-  { id: "act-seed-3", unit_id: "A1-U1", name: "Say it out loud", type: "record", answer: "Nice to meet you." },
+  { id: "act-seed-1", unit_id: "A1-U1", name: "Greeting basics", type: "fill_gaps", category: "vocabulary", paragraph: "Hello, my [blank] is Sarah.", answer: "name" },
+  { id: "act-seed-2", unit_id: "A1-U1", name: "Pick the greeting", type: "read_select", category: "grammar", prompt: "Morning at the office.", question: "Which greeting fits best?", options: ["Good night", "Good morning", "See you", "Bye"], correctIndex: 1 },
+  { id: "act-seed-3", unit_id: "A1-U1", name: "Say it out loud", type: "record", category: "practice", answer: "Nice to meet you." },
 ];
 
 export function loadActivities(): Activity[] {
@@ -119,6 +147,92 @@ export function resetAttempts(unitId: string) {
   safeWrite(ATTEMPTS_KEY, a);
 }
 
+/* ---- Per-activity best scores ---- */
+export interface ActivityScore { best: number; attempts: number; lastAt: string }
+export function loadActivityScores(): Record<string, ActivityScore> {
+  return safeRead<Record<string, ActivityScore>>(SCORES_KEY, {});
+}
+export function recordActivityScore(activityId: string, score: number): ActivityScore {
+  const all = loadActivityScores();
+  const cur = all[activityId] ?? { best: 0, attempts: 0, lastAt: "" };
+  const next: ActivityScore = {
+    best: Math.max(cur.best, Math.round(score)),
+    attempts: cur.attempts + 1,
+    lastAt: new Date().toISOString(),
+  };
+  all[activityId] = next;
+  safeWrite(SCORES_KEY, all);
+  return next;
+}
+export function bestScoreFor(activityId: string): number {
+  return loadActivityScores()[activityId]?.best ?? 0;
+}
+
+/* ---- Milestone units (10 / 20 / 30) ---- */
+export function unitNumberOf(unitId: string): number {
+  const m = unitId.match(/-U(\d+)$/);
+  return m ? parseInt(m[1], 10) : 0;
+}
+export function isMilestoneUnit(unitId: string): boolean {
+  const n = unitNumberOf(unitId);
+  return n === 10 || n === 20 || n === 30;
+}
+function milestoneKey(studentId: string, unitId: string) { return `${studentId}::${unitId}`; }
+export function loadMilestoneUnlocks(): Record<string, boolean> {
+  return safeRead<Record<string, boolean>>(MILESTONE_KEY, {});
+}
+export function isMilestoneUnlocked(studentId: string, unitId: string): boolean {
+  return !!loadMilestoneUnlocks()[milestoneKey(studentId, unitId)];
+}
+export function setMilestoneUnlocked(studentId: string, unitId: string, on: boolean) {
+  const all = loadMilestoneUnlocks();
+  if (on) all[milestoneKey(studentId, unitId)] = true;
+  else delete all[milestoneKey(studentId, unitId)];
+  safeWrite(MILESTONE_KEY, all);
+}
+
+/* ---- Unit pass rule ----
+ * A unit is "passed" when every mandatory category present in that unit
+ * has at least one activity with best score ≥ 60. Units without any mandatory
+ * activity fall back to the legacy completion flag (admin override / seed).
+ */
+export function unitPassed(unitId: string): boolean {
+  const list = activitiesForUnit(unitId);
+  const scores = loadActivityScores();
+  const byCat = new Map<string, Activity[]>();
+  for (const a of list) {
+    if (!isMandatoryCategory(a.category)) continue;
+    const arr = byCat.get(a.category!) ?? [];
+    arr.push(a);
+    byCat.set(a.category!, arr);
+  }
+  if (byCat.size === 0) return !!loadCompletion()[unitId];
+  for (const [, arr] of byCat) {
+    const ok = arr.some((a) => (scores[a.id]?.best ?? 0) >= 60);
+    if (!ok) return false;
+  }
+  return true;
+}
+
+export function unitCategoryProgress(unitId: string): {
+  category: string; passed: boolean; best: number; mandatory: boolean;
+}[] {
+  const list = activitiesForUnit(unitId);
+  const scores = loadActivityScores();
+  const byCat = new Map<string, Activity[]>();
+  for (const a of list) {
+    const cat = a.category ?? "uncategorized";
+    const arr = byCat.get(cat) ?? [];
+    arr.push(a);
+    byCat.set(cat, arr);
+  }
+  return Array.from(byCat.entries()).map(([category, arr]) => {
+    const best = arr.reduce((m, a) => Math.max(m, scores[a.id]?.best ?? 0), 0);
+    const mandatory = isMandatoryCategory(category);
+    return { category, best, mandatory, passed: mandatory ? best >= 60 : true };
+  });
+}
+
 export function renameUnitReferences(oldUnitId: string, newUnitId: string) {
   const activities = loadActivities();
   let changed = false;
@@ -145,16 +259,18 @@ export function renameUnitReferences(oldUnitId: string, newUnitId: string) {
   }
 }
 
-/** A unit is unlocked if it's the first of its level, the previous unit is completed,
- *  or it has already been completed itself. */
+/**
+ * Legacy helper — retained for the old A1..B2 mock course view. New Learning
+ * Path uses `computeUnitLocks` in student.courses.tsx which is aware of
+ * milestone teacher-locks and per-student state.
+ */
 export function isUnitUnlocked(unitId: string): boolean {
-  const completion = loadCompletion();
-  if (completion[unitId]) return true;
+  if (unitPassed(unitId)) return true;
   for (const lvl of loadLevels()) {
     const idx = lvl.units.findIndex((u) => u.id === unitId);
     if (idx === -1) continue;
     if (idx === 0) return true;
-    return !!completion[lvl.units[idx - 1].id];
+    return unitPassed(lvl.units[idx - 1].id);
   }
   return true;
 }
