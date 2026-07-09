@@ -69,6 +69,9 @@ export function setLevelReopened(studentId: string, levelName: string, on: boole
 
 export function getReopenedLevels(studentId: string): string[] {
   return USERS.find((x) => x.id === studentId)?.reopened_levels ?? [];
+}
+
+
 
 export function subscribeStudents(cb: () => void): () => void {
   if (typeof window === "undefined") return () => {};
