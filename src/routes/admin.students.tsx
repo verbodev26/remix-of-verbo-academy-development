@@ -1185,6 +1185,42 @@ function StudentDetailModal({
                 </div>
               )}
 
+              {/* Learning Path — reopen a completed level for read-only review */}
+              {student.contracted_levels && student.contracted_levels.length > 0 && (
+                <div>
+                  <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Learning Path · Reopen for Review</div>
+                  <p className="mb-2 text-xs text-muted-foreground">
+                    Grants the student read-only access to a completed level (they can review content and past scores but cannot redo activities).
+                  </p>
+                  <div className="space-y-2">
+                    {student.contracted_levels.map((lvl) => {
+                      const reopened = (student.reopened_levels ?? []).includes(lvl);
+                      return (
+                        <div key={lvl} className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background px-3 py-2">
+                          <div className="flex items-center gap-2 text-sm text-foreground">
+                            <RotateCcw className={`h-3.5 w-3.5 ${reopened ? "text-accent" : "text-muted-foreground"}`} />
+                            <span>{lvl}</span>
+                            {reopened && <Tag className="bg-accent/15 text-accent">Reopened for Review</Tag>}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => { setLevelReopened(student.id, lvl, !reopened); forceTick((n) => n + 1); }}
+                            className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+                              reopened
+                                ? "border-border bg-secondary text-foreground hover:bg-muted"
+                                : "border-accent/30 bg-accent/10 text-accent hover:bg-accent/15"
+                            }`}
+                          >
+                            {reopened ? "Close review access" : "Reopen for Review"}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+
               {/* Video call link */}
               <div>
                 <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Video Call Link</div>
