@@ -9,6 +9,9 @@ import {
   Play,
   Sparkles,
   X,
+  Share2,
+  Link2,
+  Upload,
 } from "lucide-react";
 import { Card, Pill, PrimaryButton, GhostButton, SuccessButton } from "@/components/verbo/ui";
 import { useAuth } from "@/lib/auth";
@@ -27,13 +30,19 @@ import {
 import {
   chooseChallenge,
   completeChallenge,
+  completeCooldownRemaining,
   hasChosenChallenge,
   hasCompletedChallenge,
+  getSharedResult,
+  shareChallengeResult,
   subscribeStudents,
 } from "@/lib/students-store";
 import { USERS } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/student/challenges")({ component: Page });
+
+const COOLDOWN_MSG =
+  "You've already completed a Challenge in the last 24 hours — come back soon for your next one!";
 
 /* -------------------------------------------------------------------------- */
 /* Style tokens — reused from Learning Path so the visual language matches.   */
@@ -126,6 +135,7 @@ function Page() {
   const [difficulty, setDifficulty] = useState<DifficultyId | null>(null);
   const [category, setCategory] = useState<string | "all">("all");
   const [open, setOpen] = useState<Challenge | null>(null);
+  const [shareFor, setShareFor] = useState<Challenge | null>(null);
 
   useEffect(() => {
     setChallenges(loadChallenges());
@@ -140,7 +150,6 @@ function Page() {
   const gradient = PRODUCT_GRADIENTS[productId] ?? PRODUCT_GRADIENTS.enterprise;
   const hasPremiumAccess = PREMIUM_ACCESS.includes(student.access_plan ?? "");
 
-  // All challenges available to this student's product (all difficulties).
   const productChallenges = useMemo(
     () => challenges.filter((c) => c.product === productId),
     [challenges, productId],
@@ -149,7 +158,6 @@ function Page() {
   const countByDifficulty = (d: DifficultyId) =>
     productChallenges.filter((c) => c.difficulty === d).length;
 
-  // Badge context — derived live, never persisted.
   const badgeCtx: BadgeContext = useMemo(() => {
     void tick;
     const done = student.completed_challenges ?? [];
@@ -233,34 +241,49 @@ function Page() {
               const locked = !!c.premium && !hasPremiumAccess;
               const chosen = hasChosenChallenge(student.id, c.id);
               const done = hasCompletedChallenge(student.id, c.id);
+              const shared = !!getSharedResult(student.id, c.id);
               return (
-                <button
+                <div
                   key={c.id}
-                  type="button"
-                  onClick={() => setOpen(c)}
                   className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-5 text-left shadow-soft transition-all hover:-translate-y-0.5 hover:border-accent hover:shadow-elevated"
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <CategoryBadge name={c.category} />
-                      {locked && <PremiumBadge />}
+                  <button
+                    type="button"
+                    onClick={() => setOpen(c)}
+                    className="flex flex-1 flex-col gap-3 text-left"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <CategoryBadge name={c.category} />
+                        {locked && <PremiumBadge />}
+                      </div>
+                      {done ? (
+                        <Pill tone="success"><CheckCircle2 className="mr-1 h-3 w-3" /> Completed</Pill>
+                      ) : chosen ? (
+                        <Pill tone="warning">In progress</Pill>
+                      ) : null}
                     </div>
-                    {done ? (
-                      <Pill tone="success"><CheckCircle2 className="mr-1 h-3 w-3" /> Completed</Pill>
-                    ) : chosen ? (
-                      <Pill tone="warning">In progress</Pill>
-                    ) : null}
-                  </div>
-                  <div>
-                    <div className="text-sm font-semibold text-foreground">{c.title}</div>
-                    <p className="mt-1 line-clamp-3 text-xs text-muted-foreground">{c.description || "Tap to see the details."}</p>
-                  </div>
-                  {c.skill_tags && c.skill_tags.length > 0 && (
-                    <div className="mt-auto flex flex-wrap items-center gap-1 pt-1">
-                      {c.skill_tags.map((s) => <SkillChip key={s} label={s} />)}
+                    <div>
+                      <div className="text-sm font-semibold text-foreground">{c.title}</div>
+                      <p className="mt-1 line-clamp-3 text-xs text-muted-foreground">{c.description || "Tap to see the details."}</p>
                     </div>
+                    {c.skill_tags && c.skill_tags.length > 0 && (
+                      <div className="mt-auto flex flex-wrap items-center gap-1 pt-1">
+                        {c.skill_tags.map((s) => <SkillChip key={s} label={s} />)}
+                      </div>
+                    )}
+                  </button>
+                  {done && (
+                    <button
+                      type="button"
+                      onClick={() => setShareFor(c)}
+                      className="inline-flex items-center gap-1.5 self-start text-[11px] font-medium text-accent hover:underline"
+                    >
+                      <Share2 className="h-3 w-3" />
+                      {shared ? "Edit shared result" : "Share result"}
+                    </button>
                   )}
-                </button>
+                </div>
               );
             })}
           </div>
@@ -273,13 +296,28 @@ function Page() {
             hasPremiumAccess={hasPremiumAccess}
             chosen={hasChosenChallenge(student.id, open.id)}
             completed={hasCompletedChallenge(student.id, open.id)}
-            onChoose={() => {
-              if (chooseChallenge(student.id, open.id)) {
-                // Notification is derived automatically via buildNotifications().
+            cooldownRemaining={completeCooldownRemaining(student.id)}
+            onChoose={() => { chooseChallenge(student.id, open.id); }}
+            onComplete={() => {
+              const ok = completeChallenge(student.id, open.id);
+              if (ok) {
+                // Immediately prompt for optional share step.
+                const justCompleted = open;
+                setOpen(null);
+                setShareFor(justCompleted);
               }
             }}
-            onComplete={() => {
-              completeChallenge(student.id, open.id);
+          />
+        )}
+
+        {shareFor && (
+          <ShareResultModal
+            challenge={shareFor}
+            initialLink={getSharedResult(student.id, shareFor.id)}
+            onClose={() => setShareFor(null)}
+            onSave={(link) => {
+              shareChallengeResult(student.id, shareFor.id, link);
+              setShareFor(null);
             }}
           />
         )}
@@ -345,7 +383,6 @@ function Page() {
         })}
       </div>
 
-      {/* -------------------- Badges section -------------------- */}
       <section>
         <div className="mb-4 flex items-end justify-between">
           <div>
@@ -384,6 +421,7 @@ function ChallengeDetail({
   hasPremiumAccess,
   chosen,
   completed,
+  cooldownRemaining,
   onChoose,
   onComplete,
 }: {
@@ -392,10 +430,12 @@ function ChallengeDetail({
   hasPremiumAccess: boolean;
   chosen: boolean;
   completed: boolean;
+  cooldownRemaining: number | null;
   onChoose: () => void;
   onComplete: () => void;
 }) {
   const locked = !!challenge.premium && !hasPremiumAccess;
+  const onCooldown = !completed && chosen && cooldownRemaining !== null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm" onClick={onClose}>
@@ -433,6 +473,11 @@ function ChallengeDetail({
                 <Play className="h-3.5 w-3.5" /> Watch reference video
               </a>
             )}
+            {onCooldown && (
+              <div className="mt-4 rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-xs font-medium text-foreground">
+                {COOLDOWN_MSG}
+              </div>
+            )}
           </div>
 
           {locked && (
@@ -458,12 +503,95 @@ function ChallengeDetail({
           {locked ? null : completed ? (
             <Pill tone="success"><CheckCircle2 className="mr-1 h-3 w-3" /> Completed</Pill>
           ) : chosen ? (
-            <SuccessButton onClick={onComplete}>
+            <SuccessButton onClick={onComplete} disabled={onCooldown} title={onCooldown ? COOLDOWN_MSG : undefined}>
               <CheckCircle2 className="h-3.5 w-3.5" /> Mark as Completed
             </SuccessButton>
           ) : (
             <PrimaryButton onClick={onChoose}>Let's do it!</PrimaryButton>
           )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Share Result modal — optional URL + locked "Upload File" (Coming soon).    */
+/* -------------------------------------------------------------------------- */
+function ShareResultModal({
+  challenge,
+  initialLink,
+  onClose,
+  onSave,
+}: {
+  challenge: Challenge;
+  initialLink: string;
+  onClose: () => void;
+  onSave: (link: string) => void;
+}) {
+  const [source, setSource] = useState<"url" | "upload">("url");
+  const [link, setLink] = useState(initialLink);
+
+  return (
+    <div className="fixed inset-0 z-[55] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm" onClick={onClose}>
+      <div
+        className="w-full max-w-lg overflow-hidden rounded-2xl border border-border bg-card shadow-elevated"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-4 border-b border-border p-5">
+          <div>
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">
+              Want to share your result? (optional)
+            </div>
+            <h3 className="mt-1 text-sm font-semibold text-foreground">{challenge.title}</h3>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-md p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"
+            aria-label="Close"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="space-y-4 p-5">
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setSource("url")}
+              className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${source === "url" ? "border-accent bg-accent/10 text-foreground" : "border-border bg-background text-muted-foreground hover:bg-secondary"}`}
+            >
+              <Link2 className="h-4 w-4" /> Video URL
+            </button>
+            <button
+              type="button"
+              disabled
+              title="Coming soon"
+              className="flex cursor-not-allowed items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-secondary/40 px-3 py-2 text-sm font-medium text-muted-foreground opacity-70"
+            >
+              <Lock className="h-4 w-4" /> Upload File
+            </button>
+          </div>
+
+          {source === "url" ? (
+            <input
+              value={link}
+              onChange={(e) => setLink(e.target.value)}
+              placeholder="Paste a link (video, doc, portfolio, etc.)"
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-accent focus:outline-none"
+            />
+          ) : (
+            <div className="flex items-center gap-2 rounded-lg border border-dashed border-border bg-secondary/40 px-3 py-3 text-xs text-muted-foreground">
+              <Upload className="h-4 w-4" /> Coming soon — file uploads (pdf / video / image, max 10MB) will be available soon.
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center justify-end gap-3 border-t border-border bg-secondary/30 p-4">
+          <GhostButton onClick={onClose}>Skip</GhostButton>
+          <PrimaryButton onClick={() => onSave(link)} disabled={source !== "url"}>
+            Save
+          </PrimaryButton>
         </div>
       </div>
     </div>
