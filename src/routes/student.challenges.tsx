@@ -12,8 +12,11 @@ import {
   Share2,
   Link2,
   Upload,
+  Gift,
+  Zap,
 } from "lucide-react";
 import { Card, Pill, PrimaryButton, GhostButton, SuccessButton } from "@/components/verbo/ui";
+import { Confetti } from "@/components/verbo/Confetti";
 import { useAuth } from "@/lib/auth";
 import {
   type Challenge,
@@ -36,13 +39,27 @@ import {
   getSharedResult,
   shareChallengeResult,
   subscribeStudents,
+  openMysteryBox,
+  mysteryBoxCooldownRemaining,
 } from "@/lib/students-store";
+import {
+  type FlashChallenge,
+  type FlashProductId,
+  loadFlashChallenges,
+  loadFlashConfig,
+  subscribeFlashChallenges,
+  subscribeFlashConfig,
+  flashChallengesFor,
+} from "@/lib/flash-challenges-store";
 import { USERS } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/student/challenges")({ component: Page });
 
 const COOLDOWN_MSG =
   "You've already completed a Challenge in the last 24 hours — come back soon for your next one!";
+const MYSTERY_COOLDOWN_MSG =
+  "You've already opened today's Mystery Box — come back tomorrow!";
+
 
 /* -------------------------------------------------------------------------- */
 /* Style tokens — reused from Learning Path so the visual language matches.   */
@@ -131,17 +148,24 @@ const BADGES: BadgeDef[] = [
 function Page() {
   const { user } = useAuth();
   const [challenges, setChallenges] = useState<Challenge[]>(loadChallenges);
+  const [flashList, setFlashList] = useState<FlashChallenge[]>(loadFlashChallenges);
+  const [flashConfig, setFlashConfig] = useState(loadFlashConfig);
   const [tick, setTick] = useState(0); // re-render on student profile mutations
   const [difficulty, setDifficulty] = useState<DifficultyId | null>(null);
   const [category, setCategory] = useState<string | "all">("all");
   const [open, setOpen] = useState<Challenge | null>(null);
   const [shareFor, setShareFor] = useState<Challenge | null>(null);
+  const [mystery, setMystery] = useState<{ opening: boolean; reveal: FlashChallenge | null; blocked: boolean }>({ opening: false, reveal: null, blocked: false });
 
   useEffect(() => {
     setChallenges(loadChallenges());
+    setFlashList(loadFlashChallenges());
+    setFlashConfig(loadFlashConfig());
     const un1 = subscribeChallenges(() => setChallenges(loadChallenges()));
     const un2 = subscribeStudents(() => setTick((t) => t + 1));
-    return () => { un1(); un2(); };
+    const un3 = subscribeFlashChallenges(() => setFlashList(loadFlashChallenges()));
+    const un4 = subscribeFlashConfig(() => setFlashConfig(loadFlashConfig()));
+    return () => { un1(); un2(); un3(); un4(); };
   }, []);
 
   if (!user) return null;
@@ -383,6 +407,28 @@ function Page() {
         })}
       </div>
 
+      {/* ---------------- Verbo Flash ---------------- */}
+      {(["enterprise", "go", "international"] as const).includes(productId as FlashProductId) && (
+        <VerboFlashSection
+          boxArtUrl={flashConfig.box_art_url}
+          available={flashChallengesFor(flashList, "mystery_box", productId as FlashProductId).length > 0}
+          onOpen={() => {
+            const pool = flashChallengesFor(flashList, "mystery_box", productId as FlashProductId);
+            if (pool.length === 0) return;
+            if (!openMysteryBox(student.id)) {
+              setMystery({ opening: false, reveal: null, blocked: true });
+              return;
+            }
+            setMystery({ opening: true, reveal: null, blocked: false });
+            // Suspenseful reveal delay — the box animates then the challenge is revealed.
+            setTimeout(() => {
+              const pick = pool[Math.floor(Math.random() * pool.length)];
+              setMystery({ opening: false, reveal: pick, blocked: false });
+            }, 900);
+          }}
+        />
+      )}
+
       <section>
         <div className="mb-4 flex items-end justify-between">
           <div>
@@ -408,9 +454,253 @@ function Page() {
           })}
         </div>
       </section>
+
+      {mystery.blocked && (
+        <MysteryCooldownModal onClose={() => setMystery({ opening: false, reveal: null, blocked: false })} />
+      )}
+      {(mystery.opening || mystery.reveal) && (
+        <MysteryRevealModal
+          opening={mystery.opening}
+          challenge={mystery.reveal}
+          hasPremiumAccess={hasPremiumAccess}
+          chosen={mystery.reveal ? hasChosenChallenge(student.id, mystery.reveal.id) : false}
+          completed={mystery.reveal ? hasCompletedChallenge(student.id, mystery.reveal.id) : false}
+          cooldownRemaining={completeCooldownRemaining(student.id)}
+          onChoose={() => { if (mystery.reveal) chooseChallenge(student.id, mystery.reveal.id); }}
+          onComplete={() => {
+            if (!mystery.reveal) return;
+            const ok = completeChallenge(student.id, mystery.reveal.id);
+            if (ok) {
+              const c = mystery.reveal;
+              setMystery({ opening: false, reveal: null, blocked: false });
+              // Reuse the standard share prompt for consistency.
+              setShareFor(c as unknown as Challenge);
+            }
+          }}
+          onClose={() => setMystery({ opening: false, reveal: null, blocked: false })}
+        />
+      )}
+
+      {shareFor && (
+        <ShareResultModal
+          challenge={shareFor}
+          initialLink={getSharedResult(student.id, shareFor.id)}
+          onClose={() => setShareFor(null)}
+          onSave={(link) => {
+            shareChallengeResult(student.id, shareFor.id, link);
+            setShareFor(null);
+          }}
+        />
+      )}
     </div>
   );
 }
+
+/* -------------------------------------------------------------------------- */
+/* Verbo Flash — Mystery Box card + reveal modal                              */
+/* -------------------------------------------------------------------------- */
+function VerboFlashSection({
+  boxArtUrl,
+  available,
+  onOpen,
+}: {
+  boxArtUrl?: string;
+  available: boolean;
+  onOpen: () => void;
+}) {
+  return (
+    <section>
+      <div className="mb-4 flex items-end justify-between">
+        <div>
+          <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-muted-foreground">
+            <Zap className="h-3.5 w-3.5 text-[#7e22ce]" /> Verbo Flash
+          </div>
+          <h2 className="mt-1 text-base font-semibold tracking-tight text-foreground">Mystery Box</h2>
+          <p className="mt-1 text-xs text-muted-foreground">A surprise challenge waits inside. One box per day.</p>
+        </div>
+      </div>
+      <style>{`
+        @keyframes verbo-box-wiggle {
+          0%, 92%, 100% { transform: rotate(0deg); }
+          94% { transform: rotate(-6deg); }
+          96% { transform: rotate(6deg); }
+          98% { transform: rotate(-3deg); }
+        }
+        @media (prefers-reduced-motion: reduce) { .verbo-box-wiggle { animation: none !important; } }
+      `}</style>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <button
+          type="button"
+          disabled={!available}
+          onClick={onOpen}
+          className={`group relative aspect-square overflow-hidden rounded-2xl border p-6 text-center shadow-soft transition-all ${
+            available
+              ? "border-[#7e22ce]/30 bg-gradient-to-br from-[#4a044e] via-[#7e22ce] to-[#f59e0b] text-white hover:-translate-y-0.5 hover:shadow-elevated"
+              : "cursor-not-allowed border-border bg-secondary/60 text-muted-foreground opacity-70"
+          }`}
+        >
+          <div className="flex h-full flex-col items-center justify-center gap-4">
+            <div
+              className="verbo-box-wiggle flex h-32 w-32 items-center justify-center rounded-2xl bg-white/15 shadow-inner"
+              style={{ animation: "verbo-box-wiggle 3.4s ease-in-out infinite", transformOrigin: "50% 90%" }}
+            >
+              {boxArtUrl ? (
+                <img src={boxArtUrl} alt="Mystery Box" className="h-full w-full rounded-2xl object-cover" />
+              ) : (
+                <Gift className="h-16 w-16 drop-shadow-md" />
+              )}
+            </div>
+            <div>
+              <div className="text-lg font-semibold tracking-tight">Mystery Box</div>
+              <div className="mt-1 text-xs opacity-90">{available ? "Tap to open" : "Coming soon"}</div>
+            </div>
+          </div>
+        </button>
+      </div>
+    </section>
+  );
+}
+
+function MysteryCooldownModal({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={onClose}>
+      <div className="w-full max-w-sm overflow-hidden rounded-2xl border border-border bg-card p-6 text-center shadow-elevated" onClick={(e) => e.stopPropagation()}>
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#4a044e] to-[#7e22ce] text-white">
+          <Gift className="h-7 w-7" />
+        </div>
+        <p className="mt-4 text-sm font-medium text-foreground">{MYSTERY_COOLDOWN_MSG}</p>
+        <div className="mt-4 flex justify-center">
+          <GhostButton onClick={onClose}>Got it</GhostButton>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MysteryRevealModal({
+  opening,
+  challenge,
+  hasPremiumAccess,
+  chosen,
+  completed,
+  cooldownRemaining,
+  onChoose,
+  onComplete,
+  onClose,
+}: {
+  opening: boolean;
+  challenge: FlashChallenge | null;
+  hasPremiumAccess: boolean;
+  chosen: boolean;
+  completed: boolean;
+  cooldownRemaining: number | null;
+  onChoose: () => void;
+  onComplete: () => void;
+  onClose: () => void;
+}) {
+  const locked = !!challenge?.premium && !hasPremiumAccess;
+  const onCooldown = !completed && chosen && cooldownRemaining !== null;
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+      {challenge && !opening && <Confetti />}
+      <div className="relative w-full max-w-xl overflow-hidden rounded-2xl border border-border bg-card shadow-elevated">
+        <style>{`
+          @keyframes verbo-box-shake {
+            0%, 100% { transform: translateX(0) rotate(0); }
+            20% { transform: translateX(-6px) rotate(-8deg); }
+            40% { transform: translateX(6px) rotate(8deg); }
+            60% { transform: translateX(-4px) rotate(-6deg); }
+            80% { transform: translateX(4px) rotate(6deg); }
+          }
+          @media (prefers-reduced-motion: reduce) { .verbo-box-shake { animation: none !important; } }
+        `}</style>
+        <div className="flex items-start justify-between gap-4 bg-gradient-to-br from-[#4a044e] via-[#7e22ce] to-[#f59e0b] p-6 text-white">
+          <div>
+            <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-white/80">
+              <Zap className="h-3.5 w-3.5" /> Verbo Flash · Mystery Box
+            </div>
+            {challenge && !opening && (
+              <>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <CategoryBadge name={challenge.category} />
+                  {challenge.premium && <PremiumBadge />}
+                </div>
+                <div className="mt-2 text-base font-semibold tracking-tight">{challenge.title}</div>
+              </>
+            )}
+          </div>
+          <button onClick={onClose} className="rounded-md p-1 text-white/80 hover:bg-white/10 hover:text-white" aria-label="Close">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {opening || !challenge ? (
+          <div className="flex flex-col items-center justify-center gap-4 p-10">
+            <div
+              className="verbo-box-shake flex h-32 w-32 items-center justify-center rounded-2xl bg-gradient-to-br from-[#4a044e] to-[#7e22ce] text-white shadow-elevated"
+              style={{ animation: "verbo-box-shake 0.5s ease-in-out infinite" }}
+            >
+              <Gift className="h-16 w-16" />
+            </div>
+            <p className="text-sm text-muted-foreground">Opening your Mystery Box…</p>
+          </div>
+        ) : (
+          <>
+            <div className="relative p-6">
+              <div className={locked ? "pointer-events-none select-none blur-sm" : ""}>
+                <p className="text-sm leading-relaxed text-foreground">
+                  {challenge.description || "No description available."}
+                </p>
+                {challenge.video_url && (
+                  <a
+                    href={challenge.video_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-4 inline-flex items-center gap-2 rounded-lg border border-border bg-secondary/50 px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary"
+                  >
+                    <Play className="h-3.5 w-3.5" /> Watch reference video
+                  </a>
+                )}
+                {onCooldown && (
+                  <div className="mt-4 rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-xs font-medium text-foreground">
+                    {COOLDOWN_MSG}
+                  </div>
+                )}
+              </div>
+              {locked && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-b-2xl bg-white/70 p-6 text-center backdrop-blur-md">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/15 text-amber-600 ring-2 ring-amber-400/40">
+                    <Lock className="h-6 w-6" />
+                  </span>
+                  <p className="max-w-sm text-sm font-medium text-foreground">
+                    This challenge is for Advance tier+. Upgrade your access level to access them.
+                  </p>
+                  <Link to="/student/access-levels" className="text-xs font-semibold text-[#7e22ce] underline underline-offset-4 hover:opacity-80">
+                    Learn more
+                  </Link>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center justify-end gap-3 border-t border-border bg-secondary/30 p-4">
+              <GhostButton onClick={onClose}>Close</GhostButton>
+              {locked ? null : completed ? (
+                <Pill tone="success"><CheckCircle2 className="mr-1 h-3 w-3" /> Completed</Pill>
+              ) : chosen ? (
+                <SuccessButton onClick={onComplete} disabled={onCooldown} title={onCooldown ? COOLDOWN_MSG : undefined}>
+                  <CheckCircle2 className="h-3.5 w-3.5" /> Mark as Completed
+                </SuccessButton>
+              ) : (
+                <PrimaryButton onClick={onChoose}>Let's do it!</PrimaryButton>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 
 /* -------------------------------------------------------------------------- */
 /* Detail modal                                                                */
