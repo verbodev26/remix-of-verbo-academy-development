@@ -71,6 +71,67 @@ export function getReopenedLevels(studentId: string): string[] {
   return USERS.find((x) => x.id === studentId)?.reopened_levels ?? [];
 }
 
+/* -------------------------------------------------------------------------- */
+/* Challenges: chosen + completed, with streak tracking.                       */
+/* -------------------------------------------------------------------------- */
+
+function persistStudentPatch(studentId: string, patch: Partial<User>) {
+  const u = USERS.find((x) => x.id === studentId);
+  if (u) Object.assign(u, patch);
+  if (typeof window === "undefined") return;
+  const overrides = readProfileOverrides();
+  overrides[studentId] = { ...(overrides[studentId] ?? {}), ...patch };
+  writeProfileOverrides(overrides);
+  window.dispatchEvent(new CustomEvent(STUDENTS_EVENT));
+}
+
+/** Add a challenge to `chosen_challenges` (idempotent). Returns true if this
+ *  was the first time this student picks that challenge — the caller can then
+ *  fire the teacher notification once. */
+export function chooseChallenge(studentId: string, challengeId: string): boolean {
+  const u = USERS.find((x) => x.id === studentId);
+  const list = u?.chosen_challenges ?? [];
+  if (list.some((c) => c.challenge_id === challengeId)) return false;
+  persistStudentPatch(studentId, {
+    chosen_challenges: [...list, { challenge_id: challengeId, chosen_at: new Date().toISOString() }],
+  });
+  return true;
+}
+
+export function hasChosenChallenge(studentId: string, challengeId: string): boolean {
+  const u = USERS.find((x) => x.id === studentId);
+  return (u?.chosen_challenges ?? []).some((c) => c.challenge_id === challengeId);
+}
+
+export function hasCompletedChallenge(studentId: string, challengeId: string): boolean {
+  const u = USERS.find((x) => x.id === studentId);
+  return (u?.completed_challenges ?? []).some((c) => c.challenge_id === challengeId);
+}
+
+/** Mark a challenge as completed. Idempotent + updates streak counters using
+ *  the same "≤14 days keeps the streak alive" rule used elsewhere. */
+export function completeChallenge(studentId: string, challengeId: string): void {
+  const u = USERS.find((x) => x.id === studentId);
+  if (!u) return;
+  const done = u.completed_challenges ?? [];
+  if (done.some((c) => c.challenge_id === challengeId)) return;
+
+  const now = new Date();
+  const nowIso = now.toISOString();
+  const last = u.last_completed_at ? new Date(u.last_completed_at) : null;
+  const diffDays = last ? (now.getTime() - last.getTime()) / 86_400_000 : Infinity;
+  const nextCurrent = last && diffDays <= 14 ? (u.current_streak ?? 0) + 1 : 1;
+  const nextLongest = Math.max(u.longest_streak ?? 0, nextCurrent);
+
+  persistStudentPatch(studentId, {
+    completed_challenges: [...done, { challenge_id: challengeId, completed_at: nowIso }],
+    last_completed_at: nowIso,
+    current_streak: nextCurrent,
+    longest_streak: nextLongest,
+  });
+}
+
+
 
 
 export function subscribeStudents(cb: () => void): () => void {

@@ -26,6 +26,9 @@ import { teacherStatus } from "./teacher-model";
 import { activeAnnouncements, ANN_EVENT } from "./announcements-store";
 import { loadFinancialIssues, FIN_ISSUES_EVENT } from "./financial-issues-store";
 import { REPORTS_KEY, REPORTS_EVENT, type StudentReport } from "./student-reports-store";
+import { ASSIGNMENTS } from "./mock-data";
+import { loadChallenges, CHALLENGES_EVENT } from "./challenges-store";
+import { STUDENTS_EVENT } from "./students-store";
 
 function readStudentReportsRaw(): StudentReport[] {
   if (typeof window === "undefined") return [];
@@ -45,6 +48,7 @@ export type NotificationKind =
   | "kpi_below_threshold"
   | "bonus_eligible"
   | "announcement"
+  | "student_challenge_selected"
   // admin-facing
   | "needs_substitute"
   | "release_request"
@@ -275,6 +279,31 @@ function teacherNotifications(teacherId: string): Notification[] {
     });
   }
 
+  // ---- Students on this teacher's roster picked a Challenge --------------
+  // Reuses the ASSIGNMENTS table (same source used by session_assigned) —
+  // no new "assigned teacher" field needed.
+  const roster = ASSIGNMENTS.filter((a) => a.teacher_id === teacherId).map((a) => a.student_id);
+  if (roster.length > 0) {
+    const challengeById = new Map(loadChallenges().map((c) => [c.id, c]));
+    for (const sid of roster) {
+      const st = USERS.find((x) => x.id === sid);
+      if (!st) continue;
+      for (const pick of st.chosen_challenges ?? []) {
+        const ch = challengeById.get(pick.challenge_id);
+        if (!ch) continue;
+        out.push({
+          id: `student-challenge:${sid}:${pick.challenge_id}`,
+          kind: "student_challenge_selected",
+          title: `${st.name} picked a Challenge`,
+          body: `${ch.title}${ch.category ? ` (${ch.category})` : ""}`,
+          createdAt: pick.chosen_at,
+          to: "/teacher/students",
+          read: false,
+        });
+      }
+    }
+  }
+
   return out;
 }
 
@@ -397,7 +426,7 @@ export function buildNotifications(role: Role, userId: string): Notification[] {
 const SOURCE_EVENTS = [
   SESSIONS_EVENT, CLUBS_EVENT, RELEASE_REQUESTS_EVENT,
   AVAIL_EVENT, STRIKES_EVENT, ANN_EVENT, NOTIF_EVENT,
-  REPORTS_EVENT, FIN_ISSUES_EVENT,
+  REPORTS_EVENT, FIN_ISSUES_EVENT, STUDENTS_EVENT, CHALLENGES_EVENT,
 ];
 
 function subscribe(cb: () => void): () => void {
