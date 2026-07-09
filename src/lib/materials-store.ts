@@ -22,7 +22,7 @@ export interface StoredMaterial {
 export const RESTRICT_PRODUCTS: { id: RestrictProduct; label: string; levels: string[] }[] = [
   { id: "go", label: "GO", levels: ["Kickstart", "Everyday Flow", "Confident Voice", "Culture Master"] },
   { id: "enterprise", label: "Enterprise", levels: ["Core Foundations", "Strategic Fluency", "Executive Presence", "Global Leadership"] },
-  { id: "international", label: "International", levels: ["Survival Basics", "Travel Ready", "Social Fluency", "Full Command"] },
+  { id: "international", label: "International", levels: ["Survival Basics", "Travel Ready", "Global Connector", "World Fluency"] },
 ];
 
 export function levelsForProduct(product?: RestrictProduct | ""): string[] {

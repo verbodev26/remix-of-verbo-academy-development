@@ -49,6 +49,9 @@ import {
   rescheduleQuota,
 } from "@/lib/student-requests-store";
 import { isTeacherAvailableAt, findAvailableStartSlots } from "@/lib/availability-store";
+import { ClubReservationModal } from "@/components/verbo/ClubReservationModal";
+import type { Club } from "@/lib/clubs-store";
+
 
 export const Route = createFileRoute("/student/sessions")({ component: Page });
 
@@ -68,8 +71,10 @@ function Page() {
   const [cantAttendFor, setCantAttendFor] = useState<ExtSession | null>(null);
   const [rescheduleFor, setRescheduleFor] = useState<ExtSession | null>(null);
   const [spotlightOpen, setSpotlightOpen] = useState(false);
+  const [clubModal, setClubModal] = useState<Club | null>(null);
 
   useEffect(() => subscribeSessions(() => tick((n) => n + 1)), []);
+
 
   const events = useMemo<CalendarEvent[]>(() => {
     if (!user) return [];
@@ -85,7 +90,14 @@ function Page() {
   const used = reschedulesUsedThisMonth(user.id);
   const spotlightCap = user.addon_spotlight_per_month ?? 0;
 
-  const handleEventClick = (ev: CalendarEvent) => setSelected(ev);
+  const handleEventClick = (ev: CalendarEvent) => {
+    if (ev.club && (ev.kind === "insight" || ev.kind === "book_club")) {
+      setClubModal(ev.club);
+      return;
+    }
+    setSelected(ev);
+  };
+
 
   const onCantAttend = (session: ExtSession) => {
     setSelected(null);
@@ -163,7 +175,16 @@ function Page() {
           onClose={() => setSpotlightOpen(false)}
         />
       )}
+
+      {clubModal && (
+        <ClubReservationModal
+          club={clubModal}
+          studentId={user.id}
+          onClose={() => setClubModal(null)}
+        />
+      )}
     </div>
+
   );
 }
 

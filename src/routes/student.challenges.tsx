@@ -68,6 +68,7 @@ import {
   completeSeasonChallenge,
 } from "@/lib/students-store";
 import { USERS } from "@/lib/mock-data";
+import { groupsByStudentId } from "@/lib/groups-store";
 
 export const Route = createFileRoute("/student/challenges")({ component: Page });
 
@@ -75,6 +76,36 @@ const COOLDOWN_MSG =
   "You've already completed a Challenge in the last 24 hours — come back soon for your next one!";
 const MYSTERY_COOLDOWN_MSG =
   "You've already opened today's Mystery Box — come back tomorrow!";
+
+/**
+ * Access-level gate shown when a challenge is locked behind Advance tier.
+ * For Group members we swap "Upgrade your access level" (which reads as a
+ * payment call-to-action) for a neutral note that upgrades happen at the
+ * group level via the admin — no billing surface is exposed to the student.
+ */
+function AccessGateNotice({ accent }: { accent?: string }) {
+  const { user } = useAuth();
+  const isGroup = !!(user && groupsByStudentId().has(user.id));
+  return (
+    <>
+      <p className="max-w-sm text-sm font-medium text-foreground">
+        {isGroup
+          ? "This challenge is for Advance tier+. It's not included in your group's plan — contact your admin to expand access."
+          : "This challenge is for Advance tier+. Upgrade your access level to access them."}
+      </p>
+      {!isGroup && (
+        <Link
+          to="/student/access-levels"
+          className="text-xs font-semibold underline underline-offset-4 hover:opacity-80"
+          style={accent ? { color: accent } : undefined}
+        >
+          Learn more
+        </Link>
+      )}
+    </>
+  );
+}
+
 
 
 /* -------------------------------------------------------------------------- */
@@ -891,12 +922,9 @@ function MysteryRevealModal({
                   <span className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/15 text-amber-600 ring-2 ring-amber-400/40">
                     <Lock className="h-6 w-6" />
                   </span>
-                  <p className="max-w-sm text-sm font-medium text-foreground">
-                    This challenge is for Advance tier+. Upgrade your access level to access them.
-                  </p>
-                  <Link to="/student/access-levels" className="text-xs font-semibold text-[#7e22ce] underline underline-offset-4 hover:opacity-80">
-                    Learn more
-                  </Link>
+                  <AccessGateNotice accent="#7e22ce" />
+
+
                 </div>
               )}
             </div>
@@ -993,15 +1021,8 @@ function ChallengeDetail({
               <span className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/15 text-amber-600 ring-2 ring-amber-400/40">
                 <Lock className="h-6 w-6" />
               </span>
-              <p className="max-w-sm text-sm font-medium text-foreground">
-                This challenge is for Advance tier+. Upgrade your access level to access them.
-              </p>
-              <Link
-                to="/student/access-levels"
-                className="text-xs font-semibold text-[#f38934] underline underline-offset-4 hover:opacity-80"
-              >
-                Learn more
-              </Link>
+              <AccessGateNotice accent="#f38934" />
+
             </div>
           )}
         </div>
@@ -1294,12 +1315,8 @@ function LightningRevealModal({
               <span className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/15 text-amber-600 ring-2 ring-amber-400/40">
                 <Lock className="h-6 w-6" />
               </span>
-              <p className="max-w-sm text-sm font-medium text-foreground">
-                This challenge is for Advance tier+. Upgrade your access level to access them.
-              </p>
-              <Link to="/student/access-levels" className="text-xs font-semibold text-[#0284c7] underline underline-offset-4 hover:opacity-80">
-                Learn more
-              </Link>
+              <AccessGateNotice accent="#0284c7" />
+
             </div>
           )}
         </div>
@@ -1445,12 +1462,8 @@ function SeasonRevealModal({
                   <span className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/15 text-amber-600 ring-2 ring-amber-400/40">
                     <Lock className="h-6 w-6" />
                   </span>
-                  <p className="max-w-sm text-sm font-medium text-foreground">
-                    This challenge is for Advance tier+. Upgrade your access level to access them.
-                  </p>
-                  <Link to="/student/access-levels" className="text-xs font-semibold underline underline-offset-4 hover:opacity-80" style={{ color: accent }}>
-                    Learn more
-                  </Link>
+                  <AccessGateNotice accent={accent} />
+
                 </div>
               )}
             </div>

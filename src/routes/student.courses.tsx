@@ -54,6 +54,8 @@ import {
   subscribeEvents,
   type LearningPathEvent,
 } from "@/lib/learning-path-events";
+import { groupsByStudentId } from "@/lib/groups-store";
+
 
 export const Route = createFileRoute("/student/courses")({ component: Page });
 
@@ -97,7 +99,9 @@ function computeLevelStates(
   contracted: string[],
   reopened: string[],
   studentId: string,
+  isGroupMember: boolean = false,
 ): LevelState[] {
+
   const contractedSet = new Set(contracted);
   const reopenedSet = new Set(reopened);
   const completion: boolean[] = levels.map((l) => levelIsComplete(l, studentId));
@@ -117,7 +121,10 @@ function computeLevelStates(
         ...base,
         kind: "locked_not_contracted",
         readOnly: false,
-        message: "Not included in your current plan — contact your advisor to upgrade",
+        message: isGroupMember
+          ? "Not included in your group's plan — contact your admin to expand access"
+          : "Not included in your current plan — contact your advisor to upgrade",
+
       };
     }
     if (completion[i]) {
@@ -210,10 +217,12 @@ function Page() {
   const levels = product?.levels ?? [];
   const contracted = user?.contracted_levels ?? [];
   const reopened = user?.reopened_levels ?? [];
+  const isGroupMember = !!(user && groupsByStudentId().has(user.id));
   const states = useMemo(
-    () => computeLevelStates(levels, contracted, reopened, user?.id ?? ""),
-    [levels, contracted, reopened, user?.id, rev],
+    () => computeLevelStates(levels, contracted, reopened, user?.id ?? "", isGroupMember),
+    [levels, contracted, reopened, user?.id, rev, isGroupMember],
   );
+
 
   const onUnitCompleted = (levelId: string, unitId: string) => {
     // Record milestone events + potential level completion when unit passes.
