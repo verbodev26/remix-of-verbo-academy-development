@@ -541,6 +541,38 @@ function Page() {
               </div>
             );
           })()}
+          {/* Dynamic Season badges — grows as admin creates Seasons. */}
+          {seasons.map((s) => {
+            const earned = (student.season_completions?.[s.id] ?? 0) >= 1;
+            const accent = s.accent_color || "#7e22ce";
+            return (
+              <div
+                key={s.id}
+                className={`flex flex-col items-center gap-2 rounded-2xl border p-5 text-center shadow-soft transition-opacity ${earned ? "bg-card" : "border-border bg-card opacity-60"}`}
+                style={earned ? { borderColor: accent, boxShadow: `0 0 0 1px ${accent}22` } : undefined}
+              >
+                <span
+                  className="flex h-12 w-12 items-center justify-center rounded-full"
+                  style={
+                    earned
+                      ? { background: `${accent}22`, color: accent, boxShadow: `0 0 0 2px ${accent}55` }
+                      : undefined
+                  }
+                >
+                  {earned ? <Sparkles className="h-6 w-6" /> : <Lock className="h-5 w-5 text-muted-foreground" />}
+                </span>
+                <div
+                  className="text-sm font-semibold text-foreground"
+                  style={{ fontFamily: `"${fontFamilyFor(s)}", system-ui, sans-serif` }}
+                >
+                  {s.badge_name}
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Completed a challenge during the {s.display_name} Season.
+                </p>
+              </div>
+            );
+          })}
         </div>
       </section>
 
