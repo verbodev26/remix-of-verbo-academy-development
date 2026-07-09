@@ -45,6 +45,7 @@ import {
 import {
   type FlashChallenge,
   type FlashProductId,
+  type FlashSeason,
   type LightningState,
   loadFlashChallenges,
   loadFlashConfig,
@@ -55,8 +56,17 @@ import {
   subscribeLightning,
   acceptLightning,
   isLightningVisibleForStudents,
+  loadSeasons,
+  subscribeSeasons,
+  fontFamilyFor,
+  ensureGoogleFont,
 } from "@/lib/flash-challenges-store";
-import { completeLightningChallenge } from "@/lib/students-store";
+import {
+  completeLightningChallenge,
+  openSeason,
+  seasonCooldownRemaining,
+  completeSeasonChallenge,
+} from "@/lib/students-store";
 import { USERS } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/student/challenges")({ component: Page });
