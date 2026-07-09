@@ -177,6 +177,33 @@ export function getSharedResult(studentId: string, challengeId: string): string 
   const entry = (u?.completed_challenges ?? []).find((c) => c.challenge_id === challengeId);
   return entry?.shared_link ?? "";
 }
+/* -------------------------------------------------------------------------- */
+/* Lightning (Verbo Flash) — completion is INDEPENDENT from the traditional     */
+/* 24h cooldown. Tracks its own last_lightning_completed_at + counter for the   */
+/* Lightning Bolt badge.                                                        */
+/* -------------------------------------------------------------------------- */
+
+/** Complete a Lightning challenge. No cross-cooldown with the traditional bank:
+ *  a student may complete both a Lightning and a normal challenge in the same
+ *  24h window. Idempotent per challenge id. */
+export function completeLightningChallenge(studentId: string, challengeId: string): boolean {
+  const u = USERS.find((x) => x.id === studentId);
+  if (!u) return false;
+  const done = u.completed_challenges ?? [];
+  if (done.some((c) => c.challenge_id === challengeId)) return false;
+
+  const nowIso = new Date().toISOString();
+  persistStudentPatch(studentId, {
+    completed_challenges: [
+      ...done,
+      { challenge_id: challengeId, completed_at: nowIso, format: "lightning" },
+    ],
+    last_lightning_completed_at: nowIso,
+    lightning_completions: (u.lightning_completions ?? 0) + 1,
+  });
+  return true;
+}
+
 
 
 
