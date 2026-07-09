@@ -302,7 +302,15 @@ function PhaseGroup({ label, list, onRemove, showTag }: {
                   <span className="truncate text-xs font-semibold text-foreground">{a.name}</span>
                   {showTag && <Pill tone="warning">Post-Session</Pill>}
                 </div>
-                <div className="text-[11px] text-muted-foreground">{EXERCISE_LABELS[a.type]}</div>
+                <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                  <span>{EXERCISE_LABELS[a.type]}</span>
+                  {a.category && (
+                    <>
+                      <span>·</span>
+                      <span className={isMandatoryCategory(a.category) ? "font-semibold text-accent" : ""}>{categoryLabel(a.category)}</span>
+                    </>
+                  )}
+                </div>
               </div>
               <button onClick={() => onRemove(a.id)} className="text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"><Trash2 className="h-3.5 w-3.5" /></button>
             </li>
