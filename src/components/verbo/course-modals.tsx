@@ -76,6 +76,9 @@ export function ActivityModal({ unitId, unitTitle, onClose }: { unitId: string; 
   const [phase, setPhase] = useState<SessionPhase>("pre");
   const [name, setName] = useState("");
   const [type, setType] = useState<ExerciseType>("fill_gaps");
+  const [category, setCategory] = useState<ActivityCategory>("vocabulary");
+  const [customCategory, setCustomCategory] = useState("");
+  const [useCustomCategory, setUseCustomCategory] = useState(false);
   const [paragraph, setParagraph] = useState("");
   const [answer, setAnswer] = useState("");
   const [items, setItems] = useState<{ text: string; key: string }[]>([{ text: "", key: "" }, { text: "", key: "" }]);
@@ -90,6 +93,9 @@ export function ActivityModal({ unitId, unitTitle, onClose }: { unitId: string; 
   const preList = existing.filter((a) => phaseOf(a) === "pre");
   const postList = existing.filter((a) => phaseOf(a) === "post");
 
+  const presentCategories = useMemo(() => new Set(existing.map((a) => a.category).filter(Boolean) as string[]), [existing]);
+  const missingMandatory = MANDATORY_CATEGORIES.filter((c) => !presentCategories.has(c));
+
   const resetDraft = () => {
     setName(""); setParagraph(""); setAnswer("");
     setItems([{ text: "", key: "" }, { text: "", key: "" }]);
@@ -99,7 +105,8 @@ export function ActivityModal({ unitId, unitTitle, onClose }: { unitId: string; 
 
   const save = () => {
     if (!name.trim()) { alert("Please give the activity a name."); return; }
-    const base: Activity = { id: `act-${Date.now()}`, unit_id: unitId, name: name.trim(), type, session_phase: phase };
+    const finalCategory = (useCustomCategory ? customCategory.trim().toLowerCase() : category) || "vocabulary";
+    const base: Activity = { id: `act-${Date.now()}`, unit_id: unitId, name: name.trim(), type, category: finalCategory, session_phase: phase };
     let payload: Activity = base;
     if (type === "fill_gaps" || type === "read_complete") {
       if (!paragraph.trim() || !answer.trim()) { alert("Provide a paragraph and the correct answer."); return; }
@@ -119,6 +126,7 @@ export function ActivityModal({ unitId, unitTitle, onClose }: { unitId: string; 
     resetDraft();
     setRev((r) => r + 1);
   };
+
 
   return (
     <ModalShell title="Activities" subtitle={unitTitle} onClose={onClose} width="max-w-4xl">
