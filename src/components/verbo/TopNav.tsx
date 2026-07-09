@@ -232,7 +232,7 @@ export function TopNav({ items, variant = "light" }: { items: NavEntry[]; varian
           >
             <div className="sign">
               <svg viewBox="0 0 24 24">
-                <path d="M5 5h9v2H7v10h7v2H5V5zm13.83 6-2.58-2.59L15 10l5 5-5 5-1.41-1.41L18.83 16H10v-2h8.83z" />
+                <path d="M4 11h14v-4l6 5-6 5v-4H4z" />
               </svg>
             </div>
             <div className="text">Sign out</div>
