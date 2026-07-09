@@ -52,6 +52,27 @@ export function setStudentVideoLink(studentId: string, link: string) {
   window.dispatchEvent(new CustomEvent(STUDENTS_EVENT));
 }
 
+/** Toggle a completed level into "Reopened for Review" (read-only student access). */
+export function setLevelReopened(studentId: string, levelName: string, on: boolean) {
+  const u = USERS.find((x) => x.id === studentId);
+  const current = u?.reopened_levels ?? [];
+  const next = on
+    ? Array.from(new Set([...current, levelName]))
+    : current.filter((n) => n !== levelName);
+  if (u) u.reopened_levels = next;
+  if (typeof window === "undefined") return;
+  const overrides = readProfileOverrides();
+  overrides[studentId] = { ...(overrides[studentId] ?? {}), reopened_levels: next };
+  writeProfileOverrides(overrides);
+  window.dispatchEvent(new CustomEvent(STUDENTS_EVENT));
+}
+
+export function getReopenedLevels(studentId: string): string[] {
+  return USERS.find((x) => x.id === studentId)?.reopened_levels ?? [];
+}
+
+
+
 export function subscribeStudents(cb: () => void): () => void {
   if (typeof window === "undefined") return () => {};
   const onStorage = (e: StorageEvent) => { if (e.key === PROFILE_KEY) cb(); };

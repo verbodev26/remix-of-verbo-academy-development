@@ -12,7 +12,12 @@ import {
   type Activity,
   type ExerciseType,
   type SessionPhase,
+  type ActivityCategory,
   EXERCISE_LABELS,
+  DEFAULT_CATEGORIES,
+  MANDATORY_CATEGORIES,
+  categoryLabel,
+  isMandatoryCategory,
   activitiesForUnit,
   addActivity,
   removeActivity,
@@ -71,6 +76,9 @@ export function ActivityModal({ unitId, unitTitle, onClose }: { unitId: string; 
   const [phase, setPhase] = useState<SessionPhase>("pre");
   const [name, setName] = useState("");
   const [type, setType] = useState<ExerciseType>("fill_gaps");
+  const [category, setCategory] = useState<ActivityCategory>("vocabulary");
+  const [customCategory, setCustomCategory] = useState("");
+  const [useCustomCategory, setUseCustomCategory] = useState(false);
   const [paragraph, setParagraph] = useState("");
   const [answer, setAnswer] = useState("");
   const [items, setItems] = useState<{ text: string; key: string }[]>([{ text: "", key: "" }, { text: "", key: "" }]);
@@ -85,6 +93,9 @@ export function ActivityModal({ unitId, unitTitle, onClose }: { unitId: string; 
   const preList = existing.filter((a) => phaseOf(a) === "pre");
   const postList = existing.filter((a) => phaseOf(a) === "post");
 
+  const presentCategories = useMemo(() => new Set(existing.map((a) => a.category).filter(Boolean) as string[]), [existing]);
+  const missingMandatory = MANDATORY_CATEGORIES.filter((c) => !presentCategories.has(c));
+
   const resetDraft = () => {
     setName(""); setParagraph(""); setAnswer("");
     setItems([{ text: "", key: "" }, { text: "", key: "" }]);
@@ -94,7 +105,8 @@ export function ActivityModal({ unitId, unitTitle, onClose }: { unitId: string; 
 
   const save = () => {
     if (!name.trim()) { alert("Please give the activity a name."); return; }
-    const base: Activity = { id: `act-${Date.now()}`, unit_id: unitId, name: name.trim(), type, session_phase: phase };
+    const finalCategory = (useCustomCategory ? customCategory.trim().toLowerCase() : category) || "vocabulary";
+    const base: Activity = { id: `act-${Date.now()}`, unit_id: unitId, name: name.trim(), type, category: finalCategory, session_phase: phase };
     let payload: Activity = base;
     if (type === "fill_gaps" || type === "read_complete") {
       if (!paragraph.trim() || !answer.trim()) { alert("Provide a paragraph and the correct answer."); return; }
@@ -114,6 +126,7 @@ export function ActivityModal({ unitId, unitTitle, onClose }: { unitId: string; 
     resetDraft();
     setRev((r) => r + 1);
   };
+
 
   return (
     <ModalShell title="Activities" subtitle={unitTitle} onClose={onClose} width="max-w-4xl">
@@ -141,6 +154,55 @@ export function ActivityModal({ unitId, unitTitle, onClose }: { unitId: string; 
               </select>
             </Field>
           </div>
+
+          <Field
+            label="Category"
+            hint="Vocabulary, Grammar, and Practice are the three mandatory categories that gate unit progression."
+          >
+            {!useCustomCategory ? (
+              <div className="flex gap-2">
+                <select
+                  value={category}
+                  onChange={(e) => {
+                    if (e.target.value === "__custom__") { setUseCustomCategory(true); return; }
+                    setCategory(e.target.value);
+                  }}
+                  className={inputCls}
+                >
+                  {DEFAULT_CATEGORIES.map((c) => (
+                    <option key={c} value={c}>
+                      {categoryLabel(c)}{isMandatoryCategory(c) ? " (mandatory)" : ""}
+                    </option>
+                  ))}
+                  <option value="__custom__">Add custom category…</option>
+                </select>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <input
+                  value={customCategory}
+                  onChange={(e) => setCustomCategory(e.target.value)}
+                  placeholder="e.g. Idioms"
+                  className={inputCls}
+                  autoFocus
+                />
+                <button
+                  type="button"
+                  onClick={() => { setUseCustomCategory(false); setCustomCategory(""); }}
+                  className="rounded-lg border border-border bg-background px-3 text-xs font-medium text-muted-foreground hover:bg-secondary"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+          </Field>
+
+          {missingMandatory.length > 0 && (
+            <div className="flex items-start gap-2 rounded-lg border border-dashed border-amber-400/60 bg-amber-50/60 px-3 py-2.5 text-[11px] leading-relaxed text-amber-900 dark:bg-amber-500/10 dark:text-amber-200">
+              <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              This unit is missing mandatory {missingMandatory.map(categoryLabel).join(" · ")} activities. Students cannot pass the unit until each mandatory category has at least one activity with a score ≥ 60.
+            </div>
+          )}
 
           {(type === "fill_gaps" || type === "read_complete") && (
             <div className="space-y-4">
@@ -240,7 +302,15 @@ function PhaseGroup({ label, list, onRemove, showTag }: {
                   <span className="truncate text-xs font-semibold text-foreground">{a.name}</span>
                   {showTag && <Pill tone="warning">Post-Session</Pill>}
                 </div>
-                <div className="text-[11px] text-muted-foreground">{EXERCISE_LABELS[a.type]}</div>
+                <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                  <span>{EXERCISE_LABELS[a.type]}</span>
+                  {a.category && (
+                    <>
+                      <span>·</span>
+                      <span className={isMandatoryCategory(a.category) ? "font-semibold text-accent" : ""}>{categoryLabel(a.category)}</span>
+                    </>
+                  )}
+                </div>
               </div>
               <button onClick={() => onRemove(a.id)} className="text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"><Trash2 className="h-3.5 w-3.5" /></button>
             </li>
