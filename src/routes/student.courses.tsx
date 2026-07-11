@@ -85,13 +85,13 @@ function levelIsComplete(level: CourseLevel, studentId: string): boolean {
   if (level.units.length === 0) return false;
   for (const u of level.units) {
     if (isMilestoneUnit(u.id) && !isMilestoneUnlocked(studentId, u.id)) return false;
-    if (!unitPassed(u.id)) return false;
+    if (!unitPassed(studentId, u.id)) return false;
   }
   return true;
 }
 
-function passedUnitCount(level: CourseLevel): number {
-  return level.units.filter((u) => unitPassed(u.id)).length;
+function passedUnitCount(level: CourseLevel, studentId: string): number {
+  return level.units.filter((u) => unitPassed(studentId, u.id)).length;
 }
 
 function computeLevelStates(
