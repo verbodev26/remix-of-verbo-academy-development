@@ -938,7 +938,7 @@ function AddAdjustmentModal({ onClose, onSave }: { onClose: () => void; onSave: 
   const valid = amount.trim() !== "" && !Number.isNaN(num) && num !== 0 && reason.trim() !== "";
 
   return (
-    <div onClick={onClose} className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
       <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md overflow-hidden rounded-2xl bg-card shadow-floating">
         <div className="flex items-start justify-between border-b border-border px-6 py-5" style={{ background: "linear-gradient(135deg, #01304a 0%, #02466b 100%)" }}>
           <div>
@@ -1148,7 +1148,7 @@ function TeacherFormModal({
 // ===========================================================================
 function Overlay({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
-    <div onClick={onClose} className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
       <div onClick={(e) => e.stopPropagation()} className="w-full max-w-3xl">{children}</div>
     </div>
   );

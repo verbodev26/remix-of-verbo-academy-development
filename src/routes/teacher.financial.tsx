@@ -434,7 +434,7 @@ function FinancialIssueModal({ onClose, onSubmit }: { onClose: () => void; onSub
   const [text, setText] = useState("");
   const trimmed = text.trim();
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
       <div className="w-full max-w-lg overflow-hidden rounded-2xl border border-border bg-card shadow-elevated" onClick={(e) => e.stopPropagation()}>
         <div className="bg-gradient-to-br from-[#01304a] to-[#024366] p-5 text-white">
           <div className="text-base font-semibold">Report a Financial Issue</div>

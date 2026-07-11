@@ -814,7 +814,7 @@ function ActivityRunner({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
       <div className="flex h-[78vh] max-h-[820px] w-[76vw] max-w-[1100px] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-elevated" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between gap-4 bg-gradient-to-br from-[#01304a] to-[#024366] px-6 py-4 text-white">
           <div>

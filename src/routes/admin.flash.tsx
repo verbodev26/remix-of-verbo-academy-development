@@ -332,7 +332,7 @@ function FlashModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
       <div className="w-full max-w-xl overflow-hidden rounded-2xl border border-border bg-card shadow-elevated" onClick={(e) => e.stopPropagation()}>
         <div className={`flex items-start justify-between gap-4 p-6 text-white ${format === "lightning" ? "bg-gradient-to-br from-[#1e3a8a] via-[#0284c7] to-[#facc15]" : "bg-gradient-to-br from-[#4a044e] via-[#7e22ce] to-[#a855f7]"}`}>
           <div>
@@ -838,7 +838,7 @@ function SeasonModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
       <div className="w-full max-w-xl overflow-hidden rounded-2xl border border-border bg-card shadow-elevated" onClick={(e) => e.stopPropagation()}>
         <div
           className="flex items-start justify-between gap-4 p-6 text-white"

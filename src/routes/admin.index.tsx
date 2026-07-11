@@ -447,7 +447,7 @@ function MetricsModal({ students, teacherRows, onClose }: {
   const teacherLogins = labels.map((m, i) => ({ month: m, value: series(211, 10, 60)[i] }));
 
   return (
-    <div onClick={onClose} className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
       <div onClick={(e) => e.stopPropagation()} className="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-card shadow-floating">
         <div className="flex items-center justify-between border-b border-border px-6 py-4" style={{ background: "linear-gradient(135deg, #01304a 0%, #02466b 100%)" }}>
           <div className="flex items-center gap-2 text-white">

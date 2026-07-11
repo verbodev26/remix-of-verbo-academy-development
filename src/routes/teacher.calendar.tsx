@@ -295,7 +295,7 @@ function ClubQuickModal({ club, onClose, onCantAttend }: {
   club: Club; onClose: () => void; onCantAttend: () => void;
 }) {
   return (
-    <div onClick={onClose} className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
       <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md overflow-hidden rounded-2xl bg-card shadow-floating">
         <div className="flex items-center justify-between border-b border-border px-5 py-4">
           <div>
@@ -330,7 +330,7 @@ function RequestReleaseModal({ club, onClose, onSubmit }: {
 }) {
   const [reason, setReason] = useState("");
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-4">
       <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md rounded-2xl bg-background shadow-2xl">
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <h2 className="text-base font-semibold text-foreground">Request Release</h2>

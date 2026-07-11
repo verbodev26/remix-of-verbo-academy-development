@@ -812,7 +812,7 @@ function VerboFlashSection({
 
 function MysteryCooldownModal({ onClose }: { onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
       <div className="w-full max-w-sm overflow-hidden rounded-2xl border border-border bg-card p-6 text-center shadow-elevated" onClick={(e) => e.stopPropagation()}>
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#4a044e] to-[#7e22ce] text-white">
           <Gift className="h-7 w-7" />
@@ -974,7 +974,7 @@ function ChallengeDetail({
   const onCooldown = !completed && chosen && cooldownRemaining !== null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
       <div className="w-full max-w-xl overflow-hidden rounded-2xl border border-border bg-card shadow-elevated" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between gap-4 bg-gradient-to-br from-[#01304a] to-[#024366] p-6 text-white">
           <div>
@@ -1062,7 +1062,7 @@ function ShareResultModal({
   const [link, setLink] = useState(initialLink);
 
   return (
-    <div className="fixed inset-0 z-[55] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-[55] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
       <div
         className="w-full max-w-lg overflow-hidden rounded-2xl border border-border bg-card shadow-elevated"
         onClick={(e) => e.stopPropagation()}
@@ -1342,7 +1342,7 @@ function LightningRevealModal({
 function SeasonCooldownModal({ season, onClose }: { season: FlashSeason; onClose: () => void }) {
   const accent = season.accent_color || "#7e22ce";
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
       <div className="w-full max-w-sm overflow-hidden rounded-2xl border border-border bg-card p-6 text-center shadow-elevated" onClick={(e) => e.stopPropagation()}>
         <div
           className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl text-white"
