@@ -405,11 +405,14 @@ function ClubFormPanel({
   const [description, setDescription] = useState(initial?.description ?? "");
   const [link, setLink] = useState(initial?.link ?? "");
   const [material, setMaterial] = useState(initial?.material ?? "");
+  const [materialName, setMaterialName] = useState(initial?.material ?? "");
   const [cover, setCover] = useState(initial?.cover_image ?? "");
   const [teacherId, setTeacherId] = useState(initial?.teacher_id ?? "");
   const [date, setDate] = useState(initial?.date?.slice(0, 16) ?? "");
   const [duration, setDuration] = useState(initial?.duration_minutes ?? 60);
   const [spotsTotal, setSpotsTotal] = useState(initial?.spots_total ?? (type === "book" ? 4 : 30));
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  const materialInputRef = useRef<HTMLInputElement>(null);
   const [teacherPayment, setTeacherPayment] = useState<string>(
     initial?.teacher_payment != null ? String(initial.teacher_payment) : "",
   );
