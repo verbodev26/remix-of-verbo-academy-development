@@ -21,12 +21,12 @@ import { Confetti } from "./Confetti";
 import {
   hasCreditUsed,
   isSilenced,
-  markCreditUsed,
   markSilenced,
   useFreemium,
   type FreemiumKind,
 } from "@/lib/core-freemium-store";
 import { PLAN_DEFAULTS } from "@/lib/club-bookings-store";
+
 
 const LABELS: Record<FreemiumKind, string> = {
   insight: "Insight session",
