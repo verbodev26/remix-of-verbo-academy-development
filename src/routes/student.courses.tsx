@@ -829,7 +829,7 @@ function ActivityRunner({
           {orderedCats.map((c) => {
             const active = c === activeCat;
             const mandatory = isMandatoryCategory(c);
-            const best = activities.filter((a) => (a.category ?? "uncategorized") === c).reduce((m, a) => Math.max(m, bestScoreFor(a.id)), 0);
+            const best = activities.filter((a) => (a.category ?? "uncategorized") === c).reduce((m, a) => Math.max(m, bestScoreFor(studentId, a.id)), 0);
             const ok = mandatory && best >= 60;
             return (
               <button
