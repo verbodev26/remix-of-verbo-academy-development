@@ -265,8 +265,8 @@ Nombres de nivel confirmados por producto:
 | paragraph / answer / items / prompt / audioName / question / options / correctIndex | — | opcional | según `type` |
 
 **`MatchItem`**: `{ text: string; key: string }`.
-**`ActivityScore`**: `{ best: number; attempts: number; lastAt: string }`, clave = `activityId` — ⚠️ **sin `studentId`**, ver §13.
-Mapas relacionados sin interfaz formal: `Completion` (`unitId → boolean`), `Attempts` (`unitId → number`), `MilestoneUnlocks` (clave `` `${studentId}::${unitId}` ``).
+**`ActivityScore`**: `{ best: number; attempts: number; lastAt: string }`, clave = `` `${studentId}::${activityId}` `` — ✅ scoped por alumno desde 2026-07-11 (fix bug de progreso compartido).
+Mapas relacionados sin interfaz formal, todos con clave compuesta `` `${studentId}::${unitId}` ``: `Completion` (→ `boolean`), `Attempts` (→ `number`), `MilestoneUnlocks` (→ `boolean`).
 
 ### `StoredMaterial` (`src/lib/materials-store.ts`)
 
