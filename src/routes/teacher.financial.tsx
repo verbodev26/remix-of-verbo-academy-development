@@ -16,6 +16,7 @@ import {
 } from "@/lib/teacher-kpis";
 import { addFinancialIssue } from "@/lib/financial-issues-store";
 import { Card, SectionTitle, Pill } from "@/components/verbo/ui";
+import { BonusBadge } from "@/components/verbo/BonusBadge";
 
 export const Route = createFileRoute("/teacher/financial")({
   head: () => ({
@@ -222,14 +223,9 @@ function MyBalancePage() {
       </div>
 
       {/* Badges */}
-      {(kpis?.bonusEligible || warningLevel !== "none") && (
+      {(kpis || warningLevel !== "none") && (
         <div className="flex flex-wrap items-center justify-end gap-2">
-          {kpis?.bonusEligible && (
-            <span className="verbo-bonus-glow inline-flex items-center gap-1.5 rounded-full bg-success/15 px-3 py-1.5 text-xs font-semibold text-success">
-              <Trophy className="h-3.5 w-3.5" /> Bonus Eligible
-              <Sparkles className="h-3 w-3" />
-            </span>
-          )}
+          {kpis && <BonusBadge status={kpis.bonusStatus} glow={kpis.bonusEligible} />}
           {warningLevel === "yellow" && (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-warning/20 px-3 py-1.5 text-xs font-semibold text-amber-700">
               <AlertTriangle className="h-3.5 w-3.5" /> 1 KPI Below Target
