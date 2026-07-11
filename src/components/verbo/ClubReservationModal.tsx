@@ -213,10 +213,12 @@ export function ClubReservationModal({
             </>
           )}
         </div>
+        </div>
       </div>
     </div>
   );
 }
+
 
 function Row({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
