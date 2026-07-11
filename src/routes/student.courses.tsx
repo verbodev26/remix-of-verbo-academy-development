@@ -114,7 +114,7 @@ function computeLevelStates(
   }
 
   return levels.map((level, i) => {
-    const passed = passedUnitCount(level);
+    const passed = passedUnitCount(level, studentId);
     const base = { passedUnits: passed, totalUnits: level.units.length };
     if (!contractedSet.has(level.name)) {
       return {
