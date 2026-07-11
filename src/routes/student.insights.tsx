@@ -41,6 +41,7 @@ function Page() {
   useBookings(); // re-render on booking changes
 
   const [selected, setSelected] = useState<Club | null>(null);
+  const freemium = useCoreFreemiumGate(user);
 
   const events = useMemo<CalendarEvent[]>(() => {
     return loadClubs()
@@ -51,9 +52,7 @@ function Page() {
   if (!user) return null;
 
   const isSignature = user.access_plan === "Signature";
-  const freemium = useCoreFreemiumGate(user);
-  // If a Core student has silenced insights, hide the calendar entirely.
-  const insightSilenced = user.access_plan === "Core" && isSilenced(user.id, "insight");
+
 
   const used = bookingsThisMonth(user.id, "insight");
   const capNum = monthlyCap(user.id, "insight");
