@@ -302,19 +302,20 @@ const PRODUCT_GRADIENTS: Record<string, string> = {
 };
 
 function LevelsView({
-  productLabel, levels, states, contracted, events, onOpen,
+  productLabel, levels, states, contracted, events, studentId, onOpen,
 }: {
   productLabel: string;
   levels: CourseLevel[];
   states: LevelState[];
   contracted: string[];
   events: LearningPathEvent[];
+  studentId: string;
   onOpen: (level: CourseLevel, state: LevelState) => void;
 }) {
   const contractedSet = new Set(contracted);
   const contractedLevels = levels.filter((l) => contractedSet.has(l.name));
   const totalUnits = contractedLevels.reduce((s, l) => s + l.units.length, 0);
-  const passedUnits = contractedLevels.reduce((s, l) => s + passedUnitCount(l), 0);
+  const passedUnits = contractedLevels.reduce((s, l) => s + passedUnitCount(l, studentId), 0);
   const pct = totalUnits === 0 ? 0 : Math.round((passedUnits / totalUnits) * 100);
 
   // Upcoming milestone banner: within 3 non-milestone units of the next locked milestone
@@ -325,12 +326,12 @@ function LevelsView({
   if (currentLevel) {
     for (let i = 0; i < currentLevel.units.length; i++) {
       const u = currentLevel.units[i];
-      if (isMilestoneUnit(u.id) && !unitPassed(u.id)) {
+      if (isMilestoneUnit(u.id) && !unitPassed(studentId, u.id)) {
         // Count non-passed non-milestone units before this milestone.
         let remaining = 0;
         for (let j = 0; j < i; j++) {
           const v = currentLevel.units[j];
-          if (!isMilestoneUnit(v.id) && !unitPassed(v.id)) remaining++;
+          if (!isMilestoneUnit(v.id) && !unitPassed(studentId, v.id)) remaining++;
         }
         if (remaining <= 3) milestoneRemaining = remaining;
         break;
