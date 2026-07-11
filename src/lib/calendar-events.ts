@@ -162,10 +162,13 @@ export function studentCalendarEvents(studentId: string, opts?: {
   for (const c of loadClubs()) {
     if (c.type !== "insight" && c.type !== "book") continue;
     if (c.status === "cancelled") continue;
-    events.push(clubEvent(c));
+    const ev = clubEvent(c);
+    ev.booked = isBooked(studentId, c.id);
+    events.push(ev);
   }
   return events;
 }
+
 
 
 
