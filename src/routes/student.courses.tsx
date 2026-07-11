@@ -857,7 +857,7 @@ function ActivityRunner({
               <h3 className="mt-1 text-xl font-semibold tracking-tight text-foreground">{current.name}</h3>
               {readOnly && (
                 <div className="mt-2 rounded-lg bg-secondary/50 p-2 text-[11px] text-muted-foreground">
-                  Best score: <span className="font-semibold text-foreground">{bestScoreFor(current.id)}/100</span> — review only.
+                  Best score: <span className="font-semibold text-foreground">{bestScoreFor(studentId, current.id)}/100</span> — review only.
                 </div>
               )}
               <div className="mt-6">
