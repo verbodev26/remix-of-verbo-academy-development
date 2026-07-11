@@ -11,6 +11,9 @@ import { Card } from "@/components/verbo/ui";
 import { ClubReservationModal } from "@/components/verbo/ClubReservationModal";
 import type { CalendarEvent, CalendarEventKind } from "@/lib/calendar-events";
 import { isBooked, monthlyCap, bookingsThisMonth, useBookings } from "@/lib/club-bookings-store";
+import { useCoreFreemiumGate } from "@/components/verbo/CoreFreemiumFlow";
+import { isSilenced } from "@/lib/core-freemium-store";
+
 
 export const Route = createFileRoute("/student/insights")({ component: Page });
 
