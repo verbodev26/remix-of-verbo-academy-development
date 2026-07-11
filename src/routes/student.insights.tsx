@@ -19,7 +19,7 @@ export const Route = createFileRoute("/student/insights")({ component: Page });
 
 const KINDS: CalendarEventKind[] = ["insight"];
 
-function clubToEvent(c: Club): CalendarEvent {
+function clubToEvent(c: Club, studentId: string): CalendarEvent {
   return {
     id: c.id,
     kind: "insight",
@@ -30,9 +30,11 @@ function clubToEvent(c: Club): CalendarEvent {
     status: c.status,
     spots_taken: c.spots_taken,
     spots_total: c.spots_total,
+    booked: isBooked(studentId, c.id),
     club: c,
   };
 }
+
 
 function Page() {
   const { user } = useAuth();
