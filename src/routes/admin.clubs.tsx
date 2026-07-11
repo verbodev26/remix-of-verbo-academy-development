@@ -493,9 +493,34 @@ function ClubFormPanel({
           <Field label="Cover image" help="Cover image students will see on their calendar.">
             <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-secondary/30 p-8 text-center">
               <ImageIcon className="h-7 w-7 text-muted-foreground" />
-              <div className="mt-2 text-sm font-medium text-foreground">{cover || "Drag & drop or choose an image"}</div>
+              {cover ? (
+                <img src={cover} alt="Cover preview" className="mb-2 h-32 w-full max-w-xs rounded-lg object-cover" />
+              ) : (
+                <div className="mt-2 text-sm font-medium text-foreground">Drag & drop or choose an image</div>
+              )}
               <div className="mt-1 text-xs text-muted-foreground">JPG or PNG shown on the student calendar</div>
-              <GhostButton type="button" className="mt-3" onClick={() => setCover(cover ? "" : "club-cover.jpg")}>
+              <input
+                ref={coverInputRef}
+                type="file"
+                accept="image/png,image/jpeg"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  const reader = new FileReader();
+                  reader.onload = () => setCover(String(reader.result));
+                  reader.readAsDataURL(file);
+                  e.target.value = "";
+                }}
+              />
+              <GhostButton
+                type="button"
+                className="mt-3"
+                onClick={() => {
+                  if (cover) setCover("");
+                  else coverInputRef.current?.click();
+                }}
+              >
                 {cover ? "Remove image" : "Choose file"}
               </GhostButton>
             </div>
