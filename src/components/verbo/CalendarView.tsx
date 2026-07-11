@@ -288,23 +288,32 @@ function EventPill({ ev, onClick }: { ev: CalendarEvent; onClick: () => void }) 
     <div className="group relative">
       <button
         onClick={onClick}
-        className="flex w-full items-center gap-1 truncate rounded-md px-1.5 py-1 text-left text-[10.5px] font-medium text-white shadow-sm transition-opacity hover:opacity-90 cursor-pointer"
+        className={`flex w-full items-center gap-1 truncate rounded-md px-1.5 py-1 text-left text-[10.5px] font-medium text-white shadow-sm transition-opacity hover:opacity-90 cursor-pointer ${
+          ev.booked ? "ring-2 ring-emerald-400 ring-offset-1 ring-offset-card" : ""
+        }`}
         style={{ backgroundColor: display.color }}
         title={
           ev.sub_status
             ? `${SUB_STATUS_META[ev.sub_status].label} — ${ev.title}`
-            : `${ev.is_group ? "Group" : kindMeta.label} — ${ev.title}`
+            : `${ev.booked ? "Reserved — " : ""}${ev.is_group ? "Group" : kindMeta.label} — ${ev.title}`
         }
       >
-        <span className="rounded bg-white/20 px-1 text-[9px] font-bold leading-none">
-          {display.short}
-        </span>
+        {ev.booked ? (
+          <span className="inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white" title="You're in">
+            <Check className="h-2.5 w-2.5" strokeWidth={3} />
+          </span>
+        ) : (
+          <span className="rounded bg-white/20 px-1 text-[9px] font-bold leading-none">
+            {display.short}
+          </span>
+        )}
         <span className="truncate">
           {isClub
             ? `${fmtTime(ev.date)} · ${ev.title}${seats ? ` · ${seats}` : ""}`
             : `${fmtTime(ev.date)} · ${ev.is_group ? ev.title : ev.title.split(" ")[0]}${cellLabelInline}`}
         </span>
       </button>
+
       {isClub && ev.enrolled_names && ev.enrolled_names.length > 0 && (
         <div className="pointer-events-none absolute left-full top-0 z-20 ml-2 hidden w-52 rounded-lg border border-border bg-card p-3 text-left text-[11px] shadow-floating group-hover:block">
           <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Enrolled Students</div>
