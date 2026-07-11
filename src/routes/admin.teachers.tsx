@@ -9,7 +9,8 @@ import {
   PAYMENT_FREQUENCIES, paymentFrequency, defaultPaymentRecords, financialSummary,
   type QualifiedProduct, type TeacherStatus, type PaymentFrequency,
 } from "@/lib/teacher-model";
-import { isBonusEligible } from "@/lib/teacher-kpis";
+import { computeTeacherKpis } from "@/lib/teacher-kpis";
+import { BonusBadge } from "@/components/verbo/BonusBadge";
 import { useAvatar } from "@/lib/avatar-store";
 import {
   activeStrikeCount, recentStrikes, justifyStrike, subscribeStrikes,
