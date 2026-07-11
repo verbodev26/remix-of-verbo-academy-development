@@ -145,17 +145,23 @@ export function totalBookingsForStudent(studentId: string, type: ClubType): numb
  *  - Others: cap − bookings_this_month (non-accumulable, monthly reset). */
 export function resolvedRemainingSeats(studentId: string, kind: AccessKind): number {
   const cap = resolvedMonthlyCap(studentId, kind);
+  // Core plan: courtesy freemium credit — while it's unclaimed, treat as 1
+  // available seat so the reservation/request flow isn't blocked by the
+  // recurring cap (which is 0 for Core by design).
+  const plan = userById(studentId)?.access_plan;
+  const freemiumBoost = plan === "Core" && !freemiumUsed(studentId, kind) ? 1 : 0;
   if (!isFinite(cap)) return Infinity;
-  if (cap === 0) return 0;
+  if (cap === 0 && freemiumBoost === 0) return 0;
   if (isAccumulable(studentId) && kind !== "spotlight") {
     const type: ClubType = kind === "insight" ? "insight" : "book";
     const total = totalBookingsForStudent(studentId, type);
     return Math.max(0, cap * monthsElapsedSinceCycle(studentId) - total);
   }
-  if (kind === "spotlight") return cap; // spotlight bookings tracked elsewhere
+  if (kind === "spotlight") return cap + freemiumBoost;
   const type: ClubType = kind === "insight" ? "insight" : "book";
-  return Math.max(0, cap - bookingsThisMonth(studentId, type));
+  return Math.max(0, cap - bookingsThisMonth(studentId, type)) + freemiumBoost;
 }
+
 
 /** Backwards-compat wrapper for the old X/month cap API. Prefer
  *  `resolvedMonthlyCap` / `resolvedRemainingSeats` for new call-sites. */
