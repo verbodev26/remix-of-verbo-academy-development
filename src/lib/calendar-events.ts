@@ -17,6 +17,8 @@ import type { ExtSession, ExtSessionStatus, AttendanceSubStatus } from "./sessio
 import { loadSessions, SUB_STATUS_META } from "./sessions-store";
 import { loadClubs, type Club, type ClubType, type TimeStatus } from "./clubs-store";
 import { groupsByStudentId } from "./groups-store";
+import { isBooked } from "./club-bookings-store";
+
 
 export type CalendarEventKind =
   | "class"        // 1:1 Performance Session (course)
@@ -43,6 +45,9 @@ export interface CalendarEvent {
   spots_taken?: number;
   spots_total?: number;
   enrolled_names?: string[];
+  /** True when the currently-viewed student already has a seat in this club.
+   *  Only set by student-scoped adapters; teacher adapters leave it undefined. */
+  booked?: boolean;
   /** Refinement of Absent/Cancelled status. When set, the pill renders the
    *  2-letter initials + the sub-status color instead of the base color. */
   sub_status?: AttendanceSubStatus;
@@ -50,6 +55,7 @@ export interface CalendarEvent {
   session?: ExtSession;
   club?: Club;
 }
+
 
 function sessionEvent(s: ExtSession, title: string, subStatus?: AttendanceSubStatus): CalendarEvent {
   return {
@@ -156,10 +162,13 @@ export function studentCalendarEvents(studentId: string, opts?: {
   for (const c of loadClubs()) {
     if (c.type !== "insight" && c.type !== "book") continue;
     if (c.status === "cancelled") continue;
-    events.push(clubEvent(c));
+    const ev = clubEvent(c);
+    ev.booked = isBooked(studentId, c.id);
+    events.push(ev);
   }
   return events;
 }
+
 
 
 

@@ -87,16 +87,27 @@ export function ClubReservationModal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-lg rounded-2xl bg-card p-6 shadow-floating"
+        className="relative w-full max-w-lg overflow-hidden rounded-2xl bg-card shadow-floating"
       >
         <button
           onClick={onClose}
           aria-label="Close"
-          className="absolute right-4 top-4 rounded-md p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"
+          className="absolute right-4 top-4 z-10 rounded-md bg-black/40 p-1 text-white hover:bg-black/60"
         >
           <X className="h-4 w-4" />
         </button>
 
+        {club.cover_image && (
+          <div className="relative h-40 w-full overflow-hidden bg-secondary">
+            <img
+              src={club.cover_image}
+              alt=""
+              className="h-full w-full object-cover"
+            />
+          </div>
+        )}
+
+        <div className="p-6">
         <div className="flex items-center gap-2">
           <span
             className="rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white"
@@ -121,8 +132,23 @@ export function ClubReservationModal({
         <div className="mt-4 space-y-2 text-sm">
           <Row icon={<CalendarClock className="h-4 w-4" />} label="When" value={`${fmtLong(club.date)} · ${club.duration_minutes} min`} />
           {teacher && <Row icon={<Video className="h-4 w-4" />} label="Host" value={teacher.name} />}
-          {club.material && <Row icon={<FileText className="h-4 w-4" />} label="Material" value={club.material} />}
+          {club.material && (
+            <div className="flex items-center justify-between gap-3">
+              <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                <FileText className="h-4 w-4" />Material
+              </span>
+              <a
+                href={club.material}
+                target="_blank"
+                rel="noreferrer"
+                className="truncate text-right font-medium text-accent underline-offset-2 hover:underline"
+              >
+                View pre-club material
+              </a>
+            </div>
+          )}
         </div>
+
 
         {/* Seat meter */}
         <div className="mt-5">
@@ -146,11 +172,12 @@ export function ClubReservationModal({
         <div className="mt-4 rounded-lg bg-amber-50 px-3 py-2.5 text-[11.5px] leading-relaxed text-amber-900 ring-1 ring-amber-200">
           <div>Reservations close 24h before start.</div>
           <div className="mt-0.5">
-            You can book up to <strong>{capDisplay}</strong> {isBook ? "Book Clubs" : "Insights"} per month —
-            used <strong>{used}/{capDisplay}</strong> this cycle.
+            {isSignature || !isFinite(cap)
+              ? <>You have <strong>unlimited</strong> {isBook ? "Book Clubs" : "Insights"} this month.</>
+              : <>You've used <strong>{used} of your {capDisplay}</strong> {isBook ? "Book Clubs" : "Insights"} this month.</>}
           </div>
-
         </div>
+
 
         {error && (
           <div className="mt-3 flex items-start gap-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-800 ring-1 ring-red-200">
@@ -186,10 +213,12 @@ export function ClubReservationModal({
             </>
           )}
         </div>
+        </div>
       </div>
     </div>
   );
 }
+
 
 function Row({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (

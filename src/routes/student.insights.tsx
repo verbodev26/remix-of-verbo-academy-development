@@ -19,7 +19,7 @@ export const Route = createFileRoute("/student/insights")({ component: Page });
 
 const KINDS: CalendarEventKind[] = ["insight"];
 
-function clubToEvent(c: Club): CalendarEvent {
+function clubToEvent(c: Club, studentId: string): CalendarEvent {
   return {
     id: c.id,
     kind: "insight",
@@ -30,9 +30,11 @@ function clubToEvent(c: Club): CalendarEvent {
     status: c.status,
     spots_taken: c.spots_taken,
     spots_total: c.spots_total,
+    booked: isBooked(studentId, c.id),
     club: c,
   };
 }
+
 
 function Page() {
   const { user } = useAuth();
@@ -44,10 +46,12 @@ function Page() {
   const freemium = useCoreFreemiumGate(user);
 
   const events = useMemo<CalendarEvent[]>(() => {
+    if (!user) return [];
     return loadClubs()
       .filter((c) => c.type === "insight" && c.status !== "cancelled")
-      .map(clubToEvent);
-  }, []);
+      .map((c) => clubToEvent(c, user.id));
+  }, [user]);
+
 
   if (!user) return null;
 
@@ -66,8 +70,9 @@ function Page() {
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">Insights</h1>
           <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
             Live micro-workshops on grammar, vocabulary, pronunciation and culture. Reserve your seat
-            up to 24h before start — you can book up to {capDisplay} per month.
+            up to 24h before start — {isSignature ? "you have unlimited Insights every month." : `you can book up to ${capDisplay} per month.`}
           </p>
+
         </div>
       </div>
 
@@ -82,13 +87,15 @@ function Page() {
       <Card className="!p-4">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs">
           <div className="text-muted-foreground">
-            Seats used this cycle: <span className="font-semibold text-foreground">{used}/{capDisplay}</span>
+            {isSignature
+              ? <>You have <span className="font-semibold text-foreground">unlimited</span> Insights this month.</>
+              : <>You've used <span className="font-semibold text-foreground">{used} of your {capDisplay}</span> Insights this month.</>}
           </div>
           <div className="text-muted-foreground">
-
             Currently reserved: <span className="font-semibold text-foreground">{bookedCount}</span>
           </div>
         </div>
+
       </Card>
 
       {selected && (
