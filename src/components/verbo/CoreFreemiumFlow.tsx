@@ -60,11 +60,16 @@ export function useCoreFreemiumGate(user: { id: string; access_plan?: string } |
 
   const claim = () => {
     if (!state || state.step !== "welcome" || !user) return;
-    markCreditUsed(user.id, state.kind);
+    // NOTE: credit is NOT consumed here — only when the underlying
+    // reservation/request is actually confirmed (reserveSeat in
+    // club-bookings-store, or the Spotlight submit in student.sessions).
+    // If the student closes the next modal without confirming, the
+    // courtesy credit stays intact for a future attempt.
     const proceed = state.onProceed;
     setState(null);
     proceed();
   };
+
 
   const dismissUsed = (silence: boolean) => {
     if (!state || state.step !== "used" || !user) return;
