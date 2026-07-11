@@ -153,7 +153,7 @@ function computeUnitStates(level: CourseLevel, studentId: string, readOnly: bool
   const states: UnitStateKind[] = [];
   let previousPassed = true; // first unit is always unlockable
   for (const u of level.units) {
-    const passed = unitPassed(u.id);
+    const passed = unitPassed(studentId, u.id);
     if (isMilestoneUnit(u.id)) {
       if (passed) { states.push("passed"); previousPassed = true; continue; }
       if (!previousPassed) { states.push("locked"); previousPassed = false; continue; }
