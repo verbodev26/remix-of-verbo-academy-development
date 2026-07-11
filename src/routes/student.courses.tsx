@@ -639,18 +639,19 @@ function UnitVideoPlayer({ url }: { url: string }) {
 }
 
 function UnitDetail({
-  level, unit, readOnly, onBack, onChange,
+  level, unit, studentId, readOnly, onBack, onChange,
 }: {
   level: CourseLevel;
   unit: CourseUnit;
+  studentId: string;
   readOnly: boolean;
   onBack: () => void;
   onChange: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const activities = activitiesForUnit(unit.id);
-  const catProgress = unitCategoryProgress(unit.id);
-  const passed = unitPassed(unit.id);
+  const catProgress = unitCategoryProgress(studentId, unit.id);
+  const passed = unitPassed(studentId, unit.id);
   const milestone = isMilestoneUnit(unit.id);
 
   return (
