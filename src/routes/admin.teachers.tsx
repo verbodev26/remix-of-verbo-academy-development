@@ -1104,6 +1104,17 @@ function TeacherFormModal({
               <span className="pr-3 text-xs text-muted-foreground">MXN/h</span>
             </div>
           </Field>
+          <Field label="Hire date">
+            <input
+              type="date"
+              value={hireDate}
+              onChange={(e) => setHireDate(e.target.value)}
+              className={inputCls}
+            />
+            <p className="mt-1 text-[10.5px] text-muted-foreground">
+              KPI tracking activates in week 2 of the hire month. The 6-month bonus streak counts from the first full calendar month after the hire month.
+            </p>
+          </Field>
           <Field label="Qualified products (at least one)">
             <div className="flex flex-wrap gap-2">
               {QUALIFIED_PRODUCTS.map((p) => {
