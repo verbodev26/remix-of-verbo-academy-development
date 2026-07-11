@@ -441,7 +441,7 @@ function ClubFormPanel({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/40" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex justify-end bg-black/40">
       <div onClick={(e) => e.stopPropagation()} className="flex h-full w-full max-w-xl flex-col bg-background shadow-2xl">
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <div>
@@ -765,7 +765,7 @@ function ApproveReleaseModal({
   const valid = amount.trim() !== "" && !isNaN(parseFloat(amount)) && parseFloat(amount) >= 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md rounded-2xl bg-background shadow-2xl">
         <div className="border-b border-border px-6 py-4">
           <h2 className="text-base font-semibold text-foreground">Approve release</h2>

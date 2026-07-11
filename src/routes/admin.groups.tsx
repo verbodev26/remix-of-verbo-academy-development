@@ -863,7 +863,7 @@ function RestoreArchivedModal({ studentId, onClose, onDone }: { studentId: strin
 // -----------------------------------------------------------------------------
 function Overlay({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div onClick={(e) => e.stopPropagation()}>{children}</div>
     </div>
   );

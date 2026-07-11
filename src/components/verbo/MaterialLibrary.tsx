@@ -48,7 +48,7 @@ function PreviewModal({ m, onClose }: { m: StoredMaterial; onClose: () => void }
   const isPdf = m.material_type === "pdf";
   const isVideo = m.material_type === "video";
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
       <div
         className="flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl"
         onClick={(e) => e.stopPropagation()}

@@ -1430,7 +1430,7 @@ function Info({ label, value }: { label: string; value: string }) {
 // ===========================================================================
 function Overlay({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
-    <div onClick={onClose} className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
       <div onClick={(e) => e.stopPropagation()} className="w-full max-w-3xl">{children}</div>
     </div>
   );

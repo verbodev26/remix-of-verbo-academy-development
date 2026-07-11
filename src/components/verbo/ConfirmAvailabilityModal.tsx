@@ -9,7 +9,7 @@ export function ConfirmAvailabilityModal({
   onConfirm: () => void;
 }) {
   return (
-    <div onClick={onCancel} className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
       <div
         onClick={(e) => e.stopPropagation()}
         className="relative w-full max-w-lg rounded-2xl bg-card p-6 shadow-floating"

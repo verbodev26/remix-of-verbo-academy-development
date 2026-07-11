@@ -248,7 +248,7 @@ function EventDetailsModal({
     if (session?.teams_link) window.open(session.teams_link, "_blank");
   };
   return (
-    <div onClick={onClose} className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
       <div onClick={(e) => e.stopPropagation()} className="relative w-full max-w-md rounded-2xl bg-card p-6 shadow-floating">
         <button onClick={onClose} aria-label="Close" className="absolute right-4 top-4 rounded-md p-1 text-muted-foreground hover:bg-secondary hover:text-foreground">
           <X className="h-4 w-4" />
@@ -403,7 +403,7 @@ function LateCancellationModal({
   firstLine, onClose, onConfirm,
 }: { firstLine: string; onClose: () => void; onConfirm: () => void }) {
   return (
-    <div onClick={onClose} className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
       <div
         onClick={(e) => e.stopPropagation()}
         className="relative w-full max-w-md rounded-2xl bg-card p-6 ring-1 ring-red-200"
@@ -443,7 +443,7 @@ function SessionCancellationModal({
   onCancelNoReschedule: () => void;
 }) {
   return (
-    <div onClick={onClose} className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
       <div onClick={(e) => e.stopPropagation()} className="relative w-full max-w-md rounded-2xl bg-card p-6 shadow-floating">
         <button onClick={onClose} aria-label="Close" className="absolute right-4 top-4 rounded-md p-1 text-muted-foreground hover:bg-secondary hover:text-foreground">
           <X className="h-4 w-4" />
@@ -585,7 +585,7 @@ function RescheduleRequestModal({ session, onClose }: { session: ExtSession; onC
   };
 
   return (
-    <div onClick={onClose} className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
       <div onClick={(e) => e.stopPropagation()} className="relative w-full max-w-md rounded-2xl bg-card p-6 shadow-floating">
         <button onClick={onClose} aria-label="Close" className="absolute right-4 top-4 rounded-md p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"><X className="h-4 w-4" /></button>
         <div className="flex items-center gap-2">
@@ -649,7 +649,7 @@ function SpotlightRequestFlow({ studentId, onClose }: { studentId: string; onClo
 
   if (step === "explain") {
     return (
-      <div onClick={onClose} className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+      <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
         <div onClick={(e) => e.stopPropagation()} className="relative w-full max-w-md rounded-2xl bg-card p-6 shadow-floating">
           <div className="flex items-center gap-2 text-[#0d9488]">
             <Sparkles className="h-5 w-5" />
@@ -775,7 +775,7 @@ function SpotlightFormModal({ studentId, onClose }: { studentId: string; onClose
   }
 
   return (
-    <div onClick={onClose} className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
       <div onClick={(e) => e.stopPropagation()} className="relative w-full max-w-md rounded-2xl bg-card p-6 shadow-floating">
         <button onClick={onClose} aria-label="Close" className="absolute right-4 top-4 rounded-md p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"><X className="h-4 w-4" /></button>
         <div className="flex items-center gap-2 text-[#0d9488]">

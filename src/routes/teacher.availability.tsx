@@ -195,7 +195,7 @@ function AvailabilityPage() {
       )}
 
       {changeOpen && (
-        <div onClick={() => setChangeOpen(false)} className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
           <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md rounded-2xl bg-card p-6 shadow-floating">
             <h3 className="text-base font-semibold text-foreground">Request Change</h3>
             <p className="mt-1 text-xs text-muted-foreground">

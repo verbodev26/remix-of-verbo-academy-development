@@ -83,7 +83,7 @@ export function PlanModal({
   const readOnlyCls = "mt-1.5 w-full rounded-lg border border-input bg-muted px-3 py-2 text-sm text-muted-foreground cursor-not-allowed";
 
   return (
-    <div onClick={onClose} className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
       <div onClick={(e) => e.stopPropagation()} className="relative w-full max-w-2xl rounded-2xl bg-card p-6 shadow-floating max-h-[90vh] overflow-y-auto">
         <button onClick={onClose} className="absolute right-4 top-4 cursor-pointer rounded-md p-1 text-muted-foreground hover:bg-secondary hover:text-foreground" aria-label="Close">
           <X className="h-4 w-4" />
