@@ -765,10 +765,11 @@ function UnitDetail({
 /* Activity runner                                                             */
 /* -------------------------------------------------------------------------- */
 function ActivityRunner({
-  unit, activities, readOnly, onClose,
+  unit, activities, studentId, readOnly, onClose,
 }: {
   unit: CourseUnit;
   activities: Activity[];
+  studentId: string;
   readOnly: boolean;
   onClose: () => void;
 }) {
@@ -795,9 +796,9 @@ function ActivityRunner({
     if (!current) return;
     const ok = evaluate(current, draft[current.id] ?? "");
     const score = ok ? 100 : 0;
-    if (!readOnly) recordActivityScore(current.id, score);
+    if (!readOnly) recordActivityScore(studentId, current.id, score);
     // Auto-complete unit when the mandatory rule is satisfied.
-    if (!readOnly && unitPassed(unit.id)) setUnitCompleted(unit.id, true);
+    if (!readOnly && unitPassed(studentId, unit.id)) setUnitCompleted(studentId, unit.id, true);
     setFeedback({ ok, score });
   };
 
