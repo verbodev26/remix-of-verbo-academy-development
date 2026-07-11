@@ -789,6 +789,11 @@ function FinancialTab({ t, onPersist, onAddAdjustment }: { t: User; onPersist: (
 
   return (
     <div className="space-y-6">
+      {/* Bonus streak status — visible for every state so admins understand
+          why (or why not) the bonus authorization banner is showing. */}
+      <div className="flex justify-end">
+        <BonusBadge status={kpis.bonusStatus} glow={bonusEligible} />
+      </div>
       {/* Authorized bonus banner (only when KPIs mark the teacher as eligible) */}
       {bonusEligible && (
         <div className="rounded-xl border border-success/40 bg-success/10 p-4">
