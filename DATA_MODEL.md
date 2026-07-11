@@ -344,7 +344,8 @@ Persistencia: `Record<studentId, LearningPathEvent[]>`, dedupe 60s, máx. 100 ev
 `ClubType = "insight" | "book"` — ⚠️ **no incluye `"spotlight"`**, aunque `ClubReportEventType` sí lo tiene (ver abajo).
 
 ### `ClubBooking` (`src/lib/club-bookings-store.ts`)
-`id, student_id, club_id, club_type, booked_at`. Cupo mensual (`monthlyCap`) depende de `addon_bookclubs_per_month`/`addon_insights_per_month` de `User`/`Group` (default 3). Constante: `RESERVATION_CUTOFF_HOURS = 24`.
+`id, student_id, club_id, club_type, booked_at`. El cupo mensual efectivo se resuelve por `resolvedMonthlyCap(studentId, kind)` con la tabla **`PLAN_DEFAULTS`** (fuente única de verdad por `AccessPlanId`): Core `0/0/0` (freemium aparte), Advance `2/2/1`, Elite `4/4/4` (**acumulable**: `resolvedRemainingSeats` calcula `cap × meses_desde_cycle_start − total_reservas_historicas`), Signature `∞/∞/∞`. Los add-ons manuales `addon_insights_per_month`/`addon_bookclubs_per_month`/`addon_spotlight_per_month` en `User` o `Group` (incluyendo `0`) siempre ganan al default de plan — control absoluto del admin. Constante: `RESERVATION_CUTOFF_HOURS = 24`. UI muestra `∞` para Signature en "seats used" y "spotlight cap".
+
 
 ### `ClubReport` (`src/lib/club-reports-store.ts`)
 `event_id` (PK lógica), `event_type: "insight"|"book"|"spotlight"`, `teacher_id`, `attendance: Record<student_id, "present"|"absent">`, `comments`, `submitted_at`.
