@@ -367,9 +367,15 @@ function MyBalancePage() {
             {signals.map((s) => <KpiBar key={s.key} label={s.label} value={s.value} sub={s.sub} />)}
           </div>
           <div className="mt-4 rounded-lg border border-border bg-secondary/30 p-3 text-xs text-muted-foreground">
-            {kpis.bonusEligible
-              ? <>You are <span className="font-semibold text-success">Bonus Eligible</span> — Composite Score {kpis.composite}% ≥ threshold {threshold}%.</>
-              : <>Composite Score {kpis.composite}% is below the {threshold}% threshold required for a bonus this month.</>}
+            {kpis.bonusStatus.kind === "eligible" && (
+              <>You are <span className="font-semibold text-success">Bonus Eligible</span> — 6 consecutive months with Composite Score ≥ {threshold}%.</>
+            )}
+            {kpis.bonusStatus.kind === "streak" && (
+              <>Streak: <span className="font-semibold text-foreground">{kpis.bonusStatus.streak}/{kpis.bonusStatus.needed} months ≥{threshold}%</span>. This month's Composite Score is {kpis.composite}%.</>
+            )}
+            {kpis.bonusStatus.kind === "not-tracking" && (
+              <>KPI tracking starts <span className="font-semibold text-foreground">{kpis.bonusStatus.trackingStartLabel}</span> — the first full calendar month after your hire month.</>
+            )}
           </div>
         </Card>
       )}
