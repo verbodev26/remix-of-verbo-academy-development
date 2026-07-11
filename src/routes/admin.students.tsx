@@ -1035,8 +1035,9 @@ function StudentFormModal({
             <Step n={2} title="Insights Access">
               <p className="mb-3 text-[11px] text-muted-foreground">Standalone Insights customer. Set the monthly cap for this person.</p>
               <Field label="Insights (per month)" icon={<Lightbulb className="h-3.5 w-3.5" />}>
-                <input type="number" min={0} value={f.addon_insights_per_month} onChange={(e) => set("addon_insights_per_month", Number(e.target.value))} className={inputCls} />
+                <input type="number" min={0} value={f.addon_insights_per_month} onChange={(e) => setAddon("insights", Number(e.target.value))} className={inputCls} />
               </Field>
+
             </Step>
           )}
         </div>
