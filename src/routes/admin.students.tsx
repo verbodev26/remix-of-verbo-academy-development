@@ -573,8 +573,10 @@ function StudentFormModal({
       hired_sessions: 0,
       remaining_sessions: 0,
       sessions_auto: true,
+      ...applyPlanAddonDefaults(p.defaultAccessPlan ?? ""),
     }));
   };
+
 
   // --- Focus change: pre-mark suggested levels ---
   const pickFocus = (name: string) => {
