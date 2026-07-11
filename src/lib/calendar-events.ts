@@ -45,6 +45,9 @@ export interface CalendarEvent {
   spots_taken?: number;
   spots_total?: number;
   enrolled_names?: string[];
+  /** True when the currently-viewed student already has a seat in this club.
+   *  Only set by student-scoped adapters; teacher adapters leave it undefined. */
+  booked?: boolean;
   /** Refinement of Absent/Cancelled status. When set, the pill renders the
    *  2-letter initials + the sub-status color instead of the base color. */
   sub_status?: AttendanceSubStatus;
@@ -52,6 +55,7 @@ export interface CalendarEvent {
   session?: ExtSession;
   club?: Club;
 }
+
 
 function sessionEvent(s: ExtSession, title: string, subStatus?: AttendanceSubStatus): CalendarEvent {
   return {
