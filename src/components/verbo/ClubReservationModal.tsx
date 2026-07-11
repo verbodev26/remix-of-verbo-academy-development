@@ -172,11 +172,12 @@ export function ClubReservationModal({
         <div className="mt-4 rounded-lg bg-amber-50 px-3 py-2.5 text-[11.5px] leading-relaxed text-amber-900 ring-1 ring-amber-200">
           <div>Reservations close 24h before start.</div>
           <div className="mt-0.5">
-            You can book up to <strong>{capDisplay}</strong> {isBook ? "Book Clubs" : "Insights"} per month —
-            used <strong>{used}/{capDisplay}</strong> this cycle.
+            {isSignature || !isFinite(cap)
+              ? <>You have <strong>unlimited</strong> {isBook ? "Book Clubs" : "Insights"} this month.</>
+              : <>You've used <strong>{used} of your {capDisplay}</strong> {isBook ? "Book Clubs" : "Insights"} this month.</>}
           </div>
-
         </div>
+
 
         {error && (
           <div className="mt-3 flex items-start gap-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-800 ring-1 ring-red-200">
