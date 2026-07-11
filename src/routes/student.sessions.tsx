@@ -52,6 +52,9 @@ import { isTeacherAvailableAt, findAvailableStartSlots } from "@/lib/availabilit
 import { ClubReservationModal } from "@/components/verbo/ClubReservationModal";
 import type { Club } from "@/lib/clubs-store";
 import { resolvedRemainingSeats, resolvedMonthlyCap } from "@/lib/club-bookings-store";
+import { useCoreFreemiumGate } from "@/components/verbo/CoreFreemiumFlow";
+import { isSilenced } from "@/lib/core-freemium-store";
+
 
 
 export const Route = createFileRoute("/student/sessions")({ component: Page });
