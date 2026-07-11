@@ -11,6 +11,8 @@ import {
   type ProductId, type AccessPlanId,
 } from "@/lib/student-model";
 import { teachersForProduct } from "@/lib/teacher-model";
+import { PLAN_DEFAULTS } from "@/lib/club-bookings-store";
+
 import { Card, GhostButton, PrimaryButton } from "@/components/verbo/ui";
 import { useAvatar } from "@/lib/avatar-store";
 import {
