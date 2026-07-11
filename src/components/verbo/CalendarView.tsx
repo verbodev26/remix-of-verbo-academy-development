@@ -12,7 +12,8 @@
 // the Student panel can wire it later with its own event source.
 
 import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check } from "lucide-react";
+
 import { GhostButton } from "@/components/verbo/ui";
 import {
   CALENDAR_STATUS_META,
