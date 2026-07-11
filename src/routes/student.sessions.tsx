@@ -142,13 +142,16 @@ function Page() {
             Your calendar of 1:1 Classes, Verbo Insights, Book Clubs and Spotlight Sessions.
           </p>
         </div>
-        <button
-          onClick={() => setSpotlightOpen(true)}
-          className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-[#0d9488] px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition-opacity hover:opacity-90"
-        >
-          <Sparkles className="h-4 w-4" /> Request a Spotlight Session
-        </button>
+        {hasSpot && (
+          <button
+            onClick={() => freemium.tryOpen("spotlight", () => setSpotlightOpen(true))}
+            className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-[#0d9488] px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition-opacity hover:opacity-90"
+          >
+            <Sparkles className="h-4 w-4" /> Request a Spotlight Session
+          </button>
+        )}
       </div>
+
 
       <Card>
         <CalendarView
