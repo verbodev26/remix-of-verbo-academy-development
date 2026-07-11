@@ -87,13 +87,15 @@ function Page() {
       <Card className="!p-4">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs">
           <div className="text-muted-foreground">
-            Seats used this cycle: <span className="font-semibold text-foreground">{used}/{capDisplay}</span>
+            {isSignature
+              ? <>You have <span className="font-semibold text-foreground">unlimited</span> Insights this month.</>
+              : <>You've used <span className="font-semibold text-foreground">{used} of your {capDisplay}</span> Insights this month.</>}
           </div>
           <div className="text-muted-foreground">
-
             Currently reserved: <span className="font-semibold text-foreground">{bookedCount}</span>
           </div>
         </div>
+
       </Card>
 
       {selected && (
