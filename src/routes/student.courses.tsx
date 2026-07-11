@@ -227,7 +227,7 @@ function Page() {
   const onUnitCompleted = (levelId: string, unitId: string) => {
     // Record milestone events + potential level completion when unit passes.
     if (!user) return;
-    if (unitPassed(unitId)) {
+    if (unitPassed(user.id, unitId)) {
       pushEvent(user.id, { kind: "unit_completed", ref: unitId, label: `Completed Unit ${unitNumberOf(unitId)}` });
       const level = levels.find((l) => l.id === levelId);
       if (level && levelIsComplete(level, user.id)) {
