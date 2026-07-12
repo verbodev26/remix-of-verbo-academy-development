@@ -393,6 +393,7 @@ function MyBalancePage() {
             )}
             <div className="text-xs text-muted-foreground">
               Composite Score: <span className="text-base font-bold" style={{ color: kpis ? signalColor(kpis.composite) : undefined }}>{kpis?.composite ?? 0}%</span>
+              {kpis?.onboarding && <span className="ml-2 rounded-full bg-blue-50 px-2 py-0.5 align-middle text-[10px] font-semibold uppercase tracking-wider text-blue-700">Onboarding</span>}
             </div>
           </div>
         </div>
