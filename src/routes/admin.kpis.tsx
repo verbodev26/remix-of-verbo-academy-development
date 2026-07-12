@@ -224,9 +224,8 @@ function TeacherKpiCard({
         <KpiBar label="Reschedule/Substitute Responsiveness" value={kpis.responsiveness} sub={kpis.penaltyState > 0 ? `−${kpis.penaltyState} cumulative penalty this month` : "No penalty this month"} />
         <KpiBar label="Teacher-caused absence rate" value={kpis.teacherAbsenceRate} invert />
       </div>
-
-      </div>
     </div>
+
   );
 }
 
