@@ -40,7 +40,8 @@ export type ActivityKind =
   | "avail_request_approved"
   | "avail_request_rejected"
   | "release_request_submitted"
-  | "report_filed";
+  | "report_filed"
+  | "kpi_manual_override";
 
 export type ActorRole = "admin" | "teacher" | "student" | "system";
 
