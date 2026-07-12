@@ -536,9 +536,10 @@ function TeacherDetailModal({
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 <BigStat label="Avg. rating" value={avgRating(t) != null ? avgRating(t)!.toFixed(1) : "—"} />
                 <BigStat label="Planning on time" value={`${t.plan_punctuality ?? 0}%`} />
-                <BigStat label="Reports on time" value={`${t.report_punctuality ?? 0}%`} />
+                <BigStat label="Responsiveness" value={`${computeTeacherKpis(t).responsiveness}%`} />
                 <BigStat label="Hours this month" value={`${t.hours_month ?? 0}h`} />
               </div>
+
               <p className="rounded-lg bg-muted px-3 py-2 text-[11px] text-muted-foreground">Full breakdown and history live in the global <span className="font-medium text-foreground">KPIs</span> page.</p>
 
               <StrikesSection teacherId={t.id} />

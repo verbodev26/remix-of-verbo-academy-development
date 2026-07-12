@@ -448,18 +448,26 @@ El propio comentario del archivo aclara: **no es una tabla de pagos paralela**, 
 `saveSubskillEvaluation()` recalcula las 4 claves legacy como promedio de los subskills, escalado 0-100→1-5, para mantener compatibilidad retro.
 
 ### `TeacherKpis` / `RatingBand` / `RatingPoint` (`src/lib/teacher-kpis.ts`)
-`TeacherKpis`: `rating, ratingNormalized, connectionPunctuality, planningPunctuality, reportPunctuality, completionRate, teacherAbsenceRate, cancellationScore, activeStrikes, composite, bonusEligible, bonusStatus`.
-Fórmula del composite: promedio de 6 métricas. `BONUS_THRESHOLD_DEFAULT = 85` (extraído a `teacher-kpis-threshold.ts` para romper ciclos de import).
+`TeacherKpis`: `rating, ratingNormalized, connectionPunctuality, planningPunctuality, completionRate, teacherAbsenceRate, cancellationScore, activeStrikes, penaltyState, responsiveness, baseComposite, composite, onboarding, bonusEligible, bonusStatus`.
+
+**Fórmula del composite (final)**:
+1. `baseComposite` = promedio de 5 señales: `connectionPunctuality, planningPunctuality, completionRate, ratingNormalized, cancellationScore`.
+2. `completionRate` fusiona la vieja "Report punctuality": por cada sesión en el denominador (mismo criterio de `sessionCompletionRate`), crédito = 1.0 si completed + reporte a tiempo, 0.7 si completed + reporte tarde, 0 si no completed. `report_punctuality` del profesor se usa como proxy de "share on-time" hasta que exista timestamp por sesión.
+3. `composite = max(0, baseComposite − penaltyState)`. Durante el **mes de onboarding** (mes calendario de `hire_date`) `composite` queda fijo en **90** con etiqueta "Onboarding" y `penaltyState = 0`.
+4. La fila informativa `responsiveness = 100 − penaltyState` (100 durante onboarding) se muestra en Admin > KPIs, Admin > Teachers Financial, Teacher > Financial y Teacher home.
+
+**`penaltyState` (Reschedule/Substitute Responsiveness)** — estado acumulativo **secuencial** por profesor, recalculado mes a mes desde `trackingStartKey`:
+- Mes con ≥3 negativas de reagendo/sustituto (`needs_substitute` en sesiones del mes, mock determinista para meses pasados): `penaltyState += 15`.
+- Mes limpio (<3 negativas): `penaltyState = max(0, penaltyState − 5)`.
+- El mes de onboarding no aplica penalización.
 
 ### `BonusStatus` (`src/lib/teacher-kpi-history-store.ts`)
-`bonusEligible` ya no es "composite actual ≥ umbral"; ahora requiere una **racha de 6 meses calendario consecutivos** con composite ≥ umbral (incluyendo el mes en curso). Estados posibles:
-- `{ kind: "eligible", streak: 6, threshold }`
-- `{ kind: "streak", streak, needed: 6, threshold }` — acumulando racha.
-- `{ kind: "not-tracking", trackingStartLabel, trackingStartKey }` — profesor aún no llegó al primer mes calendario completo tras su mes de ingreso.
+`bonusEligible` requiere una **racha de 6 meses calendario consecutivos** con el composite FINAL (ya con penalty aplicado, y con onboarding contando como 90) ≥ umbral, incluyendo el mes en curso. Estados: `eligible | streak | not-tracking`.
 
-**Ventana de tracking**: se activa en la 2ª semana del mes de ingreso; la racha empieza a contar desde el **primer mes calendario completo posterior** al mes de ingreso (`hire_date + 1 month`). El mes de ingreso NO cuenta.
+**Ventana de tracking**: la racha empieza en el **primer mes calendario completo posterior** al mes de ingreso (`hire_date + 1 month`). El mes de ingreso NO cuenta (es "Onboarding").
 
-**Historial mensual**: el mes en curso usa el composite real de `computeTeacherKpis`. Los meses pasados usan un mock determinista sembrado por `teacher.id + monthKey` vía `mockCompositeFor()` (rango 65–99). No hay persistencia real de historia mensual todavía.
+**Historial mensual** (`monthlySnapshot`): el mes en curso usa `baseComposite` real y `penaltyState` calculado secuencialmente sobre negativas reales + mock. Meses pasados usan `mockCompositeFor()` (base, rango 65–99) y `mockRefusalsFor()` (negativas 0–4). En el histórico se guarda el composite **final** (con penalty y con override 90 en el mes de onboarding), no la base cruda. No hay persistencia real todavía.
+
 
 ### `User.hire_date` (`src/lib/mock-data.ts`)
 Fecha ISO (YYYY-MM-DD) de ingreso del profesor. Editable desde Admin > Teachers (form de alta/edición). Es el input único de la ventana de tracking del bono.

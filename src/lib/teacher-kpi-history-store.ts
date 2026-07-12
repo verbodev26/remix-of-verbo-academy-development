@@ -1,11 +1,15 @@
 // ============================================================================
 // Teacher KPI monthly history — single source of truth for the "6-month bonus
-// streak" logic. There is NO real per-month persistence of the composite score
-// yet, so past months are generated with deterministic mock values seeded by
-// teacher.id + month key (stable across renders). The CURRENT (in-progress)
-// month always uses the real composite value passed in by the caller.
+// streak", the sequential Reschedule/Substitute penalty state, and the
+// onboarding baseline for freshly-hired teachers.
+//
+// There is NO real per-month persistence of the composite score yet, so past
+// months are generated with deterministic mock values seeded by teacher.id +
+// month key (stable across renders). The CURRENT (in-progress) month always
+// uses the real base composite / refusal count fed in by the caller.
 // ============================================================================
 import { type User } from "./mock-data";
+import { loadSessions } from "./sessions-store";
 import { getBonusThreshold } from "./teacher-kpis-threshold";
 
 // ----- Month-key helpers ----------------------------------------------------
@@ -41,13 +45,152 @@ function mulberry32(a: number): () => number {
   };
 }
 
-// Mock composite for a past month — stable per teacher+month. Range 65–99.
+// Mock BASE composite (5-factor avg, before the responsiveness penalty) for a
+// past month. Stable per teacher+month. Range 65–99.
 export function mockCompositeFor(teacherId: string, monthKey: string): number {
   const rng = mulberry32(hashSeed(`${teacherId}:composite:${monthKey}`));
   return Math.round(65 + rng() * 34);
 }
 
-// Composite for any month: real when it's the current month, mock otherwise.
+// Mock monthly refusal count (Reschedule / Substitute negatives) — stable per
+// teacher+month, mostly 0–2 with occasional bad months at 3+.
+function mockRefusalsFor(teacherId: string, monthKey: string): number {
+  const rng = mulberry32(hashSeed(`${teacherId}:refusals:${monthKey}`));
+  const r = rng();
+  if (r < 0.70) return 0;
+  if (r < 0.88) return 1;
+  if (r < 0.96) return 2;
+  if (r < 0.99) return 3;
+  return 4;
+}
+
+// Real refusals in a given calendar month, derived from sessions where the
+// teacher was flagged `needs_substitute` (i.e. couldn't/wouldn't cover). Only
+// used for the current & future months; past months use the mock generator so
+// the historical curve stays stable.
+export function realRefusalsFor(teacherId: string, monthKey: string): number {
+  try {
+    const sessions = loadSessions();
+    return sessions.filter((s) => {
+      if (s.teacher_id !== teacherId) return false;
+      if (!s.needs_substitute) return false;
+      return monthKeyOf(new Date(s.date_time)) === monthKey;
+    }).length;
+  } catch {
+    return 0;
+  }
+}
+
+export function monthlyRefusals(
+  teacherId: string,
+  monthKey: string,
+  currentMonthRefusals?: number,
+): number {
+  const nowKey = monthKeyOf(new Date());
+  if (monthKey === nowKey) return currentMonthRefusals ?? realRefusalsFor(teacherId, monthKey);
+  if (monthKey > nowKey) return realRefusalsFor(teacherId, monthKey);
+  return mockRefusalsFor(teacherId, monthKey);
+}
+
+// ----- Onboarding + tracking window ----------------------------------------
+// Bonus tracking starts on the FIRST FULL calendar month AFTER the hire month.
+// The hire month itself is the "Onboarding" month — composite locked at 90,
+// no penalty is applied.
+export const ONBOARDING_COMPOSITE = 90;
+
+export function trackingStartKey(teacher: User): string {
+  const hire = teacher.hire_date ? new Date(teacher.hire_date) : null;
+  const nowKey = monthKeyOf(new Date());
+  const hireKey = hire && !isNaN(hire.getTime()) ? monthKeyOf(hire) : null;
+  return hireKey ? addMonthKey(hireKey, 1) : addMonthKey(nowKey, -BONUS_STREAK_REQUIRED);
+}
+
+export function isOnboardingMonth(teacher: User, monthKey: string): boolean {
+  const hire = teacher.hire_date ? new Date(teacher.hire_date) : null;
+  if (!hire || isNaN(hire.getTime())) return false;
+  return monthKeyOf(hire) === monthKey;
+}
+
+// ----- Sequential penalty state --------------------------------------------
+// Rules:
+//   - Every month with ≥3 refusals adds +15 to penaltyState (accumulative).
+//   - Every clean month (<3 refusals) recovers 5, floored at 0.
+//   - Onboarding month and any pre-tracking month leave penaltyState at 0.
+export const RESPONSIVENESS_BAD_THRESHOLD = 3;
+export const RESPONSIVENESS_PENALTY = 15;
+export const RESPONSIVENESS_RECOVERY = 5;
+
+export function penaltyStateAt(
+  teacher: User,
+  monthKey: string,
+  currentMonthRefusals?: number,
+): number {
+  const startKey = trackingStartKey(teacher);
+  // Walk forward from the tracking start (or from the hire month + 1 for
+  // teachers without a hire_date fallback) up to and INCLUDING monthKey.
+  let state = 0;
+  let cursor = startKey;
+  const nowKey = monthKeyOf(new Date());
+  // Safety cap to avoid runaways from bogus data.
+  for (let i = 0; i < 240 && cursor <= monthKey; i++) {
+    if (isOnboardingMonth(teacher, cursor)) {
+      // Onboarding month never changes the penalty state.
+    } else if (cursor > nowKey) {
+      // Future months don't feed into penalty state.
+    } else {
+      const refusals =
+        cursor === nowKey ? (currentMonthRefusals ?? realRefusalsFor(teacher.id, cursor))
+        : monthlyRefusals(teacher.id, cursor);
+      if (refusals >= RESPONSIVENESS_BAD_THRESHOLD) state += RESPONSIVENESS_PENALTY;
+      else state = Math.max(0, state - RESPONSIVENESS_RECOVERY);
+    }
+    if (cursor === monthKey) break;
+    cursor = addMonthKey(cursor, 1);
+  }
+  return state;
+}
+
+// ----- Snapshot: final composite for any month, penalty applied ------------
+export interface MonthlySnapshot {
+  monthKey: string;
+  baseComposite: number;   // 5-factor avg BEFORE penalty
+  penaltyState: number;    // cumulative penalty applied this month
+  composite: number;       // final composite, floored at 0 (Onboarding => 90)
+  responsiveness: number;  // 100 - penaltyState (100 during Onboarding)
+  onboarding: boolean;
+}
+
+export function monthlySnapshot(
+  teacher: User,
+  monthKey: string,
+  currentMonthBase?: number,
+  currentMonthRefusals?: number,
+): MonthlySnapshot {
+  const nowKey = monthKeyOf(new Date());
+  const onboarding = isOnboardingMonth(teacher, monthKey);
+
+  if (onboarding) {
+    return {
+      monthKey,
+      baseComposite: ONBOARDING_COMPOSITE,
+      penaltyState: 0,
+      composite: ONBOARDING_COMPOSITE,
+      responsiveness: 100,
+      onboarding: true,
+    };
+  }
+
+  const baseComposite =
+    monthKey === nowKey && typeof currentMonthBase === "number"
+      ? currentMonthBase
+      : mockCompositeFor(teacher.id, monthKey);
+  const penaltyState = penaltyStateAt(teacher, monthKey, currentMonthRefusals);
+  const composite = Math.max(0, baseComposite - penaltyState);
+  const responsiveness = Math.max(0, 100 - penaltyState);
+  return { monthKey, baseComposite, penaltyState, composite, responsiveness, onboarding: false };
+}
+
+// Kept for back-compat with callers that only need the final composite value.
 export function monthlyComposite(
   teacher: User,
   monthKey: string,
@@ -55,17 +198,16 @@ export function monthlyComposite(
 ): number {
   const nowKey = monthKeyOf(new Date());
   if (monthKey === nowKey) return currentMonthComposite;
-  return mockCompositeFor(teacher.id, monthKey);
+  return monthlySnapshot(teacher, monthKey).composite;
 }
 
 // ----- Bonus streak status --------------------------------------------------
-// Business rules (see PROMPT):
-//   - Bonus eligibility requires 6 consecutive calendar months (including the
-//     current in-progress month) with composite ≥ threshold.
-//   - A teacher's tracking window starts on the FIRST FULL calendar month
-//     AFTER their hire month (the hire month itself does not count).
-//   - Before that first tracked month, the teacher is "not-tracking" and no
-//     streak / bonus is shown.
+// Business rules:
+//   - Bonus eligibility requires BONUS_STREAK_REQUIRED consecutive calendar
+//     months (including the current in-progress month) with the FINAL
+//     composite ≥ threshold.
+//   - Tracking starts on the first full calendar month after the hire month.
+//   - Onboarding month (hire month) does NOT count toward the streak.
 export const BONUS_STREAK_REQUIRED = 6;
 
 export type BonusStatus =
@@ -79,31 +221,23 @@ export function bonusStatus(
   threshold = getBonusThreshold(),
 ): BonusStatus {
   const nowKey = monthKeyOf(new Date());
-  const hire = teacher.hire_date ? new Date(teacher.hire_date) : null;
-  // With no hire_date on record we behave as if tracking started long ago,
-  // so the mock history alone drives the streak — matches the pre-change flow.
-  const hireKey = hire && !isNaN(hire.getTime()) ? monthKeyOf(hire) : null;
-  const trackingStartKey = hireKey ? addMonthKey(hireKey, 1) : addMonthKey(nowKey, -BONUS_STREAK_REQUIRED);
+  const startKey = trackingStartKey(teacher);
 
-  if (trackingStartKey > nowKey) {
-    return { kind: "not-tracking", trackingStartLabel: monthLabel(trackingStartKey), trackingStartKey };
+  if (startKey > nowKey) {
+    return { kind: "not-tracking", trackingStartLabel: monthLabel(startKey), trackingStartKey: startKey };
   }
 
-  // Collect the up-to-6 month window ending at the current month, clipped to
-  // trackingStartKey so freshly-tracked teachers can only accumulate real
-  // eligible months.
   const window: string[] = [];
   for (let i = BONUS_STREAK_REQUIRED - 1; i >= 0; i--) {
     const k = addMonthKey(nowKey, -i);
-    if (k >= trackingStartKey) window.push(k);
+    if (k >= startKey) window.push(k);
   }
 
-  // Streak: consecutive months meeting the threshold, counted backwards from
-  // the current month. Breaks the moment one month falls below.
   let streak = 0;
   for (let i = window.length - 1; i >= 0; i--) {
     const key = window[i];
-    const composite = key === nowKey ? currentMonthComposite : mockCompositeFor(teacher.id, key);
+    const composite =
+      key === nowKey ? currentMonthComposite : monthlySnapshot(teacher, key).composite;
     if (composite >= threshold) streak++;
     else break;
   }

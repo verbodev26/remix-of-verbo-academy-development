@@ -12,7 +12,14 @@ import { type User } from "./mock-data";
 import { loadSessions } from "./sessions-store";
 import { avgRating } from "./teacher-model";
 import { activeStrikeCount } from "./strikes-store";
-import { bonusStatus, type BonusStatus } from "./teacher-kpi-history-store";
+import {
+  bonusStatus,
+  isOnboardingMonth,
+  monthKeyOf,
+  ONBOARDING_COMPOSITE,
+  penaltyStateAt,
+  type BonusStatus,
+} from "./teacher-kpi-history-store";
 
 // Re-export the threshold helpers so existing imports from teacher-kpis keep
 // working after the extraction. New code should import them directly from
@@ -69,21 +76,44 @@ function teacherSessions(teacherId: string) {
   return loadSessions().filter((s) => s.teacher_id === teacherId);
 }
 
-// % of sessions that reached "completed" (report sent) over the sessions the
-// teacher was responsible for. Denominator EXCLUDES "no_show" and
-// "absent (student)"; it INCLUDES "absent (teacher)". Future scheduled
-// sessions (not yet due) are excluded — they haven't happened.
-export function sessionCompletionRate(teacherId: string): number | null {
+// Denominator used by session-completion calcs. Same rules as before:
+// EXCLUDE "no_show" and "absent (student)"; INCLUDE "absent (teacher)".
+// Future scheduled sessions are excluded.
+function completionDenominator(teacherId: string) {
   const now = Date.now();
   const mine = teacherSessions(teacherId).filter((s) => new Date(s.date_time).getTime() <= now);
-  const denom = mine.filter((s) => {
+  return mine.filter((s) => {
     if (s.status === "no_show") return false;
     if (s.status === "absent" && (s.absent_cause ?? "student") === "student") return false;
     return true;
   });
+}
+
+// Legacy raw completion % — still exported for callers that only need
+// completed / denom without the report-punctuality weighting.
+export function sessionCompletionRate(teacherId: string): number | null {
+  const denom = completionDenominator(teacherId);
   if (denom.length === 0) return null;
   const completed = denom.filter((s) => s.status === "completed").length;
   return Math.round((completed / denom.length) * 100);
+}
+
+// Fused "Session completion rate" — merges the old "Report punctuality" signal.
+// Per session in the denominator: 1.0 credit if completed AND report on-time,
+// 0.7 if completed but report late, 0 if not completed. We don't yet have
+// per-session report timestamps, so we use the teacher-level report_punctuality
+// as the on-time share proxy (default 100 when missing).
+function sessionCompletionCredit(
+  teacherId: string,
+  reportPunctuality: number,
+  fallback: number,
+): number {
+  const denom = completionDenominator(teacherId);
+  if (denom.length === 0) return fallback;
+  const completedRatio = denom.filter((s) => s.status === "completed").length / denom.length;
+  const onTimeShare = Math.max(0, Math.min(1, reportPunctuality / 100));
+  const creditPerCompleted = onTimeShare * 1.0 + (1 - onTimeShare) * 0.7;
+  return Math.round(completedRatio * creditPerCompleted * 100);
 }
 
 // % of the teacher's sessions marked "Absent" with cause "Teacher".
@@ -102,12 +132,21 @@ export interface TeacherKpis {
   ratingNormalized: number; // rating/5*100 (0 when no rating)
   connectionPunctuality: number;
   planningPunctuality: number;
-  reportPunctuality: number;
+  /** Fused signal: completion weighted by on-time-report share. */
   completionRate: number;
   teacherAbsenceRate: number;
   cancellationScore: number;   // 0..100 — (3 - active strikes) / 3 * 100
   activeStrikes: number;       // raw count, last 6 months, unjustified
+  /** Sequential Reschedule/Substitute penalty state for THIS month. */
+  penaltyState: number;
+  /** Informational metric = 100 - penaltyState (100 during Onboarding). */
+  responsiveness: number;
+  /** 5-factor avg BEFORE penalty (informational). */
+  baseComposite: number;
+  /** Final composite: baseComposite − penaltyState, floored at 0.
+   *  During the Onboarding month it is locked at 90. */
   composite: number;
+  onboarding: boolean;
   bonusEligible: boolean;
   bonusStatus: BonusStatus;
 }
@@ -124,21 +163,29 @@ export function computeTeacherKpis(t: User, threshold = getBonusThreshold()): Te
   const connectionPunctuality = clamp(pctInRange(rng(), 72, 99) + bias);
   const planningPunctuality =
     typeof t.plan_punctuality === "number" ? t.plan_punctuality : clamp(pctInRange(rng(), 70, 98) + bias);
-  const reportPunctuality =
+  const reportPunctualityProxy =
     typeof t.report_punctuality === "number" ? t.report_punctuality : clamp(pctInRange(rng(), 68, 97) + bias);
 
-  const completionReal = sessionCompletionRate(t.id);
-  const completionRate = completionReal ?? clamp(pctInRange(rng(), 75, 99) + bias);
+  const completionFallback = clamp(pctInRange(rng(), 75, 99) + bias);
+  const completionRate = sessionCompletionCredit(t.id, reportPunctualityProxy, completionFallback);
   const teacherAbsenceRate = teacherCausedAbsenceRate(t.id);
   const strikes = activeStrikeCount(t.id);
   const cancellationScore = Math.max(0, Math.round(((3 - Math.min(3, strikes)) / 3) * 100));
 
-  const composite = Math.round(
-    (connectionPunctuality + planningPunctuality + reportPunctuality + completionRate + ratingNormalized + cancellationScore) / 6,
+  // Base composite = avg of the 5 real signals (no more Report punctuality row).
+  const baseComposite = Math.round(
+    (connectionPunctuality + planningPunctuality + completionRate + ratingNormalized + cancellationScore) / 5,
   );
 
-  // Bonus eligibility is now a 6-month streak — the current month's composite
-  // is fed in, past months come from the (mock) history store.
+  // Onboarding month → composite locked at 90, penalty is 0.
+  const nowKey = monthKeyOf(new Date());
+  const onboarding = isOnboardingMonth(t, nowKey);
+  const penaltyState = onboarding ? 0 : penaltyStateAt(t, nowKey);
+  const responsiveness = Math.max(0, 100 - penaltyState);
+  const composite = onboarding ? ONBOARDING_COMPOSITE : Math.max(0, baseComposite - penaltyState);
+
+  // Bonus eligibility is a 6-month streak on the FINAL composite (with penalty
+  // already applied and onboarding baseline honoured by the history store).
   const status = bonusStatus(t, composite, threshold);
 
   return {
@@ -146,12 +193,15 @@ export function computeTeacherKpis(t: User, threshold = getBonusThreshold()): Te
     ratingNormalized,
     connectionPunctuality,
     planningPunctuality,
-    reportPunctuality,
     completionRate,
     teacherAbsenceRate,
     cancellationScore,
     activeStrikes: strikes,
+    penaltyState,
+    responsiveness,
+    baseComposite,
     composite,
+    onboarding,
     bonusEligible: status.kind === "eligible",
     bonusStatus: status,
   };
@@ -160,6 +210,8 @@ export function computeTeacherKpis(t: User, threshold = getBonusThreshold()): Te
 export function isBonusEligible(t: User, threshold = getBonusThreshold()): boolean {
   return computeTeacherKpis(t, threshold).bonusEligible;
 }
+
+
 
 // ----- Monthly rating history (mock, last 6 months) -------------------------
 export interface RatingPoint {
