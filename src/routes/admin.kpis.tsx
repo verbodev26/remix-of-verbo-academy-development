@@ -210,8 +210,8 @@ function TeacherKpiCard({
         <CompositeRing value={kpis.composite} />
         <div>
           <div className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground">Composite score</div>
-          <div className="text-3xl font-bold tracking-tight text-foreground">{kpis.composite}%</div>
-          <div className="text-[10.5px] text-muted-foreground">avg of 5 weighted signals</div>
+          <div className="text-3xl font-bold tracking-tight text-foreground">{kpis.composite}%{kpis.onboarding ? <span className="ml-2 rounded-full bg-blue-50 px-2 py-0.5 align-middle text-[10px] font-semibold uppercase tracking-wider text-blue-700">Onboarding</span> : null}</div>
+          <div className="text-[10.5px] text-muted-foreground">avg of 5 signals{kpis.penaltyState > 0 ? ` − ${kpis.penaltyState} responsiveness penalty` : ""}</div>
         </div>
       </div>
 
@@ -219,10 +219,12 @@ function TeacherKpiCard({
       <div className="mt-4 space-y-3">
         <KpiBar label="Connection punctuality" value={kpis.connectionPunctuality} />
         <KpiBar label="Planning punctuality" value={kpis.planningPunctuality} />
-        <KpiBar label="Report punctuality" value={kpis.reportPunctuality} />
         <KpiBar label="Session completion rate" value={kpis.completionRate} />
         <KpiBar label="Cancellations / No-Shows" value={kpis.cancellationScore} sub={`${Math.min(3, kpis.activeStrikes)}/3 (last 6 months)`} />
+        <KpiBar label="Reschedule/Substitute Responsiveness" value={kpis.responsiveness} sub={kpis.penaltyState > 0 ? `−${kpis.penaltyState} cumulative penalty this month` : "No penalty this month"} />
         <KpiBar label="Teacher-caused absence rate" value={kpis.teacherAbsenceRate} invert />
+      </div>
+
       </div>
     </div>
   );
