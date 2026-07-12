@@ -16,7 +16,8 @@ export type KpiMetric =
   | "ratingNormalized"
   | "cancellationScore"
   | "responsiveness"
-  | "composite";
+  | "composite"
+  | "bonusStreak";
 
 export const KPI_METRIC_LABELS: Record<KpiMetric, string> = {
   connectionPunctuality: "Connection punctuality",
@@ -26,6 +27,7 @@ export const KPI_METRIC_LABELS: Record<KpiMetric, string> = {
   cancellationScore: "Cancellations / No-Shows",
   responsiveness: "Reschedule/Substitute Responsiveness",
   composite: "Composite score",
+  bonusStreak: "Bonus streak (months)",
 };
 
 export interface KpiOverride {
