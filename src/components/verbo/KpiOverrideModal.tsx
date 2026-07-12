@@ -38,8 +38,10 @@ export function KpiOverrideModal({ teacher, metric, currentValue, admin, onClose
     });
   }, [nowKey]);
 
+  const isStreak = metric === "bonusStreak";
+  const maxValue = isStreak ? 6 : 100;
   const parsedValue = Number(newValue);
-  const validValue = Number.isFinite(parsedValue) && parsedValue >= 0 && parsedValue <= 100;
+  const validValue = Number.isFinite(parsedValue) && parsedValue >= 0 && parsedValue <= maxValue;
   const canSave = validValue && justification.trim().length > 0;
 
   const handleSave = () => {
