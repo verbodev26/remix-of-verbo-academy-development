@@ -170,6 +170,7 @@ function Page() {
                 kpis={kpis}
                 pending={pending}
                 canOverride={canOverride}
+                canOverrideStreak={canOverrideStreak}
                 onOverride={(metric, currentValue) =>
                   setOverrideTarget({ teacher: t, metric, currentValue })
                 }
@@ -199,17 +200,23 @@ function Page() {
 // TEACHER CARD
 // ===========================================================================
 function TeacherKpiCard({
-  teacher: t, kpis, pending, onOpenChart, canOverride, onOverride,
+  teacher: t, kpis, pending, onOpenChart, canOverride, canOverrideStreak, onOverride,
 }: {
   teacher: User;
   kpis: ReturnType<typeof computeTeacherKpis>;
   pending: number;
   onOpenChart: () => void;
   canOverride: boolean;
+  canOverrideStreak: boolean;
   onOverride: (metric: KpiMetric, currentValue: number) => void;
 }) {
   const band = ratingBand(kpis.rating);
   const monthOverrides = overridesForMonth(t.id, monthKeyOf(new Date()));
+  const streakValue = kpis.bonusStatus.kind === "eligible"
+    ? 6
+    : kpis.bonusStatus.kind === "streak"
+      ? kpis.bonusStatus.streak
+      : 0;
 
   return (
     <div className="flex flex-col rounded-2xl border border-border bg-card p-5 shadow-soft">
@@ -238,7 +245,29 @@ function TeacherKpiCard({
           {kpis.rating != null ? kpis.rating.toFixed(1) : "—"} · {band.label}
           <TrendingUp className="h-3.5 w-3.5" />
         </button>
+        {canOverride && (
+          <button
+            onClick={() => onOverride("ratingNormalized", kpis.ratingNormalized)}
+            className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            title="Manually adjust student rating"
+            aria-label="Manually adjust student rating"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </button>
+        )}
+        {monthOverrides.ratingNormalized && <AdjustedBadge override={monthOverrides.ratingNormalized} />}
         <BonusBadge status={kpis.bonusStatus} />
+        {canOverrideStreak && (
+          <button
+            onClick={() => onOverride("bonusStreak", streakValue)}
+            className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            title="Manually adjust bonus streak (super-admin only)"
+            aria-label="Manually adjust bonus streak"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </button>
+        )}
+        {monthOverrides.bonusStreak && <AdjustedBadge override={monthOverrides.bonusStreak} />}
       </div>
 
       {/* Composite score — prominent */}
