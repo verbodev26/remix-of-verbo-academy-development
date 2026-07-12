@@ -163,11 +163,12 @@ function MyBalancePage() {
   const signals: KpiSignal[] = kpis ? [
     { key: "connection",   label: "Connection punctuality",   value: kpis.connectionPunctuality },
     { key: "planning",     label: "Planning punctuality",     value: kpis.planningPunctuality },
-    { key: "report",       label: "Report punctuality",       value: kpis.reportPunctuality },
     { key: "completion",   label: "Session completion rate",  value: kpis.completionRate },
     { key: "rating",       label: "Student rating",           value: kpis.ratingNormalized },
     { key: "cancellation", label: "Cancellations / No-Shows", value: kpis.cancellationScore,
       sub: `${Math.min(3, kpis.activeStrikes)}/3 (last 6 months)` },
+    { key: "responsiveness", label: "Reschedule/Substitute Responsiveness", value: kpis.responsiveness,
+      sub: kpis.penaltyState > 0 ? `−${kpis.penaltyState} cumulative penalty this month` : "No penalty this month" },
   ] : [];
 
   const belowTarget = signals.filter((s) => s.value < KPI_GOOD);
