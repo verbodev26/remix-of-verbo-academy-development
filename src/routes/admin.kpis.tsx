@@ -46,6 +46,7 @@ function Page() {
   // Only super_admin and coordinator_ops may override KPIs — coordinator_fin
   // is intentionally excluded (separation of duties from the bonus payout).
   const canOverride = adminType === "super_admin" || adminType === "coordinator_ops";
+  const canOverrideStreak = adminType === "super_admin";
   const admin = user ? { id: user.id, name: user.name } : { id: "", name: "" };
   const overrides = useKpiOverrides(); // subscribe so badges/values refresh
   void overrides;
