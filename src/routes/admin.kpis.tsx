@@ -11,7 +11,14 @@ import {
 } from "@/lib/teacher-kpis";
 import { MetricCard, SectionTitle } from "@/components/verbo/ui";
 import { BonusBadge } from "@/components/verbo/BonusBadge";
-import { Star, AlertTriangle, Trophy, X, TrendingUp, SlidersHorizontal } from "lucide-react";
+import { KpiOverrideModal } from "@/components/verbo/KpiOverrideModal";
+import { useAuth } from "@/lib/auth";
+import { getAdminType } from "@/lib/admin-roles";
+import {
+  useKpiOverrides, overridesForMonth, type KpiMetric,
+} from "@/lib/teacher-kpi-overrides-store";
+import { monthKeyOf } from "@/lib/teacher-kpi-history-store";
+import { Star, AlertTriangle, TrendingUp, SlidersHorizontal, Pencil, ShieldCheck, X } from "lucide-react";
 
 export const Route = createFileRoute("/admin/kpis")({
   component: Page,
