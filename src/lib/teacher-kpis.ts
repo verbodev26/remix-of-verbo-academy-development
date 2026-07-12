@@ -207,6 +207,11 @@ export function computeTeacherKpis(t: User, threshold = getBonusThreshold()): Te
   };
 }
 
+export function isBonusEligible(t: User, threshold = getBonusThreshold()): boolean {
+  return computeTeacherKpis(t, threshold).bonusEligible;
+}
+
+
 
 // ----- Monthly rating history (mock, last 6 months) -------------------------
 export interface RatingPoint {
