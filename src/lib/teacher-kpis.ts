@@ -209,7 +209,16 @@ export function computeTeacherKpis(t: User, threshold = getBonusThreshold()): Te
 
   // Bonus eligibility is a 6-month streak on the FINAL composite (with penalty
   // already applied and onboarding baseline honoured by the history store).
-  const status = bonusStatus(t, composite, threshold);
+  let status = bonusStatus(t, composite, threshold);
+  // Super-admin may manually override the streak count (0–6) for the current
+  // month, e.g. to unblock a bonus after an unfair signal is corrected.
+  const streakOverride = monthOverrides.bonusStreak;
+  if (streakOverride) {
+    const s = Math.max(0, Math.min(6, Math.round(streakOverride.new_value)));
+    status = s >= 6
+      ? { kind: "eligible", streak: 6, threshold }
+      : { kind: "streak", streak: s, needed: 6, threshold };
+  }
 
   return {
     rating,
