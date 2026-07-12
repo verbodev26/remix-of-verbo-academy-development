@@ -10,6 +10,7 @@
 // ============================================================================
 import { type User } from "./mock-data";
 import { loadSessions } from "./sessions-store";
+import { latestOverride } from "./teacher-kpi-overrides-store";
 import { getBonusThreshold } from "./teacher-kpis-threshold";
 
 // ----- Month-key helpers ----------------------------------------------------
