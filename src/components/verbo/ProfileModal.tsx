@@ -53,6 +53,16 @@ export function ProfileModal({ open, onOpenChange }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const avatar = useAvatar(user?.id);
 
+  const [lbMode, setLbMode] = useState<LeaderboardIdentityMode>("real");
+  const [lbNickname, setLbNickname] = useState("");
+
+  useEffect(() => {
+    if (!user) return;
+    const cur = getLeaderboardIdentity(user.id);
+    setLbMode(cur.mode);
+    setLbNickname(cur.nickname);
+  }, [user, open]);
+
   if (!user) return null;
   const initial = user.name?.[0] ?? "?";
 
