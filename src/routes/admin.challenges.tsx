@@ -102,15 +102,6 @@ function Page() {
   const [modal, setModal] = useState<{ mode: "create" | "edit"; challenge?: Challenge } | null>(null);
   const [tab, setTab] = useState<"challenges" | "badges">("challenges");
 
-  if (tab === "badges" && !productId) {
-    return (
-      <div className="space-y-8">
-        <TabsBar tab={tab} setTab={setTab} />
-        <BadgesManager />
-      </div>
-    );
-  }
-
   useEffect(() => {
     setChallenges(loadChallenges());
     setCategories(loadCategories());
@@ -126,6 +117,15 @@ function Page() {
     () => (productId && difficulty ? challengesFor(challenges, productId, difficulty) : []),
     [challenges, productId, difficulty],
   );
+
+  if (tab === "badges" && !productId) {
+    return (
+      <div className="space-y-8">
+        <TabsBar tab={tab} setTab={setTab} />
+        <BadgesManager />
+      </div>
+    );
+  }
 
   const saveChallenge = (c: Challenge) => {
     setChallenges((prev) => {
