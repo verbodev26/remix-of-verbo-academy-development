@@ -536,3 +536,221 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
     </label>
   );
 }
+
+/* ---------------- Badges tab ---------------- */
+
+const BADGE_ICON_MAP: Record<BadgeIconId, React.ComponentType<{ className?: string }>> = {
+  trophy: Trophy,
+  star: Star,
+  flame: Flame,
+  target: Target,
+  award: Award,
+  medal: Medal,
+  crown: Crown,
+  zap: Zap,
+  sparkles: Sparkles,
+};
+
+function TabsBar({ tab, setTab }: { tab: "challenges" | "badges"; setTab: (t: "challenges" | "badges") => void }) {
+  const btn = (id: "challenges" | "badges", label: string) => (
+    <button
+      key={id}
+      onClick={() => setTab(id)}
+      className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-colors ${tab === id ? "bg-[#01304a] text-white" : "bg-secondary text-muted-foreground hover:bg-secondary/80"}`}
+    >
+      {label}
+    </button>
+  );
+  return <div className="flex items-center gap-2">{btn("challenges", "Challenges")}{btn("badges", "Badges")}</div>;
+}
+
+function ruleSummary(b: BadgeDef): string {
+  const meta = BADGE_METRIC_META[b.rule.metric];
+  if (!meta.numeric) return meta.label;
+  return `${meta.label} ≥ ${b.rule.threshold ?? 1}`;
+}
+
+function BadgesManager() {
+  const [badges, setBadges] = useState<BadgeDef[]>(loadBadges);
+  const [modal, setModal] = useState<{ mode: "create" | "edit"; badge?: BadgeDef } | null>(null);
+
+  useEffect(() => {
+    setBadges(loadBadges());
+    return subscribeBadges(() => setBadges(loadBadges()));
+  }, []);
+
+  const save = (b: BadgeDef) => {
+    setBadges((prev) => {
+      const exists = prev.some((x) => x.id === b.id);
+      const next = exists ? prev.map((x) => (x.id === b.id ? b : x)) : [...prev, b];
+      persistBadges(next);
+      return next;
+    });
+  };
+
+  const remove = (id: string) => {
+    if (!confirm("Delete this badge?")) return;
+    setBadges((prev) => {
+      const next = prev.filter((b) => b.id !== id);
+      persistBadges(next);
+      return next;
+    });
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Badges</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Manage the badges shown to students in the Challenges page.</p>
+        </div>
+        <GhostButton onClick={() => setModal({ mode: "create" })}>
+          <Plus className="h-3.5 w-3.5" /> Add badge
+        </GhostButton>
+      </div>
+
+      {badges.length === 0 ? (
+        <Card><div className="py-10 text-center text-sm text-muted-foreground">No badges yet.</div></Card>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {badges.map((b) => {
+            const Icon = BADGE_ICON_MAP[b.icon] ?? Trophy;
+            return (
+              <div key={b.id} className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-5 shadow-sm">
+                <div className="flex items-start gap-3">
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-amber-500/15 text-amber-600 ring-2 ring-amber-400/40">
+                    <Icon className="h-6 w-6" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-semibold text-foreground">{b.name}</div>
+                    <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{b.description}</p>
+                  </div>
+                </div>
+                <div className="rounded-lg bg-secondary/40 px-3 py-2 text-[11px] text-muted-foreground">
+                  <span className="font-semibold text-foreground">Earned when: </span>{ruleSummary(b)}
+                </div>
+                <div className="mt-auto flex items-center justify-end gap-1">
+                  <button
+                    onClick={() => setModal({ mode: "edit", badge: b })}
+                    className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-[#f38934]"
+                    aria-label="Edit badge"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => remove(b.id)}
+                    className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-destructive"
+                    aria-label="Delete badge"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {modal && (
+        <BadgeModal
+          existing={badges}
+          editing={modal.mode === "edit" ? modal.badge : undefined}
+          onClose={() => setModal(null)}
+          onSave={(b) => { save(b); setModal(null); }}
+        />
+      )}
+    </div>
+  );
+}
+
+function BadgeModal({
+  existing,
+  editing,
+  onClose,
+  onSave,
+}: {
+  existing: BadgeDef[];
+  editing?: BadgeDef;
+  onClose: () => void;
+  onSave: (b: BadgeDef) => void;
+}) {
+  const isEdit = !!editing;
+  const [name, setName] = useState(editing?.name ?? "");
+  const [description, setDescription] = useState(editing?.description ?? "");
+  const [icon, setIcon] = useState<BadgeIconId>(editing?.icon ?? "trophy");
+  const [metric, setMetric] = useState<BadgeMetric>(editing?.rule.metric ?? "completedCount");
+  const [threshold, setThreshold] = useState<number>(editing?.rule.threshold ?? 1);
+
+  const isNumeric = BADGE_METRIC_META[metric].numeric;
+
+  const handleSave = () => {
+    const id = editing?.id ?? newBadgeId(existing);
+    onSave({
+      id,
+      name: name.trim() || "Untitled badge",
+      description: description.trim(),
+      icon,
+      rule: isNumeric
+        ? { metric, threshold: Math.max(1, Math.floor(threshold || 1)) }
+        : { metric },
+    });
+  };
+
+  return (
+    <ModalShell title={isEdit ? "Edit badge" : "Add badge"} onClose={onClose}>
+      <div className="space-y-4 p-6">
+        <Field label="Icon">
+          <div className="flex flex-wrap gap-2">
+            {BADGE_ICON_OPTIONS.map((id) => {
+              const Icon = BADGE_ICON_MAP[id];
+              const active = icon === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setIcon(id)}
+                  className={`flex h-11 w-11 items-center justify-center rounded-lg border transition-colors ${active ? "border-[#f38934] bg-[#f38934]/10 text-[#f38934]" : "border-border bg-background text-muted-foreground hover:bg-secondary"}`}
+                  aria-label={id}
+                >
+                  <Icon className="h-5 w-5" />
+                </button>
+              );
+            })}
+          </div>
+        </Field>
+
+        <Field label="Name">
+          <input value={name} onChange={(e) => setName(e.target.value)} className={inputCls} placeholder="e.g. Challenge Master" />
+        </Field>
+
+        <Field label="Description">
+          <textarea value={description} onChange={(e) => setDescription(e.target.value)} className={textareaCls} placeholder="Short description shown under the badge." />
+        </Field>
+
+        <Field label="Earned when" hint={BADGE_METRIC_META[metric].hint}>
+          <select value={metric} onChange={(e) => setMetric(e.target.value as BadgeMetric)} className={inputCls}>
+            {(Object.keys(BADGE_METRIC_META) as BadgeMetric[]).map((m) => (
+              <option key={m} value={m}>{BADGE_METRIC_META[m].label}</option>
+            ))}
+          </select>
+          {isNumeric && (
+            <div className="mt-2">
+              <label className="mb-1.5 block text-[11px] font-semibold text-foreground">Threshold (≥)</label>
+              <input
+                type="number"
+                min={1}
+                value={threshold}
+                onChange={(e) => setThreshold(Number(e.target.value))}
+                className={inputCls}
+              />
+            </div>
+          )}
+        </Field>
+      </div>
+      <ModalFooter>
+        <GhostButton onClick={onClose}>Cancel</GhostButton>
+        <PrimaryButton disabled={!name.trim()} onClick={handleSave}>Save changes</PrimaryButton>
+      </ModalFooter>
+    </ModalShell>
+  );
+}
