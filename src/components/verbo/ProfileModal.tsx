@@ -174,12 +174,55 @@ export function ProfileModal({ open, onOpenChange }: Props) {
                 })}
               </div>
 
-              <button
-                onClick={() => setGallery(true)}
-                className="mt-5 cursor-pointer text-sm font-medium text-[#01304a] underline-offset-4 hover:underline"
-              >
-                View all achievements →
-              </button>
+              <div className="mt-6 rounded-xl border border-border bg-card p-4">
+                <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Show on leaderboard as
+                </div>
+                <div className="mt-3 space-y-2">
+                  <label className="flex cursor-pointer items-start gap-2 rounded-lg border border-border bg-background p-2.5 text-sm">
+                    <input
+                      type="radio"
+                      name="lb-mode"
+                      className="mt-0.5"
+                      checked={lbMode === "real"}
+                      onChange={() => {
+                        setLbMode("real");
+                        setLeaderboardIdentity(user.id, { mode: "real", nickname: lbNickname });
+                      }}
+                    />
+                    <span className="font-medium text-foreground">My name and photo</span>
+                  </label>
+                  <label className="flex cursor-pointer items-start gap-2 rounded-lg border border-border bg-background p-2.5 text-sm">
+                    <input
+                      type="radio"
+                      name="lb-mode"
+                      className="mt-0.5"
+                      checked={lbMode === "nickname"}
+                      onChange={() => {
+                        setLbMode("nickname");
+                        setLeaderboardIdentity(user.id, { mode: "nickname", nickname: lbNickname });
+                      }}
+                    />
+                    <div className="flex-1">
+                      <div className="font-medium text-foreground">Custom nickname</div>
+                      {lbMode === "nickname" && (
+                        <input
+                          type="text"
+                          value={lbNickname}
+                          placeholder="Nickname"
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            setLbNickname(v);
+                            setLeaderboardIdentity(user.id, { mode: "nickname", nickname: v });
+                          }}
+                          className="mt-2 w-full rounded-md border border-input bg-background px-2.5 py-1.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
+                        />
+                      )}
+                    </div>
+                  </label>
+                </div>
+              </div>
+
 
               <div className="mt-8 rounded-xl border border-dashed border-border bg-secondary/30 p-4">
                 <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
