@@ -524,6 +524,8 @@ function Page() {
         })()}
 
 
+      <LeaderboardSection productId={productId} currentUserId={student.id} />
+
       <section>
         <div className="mb-4 flex items-end justify-between">
           <div>
