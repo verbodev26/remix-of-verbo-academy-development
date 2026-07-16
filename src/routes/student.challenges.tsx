@@ -163,31 +163,30 @@ function SkillChip({ label }: { label: string }) {
 }
 
 /* -------------------------------------------------------------------------- */
-/* Badges catalog — pure derivation from completed_challenges + longest_streak */
+/* Badges catalog — declarative rules stored in badges-store.ts                */
 /* -------------------------------------------------------------------------- */
-interface BadgeDef {
-  id: string;
-  name: string;
-  description: string;
-  earned: (ctx: BadgeContext) => boolean;
-}
-interface BadgeContext {
-  completedCount: number;
-  longestStreak: number;
-  distinctCategories: number;
-  hasCompletedPremium: boolean;
-}
+import {
+  type BadgeDef,
+  type BadgeContext,
+  type BadgeIconId,
+  loadBadges,
+  subscribeBadges,
+  isBadgeEarned,
+} from "@/lib/badges-store";
+import { Star, Flame, Target, Award, Medal, Crown } from "lucide-react";
 
-const BADGES: BadgeDef[] = [
-  { id: "first",       name: "First Challenge",     description: "You completed your first Challenge.",             earned: (c) => c.completedCount >= 1 },
-  { id: "explorer",    name: "Challenge Explorer",  description: "You've completed 5 Challenges.",                  earned: (c) => c.completedCount >= 5 },
-  { id: "master",      name: "Challenge Master",    description: "You've completed 15 Challenges.",                 earned: (c) => c.completedCount >= 15 },
-  { id: "roll",        name: "On a Roll",           description: "3 Challenges completed in a row.",                earned: (c) => c.longestStreak >= 3 },
-  { id: "streak",      name: "Challenge Streak",    description: "5 Challenges completed in a row.",                earned: (c) => c.longestStreak >= 5 },
-  { id: "unstoppable", name: "Unstoppable",         description: "10 Challenges completed in a row.",               earned: (c) => c.longestStreak >= 10 },
-  { id: "well",        name: "Well-Rounded",        description: "Completed Challenges from 6 different categories.", earned: (c) => c.distinctCategories >= 6 },
-  { id: "elite",       name: "Elite Challenger",    description: "Completed your first Premium Challenge.",         earned: (c) => c.hasCompletedPremium },
-];
+const BADGE_ICON_MAP: Record<BadgeIconId, React.ComponentType<{ className?: string }>> = {
+  trophy: Trophy,
+  star: Star,
+  flame: Flame,
+  target: Target,
+  award: Award,
+  medal: Medal,
+  crown: Crown,
+  zap: Zap,
+  sparkles: Sparkles,
+};
+
 
 /* -------------------------------------------------------------------------- */
 /* Page                                                                        */
@@ -210,6 +209,7 @@ function Page() {
   const [seasonState, setSeasonState] = useState<
     { season: FlashSeason; opening: boolean; reveal: FlashChallenge | null; blocked: boolean } | null
   >(null);
+  const [badges, setBadges] = useState<BadgeDef[]>(loadBadges);
 
   useEffect(() => {
     setChallenges(loadChallenges());
@@ -217,15 +217,18 @@ function Page() {
     setFlashConfig(loadFlashConfig());
     setLightning(loadLightning());
     setSeasons(loadSeasons());
+    setBadges(loadBadges());
     const un1 = subscribeChallenges(() => setChallenges(loadChallenges()));
     const un2 = subscribeStudents(() => setTick((t) => t + 1));
     const un3 = subscribeFlashChallenges(() => setFlashList(loadFlashChallenges()));
     const un4 = subscribeFlashConfig(() => setFlashConfig(loadFlashConfig()));
     const un5 = subscribeLightning(() => setLightning(loadLightning()));
     const un6 = subscribeSeasons(() => setSeasons(loadSeasons()));
+    const un7 = subscribeBadges(() => setBadges(loadBadges()));
     const timer = setInterval(() => setNowTick(Date.now()), 1000);
-    return () => { un1(); un2(); un3(); un4(); un5(); un6(); clearInterval(timer); };
+    return () => { un1(); un2(); un3(); un4(); un5(); un6(); un7(); clearInterval(timer); };
   }, []);
+
 
   // Preload Google Fonts for active seasons so their skin renders.
   useEffect(() => {
@@ -542,15 +545,16 @@ function Page() {
           </div>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {BADGES.map((b) => {
-            const earned = b.earned(badgeCtx);
+          {badges.map((b) => {
+            const earned = isBadgeEarned(b, badgeCtx);
+            const IconCmp = BADGE_ICON_MAP[b.icon] ?? Trophy;
             return (
               <div
                 key={b.id}
                 className={`flex flex-col items-center gap-2 rounded-2xl border p-5 text-center shadow-soft transition-opacity ${earned ? "border-amber-400/60 bg-amber-500/5" : "border-border bg-card opacity-60"}`}
               >
                 <span className={`flex h-12 w-12 items-center justify-center rounded-full ${earned ? "bg-amber-500/15 text-amber-600 ring-2 ring-amber-400/40" : "bg-secondary text-muted-foreground"}`}>
-                  {earned ? <Trophy className="h-6 w-6" /> : <Lock className="h-5 w-5" />}
+                  {earned ? <IconCmp className="h-6 w-6" /> : <Lock className="h-5 w-5" />}
                 </span>
                 <div className="text-sm font-semibold text-foreground">{b.name}</div>
                 <p className="text-[11px] text-muted-foreground">{b.description}</p>
