@@ -8,29 +8,6 @@
 // in student.challenges.tsx) nor the dynamic Season badges (owned by
 // flash-challenges-store.ts).
 
-export type BadgeIconId =
-  | "trophy"
-  | "star"
-  | "flame"
-  | "target"
-  | "award"
-  | "medal"
-  | "crown"
-  | "zap"
-  | "sparkles";
-
-export const BADGE_ICON_OPTIONS: BadgeIconId[] = [
-  "trophy",
-  "star",
-  "flame",
-  "target",
-  "award",
-  "medal",
-  "crown",
-  "zap",
-  "sparkles",
-];
-
 export type BadgeMetric =
   | "completedCount"
   | "longestStreak"
@@ -73,7 +50,8 @@ export interface BadgeDef {
   id: string;
   name: string;
   description: string;
-  icon: BadgeIconId;
+  /** Data URL of the badge image (GIF/PNG/JPG/WebP). Empty string = not yet configured. */
+  image: string;
   rule: BadgeRule;
 }
 
@@ -95,14 +73,14 @@ export function isBadgeEarned(badge: BadgeDef, ctx: BadgeContext): boolean {
 /* ---------------- Seed ---------------- */
 
 const BADGES_SEED: BadgeDef[] = [
-  { id: "first",       name: "First Challenge",    description: "You completed your first Challenge.",               icon: "star",      rule: { metric: "completedCount", threshold: 1 } },
-  { id: "explorer",    name: "Challenge Explorer", description: "You've completed 5 Challenges.",                    icon: "target",    rule: { metric: "completedCount", threshold: 5 } },
-  { id: "master",      name: "Challenge Master",   description: "You've completed 15 Challenges.",                   icon: "trophy",    rule: { metric: "completedCount", threshold: 15 } },
-  { id: "roll",        name: "On a Roll",          description: "3 Challenges completed in a row.",                  icon: "flame",     rule: { metric: "longestStreak", threshold: 3 } },
-  { id: "streak",      name: "Challenge Streak",   description: "5 Challenges completed in a row.",                  icon: "flame",     rule: { metric: "longestStreak", threshold: 5 } },
-  { id: "unstoppable", name: "Unstoppable",        description: "10 Challenges completed in a row.",                 icon: "zap",       rule: { metric: "longestStreak", threshold: 10 } },
-  { id: "well",        name: "Well-Rounded",       description: "Completed Challenges from 6 different categories.", icon: "medal",     rule: { metric: "distinctCategories", threshold: 6 } },
-  { id: "elite",       name: "Elite Challenger",   description: "Completed your first Premium Challenge.",           icon: "crown",     rule: { metric: "hasCompletedPremium" } },
+  { id: "first",       name: "First Challenge",    description: "You completed your first Challenge.",               image: "", rule: { metric: "completedCount", threshold: 1 } },
+  { id: "explorer",    name: "Challenge Explorer", description: "You've completed 5 Challenges.",                    image: "", rule: { metric: "completedCount", threshold: 5 } },
+  { id: "master",      name: "Challenge Master",   description: "You've completed 15 Challenges.",                   image: "", rule: { metric: "completedCount", threshold: 15 } },
+  { id: "roll",        name: "On a Roll",          description: "3 Challenges completed in a row.",                  image: "", rule: { metric: "longestStreak", threshold: 3 } },
+  { id: "streak",      name: "Challenge Streak",   description: "5 Challenges completed in a row.",                  image: "", rule: { metric: "longestStreak", threshold: 5 } },
+  { id: "unstoppable", name: "Unstoppable",        description: "10 Challenges completed in a row.",                 image: "", rule: { metric: "longestStreak", threshold: 10 } },
+  { id: "well",        name: "Well-Rounded",       description: "Completed Challenges from 6 different categories.", image: "", rule: { metric: "distinctCategories", threshold: 6 } },
+  { id: "elite",       name: "Elite Challenger",   description: "Completed your first Premium Challenge.",           image: "", rule: { metric: "hasCompletedPremium" } },
 ];
 
 /* ---------------- Persistence ---------------- */
@@ -110,13 +88,30 @@ const BADGES_SEED: BadgeDef[] = [
 export const BADGES_KEY = "verbo:challenge-badges";
 export const BADGES_EVENT = "verbo:challenge-badges-updated";
 
+/** Type guard for a persisted BadgeDef. Silently drops legacy shapes
+ *  (e.g. records that had `icon: BadgeIconId` before the image switch). */
+function isValidBadge(b: unknown): b is BadgeDef {
+  if (!b || typeof b !== "object") return false;
+  const r = b as Record<string, unknown>;
+  return (
+    typeof r.id === "string" &&
+    typeof r.name === "string" &&
+    typeof r.description === "string" &&
+    typeof r.image === "string" &&
+    !!r.rule &&
+    typeof (r.rule as Record<string, unknown>).metric === "string"
+  );
+}
+
 export function loadBadges(): BadgeDef[] {
   if (typeof window === "undefined") return BADGES_SEED.slice();
   try {
     const raw = localStorage.getItem(BADGES_KEY);
     if (raw) {
-      const parsed = JSON.parse(raw) as BadgeDef[];
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0 && parsed.every(isValidBadge)) {
+        return parsed as BadgeDef[];
+      }
     }
   } catch { /* noop */ }
   return BADGES_SEED.slice();
