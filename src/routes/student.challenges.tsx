@@ -1577,13 +1577,11 @@ const PODIUM_STYLES: Record<number, { ring: string; medal: string; label: string
 };
 
 function LeaderboardSection({
-  productId,
   currentUserId,
 }: {
-  productId: ChallengeProductId;
   currentUserId: string;
 }) {
-  const rows = useLeaderboardRows(productId);
+  const rows = useLeaderboardRows();
   if (rows.length === 0) return null;
 
   const podium = rows.slice(0, 3);
@@ -1596,7 +1594,7 @@ function LeaderboardSection({
     <section>
       <div className="mb-4">
         <h2 className="text-base font-semibold tracking-tight text-foreground">Leaderboard</h2>
-        <p className="mt-1 text-xs text-muted-foreground">Challenges completed by students in your product.</p>
+        <p className="mt-1 text-xs text-muted-foreground">Total Challenges and Flash completed by all students.</p>
       </div>
       <Card>
         <div className="p-5">
