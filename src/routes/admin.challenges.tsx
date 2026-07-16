@@ -168,6 +168,7 @@ function Page() {
   if (!productId) {
     return (
       <div className="space-y-8">
+        <TabsBar tab={tab} setTab={setTab} />
         <Header title="Challenges" subtitle="Complementary weekly challenges. Select a product to manage its difficulties." />
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {PRODUCT_ORDER.map((pid) => {
