@@ -100,6 +100,16 @@ function Page() {
   const [productId, setProductId] = useState<ChallengeProductId | null>(null);
   const [difficulty, setDifficulty] = useState<DifficultyId | null>(null);
   const [modal, setModal] = useState<{ mode: "create" | "edit"; challenge?: Challenge } | null>(null);
+  const [tab, setTab] = useState<"challenges" | "badges">("challenges");
+
+  if (tab === "badges" && !productId) {
+    return (
+      <div className="space-y-8">
+        <TabsBar tab={tab} setTab={setTab} />
+        <BadgesManager />
+      </div>
+    );
+  }
 
   useEffect(() => {
     setChallenges(loadChallenges());
