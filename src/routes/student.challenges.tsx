@@ -1512,7 +1512,7 @@ interface LeaderboardRow {
   completed: number;
 }
 
-function useLeaderboardRows(productId: ChallengeProductId): LeaderboardRow[] {
+function useLeaderboardRows(): LeaderboardRow[] {
   const [tick, setTick] = useState(0);
   useEffect(() => {
     const un1 = subscribeStudents(() => setTick((t) => t + 1));
@@ -1522,24 +1522,28 @@ function useLeaderboardRows(productId: ChallengeProductId): LeaderboardRow[] {
   return useMemo(() => {
     void tick;
     return USERS
-      .filter((u) => u.role === "student" && (u.product ?? "go") === productId)
+      .filter((u) => u.role === "student")
       .map<LeaderboardRow>((u) => {
         const id = getLeaderboardIdentity(u.id);
         const useReal = id.mode === "real" || !id.nickname.trim();
         const displayName = useReal ? u.name : id.nickname.trim();
+        const regular = u.completed_challenges?.length ?? 0;
+        const lightning = u.lightning_completions ?? 0;
+        const seasons = Object.values(u.season_completions ?? {})
+          .reduce((sum, n) => sum + (n ?? 0), 0);
         return {
           userId: u.id,
           displayName,
           useRealAvatar: useReal,
           avatarSeed: useReal ? u.name : id.nickname.trim(),
-          completed: u.completed_challenges?.length ?? 0,
+          completed: regular + lightning + seasons,
         };
       })
       .sort((a, b) =>
         b.completed - a.completed
         || a.displayName.localeCompare(b.displayName),
       );
-  }, [productId, tick]);
+  }, [tick]);
 }
 
 function NicknameAvatar({ seed, className = "" }: { seed: string; className?: string }) {
