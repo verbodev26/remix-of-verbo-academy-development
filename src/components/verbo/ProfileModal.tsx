@@ -174,6 +174,15 @@ export function ProfileModal({ open, onOpenChange }: Props) {
                 })}
               </div>
 
+              <button
+                onClick={() => setGallery(true)}
+                className="mt-5 cursor-pointer text-sm font-medium text-[#01304a] underline-offset-4 hover:underline"
+              >
+                View all achievements →
+              </button>
+
+
+
               <div className="mt-6 rounded-xl border border-border bg-card p-4">
                 <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Show on leaderboard as
