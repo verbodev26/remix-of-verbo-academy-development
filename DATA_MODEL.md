@@ -313,6 +313,21 @@ Persistencia: `Record<studentId, LearningPathEvent[]>`, dedupe 60s, máx. 100 ev
 
 ✅ Verificado 2026-07-11 contra el código real: `DifficultyId` sí incluye `'experto'` y `Challenge` sí declara `premium`/`skill_tags`. No había ninguna inconsistencia real.
 
+### `BadgeDef` (`src/lib/badges-store.ts`)
+
+Catálogo editable por Admin de los badges de Challenges mostrados al estudiante (los 8 core: First Challenge, Challenge Explorer, Challenge Master, On a Roll, Challenge Streak, Unstoppable, Well-Rounded, Elite Challenger). NO incluye Lightning Bolt (Verbo Flash, vive aparte) ni Season badges dinámicos (owned by `flash-challenges-store.ts`). Persistido en `localStorage` bajo `verbo:challenge-badges`; broadcast por `verbo:challenge-badges-updated`.
+
+| campo | tipo | notas |
+|---|---|---|
+| id | string | ej. `badge-1` |
+| name / description | string | libres |
+| icon | `BadgeIconId = "trophy"\|"star"\|"flame"\|"target"\|"award"\|"medal"\|"crown"\|"zap"\|"sparkles"` | elegido de un set curado de lucide-react |
+| rule.metric | `BadgeMetric = "completedCount"\|"longestStreak"\|"distinctCategories"\|"hasCompletedPremium"` | única métrica |
+| rule.threshold | number \| undefined | requerido para métricas numéricas; ignorado para `hasCompletedPremium` (boolean on/off) |
+
+Evaluación pura: `isBadgeEarned(badge, ctx)` — sin funciones arbitrarias, todo declarativo.
+
+
 ### `FlashChallenge`, `LightningState`, `FlashSeason`, `FlashConfig` (`src/lib/flash-challenges-store.ts`)
 
 **`FlashChallenge`**: `id, format: FlashFormat, product: FlashProductId, category, title, description, video_url?, premium?, skill_tags?`.
