@@ -16,7 +16,26 @@ import {
   Link2,
   Lock,
   Info,
+  Trophy,
+  Star,
+  Flame,
+  Target,
+  Award,
+  Medal,
+  Zap,
+  Sparkles,
 } from "lucide-react";
+import {
+  type BadgeDef,
+  type BadgeIconId,
+  type BadgeMetric,
+  BADGE_ICON_OPTIONS,
+  BADGE_METRIC_META,
+  loadBadges,
+  persistBadges,
+  subscribeBadges,
+  newBadgeId,
+} from "@/lib/badges-store";
 import {
   type Challenge,
   type ChallengeProductId,
