@@ -16,20 +16,12 @@ import {
   Link2,
   Lock,
   Info,
-  Trophy,
-  Star,
-  Flame,
-  Target,
-  Award,
-  Medal,
-  Zap,
-  Sparkles,
+  Image as ImageIcon,
+  Upload,
 } from "lucide-react";
 import {
   type BadgeDef,
-  type BadgeIconId,
   type BadgeMetric,
-  BADGE_ICON_OPTIONS,
   BADGE_METRIC_META,
   loadBadges,
   persistBadges,
@@ -539,17 +531,40 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
 
 /* ---------------- Badges tab ---------------- */
 
-const BADGE_ICON_MAP: Record<BadgeIconId, React.ComponentType<{ className?: string }>> = {
-  trophy: Trophy,
-  star: Star,
-  flame: Flame,
-  target: Target,
-  award: Award,
-  medal: Medal,
-  crown: Crown,
-  zap: Zap,
-  sparkles: Sparkles,
-};
+const BADGE_IMAGE_ACCEPT = "image/gif,image/png,image/jpeg,image/webp";
+const BADGE_IMAGE_MAX_BYTES = 1024 * 1024; // 1 MB
+
+function readImageAsDataUrl(file: File): Promise<string | null> {
+  return new Promise((resolve) => {
+    if (!BADGE_IMAGE_ACCEPT.split(",").includes(file.type)) {
+      alert("Please upload a GIF, PNG, JPG or WebP image.");
+      resolve(null);
+      return;
+    }
+    if (file.size > BADGE_IMAGE_MAX_BYTES) {
+      alert("Image is too large (max 1 MB).");
+      resolve(null);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : null);
+    reader.onerror = () => { alert("Could not read the image file."); resolve(null); };
+    reader.readAsDataURL(file);
+  });
+}
+
+function BadgeImage({ src, size = "md" }: { src: string; size?: "md" | "lg" }) {
+  const box = size === "lg" ? "h-20 w-20" : "h-12 w-12";
+  const inner = size === "lg" ? "h-8 w-8" : "h-6 w-6";
+  if (src) {
+    return <img src={src} alt="" className={`${box} rounded-full object-cover ring-2 ring-amber-400/40`} />;
+  }
+  return (
+    <span className={`${box} flex items-center justify-center rounded-full bg-secondary text-muted-foreground ring-2 ring-border`}>
+      <ImageIcon className={inner} />
+    </span>
+  );
+}
 
 function TabsBar({ tab, setTab }: { tab: "challenges" | "badges"; setTab: (t: "challenges" | "badges") => void }) {
   const btn = (id: "challenges" | "badges", label: string) => (
@@ -614,13 +629,11 @@ function BadgesManager() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {badges.map((b) => {
-            const Icon = BADGE_ICON_MAP[b.icon] ?? Trophy;
             return (
               <div key={b.id} className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-5 shadow-sm">
                 <div className="flex items-start gap-3">
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-amber-500/15 text-amber-600 ring-2 ring-amber-400/40">
-                    <Icon className="h-6 w-6" />
-                  </span>
+                  <BadgeImage src={b.image} />
+
                   <div className="min-w-0 flex-1">
                     <div className="text-sm font-semibold text-foreground">{b.name}</div>
                     <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{b.description}</p>
@@ -677,7 +690,7 @@ function BadgeModal({
   const isEdit = !!editing;
   const [name, setName] = useState(editing?.name ?? "");
   const [description, setDescription] = useState(editing?.description ?? "");
-  const [icon, setIcon] = useState<BadgeIconId>(editing?.icon ?? "trophy");
+  const [image, setImage] = useState<string>(editing?.image ?? "");
   const [metric, setMetric] = useState<BadgeMetric>(editing?.rule.metric ?? "completedCount");
   const [threshold, setThreshold] = useState<number>(editing?.rule.threshold ?? 1);
 
@@ -689,33 +702,48 @@ function BadgeModal({
       id,
       name: name.trim() || "Untitled badge",
       description: description.trim(),
-      icon,
+      image,
       rule: isNumeric
         ? { metric, threshold: Math.max(1, Math.floor(threshold || 1)) }
         : { metric },
     });
   };
 
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    const dataUrl = await readImageAsDataUrl(file);
+    if (dataUrl) setImage(dataUrl);
+  };
+
   return (
     <ModalShell title={isEdit ? "Edit badge" : "Add badge"} onClose={onClose}>
       <div className="space-y-4 p-6">
-        <Field label="Icon">
-          <div className="flex flex-wrap gap-2">
-            {BADGE_ICON_OPTIONS.map((id) => {
-              const Icon = BADGE_ICON_MAP[id];
-              const active = icon === id;
-              return (
+        <Field label="Image" hint="GIF, PNG, JPG or WebP. Max 1 MB. GIFs animate on the student page.">
+          <div className="flex items-center gap-4">
+            <BadgeImage src={image} size="lg" />
+            <div className="flex flex-col gap-2">
+              <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground shadow-sm transition-colors hover:bg-secondary">
+                <Upload className="h-3.5 w-3.5" />
+                Upload image
+                <input
+                  type="file"
+                  accept={BADGE_IMAGE_ACCEPT}
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+              </label>
+              {image && (
                 <button
-                  key={id}
                   type="button"
-                  onClick={() => setIcon(id)}
-                  className={`flex h-11 w-11 items-center justify-center rounded-lg border transition-colors ${active ? "border-[#f38934] bg-[#f38934]/10 text-[#f38934]" : "border-border bg-background text-muted-foreground hover:bg-secondary"}`}
-                  aria-label={id}
+                  onClick={() => setImage("")}
+                  className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground hover:text-destructive"
                 >
-                  <Icon className="h-5 w-5" />
+                  <Trash2 className="h-3 w-3" /> Remove image
                 </button>
-              );
-            })}
+              )}
+            </div>
           </div>
         </Field>
 

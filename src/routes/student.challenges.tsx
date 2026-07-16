@@ -168,24 +168,11 @@ function SkillChip({ label }: { label: string }) {
 import {
   type BadgeDef,
   type BadgeContext,
-  type BadgeIconId,
   loadBadges,
   subscribeBadges,
   isBadgeEarned,
 } from "@/lib/badges-store";
-import { Star, Flame, Target, Award, Medal, Crown } from "lucide-react";
 
-const BADGE_ICON_MAP: Record<BadgeIconId, React.ComponentType<{ className?: string }>> = {
-  trophy: Trophy,
-  star: Star,
-  flame: Flame,
-  target: Target,
-  award: Award,
-  medal: Medal,
-  crown: Crown,
-  zap: Zap,
-  sparkles: Sparkles,
-};
 
 
 /* -------------------------------------------------------------------------- */
@@ -547,15 +534,23 @@ function Page() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {badges.map((b) => {
             const earned = isBadgeEarned(b, badgeCtx);
-            const IconCmp = BADGE_ICON_MAP[b.icon] ?? Trophy;
+            const hasImage = earned && !!b.image;
             return (
               <div
                 key={b.id}
                 className={`flex flex-col items-center gap-2 rounded-2xl border p-5 text-center shadow-soft transition-opacity ${earned ? "border-amber-400/60 bg-amber-500/5" : "border-border bg-card opacity-60"}`}
               >
-                <span className={`flex h-12 w-12 items-center justify-center rounded-full ${earned ? "bg-amber-500/15 text-amber-600 ring-2 ring-amber-400/40" : "bg-secondary text-muted-foreground"}`}>
-                  {earned ? <IconCmp className="h-6 w-6" /> : <Lock className="h-5 w-5" />}
-                </span>
+                {hasImage ? (
+                  <img
+                    src={b.image}
+                    alt=""
+                    className="h-12 w-12 rounded-full object-cover ring-2 ring-amber-400/40"
+                  />
+                ) : (
+                  <span className={`flex h-12 w-12 items-center justify-center rounded-full ${earned ? "bg-amber-500/15 text-amber-600 ring-2 ring-amber-400/40" : "bg-secondary text-muted-foreground"}`}>
+                    {earned ? <Trophy className="h-6 w-6" /> : <Lock className="h-5 w-5" />}
+                  </span>
+                )}
                 <div className="text-sm font-semibold text-foreground">{b.name}</div>
                 <p className="text-[11px] text-muted-foreground">{b.description}</p>
               </div>
