@@ -168,24 +168,11 @@ function SkillChip({ label }: { label: string }) {
 import {
   type BadgeDef,
   type BadgeContext,
-  type BadgeIconId,
   loadBadges,
   subscribeBadges,
   isBadgeEarned,
 } from "@/lib/badges-store";
-import { Star, Flame, Target, Award, Medal, Crown } from "lucide-react";
 
-const BADGE_ICON_MAP: Record<BadgeIconId, React.ComponentType<{ className?: string }>> = {
-  trophy: Trophy,
-  star: Star,
-  flame: Flame,
-  target: Target,
-  award: Award,
-  medal: Medal,
-  crown: Crown,
-  zap: Zap,
-  sparkles: Sparkles,
-};
 
 
 /* -------------------------------------------------------------------------- */
