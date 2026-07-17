@@ -905,7 +905,17 @@ function ActivityRunner({
 
         {current && (
           <div className="border-t border-border bg-card p-4">
-            {!feedback ? (
+            {attemptBlocked ? (
+              <div className="flex items-center justify-between gap-4 rounded-xl bg-amber-500/10 px-5 py-4 text-amber-800 dark:text-amber-200">
+                <div>
+                  <div className="text-sm font-semibold">Attempt already used</div>
+                  <div className="text-xs opacity-80">You've already used your only attempt for this Performance Review. Ask your teacher or admin to unlock it again if you need another try.</div>
+                </div>
+                <button onClick={next} className="inline-flex items-center gap-2 rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:opacity-90">
+                  {index + 1 < list.length ? "Next Exercise" : "Finish"} <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
+            ) : !feedback ? (
               <div className="flex justify-end">
                 <button
                   onClick={readOnly ? next : check}
