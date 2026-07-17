@@ -3,6 +3,8 @@
 // Persisted to localStorage and broadcast via a custom event so any open
 // tab/route updates in real-time. VIP is intentionally excluded here.
 
+import syllabusData from "./syllabus-data.json";
+
 export type ProductId = "go" | "enterprise" | "international";
 
 export interface CourseUnit {
@@ -10,6 +12,70 @@ export interface CourseUnit {
   title: string;
   video_url: string;
   pdf_url: string;
+  block?: string;
+  vocabulary?: string[];
+  grammar_point?: string;
+}
+
+interface SyllabusUnit {
+  id: string;
+  title: string;
+  block: string;
+  vocabulary: string[];
+  grammar_point: string;
+}
+const SYLLABUS = syllabusData as Record<string, SyllabusUnit[]>;
+
+const PLACEHOLDER_TITLE_RE = /^(Unit|Review) \d+$/;
+
+/**
+ * Merge syllabus data (titles, blocks, vocabulary, grammar points) from the
+ * shipped `syllabus-data.json` into a courses tree loaded from localStorage
+ * (or a fresh seed). Preserves any hand-edited titles, video_url and pdf_url.
+ * Returns true when something changed.
+ */
+function applySyllabus(courses: ProductCourse[]): boolean {
+  let changed = false;
+  for (const product of courses) {
+    for (const level of product.levels) {
+      const syllabusUnits = SYLLABUS[level.id];
+      if (!syllabusUnits) continue;
+      const byId = new Map(level.units.map((u) => [u.id, u]));
+      for (const s of syllabusUnits) {
+        const existing = byId.get(s.id);
+        if (existing) {
+          if (PLACEHOLDER_TITLE_RE.test(existing.title) && existing.title !== s.title) {
+            existing.title = s.title;
+            changed = true;
+          }
+          if (existing.block !== s.block) { existing.block = s.block; changed = true; }
+          if (JSON.stringify(existing.vocabulary ?? []) !== JSON.stringify(s.vocabulary)) {
+            existing.vocabulary = [...s.vocabulary]; changed = true;
+          }
+          if (existing.grammar_point !== s.grammar_point) {
+            existing.grammar_point = s.grammar_point; changed = true;
+          }
+        } else {
+          level.units.push({
+            id: s.id,
+            title: s.title,
+            video_url: "",
+            pdf_url: "",
+            block: s.block,
+            vocabulary: [...s.vocabulary],
+            grammar_point: s.grammar_point,
+          });
+          changed = true;
+        }
+      }
+      level.units.sort((a, b) => {
+        const na = parseInt(a.id.match(/-U(\d+)$/)?.[1] ?? "0", 10);
+        const nb = parseInt(b.id.match(/-U(\d+)$/)?.[1] ?? "0", 10);
+        return na - nb;
+      });
+    }
+  }
+  return changed;
 }
 
 export interface CourseLevel {
