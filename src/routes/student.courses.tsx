@@ -835,6 +835,7 @@ function ActivityRunner({
 
   const next = () => {
     setFeedback(null);
+    setAttemptBlocked(false);
     if (index + 1 < list.length) setIndex((i) => i + 1);
     else {
       // Try to advance to the next category tab, otherwise close.
