@@ -228,13 +228,18 @@ Proyección unificada de `Session`/`Club` para pintar el calendario. No se guard
 ProductId = "go" | "enterprise" | "international"
 ProductCourse { product: ProductId; levels: CourseLevel[] }
 CourseLevel { id: string; name: string; units: CourseUnit[] }
-CourseUnit { id: string; title: string; video_url: string; pdf_url: string }
+CourseUnit {
+  id: string; title: string; video_url: string; pdf_url: string;
+  block?: string; vocabulary?: string[]; grammar_point?: string;
+}
 ```
 
 Nombres de nivel confirmados por producto:
 - **go:** Kickstart, Everyday Flow, Confident Voice, Culture Master
 - **enterprise:** Core Foundations, Strategic Fluency, Executive Presence, Global Leadership (migración automática desde el nombre legacy "Global Mastery")
 - **international:** Survival Basics, Travel Ready, Social Fluency, Full Command
+
+**Syllabus real (`src/lib/syllabus-data.json`):** archivo shippeado con el catálogo real de 360 unidades (12 niveles × 30 unidades) — `title`, `block`, `vocabulary[]`, `grammar_point`. `loadCourses()` ejecuta `applySyllabus()` como migración idempotente: para cada unidad del JSON que exista con id igual en el estado local, reemplaza el `title` solo si su valor actual coincide con el patrón placeholder `/^(Unit|Review) \d+$/` (nunca pisa títulos editados a mano), y siempre actualiza `block`/`vocabulary`/`grammar_point`; `video_url` y `pdf_url` de unidades existentes se preservan intactos. Las unidades del JSON que aún no existen se crean con `video_url: ""` y `pdf_url: ""`. La migración corre tanto sobre el estado hidratado desde `localStorage` como sobre el `seed()` inicial.
 
 ⚠️ **No existe ningún campo de gating/progreso** (`Completed`/`Current`/`Locked`, "Contracted Levels") en este archivo — se buscó explícitamente y no aparece. Si esa lógica existe en producción, vive en otro archivo (componente de UI o store de inscripciones) no cubierto en esta lectura.
 
