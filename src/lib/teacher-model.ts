@@ -4,6 +4,7 @@
 // ============================================================================
 import { USERS, ASSIGNMENTS, SESSIONS, userById, type User, type Session } from "./mock-data";
 import { PRODUCTS, type ProductId } from "./student-model";
+import { effectiveHourlyRate, teacherTier } from "./teacher-tiers";
 
 export const DEFAULT_HOURLY_RATE = 120; // MXN / hour
 export const AVAILABILITY_CHANGE_DAYS = 30; // teacher may request a change once per N days
