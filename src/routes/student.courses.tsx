@@ -36,11 +36,12 @@ import {
   EXERCISE_LABELS,
   MANDATORY_CATEGORIES,
   activitiesForUnit,
+  attemptsFor,
   bestScoreFor,
   categoryLabel,
+  getUnitAccessOverride,
   isMandatoryCategory,
   isMilestoneUnit,
-  isMilestoneUnlocked,
   loadActivityScores,
   recordActivityScore,
   setUnitCompleted,
@@ -84,7 +85,9 @@ interface LevelState {
 function levelIsComplete(level: CourseLevel, studentId: string): boolean {
   if (level.units.length === 0) return false;
   for (const u of level.units) {
-    if (isMilestoneUnit(u.id) && !isMilestoneUnlocked(studentId, u.id)) return false;
+    const ov = getUnitAccessOverride(studentId, u.id);
+    if (ov === "locked") return false;
+    if (isMilestoneUnit(u.id) && ov !== "unlocked" && !unitPassed(studentId, u.id)) return false;
     if (!unitPassed(studentId, u.id)) return false;
   }
   return true;
@@ -154,22 +157,26 @@ function computeUnitStates(level: CourseLevel, studentId: string, readOnly: bool
   let previousPassed = true; // first unit is always unlockable
   for (const u of level.units) {
     const passed = unitPassed(studentId, u.id);
-    if (isMilestoneUnit(u.id)) {
-      if (passed) { states.push("passed"); previousPassed = true; continue; }
-      if (!previousPassed) { states.push("locked"); previousPassed = false; continue; }
-      // Milestone teacher-lock
-      if (isMilestoneUnlocked(studentId, u.id)) {
-        states.push("milestone_ready");
-      } else {
-        states.push("milestone_locked");
-        previousPassed = false; // hard stop
-        continue;
-      }
+    const ov = getUnitAccessOverride(studentId, u.id);
+
+    // Explicit lock always wins — overrides default progression, milestone or not.
+    if (ov === "locked") {
+      states.push("locked");
       previousPassed = false;
       continue;
     }
+
+    if (isMilestoneUnit(u.id)) {
+      if (passed) { states.push("passed"); previousPassed = true; continue; }
+      if (!previousPassed && ov !== "unlocked") { states.push("locked"); previousPassed = false; continue; }
+      if (ov === "unlocked") { states.push("milestone_ready"); }
+      else { states.push("milestone_locked"); }
+      previousPassed = false;
+      continue;
+    }
+
     if (passed) { states.push("passed"); previousPassed = true; continue; }
-    if (previousPassed) {
+    if (ov === "unlocked" || previousPassed) {
       states.push(readOnly ? "locked" : "current");
     } else {
       states.push("locked");
@@ -805,13 +812,19 @@ function ActivityRunner({
   const [index, setIndex] = useState(0);
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [feedback, setFeedback] = useState<null | { ok: boolean; score: number }>(null);
+  const [attemptBlocked, setAttemptBlocked] = useState(false);
 
-  useEffect(() => { setIndex(0); setFeedback(null); }, [activeCat]);
+  useEffect(() => { setIndex(0); setFeedback(null); setAttemptBlocked(false); }, [activeCat]);
 
   const current = list[index];
 
   const check = () => {
     if (!current) return;
+    // Milestone units get exactly one attempt per activity.
+    if (!readOnly && isMilestoneUnit(unit.id) && attemptsFor(studentId, current.id) >= 1) {
+      setAttemptBlocked(true);
+      return;
+    }
     const ok = evaluate(current, draft[current.id] ?? "");
     const score = ok ? 100 : 0;
     if (!readOnly) recordActivityScore(studentId, current.id, score);
@@ -822,6 +835,7 @@ function ActivityRunner({
 
   const next = () => {
     setFeedback(null);
+    setAttemptBlocked(false);
     if (index + 1 < list.length) setIndex((i) => i + 1);
     else {
       // Try to advance to the next category tab, otherwise close.
@@ -892,7 +906,17 @@ function ActivityRunner({
 
         {current && (
           <div className="border-t border-border bg-card p-4">
-            {!feedback ? (
+            {attemptBlocked ? (
+              <div className="flex items-center justify-between gap-4 rounded-xl bg-amber-500/10 px-5 py-4 text-amber-800 dark:text-amber-200">
+                <div>
+                  <div className="text-sm font-semibold">Attempt already used</div>
+                  <div className="text-xs opacity-80">You've already used your only attempt for this Performance Review. Ask your teacher or admin to unlock it again if you need another try.</div>
+                </div>
+                <button onClick={next} className="inline-flex items-center gap-2 rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:opacity-90">
+                  {index + 1 < list.length ? "Next Exercise" : "Finish"} <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
+            ) : !feedback ? (
               <div className="flex justify-end">
                 <button
                   onClick={readOnly ? next : check}

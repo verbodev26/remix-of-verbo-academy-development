@@ -17,6 +17,7 @@ import { loadStudentReports, REPORTS_EVENT } from "./student-reports-store";
 import { loadFinancialIssues, FIN_ISSUES_EVENT } from "./financial-issues-store";
 import { loadKpiOverrides, KPI_OVERRIDES_EVENT, KPI_METRIC_LABELS } from "./teacher-kpi-overrides-store";
 import { monthLabel } from "./teacher-kpi-history-store";
+import { loadUnitAccessLog } from "./activities-store";
 
 export type ActivityKind =
   | "session_scheduled"
@@ -41,7 +42,9 @@ export type ActivityKind =
   | "avail_request_rejected"
   | "release_request_submitted"
   | "report_filed"
-  | "kpi_manual_override";
+  | "kpi_manual_override"
+  | "unit_unlocked"
+  | "unit_locked";
 
 export type ActorRole = "admin" | "teacher" | "student" | "system";
 
@@ -416,6 +419,20 @@ export function buildActivityLog(): ActivityEntry[] {
       personId: o.teacher_id,
     });
   }
+  // ---- Unit access overrides (admin / teacher unlock/lock) ------------
+  for (const e of loadUnitAccessLog()) {
+    const kind: ActivityKind = e.action === "unlocked" ? "unit_unlocked" : "unit_locked";
+    out.push({
+      id: `unit-access:${e.id}`,
+      kind,
+      action: e.action === "unlocked" ? "Unit unlocked" : "Unit locked",
+      detail: `${userName(e.studentId)} — ${e.unitId}`,
+      timestamp: e.at,
+      actorId: e.actorId, actorName: userName(e.actorId), actorRole: e.actorRole,
+      personId: e.studentId,
+    });
+  }
+
 
   // Sort newest first, de-dupe by id (defensive).
   const seen = new Set<string>();
@@ -487,6 +504,8 @@ export const ACTIVITY_KIND_LABELS: Record<ActivityKind, string> = {
   release_request_submitted: "Release request",
   report_filed: "Report filed",
   kpi_manual_override: "KPI manually adjusted",
+  unit_unlocked: "Unit unlocked",
+  unit_locked: "Unit locked",
 };
 
 export const ACTOR_ROLE_LABELS: Record<ActorRole, string> = {

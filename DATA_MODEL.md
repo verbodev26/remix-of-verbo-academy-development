@@ -272,7 +272,21 @@ Nombres de nivel confirmados por producto:
 
 **`MatchItem`**: `{ text: string; key: string }`.
 **`ActivityScore`**: `{ best: number; attempts: number; lastAt: string }`, clave = `` `${studentId}::${activityId}` `` — ✅ scoped por alumno desde 2026-07-11 (fix bug de progreso compartido).
-Mapas relacionados sin interfaz formal, todos con clave compuesta `` `${studentId}::${unitId}` ``: `Completion` (→ `boolean`), `Attempts` (→ `number`), `MilestoneUnlocks` (→ `boolean`).
+Mapas relacionados sin interfaz formal, todos con clave compuesta `` `${studentId}::${unitId}` ``: `Completion` (→ `boolean`), `Attempts` (→ `number`).
+
+**`UnitAccessEvent`** (`src/lib/activities-store.ts`, key `verbo:unit-access-log`): historial append-only de overrides de acceso por unidad, aplica a **cualquier** unitId (no solo milestones 10/20/30).
+
+| campo | tipo | notas |
+|---|---|---|
+| id | string | único |
+| studentId | string | |
+| unitId | string | |
+| action | `"unlocked" \| "locked"` | |
+| actorId | string | admin o teacher que ejecuta |
+| actorRole | `"admin" \| "teacher"` | |
+| at | string ISO | |
+
+Reglas de gating (student.courses.tsx): el override MÁS RECIENTE por `(studentId, unitId)` gana. `getUnitAccessOverride` = null → comportamiento por defecto (milestones bloqueadas, no-milestones secuenciales). `"locked"` → siempre bloqueada. `"unlocked"` → siempre accesible (permite adelantar no-milestones o abrir un milestone). Además, unidades milestone tienen límite de **1 intento por actividad**: al segundo submit dentro del runner, el sistema bloquea y pide desbloqueo. Cada evento genera un `ActivityEntry` (`unit_unlocked` / `unit_locked`) derivado en `activity-logs-store.ts`. `isMilestoneUnlocked` se conserva como wrapper de `getUnitAccessOverride === "unlocked"`.
 
 ### `StoredMaterial` (`src/lib/materials-store.ts`)
 

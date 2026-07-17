@@ -29,7 +29,12 @@ import {
 import { groupsByStudentId, groupOfStudent, removeMember, subscribeGroups, effectiveSessionCounts } from "@/lib/groups-store";
 import { logPayment, expectedAmountForStudent } from "@/lib/payments-log";
 import { setLevelReopened } from "@/lib/students-store";
-import { RotateCcw } from "lucide-react";
+import { RotateCcw, Unlock as UnlockIcon, Lock as LockIcon, Trophy } from "lucide-react";
+import { useAuth } from "@/lib/auth";
+import { loadCourses, subscribeCourses, type CourseLevel } from "@/lib/product-courses-store";
+import {
+  isMilestoneUnit, getUnitAccessOverride, setUnitAccess,
+} from "@/lib/activities-store";
 
 export const Route = createFileRoute("/admin/students")({
   component: Page,
@@ -1054,7 +1059,7 @@ function StudentFormModal({
 // ===========================================================================
 // DETAIL MODAL (tabs + actions)
 // ===========================================================================
-type Tab = "overview" | "performance" | "notes";
+type Tab = "overview" | "performance" | "progress" | "notes";
 
 function StudentDetailModal({
   student, teachers, onClose, onUpdate, onEdit,
@@ -1155,7 +1160,7 @@ function StudentDetailModal({
 
         {/* Tabs */}
         <div className="flex gap-1 border-b border-border px-6 pt-3">
-          {([["overview", "Overview"], ["performance", "Performance & Attendance"], ["notes", "Admin Notes"]] as [Tab, string][]).map(([id, label]) => (
+          {([["overview", "Overview"], ["performance", "Performance & Attendance"], ["progress", "Course Progress"], ["notes", "Admin Notes"]] as [Tab, string][]).map(([id, label]) => (
             <button
               key={id}
               onClick={() => setTab(id)}
@@ -1288,6 +1293,8 @@ function StudentDetailModal({
 
           {tab === "performance" && <PerformanceTab student={student} />}
 
+          {tab === "progress" && <CourseProgressTab student={student} />}
+
           {tab === "notes" && (
             <div>
               <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"><ShieldAlert className="h-3.5 w-3.5" /> Internal notes (admin only)</p>
@@ -1382,6 +1389,108 @@ function StudentDetailModal({
         </div>
       </div>
     </Overlay>
+  );
+}
+
+// ---- Course Progress tab: unlock/lock any unit per student ----
+function CourseProgressTab({ student }: { student: User }) {
+  return <UnitAccessPanel student={student} actorRole="admin" />;
+}
+
+function UnitAccessPanel({ student, actorRole }: { student: User; actorRole: "admin" | "teacher" }) {
+  const { user: actor } = useAuth();
+  const [rev, setRev] = useState(0);
+  const [courses, setCourses] = useState(() => loadCourses());
+  useEffect(() => {
+    setCourses(loadCourses());
+    return subscribeCourses(() => { setCourses(loadCourses()); setRev((r) => r + 1); });
+  }, []);
+
+  const productMap: Record<string, "go" | "enterprise" | "international"> = {
+    go: "go", enterprise: "enterprise", international: "international",
+  };
+  const productId = student.product ? productMap[student.product] : undefined;
+  const product = productId ? courses.find((c) => c.product === productId) : undefined;
+  const levels = product?.levels ?? [];
+  const initialLevelId = useMemo(() => {
+    const match = levels.find((l) => l.name === student.current_roadmap_level);
+    return (match ?? levels[0])?.id ?? "";
+  }, [levels, student.current_roadmap_level]);
+  const [levelId, setLevelId] = useState<string>(initialLevelId);
+  useEffect(() => { if (initialLevelId && !levelId) setLevelId(initialLevelId); }, [initialLevelId, levelId]);
+  const level: CourseLevel | undefined = levels.find((l) => l.id === levelId) ?? levels[0];
+
+  if (!productId || !product) {
+    return (
+      <div className="rounded-lg bg-muted px-3 py-6 text-center text-xs text-muted-foreground">
+        This student's product does not have a self-study Learning Path (Course Progress applies to GO, Enterprise and International).
+      </div>
+    );
+  }
+  if (!level) return null;
+
+  const toggle = (unitId: string, nextAction: "unlocked" | "locked") => {
+    if (!actor) return;
+    setUnitAccess(student.id, unitId, nextAction, actor.id, actorRole);
+    setRev((r) => r + 1);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-xs text-muted-foreground">
+          Unlock or lock any unit for this student. Milestone units (10, 20, 30) are locked by default until unlocked here.
+        </p>
+        <select
+          value={level.id}
+          onChange={(e) => setLevelId(e.target.value)}
+          className={`${inputCls} max-w-xs cursor-pointer`}
+        >
+          {levels.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+        </select>
+      </div>
+
+      <div className="divide-y divide-border rounded-xl border border-border bg-background">
+        {level.units.map((u) => {
+          const milestone = isMilestoneUnit(u.id);
+          const ov = getUnitAccessOverride(student.id, u.id);
+          const isUnlocked = ov === "unlocked" || (!milestone && ov === null);
+          const stateLabel =
+            ov === "unlocked" ? "Unlocked"
+            : ov === "locked" ? "Locked"
+            : milestone ? "Locked (default)" : "Unlocked (default)";
+          const badgeCls =
+            ov === "unlocked" ? "bg-success/10 text-success"
+            : ov === "locked" ? "bg-destructive/10 text-destructive"
+            : "bg-secondary text-muted-foreground";
+          const nextAction: "unlocked" | "locked" = isUnlocked ? "locked" : "unlocked";
+          const _ = rev; void _;
+          return (
+            <div key={u.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-mono text-muted-foreground">{u.id}</span>
+                  {milestone && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
+                      <Trophy className="h-3 w-3" /> Milestone
+                    </span>
+                  )}
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${badgeCls}`}>{stateLabel}</span>
+                </div>
+                <div className="mt-0.5 truncate text-sm text-foreground">{u.title}</div>
+              </div>
+              <button
+                type="button"
+                onClick={() => toggle(u.id, nextAction)}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-secondary"
+              >
+                {isUnlocked ? <><LockIcon className="h-3.5 w-3.5" /> Lock</> : <><UnlockIcon className="h-3.5 w-3.5" /> Unlock</>}
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
