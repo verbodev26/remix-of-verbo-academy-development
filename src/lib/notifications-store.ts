@@ -23,6 +23,7 @@ import {
 import { loadStrikes, STRIKES_EVENT, activeStrikeCount } from "./strikes-store";
 import { computeTeacherKpis } from "./teacher-kpis";
 import { teacherStatus } from "./teacher-model";
+import { teacherTier } from "./teacher-tiers";
 import { activeAnnouncements, ANN_EVENT } from "./announcements-store";
 import { loadFinancialIssues, FIN_ISSUES_EVENT } from "./financial-issues-store";
 import { REPORTS_KEY, REPORTS_EVENT, type StudentReport } from "./student-reports-store";
@@ -47,6 +48,7 @@ export type NotificationKind =
   | "freeze_applied"
   | "kpi_below_threshold"
   | "bonus_eligible"
+  | "tier_upgraded"
   | "announcement"
   | "student_challenge_selected"
   | "student_shared_challenge_result"
@@ -262,6 +264,20 @@ function teacherNotifications(teacherId: string): Notification[] {
         kind: "bonus_eligible",
         title: "Bonus Eligible reached",
         body: `Composite Score: ${k.composite} / 100.`,
+        createdAt: new Date().toISOString(),
+        to: "/teacher/financial",
+        read: false,
+      });
+    }
+
+    // ---- Tier upgraded (>= tier 2) ---------------------------------------
+    const tier = teacherTier(u);
+    if (tier.id > 1) {
+      out.push({
+        id: `tier:${teacherId}:${tier.id}`,
+        kind: "tier_upgraded",
+        title: `You reached the ${tier.name} tier`,
+        body: `Your hourly rate is now $${tier.rate} MXN/h.`,
         createdAt: new Date().toISOString(),
         to: "/teacher/financial",
         read: false,

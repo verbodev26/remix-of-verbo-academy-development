@@ -9,6 +9,7 @@ import {
   PAYMENT_FREQUENCIES, paymentFrequency, defaultPaymentRecords, financialSummary,
   type QualifiedProduct, type TeacherStatus, type PaymentFrequency,
 } from "@/lib/teacher-model";
+import { effectiveHourlyRate, teacherTier } from "@/lib/teacher-tiers";
 import { computeTeacherKpis } from "@/lib/teacher-kpis";
 import { BonusBadge } from "@/components/verbo/BonusBadge";
 import { useAvatar } from "@/lib/avatar-store";
@@ -364,7 +365,7 @@ function TeacherDetailModal({
   const meta = STATUS_META[status];
 
   // Editable fields
-  const [rate, setRate] = useState(String(t.hourly_rate ?? DEFAULT_HOURLY_RATE));
+  const [rate, setRate] = useState(String(effectiveHourlyRate(t)));
   const [freq, setFreq] = useState<PaymentFrequency>(paymentFrequency(t));
   const [products, setProducts] = useState<QualifiedProduct[]>(qualifiedProducts(t));
   const [notes, setNotes] = useState(t.admin_notes ?? "");
@@ -385,12 +386,25 @@ function TeacherDetailModal({
   const productsDirty = JSON.stringify([...products].sort()) !== JSON.stringify([...qualifiedProducts(t)].sort());
   const otherTeachers = teachers.filter((x) => x.id !== t.id && teacherStatus(x) !== "removed");
 
+  const applyStatusPatch = (base: User, target: "active" | "frozen" | "removed"): User => {
+    const current = teacherStatus(base);
+    let patch: User = { ...base, teacher_status: target };
+    if (current === "frozen" && target !== "frozen" && base.tier_frozen_since) {
+      const since = new Date(base.tier_frozen_since);
+      const days = isNaN(since.getTime()) ? 0 : Math.max(0, Math.floor((Date.now() - since.getTime()) / 86_400_000));
+      patch = { ...patch, tier_frozen_since: null, tier_frozen_days: (base.tier_frozen_days ?? 0) + days };
+    } else if (current !== "frozen" && target === "frozen") {
+      patch = { ...patch, tier_frozen_since: new Date().toISOString() };
+    }
+    return patch;
+  };
+
   const startFlow = (target: "frozen" | "removed") => {
     if (actives.length > 0) {
       setReassignMap(Object.fromEntries(actives.map((s) => [s.id, ""])));
       setFlow(target);
     } else {
-      onPersist({ ...t, teacher_status: target });
+      onPersist(applyStatusPatch(t, target));
     }
   };
 
@@ -399,7 +413,7 @@ function TeacherDetailModal({
   const confirmFlow = () => {
     if (!flow || !flowReady) return;
     actives.forEach((s) => onReassign(s.id, reassignMap[s.id]));
-    onPersist({ ...t, teacher_status: flow });
+    onPersist(applyStatusPatch(t, flow));
     setFlow(null);
     onClose();
   };
@@ -417,7 +431,7 @@ function TeacherDetailModal({
             )}
             <div>
               <h2 className="text-xl font-semibold tracking-tight text-white">{t.name}</h2>
-              <p className="text-xs text-white/70">{t.email} · ${t.hourly_rate ?? DEFAULT_HOURLY_RATE} MXN/h</p>
+              <p className="text-xs text-white/70">{t.email} · ${effectiveHourlyRate(t)} MXN/h · {teacherTier(t).name}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -465,9 +479,9 @@ function TeacherDetailModal({
                     <CalendarClock className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                   </div>
                 </div>
-                {(String(t.hourly_rate ?? DEFAULT_HOURLY_RATE) !== rate || paymentFrequency(t) !== freq) && (
+                {(String(effectiveHourlyRate(t)) !== rate || paymentFrequency(t) !== freq) && (
                   <PrimaryBtn onClick={() => {
-                    const patch: User = { ...t, hourly_rate: Number(rate) || DEFAULT_HOURLY_RATE, payment_frequency: freq };
+                    const patch: User = { ...t, hourly_rate: Number(rate) || teacherTier(t).rate, payment_frequency: freq };
                     if (paymentFrequency(t) !== freq) patch.payment_records = defaultPaymentRecords(freq);
                     onPersist(patch);
                   }}>Save</PrimaryBtn>
@@ -649,7 +663,7 @@ function TeacherDetailModal({
             <GhostBtn onClick={onEdit}><Pencil className="h-3.5 w-3.5" /> Edit profile</GhostBtn>
             <GhostBtn onClick={() => alert(`Recovery email sent to ${t.email}.`)}><KeyRound className="h-3.5 w-3.5" /> Reset password</GhostBtn>
             {status === "frozen" ? (
-              <GhostBtn onClick={() => onPersist({ ...t, teacher_status: "active" })}><Play className="h-3.5 w-3.5" /> Reactivate</GhostBtn>
+              <GhostBtn onClick={() => onPersist(applyStatusPatch(t, "active"))}><Play className="h-3.5 w-3.5" /> Reactivate</GhostBtn>
             ) : status === "active" ? (
               <GhostBtn onClick={() => startFlow("frozen")}><Snowflake className="h-3.5 w-3.5" /> Freeze</GhostBtn>
             ) : null}
@@ -1034,7 +1048,7 @@ function TeacherFormModal({
   const [email, setEmail] = useState(initial?.email ?? "");
   const [password, setPassword] = useState(initial?.password ?? "");
   const [showPw, setShowPw] = useState(false);
-  const [rate, setRate] = useState(String(initial?.hourly_rate ?? DEFAULT_HOURLY_RATE));
+  const [rate, setRate] = useState(String(initial ? effectiveHourlyRate(initial) : 120));
   const [products, setProducts] = useState<QualifiedProduct[]>(qualifiedProducts(initial ?? ({} as User)));
   const [hireDate, setHireDate] = useState(
     initial?.hire_date ?? new Date().toISOString().slice(0, 10),
@@ -1058,7 +1072,7 @@ function TeacherFormModal({
       email: email.trim(),
       password,
       role: "teacher",
-      hourly_rate: Number(rate) || DEFAULT_HOURLY_RATE,
+      hourly_rate: Number(rate) || 120,
       qualified_products: products,
       hire_date: hireDate,
       teacher_status: initial?.teacher_status ?? "active",

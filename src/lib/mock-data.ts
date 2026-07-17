@@ -88,6 +88,13 @@ export interface User {
   teacher_status?: "active" | "frozen" | "removed";
   /** ISO date (YYYY-MM-DD). Drives the 6-month bonus-streak tracking window. */
   hire_date?: string;
+  // ----- Tier clock (see src/lib/teacher-tiers.ts) -----
+  /** ISO timestamp when the current "frozen" period started (null if active). */
+  tier_frozen_since?: string | null;
+  /** Total days the tier clock has been paused across all past freezes. */
+  tier_frozen_days?: number;
+  /** ISO timestamp of the last tier reset (e.g. reactivation after "removed"). */
+  tier_reset_at?: string | null;
   rating?: number; // avg student rating (0–5)
   plan_punctuality?: number; // % lesson plans submitted on time
   report_punctuality?: number; // % post-class reports submitted on time

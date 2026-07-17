@@ -9,8 +9,9 @@ import { USERS, userById } from "@/lib/mock-data";
 import { loadSessions, subscribeSessions, type ExtSession } from "@/lib/sessions-store";
 import { groupById } from "@/lib/groups-store";
 import {
-  DEFAULT_HOURLY_RATE, avgRating,
+  avgRating,
 } from "@/lib/teacher-model";
+import { effectiveHourlyRate, teacherTier } from "@/lib/teacher-tiers";
 import {
   computeTeacherKpis, ratingBand, getBonusThreshold,
 } from "@/lib/teacher-kpis";
@@ -92,7 +93,8 @@ function MyBalancePage() {
   const mkey = monthKey(viewMonth);
   const isCurrentMonth = mkey === currentMkey;
 
-  const rate = teacher?.hourly_rate ?? DEFAULT_HOURLY_RATE;
+  const rate = teacher ? effectiveHourlyRate(teacher) : 120;
+  const tier = teacher ? teacherTier(teacher) : null;
 
   // ----- Sessions taught (this month) -----
   type SessionRow = {
@@ -205,7 +207,10 @@ function MyBalancePage() {
       {/* Header + month selector */}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <SectionTitle>My Balance</SectionTitle>
+          <div className="flex flex-wrap items-center gap-2">
+            <SectionTitle>My Balance</SectionTitle>
+            {tier && <Pill tone="success">{tier.name} tier · ${rate} MXN/h</Pill>}
+          </div>
           <p className="mt-1 text-sm text-muted-foreground">Your payment summary for this period. Read-only.</p>
         </div>
         <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-2 py-1.5 shadow-soft">

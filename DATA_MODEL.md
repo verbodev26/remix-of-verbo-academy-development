@@ -692,3 +692,31 @@ Sin sub-tipos. Nav varía por `product_type` y por `product === "vip"`. No requi
 - **`ClubReport` con `event_type: "spotlight"` — ¿tabla propia o sigue compartiendo `event_id` con `Club`?** → **Pospuesto** al diseño de tablas de Supabase. Hipótesis a verificar en ese momento: las sesiones Spotlight probablemente nacen como `Session` (vía `student-requests-store.ts`, `kind: "spotlight"`), no como `Club` — lo cual explicaría la ambigüedad. No es un problema de la app actual, es una decisión de esquema futuro.
 - **¿Unificar `Challenge`/`FlashChallenge` en una tabla con columna `kind`?** → **Pospuesto** al diseño de tablas de Supabase, misma razón que arriba. Recomendación cuando llegue el momento: sí conviene unificar. No tocar el código actual (entraría en el refactor pausado).
 - **Hallazgo #23 — progreso de actividades sin `studentId`, ¿bug real hoy?** → **Acción inmediata pendiente de confirmar por Jaret**: probar con dos alumnos desde el mismo navegador (completar una actividad como alumno A, revisar si ya aparece completada para alumno B) para confirmar si esto explica parte de la confusión vista en preview. Si se confirma, es una excepción — arreglo quirúrgico y acotado (agregar `studentId` al mapa), no el barrido completo — que se autorizaría aparte, no como parte del refactor grande pausado.
+
+---
+
+## Teacher tiers y rate automático
+
+**Fuente de verdad:** `src/lib/teacher-tiers.ts` (`TEACHER_TIERS`, `teacherTier`, `effectiveHourlyRate`, `teachersForProductSorted`).
+
+Escalera fija: `Rising` $120 → `Established` $130 → `Distinguished` $140 → `Signature` $150 (MXN/h).
+
+**Reloj del tier**: se ancla a `max(trackingStartKey(t), tier_reset_at)` — es decir, al **primer mes calendario completo después de la fecha de contratación**, coincidiendo con la ventana de tracking del bono. Cada **365 días activos** el docente sube un tier, tope en Signature.
+
+**Días activos = días calendario desde el ancla − días pausados**.
+
+**Pausa del reloj**: sólo cuenta el estado `frozen`. Al pasar a `frozen`, `admin.teachers.tsx` setea `tier_frozen_since` con `Date.now()`. Al reactivar (o cambiar a `removed`), se acumulan los días transcurridos a `tier_frozen_days` y se limpia `tier_frozen_since`. `removed` no pausa el reloj por sí mismo (se maneja como un estado terminal desde flujos de reasignación, no de pausa de tenure).
+
+**Rate efectivo (`effectiveHourlyRate(t)`)**: si `User.hourly_rate` está definido, gana la anulación manual; si no, se usa el rate del tier calculado. Consumidores actualizados: `teacher-model.ts#financialSummary`, `teacher.financial.tsx`, header y form de `admin.teachers.tsx`.
+
+**Selects de asignación**: `admin.students.tsx` reemplazó `teachersForProduct` por `teachersForProductSorted`, que ordena por `tier.id` ascendente y luego por nombre, mostrando el nombre del tier junto a cada docente para nudgear hacia profesores más nuevos/baratos.
+
+**Nuevos campos en `User` (`src/lib/mock-data.ts`)**:
+
+| Campo | Tipo | Descripción |
+| --- | --- | --- |
+| `tier_frozen_since` | `string \| null` (ISO) | Timestamp del inicio del período `frozen` actual; `null` si activo. |
+| `tier_frozen_days` | `number` | Días acumulados de pausas anteriores. |
+| `tier_reset_at` | `string \| null` (ISO) | Timestamp del último reset manual del reloj (reservado para futuros flujos). |
+
+**Notificaciones**: `notifications-store.ts` deriva una notificación `tier_upgraded` (dedupe por `tier:{teacherId}:{tierId}`) cada vez que el docente cruza a un tier ≥ 2, con enlace a `/teacher/financial`.

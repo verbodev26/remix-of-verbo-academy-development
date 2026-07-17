@@ -4,6 +4,7 @@
 // ============================================================================
 import { USERS, ASSIGNMENTS, SESSIONS, userById, type User, type Session } from "./mock-data";
 import { PRODUCTS, type ProductId } from "./student-model";
+import { effectiveHourlyRate, teacherTier } from "./teacher-tiers";
 
 export const DEFAULT_HOURLY_RATE = 120; // MXN / hour
 export const AVAILABILITY_CHANGE_DAYS = 30; // teacher may request a change once per N days
@@ -56,7 +57,7 @@ export function adjustmentsTotal(t: User): number {
 }
 
 export function financialSummary(t: User) {
-  const rate = t.hourly_rate ?? DEFAULT_HOURLY_RATE;
+  const rate = effectiveHourlyRate(t);
   const hours = hoursWorked(t);
   const subtotal = hours * rate;
   const adj = adjustmentsTotal(t);
@@ -101,6 +102,24 @@ export function teachersForProduct(
     if (!includeRemoved && teacherStatus(t) === "removed") return false;
     if (!product) return true;
     return qualifiedProducts(t).includes(product as QualifiedProduct);
+  });
+}
+
+/**
+ * Same as teachersForProduct() but sorted so that lower-tier teachers appear
+ * first — this nudges coordinators toward newer / cheaper teachers when
+ * assigning students. Ties break by name for stability.
+ */
+export function teachersForProductSorted(
+  teachers: User[],
+  product?: string | null,
+  opts: { includeRemoved?: boolean } = {},
+): User[] {
+  return teachersForProduct(teachers, product, opts).slice().sort((a, b) => {
+    const ta = teacherTier(a).id;
+    const tb = teacherTier(b).id;
+    if (ta !== tb) return ta - tb;
+    return a.name.localeCompare(b.name);
   });
 }
 
