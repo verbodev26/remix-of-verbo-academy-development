@@ -207,7 +207,10 @@ function MyBalancePage() {
       {/* Header + month selector */}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <SectionTitle>My Balance</SectionTitle>
+          <div className="flex flex-wrap items-center gap-2">
+            <SectionTitle>My Balance</SectionTitle>
+            {tier && <Pill tone="success">{tier.name} tier · ${rate} MXN/h</Pill>}
+          </div>
           <p className="mt-1 text-sm text-muted-foreground">Your payment summary for this period. Read-only.</p>
         </div>
         <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-2 py-1.5 shadow-soft">
