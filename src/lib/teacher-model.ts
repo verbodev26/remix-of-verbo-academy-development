@@ -56,9 +56,6 @@ export function adjustmentsTotal(t: User): number {
 }
 
 export function financialSummary(t: User) {
-  // Late-imported to avoid a circular init (teacher-tiers imports teacherStatus from here).
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { effectiveHourlyRate } = require("./teacher-tiers") as typeof import("./teacher-tiers");
   const rate = effectiveHourlyRate(t);
   const hours = hoursWorked(t);
   const subtotal = hours * rate;
