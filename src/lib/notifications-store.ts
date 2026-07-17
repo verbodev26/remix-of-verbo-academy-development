@@ -23,6 +23,7 @@ import {
 import { loadStrikes, STRIKES_EVENT, activeStrikeCount } from "./strikes-store";
 import { computeTeacherKpis } from "./teacher-kpis";
 import { teacherStatus } from "./teacher-model";
+import { teacherTier } from "./teacher-tiers";
 import { activeAnnouncements, ANN_EVENT } from "./announcements-store";
 import { loadFinancialIssues, FIN_ISSUES_EVENT } from "./financial-issues-store";
 import { REPORTS_KEY, REPORTS_EVENT, type StudentReport } from "./student-reports-store";
