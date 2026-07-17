@@ -1048,7 +1048,7 @@ function TeacherFormModal({
   const [email, setEmail] = useState(initial?.email ?? "");
   const [password, setPassword] = useState(initial?.password ?? "");
   const [showPw, setShowPw] = useState(false);
-  const [rate, setRate] = useState(String(initial?.hourly_rate ?? DEFAULT_HOURLY_RATE));
+  const [rate, setRate] = useState(String(initial ? effectiveHourlyRate(initial) : 120));
   const [products, setProducts] = useState<QualifiedProduct[]>(qualifiedProducts(initial ?? ({} as User)));
   const [hireDate, setHireDate] = useState(
     initial?.hire_date ?? new Date().toISOString().slice(0, 10),
@@ -1072,7 +1072,7 @@ function TeacherFormModal({
       email: email.trim(),
       password,
       role: "teacher",
-      hourly_rate: Number(rate) || DEFAULT_HOURLY_RATE,
+      hourly_rate: Number(rate) || 120,
       qualified_products: products,
       hire_date: hireDate,
       teacher_status: initial?.teacher_status ?? "active",
