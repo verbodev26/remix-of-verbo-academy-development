@@ -812,13 +812,19 @@ function ActivityRunner({
   const [index, setIndex] = useState(0);
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [feedback, setFeedback] = useState<null | { ok: boolean; score: number }>(null);
+  const [attemptBlocked, setAttemptBlocked] = useState(false);
 
-  useEffect(() => { setIndex(0); setFeedback(null); }, [activeCat]);
+  useEffect(() => { setIndex(0); setFeedback(null); setAttemptBlocked(false); }, [activeCat]);
 
   const current = list[index];
 
   const check = () => {
     if (!current) return;
+    // Milestone units get exactly one attempt per activity.
+    if (!readOnly && isMilestoneUnit(unit.id) && attemptsFor(studentId, current.id) >= 1) {
+      setAttemptBlocked(true);
+      return;
+    }
     const ok = evaluate(current, draft[current.id] ?? "");
     const score = ok ? 100 : 0;
     if (!readOnly) recordActivityScore(studentId, current.id, score);
