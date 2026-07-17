@@ -86,7 +86,9 @@ interface LevelState {
 function levelIsComplete(level: CourseLevel, studentId: string): boolean {
   if (level.units.length === 0) return false;
   for (const u of level.units) {
-    if (isMilestoneUnit(u.id) && !isMilestoneUnlocked(studentId, u.id)) return false;
+    const ov = getUnitAccessOverride(studentId, u.id);
+    if (ov === "locked") return false;
+    if (isMilestoneUnit(u.id) && ov !== "unlocked" && !unitPassed(studentId, u.id)) return false;
     if (!unitPassed(studentId, u.id)) return false;
   }
   return true;
