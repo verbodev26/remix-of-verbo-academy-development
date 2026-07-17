@@ -89,15 +89,33 @@ function Page() {
   const createUnit = (title: string, num: number, videoUrl: string, pdfUrl: string) => {
     if (!level) return;
     const id = `${level.id}-U${num}`;
-    mutateLevel((units) => sortUnits([...units.filter((u) => u.id !== id), { id, title, video_url: videoUrl, pdf_url: pdfUrl }]));
+    mutateLevel((units) => {
+      const prev = units.find((u) => u.id === id);
+      const merged: CourseUnit = {
+        ...(prev ?? {}),
+        id,
+        title,
+        video_url: videoUrl,
+        pdf_url: pdfUrl,
+      };
+      return sortUnits([...units.filter((u) => u.id !== id), merged]);
+    });
   };
 
   const updateUnit = (originalId: string, title: string, num: number, videoUrl: string, pdfUrl: string) => {
     if (!level) return;
     const newId = `${level.id}-U${num}`;
-    mutateLevel((units) =>
-      sortUnits([...units.filter((u) => u.id !== originalId && u.id !== newId), { id: newId, title, video_url: videoUrl, pdf_url: pdfUrl }]),
-    );
+    mutateLevel((units) => {
+      const prev = units.find((u) => u.id === originalId) ?? units.find((u) => u.id === newId);
+      const merged: CourseUnit = {
+        ...(prev ?? {}),
+        id: newId,
+        title,
+        video_url: videoUrl,
+        pdf_url: pdfUrl,
+      };
+      return sortUnits([...units.filter((u) => u.id !== originalId && u.id !== newId), merged]);
+    });
     if (newId !== originalId) {
       renameUnitReferences(originalId, newId);
       setActivityRev((r) => r + 1);
