@@ -479,9 +479,9 @@ function TeacherDetailModal({
                     <CalendarClock className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                   </div>
                 </div>
-                {(String(t.hourly_rate ?? DEFAULT_HOURLY_RATE) !== rate || paymentFrequency(t) !== freq) && (
+                {(String(effectiveHourlyRate(t)) !== rate || paymentFrequency(t) !== freq) && (
                   <PrimaryBtn onClick={() => {
-                    const patch: User = { ...t, hourly_rate: Number(rate) || DEFAULT_HOURLY_RATE, payment_frequency: freq };
+                    const patch: User = { ...t, hourly_rate: Number(rate) || teacherTier(t).rate, payment_frequency: freq };
                     if (paymentFrequency(t) !== freq) patch.payment_records = defaultPaymentRecords(freq);
                     onPersist(patch);
                   }}>Save</PrimaryBtn>
@@ -663,7 +663,7 @@ function TeacherDetailModal({
             <GhostBtn onClick={onEdit}><Pencil className="h-3.5 w-3.5" /> Edit profile</GhostBtn>
             <GhostBtn onClick={() => alert(`Recovery email sent to ${t.email}.`)}><KeyRound className="h-3.5 w-3.5" /> Reset password</GhostBtn>
             {status === "frozen" ? (
-              <GhostBtn onClick={() => onPersist({ ...t, teacher_status: "active" })}><Play className="h-3.5 w-3.5" /> Reactivate</GhostBtn>
+              <GhostBtn onClick={() => onPersist(applyStatusPatch(t, "active"))}><Play className="h-3.5 w-3.5" /> Reactivate</GhostBtn>
             ) : status === "active" ? (
               <GhostBtn onClick={() => startFlow("frozen")}><Snowflake className="h-3.5 w-3.5" /> Freeze</GhostBtn>
             ) : null}
