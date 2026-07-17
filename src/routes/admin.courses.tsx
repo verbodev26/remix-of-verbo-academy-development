@@ -89,15 +89,33 @@ function Page() {
   const createUnit = (title: string, num: number, videoUrl: string, pdfUrl: string) => {
     if (!level) return;
     const id = `${level.id}-U${num}`;
-    mutateLevel((units) => sortUnits([...units.filter((u) => u.id !== id), { id, title, video_url: videoUrl, pdf_url: pdfUrl }]));
+    mutateLevel((units) => {
+      const prev = units.find((u) => u.id === id);
+      const merged: CourseUnit = {
+        ...(prev ?? {}),
+        id,
+        title,
+        video_url: videoUrl,
+        pdf_url: pdfUrl,
+      };
+      return sortUnits([...units.filter((u) => u.id !== id), merged]);
+    });
   };
 
   const updateUnit = (originalId: string, title: string, num: number, videoUrl: string, pdfUrl: string) => {
     if (!level) return;
     const newId = `${level.id}-U${num}`;
-    mutateLevel((units) =>
-      sortUnits([...units.filter((u) => u.id !== originalId && u.id !== newId), { id: newId, title, video_url: videoUrl, pdf_url: pdfUrl }]),
-    );
+    mutateLevel((units) => {
+      const prev = units.find((u) => u.id === originalId) ?? units.find((u) => u.id === newId);
+      const merged: CourseUnit = {
+        ...(prev ?? {}),
+        id: newId,
+        title,
+        video_url: videoUrl,
+        pdf_url: pdfUrl,
+      };
+      return sortUnits([...units.filter((u) => u.id !== originalId && u.id !== newId), merged]);
+    });
     if (newId !== originalId) {
       renameUnitReferences(originalId, newId);
       setActivityRev((r) => r + 1);
@@ -324,6 +342,34 @@ function UnitModal({ level, editingUnit, onClose, onCreate, onUpdate }: {
         <Field label="Unit Number">
           <input type="number" min={1} max={UNITS_PER_LEVEL} value={unitNumber} onChange={(e) => setUnitNumber(Number(e.target.value))} className={`${inputCls} max-w-[140px]`} />
         </Field>
+
+        {isEdit && (editingUnit?.block || (editingUnit?.vocabulary && editingUnit.vocabulary.length > 0) || editingUnit?.grammar_point) && (
+          <div className="rounded-lg border border-dashed border-border bg-secondary/40 p-4 space-y-3">
+            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Syllabus reference</div>
+            {editingUnit?.block && (
+              <div>
+                <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Block</div>
+                <div className="mt-0.5 text-sm text-foreground">{editingUnit.block}</div>
+              </div>
+            )}
+            {editingUnit?.vocabulary && editingUnit.vocabulary.length > 0 && (
+              <div>
+                <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Key vocabulary</div>
+                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                  {editingUnit.vocabulary.map((w) => (
+                    <span key={w} className="inline-flex items-center rounded-full border border-border bg-background px-2.5 py-0.5 text-xs font-medium text-foreground">{w}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {editingUnit?.grammar_point && (
+              <div>
+                <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Grammar focus</div>
+                <div className="mt-0.5 text-sm text-foreground">{editingUnit.grammar_point}</div>
+              </div>
+            )}
+          </div>
+        )}
 
         <Field label="Lesson Video">
           <div className="grid grid-cols-2 gap-2">
