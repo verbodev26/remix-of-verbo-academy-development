@@ -126,8 +126,8 @@ export function PlanTierBadge({ tier }: { tier: string }) {
 }
 
 /** The 2-column macro-skill grid. Reused by every consumer. */
-export function PerformanceAnalyticsGrid() {
-  const macros = useComputedMacros();
+export function PerformanceAnalyticsGrid({ studentId }: { studentId: string }) {
+  const macros = useComputedMacros(studentId);
   return (
     <section className="grid gap-5 lg:grid-cols-2">
       {macros.map((m) => <MacroCard key={m.key} macro={m} />)}
