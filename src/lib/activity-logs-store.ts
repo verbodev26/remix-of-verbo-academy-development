@@ -15,7 +15,7 @@ import { listChangeRequests, AVAIL_EVENT } from "./availability-store";
 import { teacherStatus } from "./teacher-model";
 import { loadStudentReports, REPORTS_EVENT } from "./student-reports-store";
 import { loadFinancialIssues, FIN_ISSUES_EVENT } from "./financial-issues-store";
-import { loadKpiOverrides, KPI_OVERRIDES_EVENT, KPI_METRIC_LABELS } from "./teacher-kpi-overrides-store";
+import { loadKpiOverrides, KPI_OVERRIDES_EVENT, KPI_METRIC_LABELS, ADMIN_TYPE_LABELS } from "./teacher-kpi-overrides-store";
 import { monthLabel } from "./teacher-kpi-history-store";
 import { loadUnitAccessLog } from "./activities-store";
 
@@ -421,11 +421,13 @@ export function buildActivityLog(): ActivityEntry[] {
   for (const o of loadKpiOverrides()) {
     const teacher = userName(o.teacher_id);
     const metricLabel = KPI_METRIC_LABELS[o.metric] ?? o.metric;
+    const roleLabel = o.admin_type ? ADMIN_TYPE_LABELS[o.admin_type] : null;
+    const actorLabel = roleLabel ? `${o.admin_name} (${roleLabel})` : o.admin_name;
     out.push({
       id: `kpi-override:${o.id}`,
       kind: "kpi_manual_override",
       action: "KPI manually adjusted",
-      detail: `${teacher} · ${metricLabel} · ${monthLabel(o.month_key)} · ${o.previous_value}% → ${o.new_value}%${o.justification ? ` — "${o.justification.slice(0, 80)}"` : ""}`,
+      detail: `${teacher} · ${metricLabel} · ${monthLabel(o.month_key)} · ${o.previous_value}% → ${o.new_value}% · adjusted by ${actorLabel}${o.justification ? ` — "${o.justification.slice(0, 80)}"` : ""}`,
       timestamp: o.created_at,
       actorId: o.admin_id, actorName: o.admin_name, actorRole: "admin",
       personId: o.teacher_id,

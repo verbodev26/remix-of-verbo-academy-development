@@ -10,6 +10,7 @@ import {
   KPI_METRIC_LABELS,
   addKpiOverride,
   type KpiMetric,
+  type KpiOverrideAdminType,
 } from "@/lib/teacher-kpi-overrides-store";
 import { monthKeyOf, addMonthKey, monthLabel } from "@/lib/teacher-kpi-history-store";
 
@@ -17,7 +18,7 @@ interface Props {
   teacher: User;
   metric: KpiMetric;
   currentValue: number;
-  admin: { id: string; name: string };
+  admin: { id: string; name: string; admin_type: KpiOverrideAdminType | null };
   onClose: () => void;
   onSaved?: () => void;
 }
@@ -28,6 +29,7 @@ export function KpiOverrideModal({ teacher, metric, currentValue, admin, onClose
   const [newValue, setNewValue] = useState<string>(String(currentValue));
   const [justification, setJustification] = useState("");
   const [evidence, setEvidence] = useState<File | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   // Month options — the last 12 including current, so a retroactive fix can
   // reach any month currently visible in the bonus-streak window.
@@ -46,7 +48,7 @@ export function KpiOverrideModal({ teacher, metric, currentValue, admin, onClose
 
   const handleSave = () => {
     if (!canSave) return;
-    addKpiOverride({
+    const result = addKpiOverride({
       teacher_id: teacher.id,
       month_key: monthKey,
       metric,
@@ -56,7 +58,12 @@ export function KpiOverrideModal({ teacher, metric, currentValue, admin, onClose
       evidence_name: evidence?.name,
       admin_id: admin.id,
       admin_name: admin.name,
+      admin_type: admin.admin_type ?? undefined,
     });
+    if (!result.ok) {
+      setSaveError(result.error);
+      return;
+    }
     onSaved?.();
     onClose();
   };
@@ -173,6 +180,12 @@ export function KpiOverrideModal({ teacher, metric, currentValue, admin, onClose
             </span>
           </div>
         </div>
+
+        {saveError && (
+          <div className="border-t border-destructive/30 bg-destructive/10 px-6 py-3 text-[12px] font-medium text-destructive">
+            {saveError}
+          </div>
+        )}
 
         <div className="flex items-center justify-end gap-2 border-t border-border bg-secondary/30 px-6 py-4">
           <button

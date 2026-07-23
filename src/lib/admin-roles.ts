@@ -62,7 +62,11 @@ export function hydrateAdminRoles() {
 
 export function getAdminType(user: User | null | undefined): AdminType | null {
   if (!user || user.role !== "admin") return null;
-  return (user.admin_type as AdminType | undefined) ?? "super_admin";
+  const t = user.admin_type as AdminType | undefined;
+  // No silent elevation: a missing/unknown admin_type grants NO privileges.
+  // The genuine "super_admin" assignment happens in hydrateAdminRoles().
+  if (t === "super_admin" || t === "coordinator_ops" || t === "coordinator_fin") return t;
+  return null;
 }
 
 // Path-prefix based permission check for Admin nav / route access.
