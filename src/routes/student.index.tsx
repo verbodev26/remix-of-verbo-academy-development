@@ -454,7 +454,10 @@ function StudentDashboard() {
               <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
                 Join today's live conversation clubs and immerse yourself with peers across the network.
               </p>
-              <PrimaryButton className="verbo-btn-glow mt-4 w-full">
+              <PrimaryButton
+                className="verbo-btn-glow mt-4 w-full"
+                onClick={() => navigate({ to: "/student/insights" })}
+              >
                 <Sparkles className="h-3.5 w-3.5" /> View Active Clubs
               </PrimaryButton>
             </div>
