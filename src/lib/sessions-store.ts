@@ -164,6 +164,24 @@ export function updateSession(id: string, patch: Partial<ExtSession>) {
   persistSessions(next);
 }
 
+/** Persist a student's rating for a completed session. Ratings of 3★ or
+ *  below flip `review_status` to "pending" so the session enters the
+ *  Flagged Reviews queue in Admin > Teachers. Higher ratings leave
+ *  `review_status` untouched. */
+export function submitStudentRating(sessionId: string, rating: number, comment?: string) {
+  const next = loadSessions().map((s) => {
+    if (s.id !== sessionId) return s;
+    const patch: Partial<ExtSession> = { student_rating: rating };
+    if (comment !== undefined) patch.student_comment = comment;
+    if (rating <= 3) patch.review_status = "pending";
+    return { ...s, ...patch };
+  });
+  persistSessions(next);
+}
+
+
+
+
 /** Final Session Report submit. Single source of truth for the four
  *  effects the spec requires:
  *    1. Session → Completed (Present/Delayed) or Absent (with cause).

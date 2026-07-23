@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useAuth } from "@/lib/auth";
 import { LEVELS, userById } from "@/lib/mock-data";
-import { persistSessions, subscribeSessions, getSessionsSnapshot, getServerSessionsSnapshot, type ExtSession } from "@/lib/sessions-store";
+import { persistSessions, subscribeSessions, getSessionsSnapshot, getServerSessionsSnapshot, submitStudentRating, type ExtSession } from "@/lib/sessions-store";
 import {
   averagePerformance,
   getPerformanceSnapshot,
@@ -204,12 +204,13 @@ function StudentDashboard() {
     return () => clearInterval(id);
   }, [upcoming, handled]);
 
-  const handleSubmit = (rating: number) => {
+  const handleSubmit = (rating: number, note: string) => {
     if (!ratingSession) return;
-    console.log("Session rating submitted:", ratingSession.id, rating);
+    submitStudentRating(ratingSession.id, rating, note ? note : undefined);
     persistHandled(new Set(handled).add(ratingSession.id));
     setRatingSession(null);
   };
+
   const handleClose = () => {
     if (!ratingSession) return;
     persistHandled(new Set(handled).add(ratingSession.id));
@@ -537,7 +538,7 @@ function StudentDashboard() {
       {ratingSession && (
         <RatingModal
           session={ratingSession as any}
-          onSubmit={(rating) => handleSubmit(rating)}
+          onSubmit={(rating, note) => handleSubmit(rating, note)}
           onClose={handleClose}
         />
       )}
