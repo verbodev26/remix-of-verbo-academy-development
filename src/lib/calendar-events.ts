@@ -169,6 +169,56 @@ export function studentCalendarEvents(studentId: string, opts?: {
   return events;
 }
 
+/** Admin cross-view: intersection of a teacher and/or student's events.
+ *  Read-only — powers the Admin > Calendar > Overview screen. Returns [] when
+ *  neither id is provided (the page renders its own empty state). */
+export function adminCalendarEvents(opts?: {
+  teacherId?: string;
+  studentId?: string;
+}): CalendarEvent[] {
+  const teacherId = opts?.teacherId?.trim() || undefined;
+  const studentId = opts?.studentId?.trim() || undefined;
+  if (!teacherId && !studentId) return [];
+
+  const events: CalendarEvent[] = [];
+  const gMap = groupsByStudentId();
+
+  for (const s of loadSessions()) {
+    const teacherOk = !teacherId || s.teacher_id === teacherId;
+    const isMember = !!s.member_statuses && !!studentId && Object.keys(s.member_statuses).includes(studentId);
+    const studentOk = !studentId || s.student_id === studentId || isMember;
+    if (!teacherOk || !studentOk) continue;
+    // Workshops have no per-student scope; hide them whenever a student filter is active.
+    if (s.origin === "workshop" && studentId) continue;
+
+    let title: string;
+    if (s.origin === "workshop") {
+      title = "Workshop cohort";
+    } else if (s.group_id) {
+      const g = gMap.get(s.student_id);
+      title = g ? g.name : "Group session";
+    } else {
+      title = "1:1 Session";
+    }
+    const memberSub = s.group_id && studentId ? s.member_sub_statuses?.[studentId] : undefined;
+    events.push(sessionEvent(s, title, memberSub));
+  }
+
+  for (const c of loadClubs()) {
+    if (c.type !== "insight" && c.type !== "book") continue;
+    if (teacherId && c.teacher_id !== teacherId) continue;
+    if (studentId && !isBooked(studentId, c.id)) continue;
+    if (studentId && c.status === "cancelled") continue;
+    const ev = clubEvent(c);
+    if (studentId) ev.booked = true;
+    events.push(ev);
+  }
+
+  // TODO(spotlight): filter by teacher/student assignment once its store exists.
+
+  return events;
+}
+
 
 
 
