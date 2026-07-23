@@ -229,10 +229,19 @@ export function monthlySnapshot(
     };
   }
 
-  const baseComposite =
-    monthKey === nowKey && typeof currentMonthBase === "number"
-      ? currentMonthBase
+  let baseComposite: number;
+  if (monthKey === nowKey && typeof currentMonthBase === "number") {
+    baseComposite = currentMonthBase;
+    saveRealSnapshot(teacher.id, monthKey, { baseComposite });
+    if (typeof currentMonthRefusals === "number") {
+      saveRealSnapshot(teacher.id, monthKey, { refusals: currentMonthRefusals });
+    }
+  } else {
+    const saved = monthKey < nowKey ? getRealSnapshot(teacher.id, monthKey) : undefined;
+    baseComposite = saved && typeof saved.baseComposite === "number"
+      ? saved.baseComposite
       : mockCompositeFor(teacher.id, monthKey);
+  }
   const penaltyState = penaltyStateAt(teacher, monthKey, currentMonthRefusals);
   const rawComposite = Math.max(0, baseComposite - penaltyState);
   const rawResponsiveness = Math.max(0, 100 - penaltyState);
