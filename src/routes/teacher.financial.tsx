@@ -153,7 +153,12 @@ function MyBalancePage() {
   // ----- KPIs / Bonus -----
   const threshold = getBonusThreshold();
   const kpis = teacher ? computeTeacherKpis(teacher, threshold) : null;
-  const rating = teacher ? avgRating(teacher) : null;
+  const rawRating = teacher ? avgRating(teacher) : null;
+  const ratingOverride = teacher ? overridesForMonth(teacher.id, monthKeyOf(new Date())).ratingNormalized : undefined;
+  const rating = ratingOverride
+    ? Math.max(0, Math.min(5, Math.round((ratingOverride.new_value / 100) * 5 * 10) / 10))
+    : rawRating;
+
 
   // A single "Bonus" adjustment already logged this month, if any.
   const bonusAdjustment = adjustments.find((a) => /bonus/i.test(a.reason));
