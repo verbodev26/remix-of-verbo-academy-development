@@ -581,10 +581,10 @@ function TeacherDetailModal({
                   <AlertTriangle className="h-3.5 w-3.5 text-destructive" /> Flagged reviews ({flagged.length})
                 </div>
                 {flagged.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No 1–2 star sessions on record.</p>
+                  <p className="text-sm text-muted-foreground">No 1–3 star sessions on record.</p>
                 ) : (
                   <div className="space-y-2">
-                    {flagged.map((s) => <FlaggedRow key={s.id} session={s} onMarkReviewed={onMarkReviewed} />)}
+                    {flagged.map((s) => <FlaggedRow key={s.id} session={s} onMarkReviewed={onMarkReviewed} onDiscardReview={onDiscardReview} canDiscard={canDiscard} />)}
                   </div>
                 )}
               </div>
