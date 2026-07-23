@@ -132,6 +132,11 @@ function StudentDashboard() {
 
   const [toCancel, setToCancel] = useState<ExtSession | null>(null);
 
+  const [coursesRev, setCoursesRev] = useState(0);
+  useEffect(() => subscribeCourses(() => setCoursesRev((r) => r + 1)), []);
+  useEffect(() => subscribeVipUnits(() => setCoursesRev((r) => r + 1)), []);
+  useEffect(() => subscribeVipUnitCompletion(() => setCoursesRev((r) => r + 1)), []);
+
   if (!user) return null;
 
   const mySessions = sessions.filter((s) => s.student_id === user.id);
@@ -142,16 +147,18 @@ function StudentDashboard() {
     .filter((s) => !["scheduled", "rescheduled", "ready"].includes(s.status))
     .sort((a, b) => +new Date(b.date_time) - +new Date(a.date_time));
 
-  // Level progress — real: passed units of current level / total units.
+  // Level Progress + Current Course — mirror Learning Path (/student/courses)
+  // for GO/Enterprise/International and My Course (/student/my-course) for VIP.
+  // The legacy LEVELS catalog / user.current_level are no longer used here.
+  const progress = computeCurrentProgress(user.id, user.product, user.contracted_levels ?? [], coursesRev);
+  const levelProgress = progress?.progressPct ?? 0;
+  const currentUnitTitle = progress?.currentUnitTitle ?? null;
+  const currentLevelName = progress?.levelName ?? null;
+
+  // Legacy tile ("Current Level") still uses the LEVELS catalog by design —
+  // the request scoped this migration to Level Progress and Current Course.
   const level = LEVELS.find((l) => l.id === user.current_level);
-  const levelUnits = level?.units ?? [];
-  const passedUnitIds = levelUnits.filter((u) => unitPassed(user.id, u.id));
-  const levelProgress = levelUnits.length === 0
-    ? 0
-    : Math.round((passedUnitIds.length / levelUnits.length) * 100);
-  // Current Course — first unit not yet passed; if all passed, use the last.
-  const currentUnit =
-    levelUnits.find((u) => !unitPassed(user.id, u.id)) ?? levelUnits[levelUnits.length - 1];
+
 
   // Overall Attendance — mirror Admin > Students fallback formula so the
   // tile reflects real completed vs absent sessions when the static
