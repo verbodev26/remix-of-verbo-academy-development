@@ -324,6 +324,12 @@ function EventPill({ ev, onClick }: { ev: CalendarEvent; onClick: () => void }) 
             ? `${fmtTime(ev.date)} · ${ev.title}${seats ? ` · ${seats}` : ""}`
             : `${fmtTime(ev.date)} · ${ev.is_group ? ev.title : ev.title.split(" ")[0]}${cellLabelInline}`}
         </span>
+        {ev.holiday_makeup && (
+          <span className="ml-auto shrink-0 rounded bg-amber-100 px-1 text-[9px] font-bold leading-none text-amber-800" title="Holiday Makeup">
+            HM
+          </span>
+        )}
+
       </button>
 
       {isClub && ev.enrolled_names && ev.enrolled_names.length > 0 && (
