@@ -177,6 +177,9 @@ export function submitStudentRating(sessionId: string, rating: number, comment?:
     return { ...s, ...patch };
   });
   persistSessions(next);
+}
+
+
 
 
 /** Final Session Report submit. Single source of truth for the four
