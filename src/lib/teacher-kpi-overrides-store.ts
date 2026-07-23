@@ -98,14 +98,36 @@ export function subscribeKpiOverrides(cb: () => void): () => void {
 }
 
 // ----- Mutations -----------------------------------------------------------
-export function addKpiOverride(input: Omit<KpiOverride, "id" | "created_at">): KpiOverride {
+export type AddKpiOverrideResult =
+  | { ok: true; entry: KpiOverride }
+  | { ok: false; error: string };
+
+/** Permission check kept alongside the mutation so any caller — including
+ * future ones that forget the UI-level gate — cannot bypass separation of
+ * duties. coordinator_fin can never adjust; only super_admin can touch the
+ * bonusStreak metric. */
+export function canAdminOverrideMetric(
+  adminType: KpiOverrideAdminType | null | undefined,
+  metric: KpiMetric,
+): boolean {
+  if (adminType === "super_admin") return true;
+  if (adminType === "coordinator_ops") return metric !== "bonusStreak";
+  return false;
+}
+
+export function addKpiOverride(
+  input: Omit<KpiOverride, "id" | "created_at">,
+): AddKpiOverrideResult {
+  if (!canAdminOverrideMetric(input.admin_type ?? null, input.metric)) {
+    return { ok: false, error: "You don't have permission to make this adjustment." };
+  }
   const entry: KpiOverride = {
     ...input,
     id: `kpio_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
     created_at: new Date().toISOString(),
   };
   persist([entry, ...loadKpiOverrides()]);
-  return entry;
+  return { ok: true, entry };
 }
 
 /** Replace the entire overrides list — used by retention cleanup. */
