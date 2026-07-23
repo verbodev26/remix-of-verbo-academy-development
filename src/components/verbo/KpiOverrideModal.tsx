@@ -29,6 +29,7 @@ export function KpiOverrideModal({ teacher, metric, currentValue, admin, onClose
   const [newValue, setNewValue] = useState<string>(String(currentValue));
   const [justification, setJustification] = useState("");
   const [evidence, setEvidence] = useState<File | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   // Month options — the last 12 including current, so a retroactive fix can
   // reach any month currently visible in the bonus-streak window.
