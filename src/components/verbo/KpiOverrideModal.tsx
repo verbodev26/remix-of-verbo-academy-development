@@ -10,6 +10,7 @@ import {
   KPI_METRIC_LABELS,
   addKpiOverride,
   type KpiMetric,
+  type KpiOverrideAdminType,
 } from "@/lib/teacher-kpi-overrides-store";
 import { monthKeyOf, addMonthKey, monthLabel } from "@/lib/teacher-kpi-history-store";
 
@@ -17,7 +18,7 @@ interface Props {
   teacher: User;
   metric: KpiMetric;
   currentValue: number;
-  admin: { id: string; name: string };
+  admin: { id: string; name: string; admin_type: KpiOverrideAdminType | null };
   onClose: () => void;
   onSaved?: () => void;
 }
