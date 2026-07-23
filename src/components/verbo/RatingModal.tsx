@@ -61,13 +61,17 @@ export function RatingModal({ session, onSubmit, onClose }: Props) {
         <textarea
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          placeholder="Anything specific you'd like us to know? (optional)"
+          placeholder={
+            rating > 0 && rating <= 3
+              ? "Please tell us what happened — a comment is required for ratings of 3★ or below."
+              : "Anything specific you'd like us to know? (optional)"
+          }
           rows={3}
           className="mt-6 w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
         />
 
         <button
-          disabled={!rating}
+          disabled={!rating || (rating <= 3 && !note.trim())}
           onClick={() => onSubmit(rating, note)}
           className="mt-6 w-full rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground shadow-soft transition-all hover:bg-[#d9731f] disabled:cursor-not-allowed disabled:opacity-40"
         >
