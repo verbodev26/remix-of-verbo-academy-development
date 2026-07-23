@@ -73,9 +73,11 @@ function sessionEvent(s: ExtSession, title: string, subStatus?: AttendanceSubSta
     is_group: !!s.group_id,
     group_id: s.group_id,
     sub_status: subStatus ?? s.attendance_sub_status,
+    holiday_makeup: s.holiday_makeup,
     session: s,
   };
 }
+
 
 // Deterministic enrolled-student placeholders — the seed data only tracks
 // spots_taken counts, so we hydrate a stable list of names for the hover
