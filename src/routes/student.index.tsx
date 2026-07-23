@@ -10,7 +10,9 @@ import {
   subscribePerformance,
   type PerformanceRating,
 } from "@/lib/performance-store";
-import { unitPassed } from "@/lib/activities-store";
+import { unitPassed, getUnitAccessOverride, isMilestoneUnit } from "@/lib/activities-store";
+import { loadCourses, subscribeCourses, type ProductId, type CourseLevel } from "@/lib/product-courses-store";
+import { unitsForStudent, vipUnitDoneMap, subscribeVipUnits, subscribeVipUnitCompletion } from "@/lib/vip-courses-store";
 import { useComputedMacros } from "@/components/verbo/PerformanceAnalytics";
 import { GhostButton, Pill, PrimaryButton, SectionTitle, SuccessButton } from "@/components/verbo/ui";
 import {
@@ -104,6 +106,81 @@ function ProgressRing({
   );
 }
 
+const PRODUCT_TO_COURSE: Record<string, ProductId> = {
+  enterprise: "enterprise",
+  go: "go",
+  international: "international",
+};
+
+// Mirrors levelIsComplete() in student.courses.tsx: a level is complete when
+// every unit is passed (respecting explicit access overrides and milestones).
+function levelIsCompleteFor(level: CourseLevel, studentId: string): boolean {
+  if (level.units.length === 0) return false;
+  for (const u of level.units) {
+    const ov = getUnitAccessOverride(studentId, u.id);
+    if (ov === "locked") return false;
+    if (isMilestoneUnit(u.id) && ov !== "unlocked" && !unitPassed(studentId, u.id)) return false;
+    if (!unitPassed(studentId, u.id)) return false;
+  }
+  return true;
+}
+
+interface CurrentProgress {
+  isVip: boolean;
+  levelName: string;
+  progressPct: number;
+  currentUnitTitle: string | null;
+  currentUnitId?: string;
+  levelId?: string;
+}
+
+function computeCurrentProgress(
+  studentId: string,
+  product: string | undefined,
+  contractedLevels: string[],
+  // included so React re-runs this when stores emit updates
+  _rev: number,
+): CurrentProgress | null {
+  void _rev;
+  if (product === "vip") {
+    const units = unitsForStudent(studentId);
+    const done = vipUnitDoneMap();
+    const total = units.length;
+    const doneCount = units.filter((u) => done[u.id]).length;
+    const currentUnit = units.find((u) => !done[u.id]) ?? units[units.length - 1];
+    return {
+      isVip: true,
+      levelName: "VIP Course",
+      progressPct: total === 0 ? 0 : Math.round((doneCount / total) * 100),
+      currentUnitTitle: currentUnit?.title ?? null,
+      currentUnitId: currentUnit?.id,
+    };
+  }
+  const productId = product ? PRODUCT_TO_COURSE[product] : undefined;
+  if (!productId) return null;
+  const course = loadCourses().find((c) => c.product === productId);
+  const levels = course?.levels ?? [];
+  const contracted = new Set(contractedLevels);
+  const currentLevel =
+    levels.find((l) => contracted.has(l.name) && !levelIsCompleteFor(l, studentId)) ??
+    levels.find((l) => contracted.has(l.name)) ??
+    null;
+  if (!currentLevel) return null;
+  const total = currentLevel.units.length;
+  const passed = currentLevel.units.filter((u) => unitPassed(studentId, u.id)).length;
+  const currentUnit =
+    currentLevel.units.find((u) => !unitPassed(studentId, u.id)) ??
+    currentLevel.units[currentLevel.units.length - 1];
+  return {
+    isVip: false,
+    levelName: currentLevel.name,
+    progressPct: total === 0 ? 0 : Math.round((passed / total) * 100),
+    currentUnitTitle: currentUnit?.title ?? null,
+    currentUnitId: currentUnit?.id,
+    levelId: currentLevel.id,
+  };
+}
+
 function StudentDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -130,6 +207,11 @@ function StudentDashboard() {
 
   const [toCancel, setToCancel] = useState<ExtSession | null>(null);
 
+  const [coursesRev, setCoursesRev] = useState(0);
+  useEffect(() => subscribeCourses(() => setCoursesRev((r) => r + 1)), []);
+  useEffect(() => subscribeVipUnits(() => setCoursesRev((r) => r + 1)), []);
+  useEffect(() => subscribeVipUnitCompletion(() => setCoursesRev((r) => r + 1)), []);
+
   if (!user) return null;
 
   const mySessions = sessions.filter((s) => s.student_id === user.id);
@@ -140,16 +222,18 @@ function StudentDashboard() {
     .filter((s) => !["scheduled", "rescheduled", "ready"].includes(s.status))
     .sort((a, b) => +new Date(b.date_time) - +new Date(a.date_time));
 
-  // Level progress — real: passed units of current level / total units.
+  // Level Progress + Current Course — mirror Learning Path (/student/courses)
+  // for GO/Enterprise/International and My Course (/student/my-course) for VIP.
+  // The legacy LEVELS catalog / user.current_level are no longer used here.
+  const progress = computeCurrentProgress(user.id, user.product, user.contracted_levels ?? [], coursesRev);
+  const levelProgress = progress?.progressPct ?? 0;
+  const currentUnitTitle = progress?.currentUnitTitle ?? null;
+  const currentLevelName = progress?.levelName ?? null;
+
+  // Legacy tile ("Current Level") still uses the LEVELS catalog by design —
+  // the request scoped this migration to Level Progress and Current Course.
   const level = LEVELS.find((l) => l.id === user.current_level);
-  const levelUnits = level?.units ?? [];
-  const passedUnitIds = levelUnits.filter((u) => unitPassed(user.id, u.id));
-  const levelProgress = levelUnits.length === 0
-    ? 0
-    : Math.round((passedUnitIds.length / levelUnits.length) * 100);
-  // Current Course — first unit not yet passed; if all passed, use the last.
-  const currentUnit =
-    levelUnits.find((u) => !unitPassed(user.id, u.id)) ?? levelUnits[levelUnits.length - 1];
+
 
   // Overall Attendance — mirror Admin > Students fallback formula so the
   // tile reflects real completed vs absent sessions when the static
@@ -367,17 +451,34 @@ function StudentDashboard() {
             <SectionTitle>Current Course</SectionTitle>
             <PremiumCard hover className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
               <div>
-                <Pill tone="muted">{level?.title}</Pill>
+                <Pill tone="muted">{currentLevelName ?? "Learning Path"}</Pill>
                 <h3 className="mt-3 text-xl font-semibold tracking-tight" style={{ color: "#01304a" }}>
-                  {currentUnit?.title}
+                  {currentUnitTitle ?? "No unit available yet"}
                 </h3>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Pick up exactly where you left off. Video, materials and practice activities included.
                 </p>
               </div>
-              <PrimaryButton className="verbo-btn-glow">Continue unit</PrimaryButton>
+              <PrimaryButton
+                className="verbo-btn-glow"
+                disabled={!progress || (!progress.isVip && !progress.currentUnitId)}
+                onClick={() => {
+                  if (!progress) return;
+                  if (progress.isVip) {
+                    navigate({ to: "/student/my-course" });
+                  } else if (progress.levelId && progress.currentUnitId) {
+                    navigate({
+                      to: "/student/courses",
+                      search: { levelId: progress.levelId, unitId: progress.currentUnitId },
+                    });
+                  }
+                }}
+              >
+                Continue unit
+              </PrimaryButton>
             </PremiumCard>
           </div>
+
 
           {/* Upcoming Sessions */}
           <div>

@@ -58,7 +58,13 @@ import {
 import { groupsByStudentId } from "@/lib/groups-store";
 
 
-export const Route = createFileRoute("/student/courses")({ component: Page });
+export const Route = createFileRoute("/student/courses")({
+  component: Page,
+  validateSearch: (s: Record<string, unknown>): { levelId?: string; unitId?: string } => ({
+    levelId: typeof s.levelId === "string" ? s.levelId : undefined,
+    unitId: typeof s.unitId === "string" ? s.unitId : undefined,
+  }),
+});
 
 /* -------------------------------------------------------------------------- */
 /* Product mapping (student.product may be enterprise/go/international/vip).  */
@@ -196,8 +202,17 @@ type View =
 
 function Page() {
   const { user } = useAuth();
+  const search = Route.useSearch();
   const [rev, setRev] = useState(0);
-  const [view, setView] = useState<View>({ kind: "levels" });
+  const [view, setView] = useState<View>(() => {
+    if (search.levelId && search.unitId) {
+      return { kind: "unit", levelId: search.levelId, unitId: search.unitId, readOnly: false };
+    }
+    if (search.levelId) {
+      return { kind: "units", levelId: search.levelId, readOnly: false };
+    }
+    return { kind: "levels" };
+  });
   const [courses, setCourses] = useState<ProductCourse[]>(() => loadCourses());
   const [completionModal, setCompletionModal] = useState<CourseLevel | null>(null);
 
