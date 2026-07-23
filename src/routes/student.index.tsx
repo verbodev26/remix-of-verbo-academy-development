@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useAuth } from "@/lib/auth";
 import { LEVELS, userById } from "@/lib/mock-data";
-import { persistSessions, subscribeSessions, getSessionsSnapshot, getServerSessionsSnapshot, type ExtSession } from "@/lib/sessions-store";
+import { persistSessions, subscribeSessions, getSessionsSnapshot, getServerSessionsSnapshot, submitStudentRating, type ExtSession } from "@/lib/sessions-store";
 import {
   averagePerformance,
   getPerformanceSnapshot,
