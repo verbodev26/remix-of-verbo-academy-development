@@ -1008,14 +1008,42 @@ function AddAdjustmentModal({ onClose, onSave }: { onClose: () => void; onSave: 
   );
 }
 
-function FlaggedRow({ session: s, onMarkReviewed }: { session: Session; onMarkReviewed: (id: string, note: string) => void }) {
-  const reviewed = (s.review_status ?? "pending") === "reviewed";
-  const [open, setOpen] = useState(false);
+function FlaggedRow({
+  session: s, onMarkReviewed, onDiscardReview, canDiscard,
+}: {
+  session: Session;
+  onMarkReviewed: (id: string, note: string) => void;
+  onDiscardReview: (id: string, note: string) => void;
+  canDiscard: boolean;
+}) {
+  const status = s.review_status ?? "pending";
+  const reviewed = status === "reviewed";
+  const discarded = status === "discarded";
+  const resolved = reviewed || discarded;
+  const [mode, setMode] = useState<null | "review" | "discard">(null);
   const [note, setNote] = useState("");
   const student = userById(s.student_id);
 
+  const rowCls = resolved
+    ? "border-border bg-background"
+    : "border-destructive/30 bg-destructive/5";
+  const tagCls = reviewed
+    ? "bg-success/10 text-success"
+    : discarded
+      ? "bg-muted text-muted-foreground"
+      : "bg-destructive/10 text-destructive";
+  const tagLabel = reviewed ? "Reviewed" : discarded ? "Discarded" : "Pending Review";
+
+  const submit = () => {
+    if (!note.trim()) return;
+    if (mode === "review") onMarkReviewed(s.id, note.trim());
+    else if (mode === "discard") onDiscardReview(s.id, note.trim());
+    setMode(null);
+    setNote("");
+  };
+
   return (
-    <div className={`rounded-lg border px-3 py-2.5 ${reviewed ? "border-border bg-background" : "border-destructive/30 bg-destructive/5"}`}>
+    <div className={`rounded-lg border px-3 py-2.5 ${rowCls}`}>
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
@@ -1028,23 +1056,38 @@ function FlaggedRow({ session: s, onMarkReviewed }: { session: Session; onMarkRe
           </div>
           <div className="text-[11px] text-muted-foreground">{new Date(s.date_time).toLocaleDateString()}</div>
         </div>
-        <Tag className={reviewed ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}>{reviewed ? "Reviewed" : "Pending Review"}</Tag>
+        <Tag className={tagCls}>{tagLabel}</Tag>
       </div>
       {s.student_comment && <p className="mt-2 text-sm text-foreground">“{s.student_comment}”</p>}
-      {reviewed && s.review_note && (
-        <p className="mt-2 rounded-md bg-muted px-2.5 py-1.5 text-[12px] text-muted-foreground"><span className="font-semibold text-foreground">Resolution:</span> {s.review_note}</p>
+      {resolved && s.review_note && (
+        <p className="mt-2 rounded-md bg-muted px-2.5 py-1.5 text-[12px] text-muted-foreground">
+          <span className="font-semibold text-foreground">{discarded ? "Discard reason:" : "Resolution:"}</span> {s.review_note}
+        </p>
       )}
-      {!reviewed && (
-        open ? (
+      {!resolved && (
+        mode ? (
           <div className="mt-2 space-y-2 border-t border-border pt-2">
-            <input type="text" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Resolution note (required)…" className={inputCls} />
+            <input
+              type="text"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder={mode === "discard" ? "Discard reason (required)…" : "Resolution note (required)…"}
+              className={inputCls}
+            />
             <div className="flex justify-end gap-2">
-              <GhostBtn onClick={() => setOpen(false)}>Cancel</GhostBtn>
-              <PrimaryBtn onClick={() => onMarkReviewed(s.id, note.trim())} disabled={!note.trim()}>Confirm reviewed</PrimaryBtn>
+              <GhostBtn onClick={() => { setMode(null); setNote(""); }}>Cancel</GhostBtn>
+              <PrimaryBtn onClick={submit} disabled={!note.trim()}>
+                {mode === "discard" ? "Confirm discard" : "Confirm reviewed"}
+              </PrimaryBtn>
             </div>
           </div>
         ) : (
-          <div className="mt-2 flex justify-end"><GhostBtn onClick={() => setOpen(true)}><Check className="h-3.5 w-3.5" /> Mark as Reviewed</GhostBtn></div>
+          <div className="mt-2 flex justify-end gap-2">
+            {canDiscard && (
+              <GhostBtn onClick={() => setMode("discard")}><X className="h-3.5 w-3.5" /> Discard</GhostBtn>
+            )}
+            <GhostBtn onClick={() => setMode("review")}><Check className="h-3.5 w-3.5" /> Mark as Reviewed</GhostBtn>
+          </div>
         )
       )}
     </div>
