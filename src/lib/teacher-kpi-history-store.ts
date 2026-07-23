@@ -130,8 +130,14 @@ export function monthlyRefusals(
   currentMonthRefusals?: number,
 ): number {
   const nowKey = monthKeyOf(new Date());
-  if (monthKey === nowKey) return currentMonthRefusals ?? realRefusalsFor(teacherId, monthKey);
+  if (monthKey === nowKey) {
+    const value = currentMonthRefusals ?? realRefusalsFor(teacherId, monthKey);
+    saveRealSnapshot(teacherId, monthKey, { refusals: value });
+    return value;
+  }
   if (monthKey > nowKey) return realRefusalsFor(teacherId, monthKey);
+  const saved = getRealSnapshot(teacherId, monthKey);
+  if (saved && typeof saved.refusals === "number") return saved.refusals;
   return mockRefusalsFor(teacherId, monthKey);
 }
 
