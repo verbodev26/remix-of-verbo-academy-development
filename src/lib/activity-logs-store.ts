@@ -43,6 +43,7 @@ export type ActivityKind =
   | "release_request_submitted"
   | "report_filed"
   | "kpi_manual_override"
+  | "rating_discarded"
   | "unit_unlocked"
   | "unit_locked";
 
