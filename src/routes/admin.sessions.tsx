@@ -218,24 +218,52 @@ function BulkScheduler({
     : 0;
   const remaining = Math.max(0, hiredForStudent - scheduledForStudent);
 
-  const generated = useMemo(() => {
-    if (!startDate || !endDate || days.length === 0) return [] as Date[];
+  type GenSlot = { date: Date; holiday: boolean; makeup: boolean };
+  const generated = useMemo<GenSlot[]>(() => {
+    if (!startDate || !endDate || days.length === 0) return [];
     const [hh, mm] = time.split(":").map(Number);
-    const out: Date[] = [];
     const start = new Date(startDate + "T00:00:00");
     const end = new Date(endDate + "T00:00:00");
     if (end < start) return [];
+
+    const holidaySet = new Set(loadHolidays().map((h) => h.date));
+    const localKey = (d: Date) =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+    const out: GenSlot[] = [];
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
       if (days.includes(d.getDay())) {
         const dt = new Date(d);
         dt.setHours(hh, mm, 0, 0);
-        out.push(dt);
+        out.push({ date: dt, holiday: holidaySet.has(localKey(dt)), makeup: false });
       }
+    }
+
+    // Append one make-up date past endDate for every holiday hit, cascading
+    // if the make-up itself lands on another holiday.
+    let pending = out.filter((x) => x.holiday).length;
+    let cursor = out.length > 0 ? new Date(out[out.length - 1].date) : new Date(end);
+    let safety = 0;
+    while (pending > 0 && safety < 366) {
+      cursor = new Date(cursor);
+      do {
+        cursor.setDate(cursor.getDate() + 1);
+      } while (!days.includes(cursor.getDay()));
+      const dt = new Date(cursor);
+      dt.setHours(hh, mm, 0, 0);
+      const isHol = holidaySet.has(localKey(dt));
+      out.push({ date: dt, holiday: isHol, makeup: !isHol });
+      if (isHol) pending += 1; // cascade
+      pending -= 1;
+      safety += 1;
     }
     return out;
   }, [startDate, endDate, days, time]);
 
-  const overLimit = generated.length > remaining;
+  const holidayHits = generated.filter((g) => g.holiday).length;
+  const makeupCount = generated.filter((g) => g.makeup).length;
+  const consumingCount = generated.length - holidayHits;
+  const overLimit = consumingCount > remaining;
 
   // Summary of dates skipped on the last Assign because the teacher was already
   // booked with another student at that exact date/time.
@@ -248,38 +276,50 @@ function BulkScheduler({
   const assign = () => {
     if (!studentId || !teacherId || generated.length === 0 || overLimit) return;
 
-    // Teacher double-booking detection: skip any slot where the selected
-    // teacher already has an active session with a different student.
     const isBlocking = (st: ExtSessionStatus) =>
       !["completed", "absent", "cancelled", "no_show"].includes(st);
-    const clear: Date[] = [];
     const conflicts: Date[] = [];
-    generated.forEach((dt) => {
+    const batch: ExtSession[] = [];
+    generated.forEach((slot, i) => {
+      if (slot.holiday) {
+        // Auto-cancelled holiday session — never a real conflict.
+        batch.push({
+          id: `bulk-${Date.now()}-${i}`,
+          student_id: studentId,
+          teacher_id: teacherId,
+          date_time: slot.date.toISOString(),
+          duration_minutes: 60,
+          teams_link: teamsLink,
+          status: "cancelled",
+          attendance_sub_status: "cancelled_holiday",
+        });
+        return;
+      }
       const clash = existing.some(
         (x) =>
           x.teacher_id === teacherId &&
           x.student_id !== studentId &&
           isBlocking(x.status) &&
-          new Date(x.date_time).getTime() === dt.getTime(),
+          new Date(x.date_time).getTime() === slot.date.getTime(),
       );
-      (clash ? conflicts : clear).push(dt);
-    });
-
-    if (clear.length > 0) {
-      const batch: ExtSession[] = clear.map((dt, i) => ({
+      if (clash) { conflicts.push(slot.date); return; }
+      batch.push({
         id: `bulk-${Date.now()}-${i}`,
         student_id: studentId,
         teacher_id: teacherId,
-        date_time: dt.toISOString(),
+        date_time: slot.date.toISOString(),
         duration_minutes: 60,
         teams_link: teamsLink,
         status: "scheduled",
-      }));
-      onCreate(batch);
-    }
+        ...(slot.makeup ? { holiday_makeup: true } : {}),
+      });
+    });
+
+    if (batch.length > 0) onCreate(batch);
     setConflictSummary(conflicts);
     if (conflicts.length === 0) { setStartDate(""); setEndDate(""); }
   };
+
 
 
   return (
