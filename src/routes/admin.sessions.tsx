@@ -385,12 +385,18 @@ function BulkScheduler({
           <div>
             {overLimit ? (
               <>
-                <div className="font-semibold">Attention: This range generates {generated.length} sessions, but the student only has {remaining} hours remaining.</div>
+                <div className="font-semibold">Attention: This range generates {consumingCount} plan sessions, but the student only has {remaining} hours remaining.</div>
                 <div className="mt-0.5 text-xs">Please adjust the range to fit within the contracted plan.</div>
               </>
             ) : (
-              <div>This range will generate <span className="font-semibold">{generated.length}</span> sessions. Student has <span className="font-semibold">{remaining}</span> hours remaining in plan.</div>
+              <div>This range will generate <span className="font-semibold">{consumingCount}</span> sessions that count toward the plan. Student has <span className="font-semibold">{remaining}</span> hours remaining.</div>
             )}
+            {holidayHits > 0 && (
+              <div className="mt-1 text-xs">
+                {holidayHits} session{holidayHits === 1 ? "" : "s"} fall on a holiday and will be auto-cancelled; {makeupCount} replacement session{makeupCount === 1 ? "" : "s"} were added at the end of the range.
+              </div>
+            )}
+
           </div>
         </div>
       )}
