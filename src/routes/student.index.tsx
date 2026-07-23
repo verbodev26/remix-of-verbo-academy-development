@@ -204,12 +204,13 @@ function StudentDashboard() {
     return () => clearInterval(id);
   }, [upcoming, handled]);
 
-  const handleSubmit = (rating: number) => {
+  const handleSubmit = (rating: number, note: string) => {
     if (!ratingSession) return;
-    console.log("Session rating submitted:", ratingSession.id, rating);
+    submitStudentRating(ratingSession.id, rating, note ? note : undefined);
     persistHandled(new Set(handled).add(ratingSession.id));
     setRatingSession(null);
   };
+
   const handleClose = () => {
     if (!ratingSession) return;
     persistHandled(new Set(handled).add(ratingSession.id));
