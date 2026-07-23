@@ -5,7 +5,6 @@ import { useAuth } from "@/lib/auth";
 import { LEVELS, userById } from "@/lib/mock-data";
 import { persistSessions, subscribeSessions, getSessionsSnapshot, getServerSessionsSnapshot, submitStudentRating, type ExtSession } from "@/lib/sessions-store";
 import {
-  averagePerformance,
   getPerformanceSnapshot,
   getServerPerformanceSnapshot,
   subscribePerformance,
@@ -17,13 +16,9 @@ import { GhostButton, Pill, PrimaryButton, SectionTitle, SuccessButton } from "@
 import {
   ArrowRight,
   BarChart3,
-  BookOpen,
   CalendarClock,
   Download,
-  Ear,
   Flame,
-  Mic,
-  PenLine,
   Sparkles,
   Star,
   Users,
