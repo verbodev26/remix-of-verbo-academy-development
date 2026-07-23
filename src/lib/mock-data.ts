@@ -123,8 +123,8 @@ export interface Session {
   report_pdf_url?: string;
   student_rating?: number;
   student_comment?: string; // free-text feedback attached to the rating
-  review_status?: "pending" | "reviewed"; // admin review state for low ratings
-  review_note?: string; // admin resolution note
+  review_status?: "pending" | "reviewed" | "discarded"; // admin review state for low ratings
+  review_note?: string; // admin resolution note OR discard justification
   notes?: string;
   // Attendance metadata captured on Session Report. `delayed` is not a
   // canonical session status (the session still lands in "completed") —
