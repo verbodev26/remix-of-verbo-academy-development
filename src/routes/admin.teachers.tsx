@@ -68,6 +68,9 @@ const STATUS_META: Record<TeacherStatus, { label: string; cls: string }> = {
 // PAGE
 // ===========================================================================
 function Page() {
+  const { user } = useAuth();
+  const adminType = getAdminType(user);
+  const canDiscard = adminType === "super_admin" || adminType === "coordinator_ops";
   const { teacher: focusTeacher } = Route.useSearch();
   const navigate = Route.useNavigate();
   const [, forceTick] = useState(0);
