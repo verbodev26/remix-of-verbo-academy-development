@@ -1,6 +1,6 @@
 import { createFileRoute, Navigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { Card, Pill } from "@/components/verbo/ui";
+import { useMemo, useState, useSyncExternalStore } from "react";
+import { Card, Pill, PrimaryButton, GhostButton } from "@/components/verbo/ui";
 import { useAuth } from "@/lib/auth";
 import { hydrateAdminRoles, getAdminType } from "@/lib/admin-roles";
 import {
@@ -8,6 +8,18 @@ import {
   type ActivityKind, type ActorRole,
 } from "@/lib/activity-logs-store";
 import { USERS } from "@/lib/mock-data";
+import {
+  loadKpiOverrides, replaceKpiOverrides,
+  KPI_OVERRIDES_EVENT, subscribeKpiOverrides,
+} from "@/lib/teacher-kpi-overrides-store";
+import {
+  loadPayments, replacePayments,
+  PAYMENTS_EVENT, subscribePayments,
+} from "@/lib/payments-log";
+import {
+  getRetentionMonths, setRetentionMonths,
+  retentionCutoffMs, downloadJson, todayStamp,
+} from "@/lib/log-retention";
 
 export const Route = createFileRoute("/admin/activity-logs")({
   head: () => ({
