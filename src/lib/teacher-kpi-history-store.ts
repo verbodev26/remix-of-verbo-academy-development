@@ -13,6 +13,48 @@ import { loadSessions } from "./sessions-store";
 import { latestOverride } from "./teacher-kpi-overrides-store";
 import { getBonusThreshold } from "./teacher-kpis-threshold";
 
+// ----- Real monthly snapshot persistence -----------------------------------
+// Stores the last known REAL baseComposite / refusals per teacher+month, so
+// that once the "current month" rolls over, historical months keep their real
+// values instead of falling back to the deterministic mock.
+const REAL_SNAPSHOT_KEY = "verbo.teacher-kpi.real-monthly-snapshots.v1";
+interface RealMonthlySnapshot {
+  baseComposite?: number;
+  refusals?: number;
+}
+type RealSnapshotMap = Record<string, Record<string, RealMonthlySnapshot>>; // teacherId -> monthKey -> snapshot
+
+function loadRealSnapshots(): RealSnapshotMap {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = window.localStorage.getItem(REAL_SNAPSHOT_KEY);
+    return raw ? (JSON.parse(raw) as RealSnapshotMap) : {};
+  } catch {
+    return {};
+  }
+}
+function persistRealSnapshots(map: RealSnapshotMap): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(REAL_SNAPSHOT_KEY, JSON.stringify(map));
+  } catch {
+    /* ignore quota / access errors */
+  }
+}
+function getRealSnapshot(teacherId: string, monthKey: string): RealMonthlySnapshot | undefined {
+  return loadRealSnapshots()[teacherId]?.[monthKey];
+}
+function saveRealSnapshot(teacherId: string, monthKey: string, patch: RealMonthlySnapshot): void {
+  const map = loadRealSnapshots();
+  const forTeacher = map[teacherId] ?? {};
+  const prev = forTeacher[monthKey] ?? {};
+  const next: RealMonthlySnapshot = { ...prev, ...patch };
+  if (next.baseComposite === prev.baseComposite && next.refusals === prev.refusals) return;
+  forTeacher[monthKey] = next;
+  map[teacherId] = forTeacher;
+  persistRealSnapshots(map);
+}
+
 // ----- Month-key helpers ----------------------------------------------------
 export function monthKeyOf(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
@@ -88,8 +130,14 @@ export function monthlyRefusals(
   currentMonthRefusals?: number,
 ): number {
   const nowKey = monthKeyOf(new Date());
-  if (monthKey === nowKey) return currentMonthRefusals ?? realRefusalsFor(teacherId, monthKey);
+  if (monthKey === nowKey) {
+    const value = currentMonthRefusals ?? realRefusalsFor(teacherId, monthKey);
+    saveRealSnapshot(teacherId, monthKey, { refusals: value });
+    return value;
+  }
   if (monthKey > nowKey) return realRefusalsFor(teacherId, monthKey);
+  const saved = getRealSnapshot(teacherId, monthKey);
+  if (saved && typeof saved.refusals === "number") return saved.refusals;
   return mockRefusalsFor(teacherId, monthKey);
 }
 
@@ -181,10 +229,19 @@ export function monthlySnapshot(
     };
   }
 
-  const baseComposite =
-    monthKey === nowKey && typeof currentMonthBase === "number"
-      ? currentMonthBase
+  let baseComposite: number;
+  if (monthKey === nowKey && typeof currentMonthBase === "number") {
+    baseComposite = currentMonthBase;
+    saveRealSnapshot(teacher.id, monthKey, { baseComposite });
+    if (typeof currentMonthRefusals === "number") {
+      saveRealSnapshot(teacher.id, monthKey, { refusals: currentMonthRefusals });
+    }
+  } else {
+    const saved = monthKey < nowKey ? getRealSnapshot(teacher.id, monthKey) : undefined;
+    baseComposite = saved && typeof saved.baseComposite === "number"
+      ? saved.baseComposite
       : mockCompositeFor(teacher.id, monthKey);
+  }
   const penaltyState = penaltyStateAt(teacher, monthKey, currentMonthRefusals);
   const rawComposite = Math.max(0, baseComposite - penaltyState);
   const rawResponsiveness = Math.max(0, 100 - penaltyState);
