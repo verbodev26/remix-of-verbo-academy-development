@@ -523,9 +523,11 @@ Fecha ISO (YYYY-MM-DD) de ingreso del profesor. Editable desde Admin > Teachers 
 ### `KpiOverride` (`src/lib/teacher-kpi-overrides-store.ts`)
 Corrección manual retroactiva a un KPI para arreglar la racha de bono cuando una señal real fue injusta. Solo `super_admin` y `coordinator_ops` pueden crearlas (coordinator_fin excluido por separación de responsabilidades).
 
-Campos: `id, teacher_id, month_key ("YYYY-MM"), metric, previous_value, new_value, justification (obligatorio), evidence_name? (opcional, solo nombre del archivo por ahora), admin_id, admin_name (signature), created_at`.
+Campos: `id, teacher_id, month_key ("YYYY-MM"), metric, previous_value, new_value, justification (obligatorio), evidence_name? (opcional, solo nombre del archivo por ahora), admin_id, admin_name (signature), admin_type? ("super_admin" | "coordinator_ops" | "coordinator_fin" — rol capturado al momento de guardar, para auditoría), created_at`.
 
-`metric ∈ { connectionPunctuality | planningPunctuality | completionRate | ratingNormalized | cancellationScore | responsiveness | composite }`.
+`metric ∈ { connectionPunctuality | planningPunctuality | completionRate | ratingNormalized | cancellationScore | responsiveness | composite | bonusStreak }`.
+
+**Permisos (doble capa)**: la UI oculta el botón por rol y `addKpiOverride()` re-valida vía `canAdminOverrideMetric(admin_type, metric)` — coordinator_fin nunca puede ajustar; `bonusStreak` solo super_admin. Si la validación falla, el guardado devuelve `{ ok: false, error }` y el modal muestra el mensaje "You don't have permission to make this adjustment." sin persistir nada.
 
 **Aplicación**:
 - Mes en curso, `metric` sub-métrica → `computeTeacherKpis` reemplaza el valor crudo antes de recalcular `baseComposite`.
