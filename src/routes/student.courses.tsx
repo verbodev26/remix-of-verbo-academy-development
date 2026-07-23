@@ -58,7 +58,13 @@ import {
 import { groupsByStudentId } from "@/lib/groups-store";
 
 
-export const Route = createFileRoute("/student/courses")({ component: Page });
+export const Route = createFileRoute("/student/courses")({
+  component: Page,
+  validateSearch: (s: Record<string, unknown>): { levelId?: string; unitId?: string } => ({
+    levelId: typeof s.levelId === "string" ? s.levelId : undefined,
+    unitId: typeof s.unitId === "string" ? s.unitId : undefined,
+  }),
+});
 
 /* -------------------------------------------------------------------------- */
 /* Product mapping (student.product may be enterprise/go/international/vip).  */
