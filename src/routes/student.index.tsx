@@ -538,7 +538,7 @@ function StudentDashboard() {
       {ratingSession && (
         <RatingModal
           session={ratingSession as any}
-          onSubmit={(rating) => handleSubmit(rating)}
+          onSubmit={(rating, note) => handleSubmit(rating, note)}
           onClose={handleClose}
         />
       )}
