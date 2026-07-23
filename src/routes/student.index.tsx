@@ -376,17 +376,34 @@ function StudentDashboard() {
             <SectionTitle>Current Course</SectionTitle>
             <PremiumCard hover className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
               <div>
-                <Pill tone="muted">{level?.title}</Pill>
+                <Pill tone="muted">{currentLevelName ?? "Learning Path"}</Pill>
                 <h3 className="mt-3 text-xl font-semibold tracking-tight" style={{ color: "#01304a" }}>
-                  {currentUnit?.title}
+                  {currentUnitTitle ?? "No unit available yet"}
                 </h3>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Pick up exactly where you left off. Video, materials and practice activities included.
                 </p>
               </div>
-              <PrimaryButton className="verbo-btn-glow">Continue unit</PrimaryButton>
+              <PrimaryButton
+                className="verbo-btn-glow"
+                disabled={!progress || (!progress.isVip && !progress.currentUnitId)}
+                onClick={() => {
+                  if (!progress) return;
+                  if (progress.isVip) {
+                    navigate({ to: "/student/my-course" });
+                  } else if (progress.levelId && progress.currentUnitId) {
+                    navigate({
+                      to: "/student/courses",
+                      search: { levelId: progress.levelId, unitId: progress.currentUnitId },
+                    });
+                  }
+                }}
+              >
+                Continue unit
+              </PrimaryButton>
             </PremiumCard>
           </div>
+
 
           {/* Upcoming Sessions */}
           <div>
