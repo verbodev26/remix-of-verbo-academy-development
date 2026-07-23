@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useAuth } from "@/lib/auth";
 import { LEVELS, userById } from "@/lib/mock-data";
@@ -11,6 +11,8 @@ import {
   subscribePerformance,
   type PerformanceRating,
 } from "@/lib/performance-store";
+import { unitPassed } from "@/lib/activities-store";
+import { useComputedMacros } from "@/components/verbo/PerformanceAnalytics";
 import { GhostButton, Pill, PrimaryButton, SectionTitle, SuccessButton } from "@/components/verbo/ui";
 import {
   ArrowRight,
