@@ -60,6 +60,7 @@ export function RatingTrendModal({
         s.teacher_id === teacherId &&
         (s.origin === "course" || s.origin === "workshop") &&
         typeof s.student_rating === "number" &&
+        (s.review_status ?? "pending") !== "discarded" &&
         +new Date(s.date_time) >= sixMonthsAgo,
     );
     return bucketSessionsByMonth(scoped);
