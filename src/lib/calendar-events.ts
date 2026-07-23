@@ -51,10 +51,13 @@ export interface CalendarEvent {
   /** Refinement of Absent/Cancelled status. When set, the pill renders the
    *  2-letter initials + the sub-status color instead of the base color. */
   sub_status?: AttendanceSubStatus;
+  /** True when this event is a Bulk Scheduler holiday-replacement session. */
+  holiday_makeup?: boolean;
   // Passthrough refs so click handlers can open the right modal / route.
   session?: ExtSession;
   club?: Club;
 }
+
 
 
 function sessionEvent(s: ExtSession, title: string, subStatus?: AttendanceSubStatus): CalendarEvent {
