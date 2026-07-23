@@ -181,6 +181,12 @@ export function KpiOverrideModal({ teacher, metric, currentValue, admin, onClose
           </div>
         </div>
 
+        {saveError && (
+          <div className="border-t border-destructive/30 bg-destructive/10 px-6 py-3 text-[12px] font-medium text-destructive">
+            {saveError}
+          </div>
+        )}
+
         <div className="flex items-center justify-end gap-2 border-t border-border bg-secondary/30 px-6 py-4">
           <button
             type="button"
