@@ -337,25 +337,28 @@ function StudentDashboard() {
             </Link>
           </div>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {macroSkills.map(({ key, icon: Icon, value }) => (
-              <div
-                key={key}
-                className="flex items-center gap-3 rounded-xl border border-border/70 bg-white/60 px-4 py-3"
-              >
+            {macros.map((m) => {
+              const Icon = m.icon;
+              return (
                 <div
-                  className="flex h-9 w-9 items-center justify-center rounded-lg"
-                  style={{ background: "rgba(1, 48, 74, 0.06)", color: "#01304a" }}
+                  key={m.key}
+                  className="flex items-center gap-3 rounded-xl border border-border/70 bg-white/60 px-4 py-3"
                 >
-                  <Icon className="h-4.5 w-4.5" strokeWidth={1.6} />
-                </div>
-                <div className="min-w-0">
-                  <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{key}</div>
-                  <div className="text-base font-semibold tabular-nums" style={{ color: "#01304a" }}>
-                    {value}%
+                  <div
+                    className="flex h-9 w-9 items-center justify-center rounded-lg"
+                    style={{ background: "rgba(1, 48, 74, 0.06)", color: "#01304a" }}
+                  >
+                    <Icon className="h-4.5 w-4.5" strokeWidth={1.6} />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{m.key}</div>
+                    <div className="text-base font-semibold tabular-nums" style={{ color: "#01304a" }}>
+                      {m.overall === null ? "--" : `${m.overall}%`}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </PremiumCard>
       </section>
