@@ -48,7 +48,7 @@ export function KpiOverrideModal({ teacher, metric, currentValue, admin, onClose
 
   const handleSave = () => {
     if (!canSave) return;
-    addKpiOverride({
+    const result = addKpiOverride({
       teacher_id: teacher.id,
       month_key: monthKey,
       metric,
@@ -58,7 +58,12 @@ export function KpiOverrideModal({ teacher, metric, currentValue, admin, onClose
       evidence_name: evidence?.name,
       admin_id: admin.id,
       admin_name: admin.name,
+      admin_type: admin.admin_type ?? undefined,
     });
+    if (!result.ok) {
+      setSaveError(result.error);
+      return;
+    }
     onSaved?.();
     onClose();
   };
