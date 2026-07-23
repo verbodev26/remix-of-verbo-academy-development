@@ -187,16 +187,19 @@ function ActivityLogsPage() {
 // Data Retention — super_admin only. Configures a single retention window
 // (months) applied to both unbounded logs, and exports+prunes old entries.
 // ---------------------------------------------------------------------------
-function useKpiOverridesLive() {
-  return useSyncExternalStore(subscribeKpiOverrides, loadKpiOverrides, () => [] as ReturnType<typeof loadKpiOverrides>);
-}
-function usePaymentsLive() {
-  return useSyncExternalStore(subscribePayments, loadPayments, () => [] as ReturnType<typeof loadPayments>);
+function useLive<T>(load: () => T, subscribe: (cb: () => void) => () => void): T {
+  const [state, setState] = useState<T>(load);
+  useEffect(() => {
+    setState(load());
+    return subscribe(() => setState(load()));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return state;
 }
 
 function DataRetentionSection() {
-  const kpi = useKpiOverridesLive();
-  const payments = usePaymentsLive();
+  const kpi = useLive(loadKpiOverrides, subscribeKpiOverrides);
+  const payments = useLive(loadPayments, subscribePayments);
   const [months, setMonths] = useState<number>(() => getRetentionMonths());
 
   const cutoff = useMemo(() => retentionCutoffMs(months), [months, kpi, payments]);
