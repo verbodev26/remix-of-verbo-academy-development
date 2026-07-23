@@ -207,9 +207,11 @@ function MacroCard({ macro }: { macro: ComputedMacro }) {
  *  changes to the visualization propagate everywhere automatically. */
 export function PerformanceAnalyticsModal({
   planTier,
+  studentId,
   onClose,
 }: {
   planTier: string;
+  studentId: string;
   onClose: () => void;
 }) {
   return (
@@ -235,7 +237,7 @@ export function PerformanceAnalyticsModal({
             </button>
           </div>
         </div>
-        <PerformanceAnalyticsGrid />
+        <PerformanceAnalyticsGrid studentId={studentId} />
       </div>
     </div>
   );
