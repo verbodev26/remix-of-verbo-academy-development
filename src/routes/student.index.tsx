@@ -312,11 +312,11 @@ function StudentDashboard() {
             <div>
               <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Overall Attendance</div>
               <div className="mt-3 flex items-baseline gap-2">
-                <span className="text-3xl font-semibold tracking-tight" style={{ color: "#01304a" }}>{user.attendance_percentage}%</span>
+                <span className="text-3xl font-semibold tracking-tight" style={{ color: "#01304a" }}>{attendancePct}%</span>
               </div>
               <div className="mt-1 text-xs text-muted-foreground">last 90 days</div>
             </div>
-            <ProgressRing value={user.attendance_percentage ?? 0} />
+            <ProgressRing value={attendancePct} />
           </div>
         </PremiumCard>
       </section>
