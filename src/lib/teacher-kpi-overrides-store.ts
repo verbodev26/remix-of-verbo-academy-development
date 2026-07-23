@@ -30,6 +30,14 @@ export const KPI_METRIC_LABELS: Record<KpiMetric, string> = {
   bonusStreak: "Bonus streak (months)",
 };
 
+export type KpiOverrideAdminType = "super_admin" | "coordinator_ops" | "coordinator_fin";
+
+export const ADMIN_TYPE_LABELS: Record<KpiOverrideAdminType, string> = {
+  super_admin: "Super Admin",
+  coordinator_ops: "Operations Coordinator",
+  coordinator_fin: "Financial Coordinator",
+};
+
 export interface KpiOverride {
   id: string;
   teacher_id: string;
@@ -41,6 +49,7 @@ export interface KpiOverride {
   evidence_name?: string;     // filename only for now (no storage backend)
   admin_id: string;
   admin_name: string;         // signature
+  admin_type?: KpiOverrideAdminType; // role at the moment of saving (audit)
   created_at: string;         // ISO
 }
 
