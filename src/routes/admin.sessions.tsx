@@ -428,7 +428,7 @@ function BulkScheduler({
           className="inline-flex cursor-pointer items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-medium text-white shadow-soft transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
           style={{ backgroundColor: ORANGE }}
         >
-          <CalendarPlus className="h-4 w-4" /> Assign {generated.length > 0 ? `(${generated.length})` : ""}
+          <CalendarPlus className="h-4 w-4" /> Assign {generated.length > 0 ? `(${consumingCount}${holidayHits > 0 ? ` +${holidayHits} holiday` : ""})` : ""}
         </button>
       </div>
 
