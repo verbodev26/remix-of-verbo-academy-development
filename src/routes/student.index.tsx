@@ -106,6 +106,81 @@ function ProgressRing({
   );
 }
 
+const PRODUCT_TO_COURSE: Record<string, ProductId> = {
+  enterprise: "enterprise",
+  go: "go",
+  international: "international",
+};
+
+// Mirrors levelIsComplete() in student.courses.tsx: a level is complete when
+// every unit is passed (respecting explicit access overrides and milestones).
+function levelIsCompleteFor(level: CourseLevel, studentId: string): boolean {
+  if (level.units.length === 0) return false;
+  for (const u of level.units) {
+    const ov = getUnitAccessOverride(studentId, u.id);
+    if (ov === "locked") return false;
+    if (isMilestoneUnit(u.id) && ov !== "unlocked" && !unitPassed(studentId, u.id)) return false;
+    if (!unitPassed(studentId, u.id)) return false;
+  }
+  return true;
+}
+
+interface CurrentProgress {
+  isVip: boolean;
+  levelName: string;
+  progressPct: number;
+  currentUnitTitle: string | null;
+  currentUnitId?: string;
+  levelId?: string;
+}
+
+function computeCurrentProgress(
+  studentId: string,
+  product: string | undefined,
+  contractedLevels: string[],
+  // included so React re-runs this when stores emit updates
+  _rev: number,
+): CurrentProgress | null {
+  void _rev;
+  if (product === "vip") {
+    const units = unitsForStudent(studentId);
+    const done = vipUnitDoneMap();
+    const total = units.length;
+    const doneCount = units.filter((u) => done[u.id]).length;
+    const currentUnit = units.find((u) => !done[u.id]) ?? units[units.length - 1];
+    return {
+      isVip: true,
+      levelName: "VIP Course",
+      progressPct: total === 0 ? 0 : Math.round((doneCount / total) * 100),
+      currentUnitTitle: currentUnit?.title ?? null,
+      currentUnitId: currentUnit?.id,
+    };
+  }
+  const productId = product ? PRODUCT_TO_COURSE[product] : undefined;
+  if (!productId) return null;
+  const course = loadCourses().find((c) => c.product === productId);
+  const levels = course?.levels ?? [];
+  const contracted = new Set(contractedLevels);
+  const currentLevel =
+    levels.find((l) => contracted.has(l.name) && !levelIsCompleteFor(l, studentId)) ??
+    levels.find((l) => contracted.has(l.name)) ??
+    null;
+  if (!currentLevel) return null;
+  const total = currentLevel.units.length;
+  const passed = currentLevel.units.filter((u) => unitPassed(studentId, u.id)).length;
+  const currentUnit =
+    currentLevel.units.find((u) => !unitPassed(studentId, u.id)) ??
+    currentLevel.units[currentLevel.units.length - 1];
+  return {
+    isVip: false,
+    levelName: currentLevel.name,
+    progressPct: total === 0 ? 0 : Math.round((passed / total) * 100),
+    currentUnitTitle: currentUnit?.title ?? null,
+    currentUnitId: currentUnit?.id,
+    levelId: currentLevel.id,
+  };
+}
+
 function StudentDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
