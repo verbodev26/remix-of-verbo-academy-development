@@ -1,5 +1,5 @@
 import { createFileRoute, Navigate } from "@tanstack/react-router";
-import { useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, Pill, PrimaryButton, GhostButton } from "@/components/verbo/ui";
 import { useAuth } from "@/lib/auth";
 import { hydrateAdminRoles, getAdminType } from "@/lib/admin-roles";
