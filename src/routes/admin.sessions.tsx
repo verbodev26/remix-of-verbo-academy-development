@@ -636,6 +636,15 @@ function SessionRow({
                 {(session.absent_cause ?? "student") === "teacher" ? "· Teacher" : "· Student"}
               </span>
             )}
+            {session.holiday_makeup && (
+              <span
+                className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800"
+                title="Replacement for a session that fell on a holiday"
+              >
+                Holiday Makeup
+              </span>
+            )}
+
             {session.needs_substitute && (
               <span className="rounded-full bg-warning/20 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">Needs Substitute</span>
             )}
