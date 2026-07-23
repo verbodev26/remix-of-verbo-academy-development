@@ -47,7 +47,9 @@ function Page() {
   // is intentionally excluded (separation of duties from the bonus payout).
   const canOverride = adminType === "super_admin" || adminType === "coordinator_ops";
   const canOverrideStreak = adminType === "super_admin";
-  const admin = user ? { id: user.id, name: user.name } : { id: "", name: "" };
+  const admin = user
+    ? { id: user.id, name: user.name, admin_type: adminType }
+    : { id: "", name: "", admin_type: null };
   const overrides = useKpiOverrides(); // subscribe so badges/values refresh
   void overrides;
   const [, forceTick] = useState(0);
