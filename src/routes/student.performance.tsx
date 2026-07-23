@@ -37,7 +37,7 @@ function PerformanceView() {
         </div>
       </header>
 
-      <PerformanceAnalyticsGrid />
+      <PerformanceAnalyticsGrid studentId={user.id} />
     </div>
   );
 }
