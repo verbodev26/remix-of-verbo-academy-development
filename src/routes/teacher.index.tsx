@@ -1084,6 +1084,20 @@ function ReportModal({ session, perf, subskills, onClose, onSubmit }: {
                     className="mt-2 w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                   />
                 </div>
+
+                <div className="mt-5">
+                  <label className="text-xs font-medium text-foreground">Note for the student <span className="text-muted-foreground">(optional)</span></label>
+                  <textarea
+                    value={studentNote}
+                    onChange={(e) => setStudentNote(e.target.value)}
+                    rows={3}
+                    placeholder="A short comment or tip the student will see on their dashboard…"
+                    className="mt-2 w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    Shown to the student in their Quick Review Dock. Leave empty to skip.
+                  </p>
+                </div>
               </>
             )}
 
