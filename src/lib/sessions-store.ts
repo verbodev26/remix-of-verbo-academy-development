@@ -204,6 +204,7 @@ export function submitSessionReport(input: {
   absentCause?: "student" | "teacher";
   subStatus?: AttendanceSubStatus | null;
   subskills: Record<string, number>;
+  reportComments?: string;
 }): ExtSession | null {
   const status: ExtSessionStatus = input.attendance === "absent" ? "absent" : "completed";
   let updated: ExtSession | null = null;
@@ -218,6 +219,7 @@ export function submitSessionReport(input: {
         status === "absent" && input.subStatus ? input.subStatus : undefined,
       report_submitted_at: new Date().toISOString(),
       report_locked: true,
+      report_comments: input.reportComments?.trim() ? input.reportComments.trim() : s.report_comments,
     };
     return updated;
   });

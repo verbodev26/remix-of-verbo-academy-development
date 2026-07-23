@@ -11,7 +11,7 @@
 // belong on the teacher-facing view, and per product decision it should
 // no longer live on the student view either.
 
-import { useSyncExternalStore } from "react";
+import { useSyncExternalStore, useMemo } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
   getPerformanceSnapshot,
@@ -67,10 +67,8 @@ function computeMacros(performance: PerformanceMap): ComputedMacro[] {
   };
   return MACRO_SKILLS.map((m) => {
     const subs = m.subs.map((s) => {
-      // Prefer real per-subskill data written by the Session Report.
       const real = subAverage(performance, skillKey(m.key, s.name));
       if (real.count > 0) return { name: s.name, value: Math.round(real.avg) };
-      // Fall back to the base-key hash derivation (seed-only paths).
       const { avg, count } = baseAvgs[s.base];
       if (count === 0) return { name: s.name, value: null as number | null };
       const base = Math.round((avg / 5) * 100);
@@ -83,15 +81,31 @@ function computeMacros(performance: PerformanceMap): ComputedMacro[] {
   });
 }
 
-/** Public: current computed macros, live-subscribed. */
-export function useComputedMacros(): ComputedMacro[] {
+/** Public: current computed macros, live-subscribed, scoped to a student.
+ *  Filters the performance map to sessions belonging to `studentId` so the
+ *  aggregate reflects that student only — not the whole platform. */
+export function useComputedMacros(studentId: string): ComputedMacro[] {
   const performance = useSyncExternalStore(
     subscribePerformance,
     getPerformanceSnapshot,
     getServerPerformanceSnapshot,
   );
-  useSyncExternalStore(subscribeSessions, getSessionsSnapshot, getServerSessionsSnapshot);
-  return computeMacros(performance);
+  const sessions = useSyncExternalStore(
+    subscribeSessions,
+    getSessionsSnapshot,
+    getServerSessionsSnapshot,
+  );
+  return useMemo(() => {
+    if (!studentId) return computeMacros({});
+    const allowed = new Set(
+      sessions.filter((s) => s.student_id === studentId).map((s) => s.id),
+    );
+    const scoped: PerformanceMap = {};
+    for (const [sid, rating] of Object.entries(performance)) {
+      if (allowed.has(sid)) scoped[sid] = rating;
+    }
+    return computeMacros(scoped);
+  }, [performance, sessions, studentId]);
 }
 
 /** Small chip identical to the one shown in the student route header. */
@@ -112,8 +126,8 @@ export function PlanTierBadge({ tier }: { tier: string }) {
 }
 
 /** The 2-column macro-skill grid. Reused by every consumer. */
-export function PerformanceAnalyticsGrid() {
-  const macros = useComputedMacros();
+export function PerformanceAnalyticsGrid({ studentId }: { studentId: string }) {
+  const macros = useComputedMacros(studentId);
   return (
     <section className="grid gap-5 lg:grid-cols-2">
       {macros.map((m) => <MacroCard key={m.key} macro={m} />)}
@@ -193,9 +207,11 @@ function MacroCard({ macro }: { macro: ComputedMacro }) {
  *  changes to the visualization propagate everywhere automatically. */
 export function PerformanceAnalyticsModal({
   planTier,
+  studentId,
   onClose,
 }: {
   planTier: string;
+  studentId: string;
   onClose: () => void;
 }) {
   return (
@@ -221,7 +237,7 @@ export function PerformanceAnalyticsModal({
             </button>
           </div>
         </div>
-        <PerformanceAnalyticsGrid />
+        <PerformanceAnalyticsGrid studentId={studentId} />
       </div>
     </div>
   );

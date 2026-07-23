@@ -386,6 +386,7 @@ function TeacherDashboard() {
     subskills: Record<string, number>,
     absentCause?: "student" | "teacher",
     subStatus?: AttendanceSubStatus | null,
+    reportComments?: string,
   ) => {
     if (!user) return;
     const session = sessions.find((s) => s.id === sessionId);
@@ -402,6 +403,7 @@ function TeacherDashboard() {
       absentCause,
       subStatus: subStatus ?? null,
       subskills,
+      reportComments,
     });
     const plan = getLessonPlan(sessionId);
     if (plan?.vip_unit_id) {
@@ -878,7 +880,7 @@ function ReportModal({ session, perf, subskills, onClose, onSubmit }: {
   perf: PerformanceRating;
   subskills: Record<string, number>;
   onClose: () => void;
-  onSubmit: (id: string, attendance: Attendance, perf: PerformanceRating, subskills: Record<string, number>, absentCause?: "student" | "teacher", subStatus?: AttendanceSubStatus | null) => void;
+  onSubmit: (id: string, attendance: Attendance, perf: PerformanceRating, subskills: Record<string, number>, absentCause?: "student" | "teacher", subStatus?: AttendanceSubStatus | null, reportComments?: string) => void;
 }) {
   const student = userById(session.student_id);
   const [attendance, setAttendance] = useState<Attendance>("present");
@@ -887,6 +889,7 @@ function ReportModal({ session, perf, subskills, onClose, onSubmit }: {
   // AW/AI/AV all skip the metric penalty (justified). Locked past month end.
   const [absentSub, setAbsentSub] = useState<AttendanceSubStatus | null>(null);
   const [notes, setNotes] = useState("");
+  const [studentNote, setStudentNote] = useState("");
   const [entries, setEntries] = useState<Entry[]>(() => Array.from({ length: MIN_ENTRIES }, makeEntry));
   const [submitted, setSubmitted] = useState(false);
   const justificationOpen = isJustificationWindowOpen(session.date_time);
@@ -908,7 +911,7 @@ function ReportModal({ session, perf, subskills, onClose, onSubmit }: {
   const handleSubmit = () => {
     if (!canSubmit) return;
     setSubmitted(true);
-    onSubmit(session.id, attendance, perf, subskills, isAbsent ? absentCause : undefined, isAbsent ? absentSub : null);
+    onSubmit(session.id, attendance, perf, subskills, isAbsent ? absentCause : undefined, isAbsent ? absentSub : null, isAbsent ? undefined : (studentNote.trim() || undefined));
   };
 
   return (
@@ -1080,6 +1083,20 @@ function ReportModal({ session, perf, subskills, onClose, onSubmit }: {
                     placeholder="Topics covered, student performance, homework…"
                     className="mt-2 w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                   />
+                </div>
+
+                <div className="mt-5">
+                  <label className="text-xs font-medium text-foreground">Note for the student <span className="text-muted-foreground">(optional)</span></label>
+                  <textarea
+                    value={studentNote}
+                    onChange={(e) => setStudentNote(e.target.value)}
+                    rows={3}
+                    placeholder="A short comment or tip the student will see on their dashboard…"
+                    className="mt-2 w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    Shown to the student in their Quick Review Dock. Leave empty to skip.
+                  </p>
                 </div>
               </>
             )}
