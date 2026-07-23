@@ -19,6 +19,8 @@ import { CalendarPlus, ChevronDown, ChevronUp, X, Pencil, AlertTriangle, Users, 
 import { effectiveSessionCounts } from "@/lib/groups-store";
 import { CandidatesModal } from "@/components/verbo/CandidatesModal";
 import { RescheduleModal } from "@/components/verbo/RescheduleModal";
+import { loadHolidays } from "@/lib/holidays-store";
+
 
 // Status → dropdown options + distinct badge colors (no overlap).
 const STATUS_META: Record<ExtSessionStatus, { label: string; bg: string; color: string }> = {
