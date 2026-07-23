@@ -880,7 +880,7 @@ function ReportModal({ session, perf, subskills, onClose, onSubmit }: {
   perf: PerformanceRating;
   subskills: Record<string, number>;
   onClose: () => void;
-  onSubmit: (id: string, attendance: Attendance, perf: PerformanceRating, subskills: Record<string, number>, absentCause?: "student" | "teacher", subStatus?: AttendanceSubStatus | null) => void;
+  onSubmit: (id: string, attendance: Attendance, perf: PerformanceRating, subskills: Record<string, number>, absentCause?: "student" | "teacher", subStatus?: AttendanceSubStatus | null, reportComments?: string) => void;
 }) {
   const student = userById(session.student_id);
   const [attendance, setAttendance] = useState<Attendance>("present");
@@ -889,6 +889,7 @@ function ReportModal({ session, perf, subskills, onClose, onSubmit }: {
   // AW/AI/AV all skip the metric penalty (justified). Locked past month end.
   const [absentSub, setAbsentSub] = useState<AttendanceSubStatus | null>(null);
   const [notes, setNotes] = useState("");
+  const [studentNote, setStudentNote] = useState("");
   const [entries, setEntries] = useState<Entry[]>(() => Array.from({ length: MIN_ENTRIES }, makeEntry));
   const [submitted, setSubmitted] = useState(false);
   const justificationOpen = isJustificationWindowOpen(session.date_time);
