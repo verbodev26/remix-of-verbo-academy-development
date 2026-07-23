@@ -111,6 +111,7 @@ function ProgressRing({
 
 function StudentDashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const sessions = useSyncExternalStore(
     subscribeSessions,
@@ -122,6 +123,9 @@ function StudentDashboard() {
     getPerformanceSnapshot,
     getServerPerformanceSnapshot,
   );
+  // Real macro-skill scoring, scoped to this student (single source of
+  // truth shared with Student > Performance and Teacher > Mis Alumnos).
+  const macros = useComputedMacros(user?.id ?? "");
   const [perfDetail, setPerfDetail] = useState<{ session: ExtSession; rating: PerformanceRating } | null>(null);
 
   const [cancelCount, setCancelCount] = useState<number>(() => {
@@ -140,40 +144,43 @@ function StudentDashboard() {
   const history = mySessions
     .filter((s) => !["scheduled", "rescheduled", "ready"].includes(s.status))
     .sort((a, b) => +new Date(b.date_time) - +new Date(a.date_time));
-  const perfAvg = averagePerformance(history.map((s) => s.id), performance);
 
+  // Level progress — real: passed units of current level / total units.
   const level = LEVELS.find((l) => l.id === user.current_level);
-  const currentUnit = level?.units[1] ?? level?.units[0];
-  const levelProgress = 64;
+  const levelUnits = level?.units ?? [];
+  const passedUnitIds = levelUnits.filter((u) => unitPassed(user.id, u.id));
+  const levelProgress = levelUnits.length === 0
+    ? 0
+    : Math.round((passedUnitIds.length / levelUnits.length) * 100);
+  // Current Course — first unit not yet passed; if all passed, use the last.
+  const currentUnit =
+    levelUnits.find((u) => !unitPassed(user.id, u.id)) ?? levelUnits[levelUnits.length - 1];
 
-  // Map 0-5 perf scale onto 4 macro-skills (kept derivative of existing data).
-  const pct = (v: number) => Math.round((v / 5) * 100);
-  const macroSkills = [
-    { key: "Speaking", icon: Mic, value: pct(perfAvg.fluency || 0) },
-    { key: "Writing", icon: PenLine, value: pct(perfAvg.grammar || 0) },
-    { key: "Listening", icon: Ear, value: pct(perfAvg.confidence || 0) },
-    { key: "Reading", icon: BookOpen, value: pct(perfAvg.vocabulary || 0) },
-  ];
+  // Overall Attendance — mirror Admin > Students fallback formula so the
+  // tile reflects real completed vs absent sessions when the static
+  // `attendance_percentage` field isn't set.
+  const completedCount = mySessions.filter((s) => s.status === "completed").length;
+  const absentCount = mySessions.filter((s) => s.status === "absent").length;
+  const attendancePct = user.attendance_percentage ?? (
+    completedCount + absentCount > 0
+      ? Math.round((completedCount / (completedCount + absentCount)) * 100)
+      : 0
+  );
 
-  // Pull a few recent feedback items from completed history.
+  // Quick Review Dock — real teacher notes (report_comments) from completed
+  // sessions. No synthetic tips. Empty state kept when no session has one.
   const recentFeedback = useMemo(() => {
     return history
-      .filter((s) => performance[s.id])
+      .filter((s) => typeof s.report_comments === "string" && s.report_comments.trim().length > 0)
       .slice(0, 3)
       .map((s) => ({
         id: s.id,
         teacher: userById(s.teacher_id)?.name ?? "Teacher",
         date: new Date(s.date_time).toLocaleDateString(undefined, { month: "short", day: "numeric" }),
-        tip:
-          performance[s.id].fluency < 3
-            ? "Focus on connecting clauses with linking phrases."
-            : performance[s.id].vocabulary < 3
-              ? "Expand vocabulary on negotiation idioms."
-              : performance[s.id].grammar < 3
-                ? "Review conditional tenses in professional contexts."
-                : "Excellent delivery — keep practicing executive summaries.",
+        tip: (s.report_comments ?? "").trim(),
       }));
-  }, [history, performance]);
+  }, [history]);
+
 
   // Rating popup logic (untouched)
   const [ratingSession, setRatingSession] = useState<ExtSession | null>(null);
