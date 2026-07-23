@@ -248,6 +248,12 @@ function DayList({
               G
             </span>
           )}
+          {e.holiday_makeup && (
+            <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800" title="Replacement for a session that fell on a holiday">
+              Holiday Makeup
+            </span>
+          )}
+
 
           <div className="min-w-0 flex-1">
             <div className="truncate text-sm font-medium text-foreground">{e.title}</div>
