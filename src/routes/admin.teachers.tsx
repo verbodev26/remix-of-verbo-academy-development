@@ -365,7 +365,7 @@ function Tag({ children, className = "" }: { children: React.ReactNode; classNam
 type Tab = "overview" | "kpis" | "availability" | "financial" | "notes";
 
 function TeacherDetailModal({
-  teacher: t, teachers, onClose, onPersist, onReassign, onMarkReviewed, onEdit,
+  teacher: t, teachers, onClose, onPersist, onReassign, onMarkReviewed, onDiscardReview, canDiscard, onEdit,
 }: {
   teacher: User;
   teachers: User[];
@@ -373,6 +373,8 @@ function TeacherDetailModal({
   onPersist: (u: User) => void;
   onReassign: (studentId: string, teacherId: string) => void;
   onMarkReviewed: (sessionId: string, note: string) => void;
+  onDiscardReview: (sessionId: string, note: string) => void;
+  canDiscard: boolean;
   onEdit: () => void;
 }) {
   const [tab, setTab] = useState<Tab>("overview");
