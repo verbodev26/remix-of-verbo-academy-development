@@ -168,6 +168,8 @@ Extiende `Session` (con `Omit<Session,"status">`), agregando el ciclo de vida re
 | cancellation_note | string | opcional | |
 | needs_substitute | boolean | opcional | |
 | report_comments | string | opcional | |
+| holiday_makeup | boolean | opcional | `true` solo en sesiones auto-generadas por el Bulk Scheduler de Admin > Sessions como reposición de una fecha que cayó en un `Holiday` (§10). Las fechas holiday-hit se crean con `status: "cancelled"` + `attendance_sub_status: "cancelled_holiday"`; las de reposición se crean con `status: "scheduled"` + `holiday_makeup: true`. |
+
 
 ### `ReportAdminEdit` (`src/lib/sessions-store.ts`)
 | campo | tipo | requerido/opcional |
