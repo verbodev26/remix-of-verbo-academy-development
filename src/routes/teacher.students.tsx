@@ -203,7 +203,7 @@ function StudentCard({ student: s, onOpen }: { student: User; onOpen: () => void
   const attAlert = attendanceAlert(attendance);
 
   // Overall 4-skill scores (shared component / same source as student dashboard).
-  const macros = useComputedMacros();
+  const macros = useComputedMacros(s.id);
   const anySkillLow = macros.some((m) => m.overall !== null && m.overall < 70);
 
   // Standalone Workshops / Insights students (no performance sessions) get
@@ -375,7 +375,7 @@ function StudentDetailModal({
   const [showAnalytics, setShowAnalytics] = useState(false);
   // Report modal.
   const [showReport, setShowReport] = useState(false);
-  const macros = useComputedMacros();
+  const macros = useComputedMacros(s.id);
   const anySkillLow = macros.some((m) => m.overall !== null && m.overall < 70);
 
   // Coverage notes — persisted per (titular teacher, student) pair.
@@ -679,6 +679,7 @@ function StudentDetailModal({
       {showAnalytics && (
         <PerformanceAnalyticsModal
           planTier={s.hired_plan ?? s.access_plan ?? "—"}
+          studentId={s.id}
           onClose={() => setShowAnalytics(false)}
         />
       )}
