@@ -123,7 +123,11 @@ function EventDetailsModal({
 
   const s = event.session;
   const c = event.club;
-  const teacherName = s ? userById(s.teacher_id)?.name : c ? userById(c.teacher_id)?.name : undefined;
+  const teacherName = s
+    ? userById(s.teacher_id)?.name
+    : c && c.teacher_id
+      ? userById(c.teacher_id)?.name
+      : undefined;
 
   // Build student(s) / audience label.
   let audienceLabel = "Students";
