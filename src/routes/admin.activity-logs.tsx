@@ -10,11 +10,11 @@ import {
 import { USERS } from "@/lib/mock-data";
 import {
   loadKpiOverrides, replaceKpiOverrides,
-  KPI_OVERRIDES_EVENT, subscribeKpiOverrides,
+  subscribeKpiOverrides,
 } from "@/lib/teacher-kpi-overrides-store";
 import {
   loadPayments, replacePayments,
-  PAYMENTS_EVENT, subscribePayments,
+  subscribePayments,
 } from "@/lib/payments-log";
 import {
   getRetentionMonths, setRetentionMonths,
