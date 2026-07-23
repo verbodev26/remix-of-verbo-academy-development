@@ -544,7 +544,11 @@ Campos: `id, teacher_id, month_key ("YYYY-MM"), metric, previous_value, new_valu
 ### `Candidate` (`src/lib/substitute-engine.ts`) — no persistido
 `{ teacher: User; score: number }`. `findCandidates(sessionId)` filtra maestros activos, excluye al original, ordena por `TeacherKpis.composite`. ⚠️ No verifica en código que quien invoca sea admin — el comentario "Admin always picks manually" es una nota de flujo UX, no un control de acceso real.
 
+### Log retention (`src/lib/log-retention.ts`)
+Config única `verbo:log-retention-months` (default 12, rango 1-120) editable solo por `super_admin` en Admin > Activity Logs. Aplica a los dos logs sin cota nativa: `verbo:kpi-overrides` (corta por `created_at`) y `verbo:payments-log` (corta por `paid_at`). El botón "Export & Clean up" descarga las entradas más viejas que el corte como JSON y luego las elimina vía `replaceKpiOverrides` / `replacePayments` (reemplazo total del array persistido, disparando `KPI_OVERRIDES_EVENT` / `PAYMENTS_EVENT`). Fuera de alcance: sessions, student-reports, club-reports, financial-issues, learning-path-events (este último ya se auto-limita a 100 por alumno).
+
 ---
+
 
 ## 11. Matriz de permisos por rol
 

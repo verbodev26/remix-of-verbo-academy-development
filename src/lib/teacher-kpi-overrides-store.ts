@@ -99,6 +99,11 @@ export function addKpiOverride(input: Omit<KpiOverride, "id" | "created_at">): K
   return entry;
 }
 
+/** Replace the entire overrides list — used by retention cleanup. */
+export function replaceKpiOverrides(list: KpiOverride[]) {
+  persist(list);
+}
+
 // ----- Queries -------------------------------------------------------------
 export function overridesFor(teacherId: string): KpiOverride[] {
   return loadKpiOverrides().filter((o) => o.teacher_id === teacherId);
