@@ -386,6 +386,7 @@ function TeacherDashboard() {
     subskills: Record<string, number>,
     absentCause?: "student" | "teacher",
     subStatus?: AttendanceSubStatus | null,
+    reportComments?: string,
   ) => {
     if (!user) return;
     const session = sessions.find((s) => s.id === sessionId);
@@ -402,6 +403,7 @@ function TeacherDashboard() {
       absentCause,
       subStatus: subStatus ?? null,
       subskills,
+      reportComments,
     });
     const plan = getLessonPlan(sessionId);
     if (plan?.vip_unit_id) {
