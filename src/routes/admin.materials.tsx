@@ -221,7 +221,18 @@ function Page() {
               ))}
             </select>
           </div>
+          <label className="mt-3 inline-flex cursor-pointer items-center gap-2 text-sm text-foreground">
+            <input
+              type="checkbox"
+              checked={premium}
+              onChange={(e) => setPremium(e.target.checked)}
+              className="h-4 w-4 rounded border-input"
+            />
+            Premium (Advance/Elite only)
+          </label>
         </div>
+
+
 
         {/* Cover image */}
         <div className="mt-4">
