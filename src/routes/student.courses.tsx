@@ -915,13 +915,14 @@ export function UnitDetail({
 /* -------------------------------------------------------------------------- */
 /* Activity runner                                                             */
 /* -------------------------------------------------------------------------- */
-function ActivityRunner({
-  unit, activities, studentId, readOnly, onClose,
+export function ActivityRunner({
+  unit, activities, studentId, readOnly, previewMode = false, onClose,
 }: {
   unit: CourseUnit;
   activities: Activity[];
   studentId: string;
   readOnly: boolean;
+  previewMode?: boolean;
   onClose: () => void;
 }) {
   const orderedCats = useMemo(() => {
@@ -946,16 +947,16 @@ function ActivityRunner({
 
   const check = () => {
     if (!current) return;
-    // Milestone units get exactly one attempt per activity.
-    if (!readOnly && isMilestoneUnit(unit.id) && attemptsFor(studentId, current.id) >= 1) {
+    // Milestone units get exactly one attempt per activity (skipped in preview mode).
+    if (!readOnly && !previewMode && isMilestoneUnit(unit.id) && attemptsFor(studentId, current.id) >= 1) {
       setAttemptBlocked(true);
       return;
     }
     const ok = evaluate(current, draft[current.id] ?? "");
     const score = ok ? 100 : 0;
-    if (!readOnly) recordActivityScore(studentId, current.id, score);
+    if (!readOnly && !previewMode) recordActivityScore(studentId, current.id, score);
     // Auto-complete unit when the mandatory rule is satisfied.
-    if (!readOnly && unitPassed(studentId, unit.id)) setUnitCompleted(studentId, unit.id, true);
+    if (!readOnly && !previewMode && unitPassed(studentId, unit.id)) setUnitCompleted(studentId, unit.id, true);
     setFeedback({ ok, score });
   };
 
