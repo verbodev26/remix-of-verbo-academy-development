@@ -68,6 +68,7 @@ export type NotificationKind =
   | "announcement"
   | "student_challenge_selected"
   | "student_shared_challenge_result"
+  | "spotlight_cancelled"
   // admin-facing
   | "needs_substitute"
   | "release_request"
