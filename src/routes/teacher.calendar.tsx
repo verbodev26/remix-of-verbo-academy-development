@@ -116,15 +116,19 @@ function Page() {
     }
     if (ev.kind === "spotlight") {
       const end = +new Date(ev.date) + ev.duration_minutes * 60_000;
-      if (end <= Date.now() && !getClubReport(ev.id)) {
-        setReportingClub({
-          id: ev.id,
-          type: "spotlight",
-          title: ev.title,
-          date: ev.date,
-          enrolled_names: ev.enrolled_names ?? [],
-        });
+      if (end <= Date.now()) {
+        if (!getClubReport(ev.id)) {
+          setReportingClub({
+            id: ev.id,
+            type: "spotlight",
+            title: ev.title,
+            date: ev.date,
+            enrolled_names: ev.enrolled_names ?? [],
+          });
+        }
+        return;
       }
+      if (ev.session) setSpotlightPreview(ev.session);
       return;
     }
 
