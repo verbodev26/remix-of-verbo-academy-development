@@ -679,7 +679,7 @@ function TeacherDetailModal({
         {!flow && (
           <div className="flex flex-wrap items-center gap-2 border-t border-border bg-secondary/30 px-6 py-4">
             <GhostBtn onClick={onEdit}><Pencil className="h-3.5 w-3.5" /> Edit profile</GhostBtn>
-            <GhostBtn onClick={() => alert(`Recovery email sent to ${t.email}.`)}><KeyRound className="h-3.5 w-3.5" /> Reset password</GhostBtn>
+            <GhostBtn onClick={() => { onPersist({ ...t, must_change_password: true }); alert("This user will be asked to set a new password the next time they log in."); }}><KeyRound className="h-3.5 w-3.5" /> Reset password</GhostBtn>
             {status === "frozen" ? (
               <GhostBtn onClick={() => onPersist(applyStatusPatch(t, "active"))}><Play className="h-3.5 w-3.5" /> Reactivate</GhostBtn>
             ) : status === "active" ? (
