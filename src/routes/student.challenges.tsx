@@ -99,7 +99,7 @@ const PRODUCT_GRADIENTS: Record<string, string> = {
   vip: "from-[#4a044e] via-[#7e22ce] to-[#a855f7]",
 };
 
-const PREMIUM_ACCESS: readonly string[] = ["Advance", "Elite"];
+
 
 /* -------------------------------------------------------------------------- */
 /* Reusable atoms                                                              */
