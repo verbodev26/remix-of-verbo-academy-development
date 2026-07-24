@@ -424,7 +424,9 @@ Un solo uso por tipo (`insight`/`book`/`spotlight`), válido durante todo el per
 ### `ClubReport` (`src/lib/club-reports-store.ts`)
 `event_id` (PK lógica), `event_type: "insight"|"book"|"spotlight"`, `teacher_id`, `attendance: Record<student_id, "present"|"absent">`, `comments`, `submitted_at`.
 
-⚠️ `event_id` puede apuntar a un `Club.id` o, si `event_type === "spotlight"`, a un evento que **no existe como `Club`** (`ClubType` no tiene `"spotlight"`) — relación ambigua, no verificable con el código leído.
+⚠️ `event_id` puede apuntar a un `Club.id` (para `insight`/`book`, cerrado vía `updateClub(..., completed)`) o a un `Session.id` con `origin: "spotlight"` (cerrado vía `updateSession(..., completed)`). `ClubReportModal` despacha al store correcto según `event_type`.
+
+**Cancelación de Spotlight por el alumno** (`student.sessions.tsx > CancelSpotlightModal`): el alumno siempre pierde el crédito (sin reschedule, sin makeup, sin refund a `remaining_sessions` ni a `incrementGroupRemaining`). Único efecto financiero: si `hoursUntil(session.date_time) < 24`, se agrega un `TeacherAdjustment` de `Math.round(effectiveHourlyRate(teacher))` MXN con motivo "Spotlight Session — late cancellation (paid, <24h notice)" vía `appendTeacherAdjustment` (centralizada en `src/lib/teacher-tiers.ts`). El teacher recibe además notificación `spotlight_cancelled` derivada en `teacherNotifications` sobre sesiones `origin === "spotlight" && status === "cancelled"`.
 
 ### `WorkshopTemplate` / `WorkshopUnit` / `WorkshopCohort` / `WorkshopParticipant` (`src/lib/workshops-store.ts`)
 
