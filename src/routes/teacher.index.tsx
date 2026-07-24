@@ -11,6 +11,7 @@ import { PlanModal } from "@/components/verbo/PlanModal";
 import { loadLevels, subscribeLevels } from "@/lib/courses-store";
 import { loadLessonPlans, saveLessonPlan, subscribeLessonPlans, getLessonPlan, type LessonPlan } from "@/lib/lesson-plans-store";
 import { markVipUnitDone, clearVipUnitDoneForSession } from "@/lib/vip-courses-store";
+import { markTailoredUnitDone, clearTailoredUnitDoneForSession } from "@/lib/tailored-content-store";
 import { computeTeacherKpis, getBonusThreshold, ratingBand } from "@/lib/teacher-kpis";
 import { BonusBadge } from "@/components/verbo/BonusBadge";
 import { avgRating } from "@/lib/teacher-model";
@@ -420,6 +421,10 @@ function TeacherDashboard() {
     if (plan?.vip_unit_id) {
       if (attendance !== "absent") markVipUnitDone(plan.vip_unit_id, sessionId);
       else clearVipUnitDoneForSession(sessionId);
+    }
+    if (plan?.tailored_unit_id) {
+      if (attendance !== "absent") markTailoredUnitDone(plan.tailored_unit_id, sessionId);
+      else clearTailoredUnitDoneForSession(sessionId);
     }
     if (attendance !== "absent") savePerformance(sessionId, perf);
     setEditing(null);

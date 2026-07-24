@@ -9,10 +9,11 @@ export const Route = createFileRoute("/teacher")({ component: Layout });
 
 function Layout() {
   const { user } = useAuth();
-  const hasVipStudent = !!user && USERS.some((u) => {
-    if (u.role !== "student" || u.product !== "vip") return false;
-    return ASSIGNMENTS.some((a) => a.teacher_id === user.id && a.student_id === u.id);
-  });
+  const assignedStudents = user
+    ? USERS.filter((u) => u.role === "student" && ASSIGNMENTS.some((a) => a.teacher_id === user.id && a.student_id === u.id))
+    : [];
+  const hasVipStudent = assignedStudents.some((u) => u.product === "vip");
+  const hasEliteStudent = assignedStudents.some((u) => u.access_plan === "Elite");
 
   const academicItems: NavItem[] = [
     { to: "/teacher/students", label: "My Students" },
@@ -20,6 +21,7 @@ function Layout() {
     { to: "/teacher/materials", label: "Materials" },
     { to: "/teacher/workshops", label: "Focus Workshops" },
     ...(hasVipStudent ? [{ to: "/teacher/vip", label: "Course Builder VIP" }] : []),
+    ...(hasEliteStudent ? [{ to: "/teacher/tailored-content", label: "Tailored Content" }] : []),
     { to: "/teacher/clubs", label: "Clubs" },
   ];
 
