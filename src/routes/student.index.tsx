@@ -391,7 +391,7 @@ function StudentDashboard() {
       </section>
 
       {/* Linguistic Asset Performance — replaces Performance Metrics + Quote of the Week */}
-      <section>
+      <section className="verbo-fade-up motion-reduce:animate-none" style={{ animationDelay: "120ms" }}>
         <PremiumCard>
           <div className="mb-5 flex items-center justify-between gap-4">
             <h3 className="text-base font-semibold tracking-tight" style={{ color: "#01304a" }}>
@@ -408,22 +408,35 @@ function StudentDashboard() {
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             {macros.map((m) => {
               const Icon = m.icon;
+              const color = SKILL_COLORS[m.key] ?? "#01304a";
+              const pct = m.overall === null ? 0 : m.overall;
               return (
                 <div
                   key={m.key}
-                  className="flex items-center gap-3 rounded-xl border border-border/70 bg-white/60 px-4 py-3"
+                  className="flex flex-col gap-2.5 rounded-xl border border-border/70 bg-white/60 px-4 py-3"
                 >
-                  <div
-                    className="flex h-9 w-9 items-center justify-center rounded-lg"
-                    style={{ background: "rgba(1, 48, 74, 0.06)", color: "#01304a" }}
-                  >
-                    <Icon className="h-4.5 w-4.5" strokeWidth={1.6} />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{m.key}</div>
-                    <div className="text-base font-semibold tabular-nums" style={{ color: "#01304a" }}>
-                      {m.overall === null ? "--" : `${m.overall}%`}
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="flex h-9 w-9 items-center justify-center rounded-lg"
+                      style={{ background: `color-mix(in oklab, ${color} 12%, transparent)`, color }}
+                    >
+                      <Icon className="h-4.5 w-4.5" strokeWidth={1.6} />
                     </div>
+                    <div className="min-w-0">
+                      <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{m.key}</div>
+                      <div className="text-base font-semibold tabular-nums" style={{ color: "#01304a" }}>
+                        {m.overall === null ? "--" : `${m.overall}%`}
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    className="h-[3px] w-full overflow-hidden rounded-full"
+                    style={{ background: `color-mix(in oklab, ${color} 12%, transparent)` }}
+                  >
+                    <div
+                      className="h-full rounded-full transition-[width] duration-700 ease-out"
+                      style={{ width: `${pct}%`, background: color }}
+                    />
                   </div>
                 </div>
               );
