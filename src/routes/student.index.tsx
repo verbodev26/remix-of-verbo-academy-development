@@ -81,6 +81,13 @@ function PremiumCard({ children, className = "", hover = false, style }: { child
 
 const ProgressRing = StatRing;
 
+const SKILL_COLORS: Record<string, string> = {
+  Speaking: "#f38934",
+  Writing: "#7e22ce",
+  Listening: "#01304a",
+  Reading: "oklch(0.6 0.104 185)",
+};
+
 const PRODUCT_TO_COURSE: Record<string, ProductId> = {
   enterprise: "enterprise",
   go: "go",
@@ -311,7 +318,7 @@ function StudentDashboard() {
 
   return (
     <div className="space-y-10">
-      <header className="flex flex-wrap items-center justify-between gap-4">
+      <header className="verbo-fade-up motion-reduce:animate-none flex flex-wrap items-center justify-between gap-4" style={{ animationDelay: "0ms" }}>
         <div>
           <div className="text-sm text-muted-foreground">Welcome back</div>
           <div className="mt-1 flex items-center gap-3">
@@ -342,48 +349,56 @@ function StudentDashboard() {
         </div>
       </header>
 
-      {/* KPI Metrics with circular SVG progress */}
-      <section className="grid gap-4 md:grid-cols-3">
-        <PremiumCard hover className="verbo-fade-up" style={{ animationDelay: "0ms" }}>
+      {/* KPI Metrics with circular SVG progress — Level Progress is the hero */}
+      <section
+        className="verbo-fade-up motion-reduce:animate-none grid gap-4 md:grid-cols-[1fr_1.6fr_1fr]"
+        style={{ animationDelay: "60ms" }}
+      >
+        <PremiumCard hover className="verbo-card-hover">
           <div className="flex items-center justify-between gap-4">
             <div>
               <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Current Level</div>
-              <div className="mt-3 font-[family-name:var(--font-display)] text-4xl font-semibold tracking-tight" style={{ color: "#01304a" }}>
+              <div className="mt-3 font-[family-name:var(--font-display)] text-3xl font-semibold tracking-tight" style={{ color: "#01304a" }}>
                 {user.current_level ?? "—"}
               </div>
               <div className="mt-1 text-xs text-muted-foreground">{level?.title}</div>
             </div>
-            <ProgressRing value={levelProgress} label={user.current_level ?? "—"} />
+            <StatRing value={levelProgress} label={user.current_level ?? "—"} />
           </div>
         </PremiumCard>
-        <PremiumCard hover className="verbo-fade-up" style={{ animationDelay: "50ms" }}>
-          <div className="flex items-center justify-between gap-4">
+        <PremiumCard
+          hover
+          className="verbo-card-hover ring-1 ring-primary/10"
+          style={{ background: "rgba(1, 48, 74, 0.045)" }}
+        >
+          <div className="flex items-center justify-between gap-5">
             <div>
-              <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Level Progress</div>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary/80">Level Progress</div>
               <div className="mt-3 flex items-baseline gap-2">
-                <span className="font-[family-name:var(--font-display)] text-4xl font-semibold tracking-tight" style={{ color: "#01304a" }}>{levelProgress}%</span>
+                <span className="font-[family-name:var(--font-display)] text-6xl font-semibold leading-none tracking-tight" style={{ color: "#01304a" }}>{levelProgress}</span>
+                <span className="font-[family-name:var(--font-display)] text-2xl font-medium" style={{ color: "#01304a" }}>%</span>
               </div>
-              <div className="mt-1 text-xs text-muted-foreground">of {user.current_level}</div>
+              <div className="mt-1.5 text-xs text-muted-foreground">of {user.current_level}</div>
             </div>
-            <ProgressRing value={levelProgress} />
+            <StatRing value={levelProgress} size={104} stroke={9} />
           </div>
         </PremiumCard>
-        <PremiumCard hover className="verbo-fade-up" style={{ animationDelay: "100ms" }}>
+        <PremiumCard hover className="verbo-card-hover">
           <div className="flex items-center justify-between gap-4">
             <div>
               <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Overall Attendance</div>
               <div className="mt-3 flex items-baseline gap-2">
-                <span className="font-[family-name:var(--font-display)] text-4xl font-semibold tracking-tight" style={{ color: "#01304a" }}>{attendancePct}%</span>
+                <span className="font-[family-name:var(--font-display)] text-3xl font-semibold tracking-tight" style={{ color: "#01304a" }}>{attendancePct}%</span>
               </div>
               <div className="mt-1 text-xs text-muted-foreground">last 90 days</div>
             </div>
-            <ProgressRing value={attendancePct} />
+            <StatRing value={attendancePct} />
           </div>
         </PremiumCard>
       </section>
 
       {/* Linguistic Asset Performance — replaces Performance Metrics + Quote of the Week */}
-      <section>
+      <section className="verbo-fade-up motion-reduce:animate-none" style={{ animationDelay: "120ms" }}>
         <PremiumCard>
           <div className="mb-5 flex items-center justify-between gap-4">
             <h3 className="text-base font-semibold tracking-tight" style={{ color: "#01304a" }}>
@@ -400,22 +415,35 @@ function StudentDashboard() {
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             {macros.map((m) => {
               const Icon = m.icon;
+              const color = SKILL_COLORS[m.key] ?? "#01304a";
+              const pct = m.overall === null ? 0 : m.overall;
               return (
                 <div
                   key={m.key}
-                  className="flex items-center gap-3 rounded-xl border border-border/70 bg-white/60 px-4 py-3"
+                  className="flex flex-col gap-2.5 rounded-xl border border-border/70 bg-white/60 px-4 py-3"
                 >
-                  <div
-                    className="flex h-9 w-9 items-center justify-center rounded-lg"
-                    style={{ background: "rgba(1, 48, 74, 0.06)", color: "#01304a" }}
-                  >
-                    <Icon className="h-4.5 w-4.5" strokeWidth={1.6} />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{m.key}</div>
-                    <div className="text-base font-semibold tabular-nums" style={{ color: "#01304a" }}>
-                      {m.overall === null ? "--" : `${m.overall}%`}
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="flex h-9 w-9 items-center justify-center rounded-lg"
+                      style={{ background: `color-mix(in oklab, ${color} 12%, transparent)`, color }}
+                    >
+                      <Icon className="h-4.5 w-4.5" strokeWidth={1.6} />
                     </div>
+                    <div className="min-w-0">
+                      <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{m.key}</div>
+                      <div className="text-base font-semibold tabular-nums" style={{ color: "#01304a" }}>
+                        {m.overall === null ? "--" : `${m.overall}%`}
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    className="h-[3px] w-full overflow-hidden rounded-full"
+                    style={{ background: `color-mix(in oklab, ${color} 12%, transparent)` }}
+                  >
+                    <div
+                      className="h-full rounded-full transition-[width] duration-700 ease-out"
+                      style={{ width: `${pct}%`, background: color }}
+                    />
                   </div>
                 </div>
               );
@@ -427,9 +455,9 @@ function StudentDashboard() {
       {/* Two-column productivity layout */}
       <section className="grid gap-6 lg:grid-cols-[1.85fr_1fr]">
         {/* LEFT COLUMN ~65% */}
-        <div className="space-y-8">
+        <div className="verbo-fade-up motion-reduce:animate-none space-y-8" style={{ animationDelay: "180ms" }}>
           {/* Current Course */}
-          <div className="verbo-fade-up motion-reduce:animate-none" style={{ animationDelay: "150ms" }}>
+          <div>
             <SectionTitle>Current Course</SectionTitle>
             <PremiumCard hover className="verbo-card-hover flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
               <div>
@@ -464,7 +492,7 @@ function StudentDashboard() {
 
 
           {/* Upcoming Sessions */}
-          <div className="verbo-fade-up motion-reduce:animate-none" style={{ animationDelay: "200ms" }}>
+          <div>
             <SectionTitle>Upcoming Sessions</SectionTitle>
             {upcoming.length === 0 ? (
               <PremiumCard className="verbo-card-hover"><div className="text-sm text-muted-foreground">No upcoming sessions scheduled.</div></PremiumCard>
@@ -512,7 +540,7 @@ function StudentDashboard() {
         </div>
 
         {/* RIGHT SIDEBAR ~35% */}
-        <aside className="space-y-6">
+        <aside className="verbo-fade-up motion-reduce:animate-none space-y-6" style={{ animationDelay: "240ms" }}>
           {/* Verbo Experiences */}
           <PremiumCard hover className="relative overflow-hidden">
             <div
@@ -573,7 +601,7 @@ function StudentDashboard() {
       </section>
 
       {/* History */}
-      <section className="verbo-fade-up motion-reduce:animate-none" style={{ animationDelay: "250ms" }}>
+      <section className="verbo-fade-up motion-reduce:animate-none" style={{ animationDelay: "300ms" }}>
         <SectionTitle>Session History</SectionTitle>
         <PremiumCard className="verbo-card-hover !p-0 overflow-hidden">
           <TooltipProvider delayDuration={200}>
@@ -599,7 +627,7 @@ function StudentDashboard() {
                       <td className="px-6 py-4">
                         <span className={statusBadge(s.status)}>{s.status}</span>
                       </td>
-                      <td className="px-6 py-4 text-muted-foreground">{s.student_rating ? `${s.student_rating}★` : "—"}</td>
+                      <td className="px-6 py-4">{s.student_rating ? <RatingStarsCompact value={s.student_rating} /> : <span className="text-muted-foreground">—</span>}</td>
                       <td className="px-6 py-4">
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -735,6 +763,26 @@ function PerfStars({ label, value }: { label: string; value: number }) {
         })}
         <span className="ml-2 text-xs tabular-nums text-muted-foreground">{value}/5</span>
       </div>
+    </div>
+  );
+}
+
+function RatingStarsCompact({ value }: { value: number }) {
+  return (
+    <div className="inline-flex items-center gap-0.5" aria-label={`Rating ${value} out of 5`}>
+      {[1, 2, 3, 4, 5].map((n) => {
+        const active = n <= value;
+        return (
+          <Star
+            key={n}
+            className="h-3.5 w-3.5"
+            style={{
+              color: active ? "#f38934" : "#e5e7eb",
+              fill: active ? "#f38934" : "transparent",
+            }}
+          />
+        );
+      })}
     </div>
   );
 }
