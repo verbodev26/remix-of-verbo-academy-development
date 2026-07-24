@@ -154,6 +154,8 @@ function Page() {
       </div>
 
 
+      <SessionsRemainingCard studentId={user.id} />
+
       <Card>
         <CalendarView
           events={events}
