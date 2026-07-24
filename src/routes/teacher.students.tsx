@@ -53,7 +53,7 @@ type GroupBy = "none" | "company" | "product" | "level";
 
 function Page() {
   const { user } = useAuth();
-  const [, tick] = useState(0);
+  const [tickVal, tick] = useState(0);
   const [detail, setDetail] = useState<User | null>(null);
   const [search, setSearch] = useState("");
   const [groupBy, setGroupBy] = useState<GroupBy>("none");
@@ -65,8 +65,12 @@ function Page() {
     tick((n) => n + 1);
     const unsub = subscribeStudents(() => tick((n) => n + 1));
     const unsubG = subscribeGroups(() => tick((n) => n + 1));
-    return () => { unsub(); unsubG(); };
+    const unsubC = subscribeCourses(() => tick((n) => n + 1));
+    return () => { unsub(); unsubG(); unsubC(); };
   }, []);
+
+  const curriculumLevelName = (s: User): string | null =>
+    computeCurrentProgress(s.id, s.product, s.contracted_levels ?? [], tickVal)?.levelName ?? null;
 
   if (!user) return null;
 
