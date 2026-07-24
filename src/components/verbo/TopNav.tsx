@@ -2,12 +2,13 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { Logo } from "./Logo";
 import { useAuth } from "@/lib/auth";
 import { ChevronDown } from "lucide-react";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { ProfileModal } from "./ProfileModal";
 import { AdminProfileModal } from "./AdminProfileModal";
 import { useAvatar } from "@/lib/avatar-store";
 import { NotificationsBell } from "./NotificationsBell";
 import type { User } from "@/lib/mock-data";
+
 
 function roleLabel(u?: User | null): string {
   if (!u) return "";
@@ -44,21 +45,25 @@ const tabCls =
 const activeTabCls =
   "data-[status=active]:bg-secondary data-[status=active]:text-foreground";
 
-function SingleNav({ item, pathname }: { item: NavItem; pathname: string }) {
+const darkTabCls =
+  "inline-flex items-center gap-1 px-3 py-1.5 text-sm transition-colors duration-200 ease-out text-[#94a3b8] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f38934]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent data-[status=active]:text-white";
+
+function SingleNav({ item, pathname, isDark }: { item: NavItem; pathname: string; isDark?: boolean }) {
   const active = isActive(pathname, item);
   return (
     <Link
       to={item.to}
       activeOptions={{ exact: active }}
       data-status={active ? "active" : undefined}
-      className={`${tabCls} ${activeTabCls}`}
+      className={isDark ? darkTabCls : `${tabCls} ${activeTabCls}`}
     >
       {item.label}
     </Link>
   );
 }
 
-function NavGroupDropdown({ group, pathname }: { group: NavGroup; pathname: string }) {
+
+function NavGroupDropdown({ group, pathname, isDark }: { group: NavGroup; pathname: string; isDark?: boolean }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -140,7 +145,7 @@ function NavGroupDropdown({ group, pathname }: { group: NavGroup; pathname: stri
         aria-expanded={open}
         aria-haspopup="menu"
         aria-controls={menuId}
-        className={`${tabCls} ${activeTabCls}`}
+        className={isDark ? darkTabCls : `${tabCls} ${activeTabCls}`}
       >
         {group.label}
         <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
@@ -184,6 +189,32 @@ export function TopNav({ items, variant = "light" }: { items: NavEntry[]; varian
   const isDark = variant === "dark";
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
+  const navRef = useRef<HTMLElement>(null);
+  const [indicator, setIndicator] = useState<{ left: number; width: number; visible: boolean }>({
+    left: 0,
+    width: 0,
+    visible: false,
+  });
+
+  useLayoutEffect(() => {
+    if (!isDark) return;
+    const nav = navRef.current;
+    if (!nav) return;
+    const measure = () => {
+      const active = nav.querySelector<HTMLElement>('[data-status="active"]');
+      if (!active) {
+        setIndicator((p) => ({ ...p, visible: false }));
+        return;
+      }
+      const navRect = nav.getBoundingClientRect();
+      const rect = active.getBoundingClientRect();
+      setIndicator({ left: rect.left - navRect.left, width: rect.width, visible: true });
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [pathname, isDark, items]);
+
   return (
     <header
       className={`sticky top-0 z-40 ${isDark ? "" : "border-b border-border bg-background/85 backdrop-blur-xl"}`}
@@ -192,38 +223,78 @@ export function TopNav({ items, variant = "light" }: { items: NavEntry[]; varian
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
         <div className="flex items-center gap-10">
           <Logo dark={isDark} />
-          <nav className="hidden items-center gap-1 md:flex">
+          <nav ref={navRef} className="relative hidden items-center gap-1 md:flex h-16">
             {items.map((item) => {
               if (isGroup(item)) {
-                return <NavGroupDropdown key={item.label} group={item} pathname={pathname} />;
+                return <NavGroupDropdown key={item.label} group={item} pathname={pathname} isDark={isDark} />;
               }
-              return <SingleNav key={item.to} item={item} pathname={pathname} />;
+              return <SingleNav key={item.to} item={item} pathname={pathname} isDark={isDark} />;
             })}
+            {isDark && (
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute bottom-0 h-[2px] rounded-full bg-[#f38934] transition-all duration-300 ease-out"
+                style={{
+                  transform: `translateX(${indicator.left}px)`,
+                  width: `${indicator.width}px`,
+                  opacity: indicator.visible ? 1 : 0,
+                }}
+              />
+            )}
           </nav>
         </div>
-        <div className="flex items-center gap-3">
+        <div className={`flex items-center ${isDark ? "gap-6" : "gap-3"}`}>
           <div className="hidden text-right md:block">
             <div className={`text-sm font-medium ${isDark ? "text-white" : "text-foreground"}`}>{user?.name}</div>
             <div className={`text-xs ${isDark ? "text-[#94a3b8]" : "text-muted-foreground"}`}>{roleLabel(user)}</div>
           </div>
-          {user && <NotificationsBell variant={variant} />}
-          <button
-            type="button"
-            onClick={() => canEditProfile && setProfileOpen(true)}
-            disabled={!canEditProfile}
-            className={`flex h-9 w-9 overflow-hidden items-center justify-center rounded-full text-sm font-bold text-white transition-all ${
-              isDark
-                ? "bg-[#f38934]"
-                : "bg-secondary text-foreground"
-            } ${canEditProfile ? "cursor-pointer hover:ring-2 hover:ring-[#f38934]/60 hover:shadow-md" : ""}`}
-            aria-label="Open profile"
-          >
-            {avatar ? (
-              <img src={avatar} alt="" className="h-full w-full object-cover" />
-            ) : (
-              user?.name?.[0] ?? "?"
-            )}
-          </button>
+          {isDark ? (
+            <div
+              className="flex items-center gap-3 rounded-full px-2 py-1"
+              style={{ backgroundColor: "rgba(255,255,255,0.04)" }}
+            >
+              {user && <NotificationsBell variant={variant} />}
+              <span
+                aria-hidden="true"
+                className="h-6 w-px"
+                style={{ backgroundColor: "rgba(255,255,255,0.15)" }}
+              />
+              <button
+                type="button"
+                onClick={() => canEditProfile && setProfileOpen(true)}
+                disabled={!canEditProfile}
+                className={`flex h-9 w-9 overflow-hidden items-center justify-center rounded-full text-sm font-bold text-white transition-all bg-[#f38934] ${
+                  canEditProfile ? "cursor-pointer hover:ring-2 hover:ring-[#f38934]/60 hover:shadow-md" : ""
+                }`}
+                aria-label="Open profile"
+              >
+                {avatar ? (
+                  <img src={avatar} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  user?.name?.[0] ?? "?"
+                )}
+              </button>
+            </div>
+          ) : (
+            <>
+              {user && <NotificationsBell variant={variant} />}
+              <button
+                type="button"
+                onClick={() => canEditProfile && setProfileOpen(true)}
+                disabled={!canEditProfile}
+                className={`flex h-9 w-9 overflow-hidden items-center justify-center rounded-full text-sm font-bold text-white transition-all bg-secondary text-foreground ${
+                  canEditProfile ? "cursor-pointer hover:ring-2 hover:ring-[#f38934]/60 hover:shadow-md" : ""
+                }`}
+                aria-label="Open profile"
+              >
+                {avatar ? (
+                  <img src={avatar} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  user?.name?.[0] ?? "?"
+                )}
+              </button>
+            </>
+          )}
           <button
             type="button"
             onClick={() => { logout(); navigate({ to: "/" }); }}
@@ -244,3 +315,4 @@ export function TopNav({ items, variant = "light" }: { items: NavEntry[]; varian
     </header>
   );
 }
+
