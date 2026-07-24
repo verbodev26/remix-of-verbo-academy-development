@@ -30,7 +30,7 @@ import {
   Unlock as UnlockIcon, Lock as LockIcon, Trophy,
   type LucideIcon,
 } from "lucide-react";
-import { loadCourses, subscribeCourses, type CourseLevel } from "@/lib/product-courses-store";
+import { loadCourses, subscribeCourses, computeCurrentProgress, type CourseLevel } from "@/lib/product-courses-store";
 import {
   isMilestoneUnit, getUnitAccessOverride, setUnitAccess,
 } from "@/lib/activities-store";
