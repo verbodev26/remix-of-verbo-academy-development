@@ -191,6 +191,20 @@ export function reschedulesUsedThisMonth(studentId: string): number {
   return reqs;
 }
 
+/** Spotlight requests submitted in the current calendar month for a student. */
+export function spotlightRequestsThisMonth(studentId: string): number {
+  const now = new Date();
+  const y = now.getFullYear(), m = now.getMonth();
+  const inMonth = (iso: string) => {
+    const d = new Date(iso);
+    return d.getFullYear() === y && d.getMonth() === m;
+  };
+  return loadStudentRequests().filter(
+    (r) => r.kind === "spotlight" && r.student_id === studentId
+      && r.status !== "cancelled" && inMonth(r.requested_at),
+  ).length;
+}
+
 /** Given a student's plan, how many reschedules they may use this cycle. */
 export function rescheduleQuota(u: {
   sessions_per_week?: number;

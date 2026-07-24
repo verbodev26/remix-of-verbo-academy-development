@@ -11,6 +11,7 @@ import { groupsByStudentId } from "./groups-store";
 import { userById } from "./mock-data";
 import type { AccessPlanId } from "./student-model";
 import { hasCreditUsed as freemiumUsed, markCreditUsed as markFreemiumUsed } from "./core-freemium-store";
+import { spotlightRequestsThisMonth } from "./student-requests-store";
 
 
 /** Per-plan monthly seat defaults across the three consumable event types.
@@ -157,7 +158,7 @@ export function resolvedRemainingSeats(studentId: string, kind: AccessKind): num
     const total = totalBookingsForStudent(studentId, type);
     return Math.max(0, cap * monthsElapsedSinceCycle(studentId) - total);
   }
-  if (kind === "spotlight") return cap + freemiumBoost;
+  if (kind === "spotlight") return Math.max(0, cap - spotlightRequestsThisMonth(studentId)) + freemiumBoost;
   const type: ClubType = kind === "insight" ? "insight" : "book";
   return Math.max(0, cap - bookingsThisMonth(studentId, type)) + freemiumBoost;
 }

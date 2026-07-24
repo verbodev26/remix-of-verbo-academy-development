@@ -48,6 +48,7 @@ import {
   parseReschedulePolicy,
   reschedulesUsedThisMonth,
   rescheduleQuota,
+  spotlightRequestsThisMonth,
 } from "@/lib/student-requests-store";
 import { isTeacherAvailableAt, findAvailableStartSlots } from "@/lib/availability-store";
 import { ClubReservationModal } from "@/components/verbo/ClubReservationModal";
@@ -100,6 +101,8 @@ function Page() {
   const isSignature = user.access_plan === "Signature";
   const isCore = user.access_plan === "Core";
   const spotlightCapNum = resolvedMonthlyCap(user.id, "spotlight");
+  const spotlightUsedNum = spotlightRequestsThisMonth(user.id);
+  const spotlightRemaining = resolvedRemainingSeats(user.id, "spotlight");
   const spotlightCapDisplay = isSignature ? "∞" : String(spotlightCapNum);
   const spotlightVisible = isSignature || spotlightCapNum > 0;
 
@@ -114,6 +117,7 @@ function Page() {
   const hasInsight = isCore ? !insightSilenced : (isSignature || resolvedRemainingSeats(user.id, "insight") > 0 || resolvedMonthlyCap(user.id, "insight") > 0);
   const hasBook = isCore ? !bookSilenced : (isSignature || resolvedRemainingSeats(user.id, "book") > 0 || resolvedMonthlyCap(user.id, "book") > 0);
   const hasSpot = isCore ? !spotSilenced : (isSignature || spotlightCapNum > 0);
+  const canRequestSpotlight = isCore ? !spotSilenced : (isSignature || spotlightRemaining > 0);
   if (hasInsight) studentKinds.push("insight");
   if (hasBook) studentKinds.push("book_club");
   if (hasSpot) studentKinds.push("spotlight");
@@ -148,8 +152,10 @@ function Page() {
         </div>
         {hasSpot && (
           <button
-            onClick={() => freemium.tryOpen("spotlight", () => setSpotlightOpen(true))}
-            className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-[#0d9488] px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition-opacity hover:opacity-90"
+            onClick={() => { if (canRequestSpotlight) freemium.tryOpen("spotlight", () => setSpotlightOpen(true)); }}
+            disabled={!canRequestSpotlight}
+            title={!canRequestSpotlight ? "You've used all your Spotlight requests for this month." : undefined}
+            className={`inline-flex items-center gap-2 rounded-lg bg-[#0d9488] px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition-opacity ${canRequestSpotlight ? "cursor-pointer hover:opacity-90" : "cursor-not-allowed opacity-50"}`}
           >
             <Sparkles className="h-4 w-4" /> Request a Spotlight Session
           </button>
@@ -177,7 +183,11 @@ function Page() {
           </div>
           {spotlightVisible && (
             <div className="text-muted-foreground">
-              Spotlight cap: <span className="font-semibold text-foreground">{spotlightCapDisplay}/month</span>
+              {isSignature ? (
+                <>Spotlight: <span className="font-semibold text-foreground">{spotlightUsedNum} used this month</span></>
+              ) : (
+                <>Spotlight: <span className="font-semibold text-foreground">{spotlightUsedNum} of {spotlightCapDisplay} used this month</span></>
+              )}
             </div>
           )}
         </div>
@@ -727,6 +737,10 @@ function SpotlightFormModal({ studentId, onClose }: { studentId: string; onClose
   );
 
   const submit = () => {
+    if (resolvedRemainingSeats(studentId, "spotlight") <= 0) {
+      setError("You've used all your Spotlight requests for this month.");
+      return;
+    }
     if (!slotISO) { setError("Pick one of the available start times."); return; }
     if (context.trim().length === 0) { setError("Please describe what you need for your Spotlight."); return; }
     // Overlap check with an existing regular 1:1 for this student at the
