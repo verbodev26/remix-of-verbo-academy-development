@@ -63,7 +63,7 @@ function SingleNav({ item, pathname, isDark }: { item: NavItem; pathname: string
 }
 
 
-function NavGroupDropdown({ group, pathname }: { group: NavGroup; pathname: string }) {
+function NavGroupDropdown({ group, pathname, isDark }: { group: NavGroup; pathname: string; isDark?: boolean }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
