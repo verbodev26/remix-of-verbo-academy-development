@@ -760,7 +760,7 @@ function SpotlightFormModal({ studentId, onClose }: { studentId: string; onClose
               // it on their own User record.
               const g = groupOfStudent(studentId);
               if (g) {
-                incrementGroupRemaining(g.id);
+                incrementGroupRemaining(g.group.id);
               } else {
                 const u = USERS.find((x) => x.id === studentId);
                 if (u && typeof u.remaining_sessions === "number") u.remaining_sessions += 1;
