@@ -117,6 +117,7 @@ function Page() {
   const hasInsight = isCore ? !insightSilenced : (isSignature || resolvedRemainingSeats(user.id, "insight") > 0 || resolvedMonthlyCap(user.id, "insight") > 0);
   const hasBook = isCore ? !bookSilenced : (isSignature || resolvedRemainingSeats(user.id, "book") > 0 || resolvedMonthlyCap(user.id, "book") > 0);
   const hasSpot = isCore ? !spotSilenced : (isSignature || spotlightCapNum > 0);
+  const canRequestSpotlight = isCore ? !spotSilenced : (isSignature || spotlightRemaining > 0);
   if (hasInsight) studentKinds.push("insight");
   if (hasBook) studentKinds.push("book_club");
   if (hasSpot) studentKinds.push("spotlight");
