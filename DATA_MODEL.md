@@ -40,7 +40,7 @@
 | password | string | requerido | ⚠️ texto plano en seed data |
 | role | `"student" \| "teacher" \| "admin"` | requerido | |
 | must_change_password | boolean | opcional | `true` cuando un admin registra un alumno nuevo; obliga a cambio de contraseña en el próximo login y bloquea navegación hasta `/change-password`. Se limpia a `false` al completar el cambio. Ausente/`false` para usuarios ya existentes (no aplica retroactivo). |
-| current_level | string | opcional | referencia informal a `Level.id`, sin FK tipada |
+| current_level | string | opcional | Nivel CEFR de **diagnóstico inicial**, asignado por Admin al dar de alta (Admin > Students, campos "Initial English Level" / "CEFR Level"). ⚠️ **NO es el "nivel actual" del alumno en su currículo contratado** — ese se calcula en tiempo real con `computeCurrentProgress(...)` en `src/lib/product-courses-store.ts` (recorre los `contracted_levels` y `unitPassed()` para devolver el nivel comercial en curso). Toda UI que diga "Current Level" debe usar el helper; `current_level` sigue existiendo solo para el diagnóstico inicial. |
 | admin_type | `"super_admin" \| "coordinator_ops" \| "coordinator_fin"` | opcional | solo relevante si `role === "admin"` |
 | attendance_percentage | number | opcional | |
 | avatar | string | opcional | (ver también `avatar-store.ts`, que guarda avatares por separado, ver §10) |

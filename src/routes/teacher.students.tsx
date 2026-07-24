@@ -30,7 +30,7 @@ import {
   Unlock as UnlockIcon, Lock as LockIcon, Trophy,
   type LucideIcon,
 } from "lucide-react";
-import { loadCourses, subscribeCourses, type CourseLevel } from "@/lib/product-courses-store";
+import { loadCourses, subscribeCourses, computeCurrentProgress, type CourseLevel } from "@/lib/product-courses-store";
 import {
   isMilestoneUnit, getUnitAccessOverride, setUnitAccess,
 } from "@/lib/activities-store";
@@ -53,7 +53,7 @@ type GroupBy = "none" | "company" | "product" | "level";
 
 function Page() {
   const { user } = useAuth();
-  const [, tick] = useState(0);
+  const [tickVal, tick] = useState(0);
   const [detail, setDetail] = useState<User | null>(null);
   const [search, setSearch] = useState("");
   const [groupBy, setGroupBy] = useState<GroupBy>("none");
@@ -65,8 +65,12 @@ function Page() {
     tick((n) => n + 1);
     const unsub = subscribeStudents(() => tick((n) => n + 1));
     const unsubG = subscribeGroups(() => tick((n) => n + 1));
-    return () => { unsub(); unsubG(); };
+    const unsubC = subscribeCourses(() => tick((n) => n + 1));
+    return () => { unsub(); unsubG(); unsubC(); };
   }, []);
+
+  const curriculumLevelName = (s: User): string | null =>
+    computeCurrentProgress(s.id, s.product, s.contracted_levels ?? [], tickVal)?.levelName ?? null;
 
   if (!user) return null;
 
@@ -86,7 +90,7 @@ function Page() {
       let key = "—";
       if (groupBy === "company") key = s.company || "Sin empresa";
       else if (groupBy === "product") key = getProduct(s.product)?.name || "Sin producto";
-      else if (groupBy === "level") key = s.current_level || "Sin nivel";
+      else if (groupBy === "level") key = curriculumLevelName(s) || "No level yet";
       const list = map.get(key) ?? [];
       list.push(s);
       map.set(key, list);
@@ -266,9 +270,10 @@ function StudentCard({ student: s, onOpen }: { student: User; onOpen: () => void
           <div className="truncate font-semibold text-foreground">
             {s.name}{s.company ? <span className="text-muted-foreground"> · {s.company}</span> : null}
           </div>
-          {s.current_level && (
-            <div className="truncate text-xs text-muted-foreground">Level {s.current_level}</div>
-          )}
+          {(() => {
+            const lv = computeCurrentProgress(s.id, s.product, s.contracted_levels ?? [], 0)?.levelName;
+            return lv ? <div className="truncate text-xs text-muted-foreground">{lv}</div> : null;
+          })()}
         </div>
       </div>
 
@@ -432,7 +437,10 @@ function StudentDetailModal({
               {product && <Tag className="bg-primary/10 text-primary">{product.name}</Tag>}
               {s.access_plan && <Tag className="bg-accent/10 text-accent">{s.access_plan}</Tag>}
               {s.focus && <Tag className="bg-secondary text-secondary-foreground">{s.focus}</Tag>}
-              {s.current_level && <Tag className="bg-muted text-muted-foreground">Level {s.current_level}</Tag>}
+              {(() => {
+                const lv = computeCurrentProgress(s.id, s.product, s.contracted_levels ?? [], 0)?.levelName;
+                return lv ? <Tag className="bg-muted text-muted-foreground">{lv}</Tag> : null;
+              })()}
               {isVip && (
                 <Tag className="bg-amber-500/15 text-amber-600">
                   <Crown className="mr-1 h-3 w-3" /> VIP

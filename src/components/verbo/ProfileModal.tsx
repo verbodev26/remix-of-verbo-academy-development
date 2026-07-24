@@ -23,7 +23,7 @@ import {
   subscribeEquippedBadges,
   EQUIPPED_MAX,
 } from "@/lib/equipped-profile-badges-store";
-import { subscribeCourses } from "@/lib/product-courses-store";
+import { subscribeCourses, computeCurrentProgress } from "@/lib/product-courses-store";
 
 interface Props {
   open: boolean;
@@ -87,8 +87,13 @@ export function ProfileModal({ open, onOpenChange }: Props) {
 
   const [lbMode, setLbMode] = useState<LeaderboardIdentityMode>("real");
   const [lbNickname, setLbNickname] = useState("");
+  const [tick, setTick] = useState(0);
+  useEffect(() => subscribeCourses(() => setTick((t) => t + 1)), []);
 
   const { badges, ctx, earned, equipped } = useProfileBadges(user?.id);
+  const progress = user
+    ? computeCurrentProgress(user.id, user.product, user.contracted_levels ?? [], tick)
+    : null;
 
   useEffect(() => {
     if (!user) return;
@@ -306,8 +311,8 @@ export function ProfileModal({ open, onOpenChange }: Props) {
                 </div>
                 <div className="mt-2 grid grid-cols-2 gap-3 text-sm">
                   <div>
-                    <div className="text-muted-foreground text-xs">Level</div>
-                    <div className="font-semibold text-foreground">{user.current_level ?? "—"}</div>
+                    <div className="text-muted-foreground text-xs">Current Level</div>
+                    <div className="font-semibold text-foreground">{progress?.levelName ?? "—"}</div>
                   </div>
                   <div>
                     <div className="text-muted-foreground text-xs">Attendance</div>

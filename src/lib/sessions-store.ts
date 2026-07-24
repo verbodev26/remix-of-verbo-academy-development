@@ -568,3 +568,21 @@ export function studentAttendance(
   return { completed, absent, pct };
 }
 
+// ---------------------------------------------------------------------------
+// Latest teacher report snippet for a student — used to pre-fill the
+// "Last covered:" hint on Spotlight / Reschedule requests so the covering
+// teacher knows where the student left off.
+// ---------------------------------------------------------------------------
+export function lastCoveredSummaryFor(
+  sessions: Array<{ student_id: string; status: string; date_time: string; report_comments?: string }>,
+  studentId: string,
+): string | undefined {
+  const rows = sessions
+    .filter((s) => s.student_id === studentId && s.status === "completed" && s.report_comments?.trim())
+    .sort((a, b) => +new Date(b.date_time) - +new Date(a.date_time));
+  const text = rows[0]?.report_comments?.trim();
+  if (!text) return undefined;
+  return text.length > 140 ? text.slice(0, 140).trim() + "…" : text;
+}
+
+

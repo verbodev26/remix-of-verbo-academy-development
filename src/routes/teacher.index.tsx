@@ -9,6 +9,7 @@ import { MACRO_SKILLS as SHARED_MACRO_SKILLS, skillKey as sharedSkillKey, type B
 import { submitSessionReport, updateSession, loadSessions, subscribeSessions, SUB_STATUS_META, isJustificationWindowOpen, type ExtSession, type AttendanceSubStatus } from "@/lib/sessions-store";
 import { PlanModal } from "@/components/verbo/PlanModal";
 import { loadLevels, subscribeLevels } from "@/lib/courses-store";
+import { subscribeCourses, computeCurrentProgress } from "@/lib/product-courses-store";
 import { loadLessonPlans, saveLessonPlan, subscribeLessonPlans, getLessonPlan, type LessonPlan } from "@/lib/lesson-plans-store";
 import { markVipUnitDone, clearVipUnitDoneForSession } from "@/lib/vip-courses-store";
 import { markTailoredUnitDone, clearTailoredUnitDoneForSession } from "@/lib/tailored-content-store";
@@ -87,7 +88,8 @@ function TeacherDashboard() {
     const u5 = subscribeAvailability(() => setAvailTick((n) => n + 1));
     setClubReports(loadClubReports());
     const u6 = subscribeClubReports(() => setClubReports(loadClubReports()));
-    return () => { u1(); u2(); u3(); u4(); u5(); u6(); };
+    const u7 = subscribeCourses(() => setAvailTick((n) => n + 1));
+    return () => { u1(); u2(); u3(); u4(); u5(); u6(); u7(); };
   }, []);
 
   // If we arrived with ?report=<id>, auto-open Step 1 for that session
@@ -584,7 +586,12 @@ function TeacherDashboard() {
                   <div className="flex min-w-0 items-center gap-3">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-secondary"><CalendarClock className="h-4 w-4" /></div>
                     <div className="min-w-0">
-                      <div className="truncate text-sm font-medium text-foreground">{student?.name} <span className="text-muted-foreground">· {student?.current_level}</span></div>
+                      {(() => {
+                        const lv = student ? computeCurrentProgress(student.id, student.product, student.contracted_levels ?? [], availTick)?.levelName : null;
+                        return (
+                          <div className="truncate text-sm font-medium text-foreground">{student?.name}{lv ? <span className="text-muted-foreground"> · {lv}</span> : null}</div>
+                        );
+                      })()}
                       <div className="text-xs text-muted-foreground">{fmt(s.date_time)}</div>
                     </div>
                   </div>
@@ -621,7 +628,12 @@ function TeacherDashboard() {
                   <div className="flex items-start gap-3">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-secondary"><CalendarClock className="h-4 w-4" /></div>
                     <div className="min-w-0">
-                      <div className="truncate text-sm font-medium text-foreground">{student?.name} <span className="text-muted-foreground">· {student?.current_level}</span></div>
+                      {(() => {
+                        const lv = student ? computeCurrentProgress(student.id, student.product, student.contracted_levels ?? [], availTick)?.levelName : null;
+                        return (
+                          <div className="truncate text-sm font-medium text-foreground">{student?.name}{lv ? <span className="text-muted-foreground"> · {lv}</span> : null}</div>
+                        );
+                      })()}
                       <div className="text-xs text-muted-foreground">{fmt(s.date_time)} · {s.duration_minutes} min</div>
                     </div>
                     {isActive && <Pill tone="success">Live now</Pill>}

@@ -4,7 +4,7 @@ import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from "recharts";
-import { USERS, SESSIONS, LEVELS, type User, type Session } from "@/lib/mock-data";
+import { USERS, SESSIONS, type User, type Session } from "@/lib/mock-data";
 import { MetricCard, Card, PrimaryButton, GhostButton } from "@/components/verbo/ui";
 import { hydrateStudents } from "@/lib/students-store";
 import { nextPaymentDate, daysUntil, MAX_INSIGHT_STRIKES, getProduct } from "@/lib/student-model";
@@ -120,7 +120,7 @@ function Overview() {
         <MetricCard label="Students" value={String(students.length)} />
         <MetricCard label="Teachers" value={String(teachers.length)} />
         <MetricCard label="Sessions scheduled" value={String(scheduled)} />
-        <MetricCard label="Active levels" value={String(LEVELS.length)} />
+        <MetricCard label="Active levels" value={String(new Set(students.flatMap((s) => s.contracted_levels ?? [])).size)} />
         <MetricCard label="Avg composite score" value={`${avgComposite}%`} />
       </div>
 

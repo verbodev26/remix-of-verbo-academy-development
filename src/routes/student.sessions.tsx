@@ -32,7 +32,7 @@ import { USERS, userById } from "@/lib/mock-data";
 import { adjustRemainingSessions } from "@/lib/students-store";
 import {
   loadSessions, subscribeSessions, updateSession, applyGroupMemberCancellation,
-  SUB_STATUS_META,
+  SUB_STATUS_META, lastCoveredSummaryFor,
   type ExtSession, type ExtSessionStatus,
 } from "@/lib/sessions-store";
 import { CalendarView } from "@/components/verbo/CalendarView";
@@ -609,6 +609,7 @@ function RescheduleRequestModal({ session, onClose }: { session: ExtSession; onC
       origin_session_id: session.id,
       proposed_datetime: slotISO,
       duration_minutes: durationMin,
+      last_report_summary: lastCoveredSummaryFor(loadSessions(), actingStudentId),
     });
     if (isGroup) {
       const res = applyGroupMemberCancellation(session.id, actingStudentId, "pending_reschedule");
@@ -766,7 +767,7 @@ function SpotlightFormModal({ studentId, onClose }: { studentId: string; onClose
       proposed_datetime: iso,
       duration_minutes: SPOTLIGHT_DURATION,
       spotlight_context: ctx.trim(),
-      last_report_summary: studentUser ? `Level ${studentUser.current_level ?? "—"}` : undefined,
+      last_report_summary: lastCoveredSummaryFor(loadSessions(), studentId),
     });
     // Core freemium: consume the one-shot courtesy credit on real submit.
     if (studentUser?.access_plan === "Core" && !freemiumUsed(studentId, "spotlight")) {
