@@ -188,6 +188,7 @@ function Page() {
           event={selected}
           onClose={() => setSelected(null)}
           onCantAttend={(s) => onCantAttend(s)}
+          onCancelSpotlight={(s) => { setSelected(null); setCancelSpotlightFor(s); }}
         />
       )}
 
@@ -197,6 +198,13 @@ function Page() {
           user={user}
           onClose={() => setCantAttendFor(null)}
           onReschedule={() => { const s = cantAttendFor; setCantAttendFor(null); setRescheduleFor(s); }}
+        />
+      )}
+
+      {cancelSpotlightFor && (
+        <CancelSpotlightModal
+          session={cancelSpotlightFor}
+          onClose={() => setCancelSpotlightFor(null)}
         />
       )}
 
