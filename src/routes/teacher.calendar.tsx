@@ -47,6 +47,7 @@ function Page() {
   const [clubModal, setClubModal] = useState<Club | null>(null);
   const [releaseFor, setReleaseFor] = useState<Club | null>(null);
   const [reportingClub, setReportingClub] = useState<ClubReportEventInput | null>(null);
+  const [spotlightPreview, setSpotlightPreview] = useState<ExtSession | null>(null);
   const [, tick] = useState(0);
 
   useEffect(() => {
