@@ -27,6 +27,7 @@ import { Route as TeacherPerformanceSessionsRouteImport } from './routes/teacher
 import { Route as TeacherMaterialsRouteImport } from './routes/teacher.materials'
 import { Route as TeacherFinancialRouteImport } from './routes/teacher.financial'
 import { Route as TeacherClubsRouteImport } from './routes/teacher.clubs'
+import { Route as TeacherChallengesRouteImport } from './routes/teacher.challenges'
 import { Route as TeacherCalendarRouteImport } from './routes/teacher.calendar'
 import { Route as TeacherAvailabilityRouteImport } from './routes/teacher.availability'
 import { Route as StudentSessionsRouteImport } from './routes/student.sessions'
@@ -146,6 +147,11 @@ const TeacherFinancialRoute = TeacherFinancialRouteImport.update({
 const TeacherClubsRoute = TeacherClubsRouteImport.update({
   id: '/clubs',
   path: '/clubs',
+  getParentRoute: () => TeacherRoute,
+} as any)
+const TeacherChallengesRoute = TeacherChallengesRouteImport.update({
+  id: '/challenges',
+  path: '/challenges',
   getParentRoute: () => TeacherRoute,
 } as any)
 const TeacherCalendarRoute = TeacherCalendarRouteImport.update({
@@ -330,6 +336,7 @@ export interface FileRoutesByFullPath {
   '/student/sessions': typeof StudentSessionsRoute
   '/teacher/availability': typeof TeacherAvailabilityRoute
   '/teacher/calendar': typeof TeacherCalendarRoute
+  '/teacher/challenges': typeof TeacherChallengesRoute
   '/teacher/clubs': typeof TeacherClubsRoute
   '/teacher/financial': typeof TeacherFinancialRoute
   '/teacher/materials': typeof TeacherMaterialsRoute
@@ -376,6 +383,7 @@ export interface FileRoutesByTo {
   '/student/sessions': typeof StudentSessionsRoute
   '/teacher/availability': typeof TeacherAvailabilityRoute
   '/teacher/calendar': typeof TeacherCalendarRoute
+  '/teacher/challenges': typeof TeacherChallengesRoute
   '/teacher/clubs': typeof TeacherClubsRoute
   '/teacher/financial': typeof TeacherFinancialRoute
   '/teacher/materials': typeof TeacherMaterialsRoute
@@ -426,6 +434,7 @@ export interface FileRoutesById {
   '/student/sessions': typeof StudentSessionsRoute
   '/teacher/availability': typeof TeacherAvailabilityRoute
   '/teacher/calendar': typeof TeacherCalendarRoute
+  '/teacher/challenges': typeof TeacherChallengesRoute
   '/teacher/clubs': typeof TeacherClubsRoute
   '/teacher/financial': typeof TeacherFinancialRoute
   '/teacher/materials': typeof TeacherMaterialsRoute
@@ -477,6 +486,7 @@ export interface FileRouteTypes {
     | '/student/sessions'
     | '/teacher/availability'
     | '/teacher/calendar'
+    | '/teacher/challenges'
     | '/teacher/clubs'
     | '/teacher/financial'
     | '/teacher/materials'
@@ -523,6 +533,7 @@ export interface FileRouteTypes {
     | '/student/sessions'
     | '/teacher/availability'
     | '/teacher/calendar'
+    | '/teacher/challenges'
     | '/teacher/clubs'
     | '/teacher/financial'
     | '/teacher/materials'
@@ -572,6 +583,7 @@ export interface FileRouteTypes {
     | '/student/sessions'
     | '/teacher/availability'
     | '/teacher/calendar'
+    | '/teacher/challenges'
     | '/teacher/clubs'
     | '/teacher/financial'
     | '/teacher/materials'
@@ -722,6 +734,13 @@ declare module '@tanstack/react-router' {
       path: '/clubs'
       fullPath: '/teacher/clubs'
       preLoaderRoute: typeof TeacherClubsRouteImport
+      parentRoute: typeof TeacherRoute
+    }
+    '/teacher/challenges': {
+      id: '/teacher/challenges'
+      path: '/challenges'
+      fullPath: '/teacher/challenges'
+      preLoaderRoute: typeof TeacherChallengesRouteImport
       parentRoute: typeof TeacherRoute
     }
     '/teacher/calendar': {
@@ -1008,6 +1027,7 @@ const StudentRouteWithChildren =
 interface TeacherRouteChildren {
   TeacherAvailabilityRoute: typeof TeacherAvailabilityRoute
   TeacherCalendarRoute: typeof TeacherCalendarRoute
+  TeacherChallengesRoute: typeof TeacherChallengesRoute
   TeacherClubsRoute: typeof TeacherClubsRoute
   TeacherFinancialRoute: typeof TeacherFinancialRoute
   TeacherMaterialsRoute: typeof TeacherMaterialsRoute
@@ -1022,6 +1042,7 @@ interface TeacherRouteChildren {
 const TeacherRouteChildren: TeacherRouteChildren = {
   TeacherAvailabilityRoute: TeacherAvailabilityRoute,
   TeacherCalendarRoute: TeacherCalendarRoute,
+  TeacherChallengesRoute: TeacherChallengesRoute,
   TeacherClubsRoute: TeacherClubsRoute,
   TeacherFinancialRoute: TeacherFinancialRoute,
   TeacherMaterialsRoute: TeacherMaterialsRoute,
