@@ -139,9 +139,6 @@ export function teacherCalendarEvents(teacherId: string, opts?: {
     if (c.teacher_id === teacherId) events.push(clubEvent(c));
   }
 
-  // TODO(spotlight): once Spotlight Sessions get a cross-app store,
-  // filter here by teacher assignment and push events with kind: "spotlight".
-
   return events;
 }
 
