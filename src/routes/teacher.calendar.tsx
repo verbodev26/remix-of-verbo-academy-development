@@ -287,6 +287,10 @@ function Page() {
           onClose={() => setReportingClub(null)}
         />
       )}
+
+      {spotlightPreview && (
+        <SpotlightPreviewModal session={spotlightPreview} onClose={() => setSpotlightPreview(null)} />
+      )}
     </div>
   );
 }
