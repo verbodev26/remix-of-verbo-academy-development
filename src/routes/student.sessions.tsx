@@ -76,6 +76,7 @@ function Page() {
   const [, tick] = useState(0);
   const [selected, setSelected] = useState<CalendarEvent | null>(null);
   const [cantAttendFor, setCantAttendFor] = useState<ExtSession | null>(null);
+  const [cancelSpotlightFor, setCancelSpotlightFor] = useState<ExtSession | null>(null);
   const [rescheduleFor, setRescheduleFor] = useState<ExtSession | null>(null);
   const [spotlightOpen, setSpotlightOpen] = useState(false);
   const [clubModal, setClubModal] = useState<Club | null>(null);
