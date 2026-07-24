@@ -93,9 +93,11 @@ function Page() {
       cover_image: cover,
       restrict_product: restrictProduct || undefined,
       restrict_level: restrictLevel || undefined,
+      premium: premium || undefined,
     });
     resetForm();
   };
+
 
   const startEdit = (m: StoredMaterial) => {
     setEditingId(m.id);
