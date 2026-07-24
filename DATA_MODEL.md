@@ -48,7 +48,7 @@
 | hired_plan | string | opcional | ⚠️ alias legacy de `access_plan`, documentado como tal en el propio código |
 | member_since | string (ISO date) | opcional | |
 | hired_sessions | number | opcional | |
-| remaining_sessions | number | opcional | |
+| remaining_sessions | number | opcional | decrementa en `submitSessionReport` para 1:1 (no origin, no group_id, no workshop_*) cuando la clase ocurrió (no aplica si `absent` con `absentCause === "teacher"`). Ajustes vía `adjustRemainingSessions(studentId, delta)` en `students-store.ts`, siempre clamped a `[0, hired_sessions]`. |
 | product | `"enterprise" \| "go" \| "international" \| "vip"` | opcional | |
 | focus | string | opcional | nombre de "Enfoque" (solo GO/International) |
 | access_plan | `"Core" \| "Advance" \| "Elite" \| "Signature"` | opcional | |
