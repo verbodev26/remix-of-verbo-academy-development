@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useAuth } from "@/lib/auth";
-import { LEVELS, userById } from "@/lib/mock-data";
+import { userById } from "@/lib/mock-data";
 import { effectiveSessionCounts, groupOfStudent } from "@/lib/groups-store";
 import { persistSessions, subscribeSessions, getSessionsSnapshot, getServerSessionsSnapshot, submitStudentRating, studentAttendance, type ExtSession } from "@/lib/sessions-store";
 import {
@@ -12,7 +12,7 @@ import {
   type PerformanceRating,
 } from "@/lib/performance-store";
 import { unitPassed, getUnitAccessOverride, isMilestoneUnit } from "@/lib/activities-store";
-import { loadCourses, subscribeCourses, type ProductId, type CourseLevel } from "@/lib/product-courses-store";
+import { loadCourses, subscribeCourses, PRODUCT_META, type ProductId, type CourseLevel } from "@/lib/product-courses-store";
 import { unitsForStudent, vipUnitDoneMap, subscribeVipUnits, subscribeVipUnitCompletion } from "@/lib/vip-courses-store";
 import { useComputedMacros } from "@/components/verbo/PerformanceAnalytics";
 import { GhostButton, Pill, PrimaryButton, SectionTitle, StatRing, SuccessButton } from "@/components/verbo/ui";
@@ -214,9 +214,16 @@ function StudentDashboard() {
   const currentUnitTitle = progress?.currentUnitTitle ?? null;
   const currentLevelName = progress?.levelName ?? null;
 
-  // Legacy tile ("Current Level") still uses the LEVELS catalog by design —
-  // the request scoped this migration to Level Progress and Current Course.
-  const level = LEVELS.find((l) => l.id === user.current_level);
+  // Product label — VIP lives outside PRODUCT_META, handle it literally.
+  const productLabel = user.product === "vip" ? "VIP" : (user.product ? PRODUCT_META[user.product as ProductId]?.label : undefined);
+
+  // Ordinal position of current level within contracted levels ("2/3").
+  const contractedLevels = user.contracted_levels ?? [];
+  const currentLevelIdx = currentLevelName ? contractedLevels.indexOf(currentLevelName) : -1;
+  const currentLevelRingLabel =
+    currentLevelIdx >= 0 && contractedLevels.length > 0
+      ? `${currentLevelIdx + 1}/${contractedLevels.length}`
+      : "";
 
 
   // Overall Attendance — shared helper (studentAttendance) so Admin, Teacher
@@ -344,6 +351,7 @@ function StudentDashboard() {
             </h1>
             <FeaturedProfileBadge user={user} />
             {user.access_plan === "Elite" && <Pill tone="elite">Elite</Pill>}
+            {productLabel && <Pill tone="muted">{productLabel}</Pill>}
           </div>
           <p className="mt-1.5 text-xs text-muted-foreground">{welcomeLine}</p>
         </div>
@@ -377,11 +385,11 @@ function StudentDashboard() {
             <div>
               <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Current Level</div>
               <div className="mt-3 font-[family-name:var(--font-display)] text-3xl font-semibold tracking-tight" style={{ color: "#01304a" }}>
-                {user.current_level ?? "—"}
+                {currentLevelName ?? "—"}
               </div>
-              <div className="mt-1 text-xs text-muted-foreground">{level?.title}</div>
+              <div className="mt-1 text-xs text-muted-foreground">{productLabel}</div>
             </div>
-            <StatRing value={levelProgress} label={user.current_level ?? "—"} />
+            <StatRing value={levelProgress} label={currentLevelRingLabel} />
           </div>
         </PremiumCard>
         <PremiumCard
@@ -396,7 +404,7 @@ function StudentDashboard() {
                 <span className="font-[family-name:var(--font-display)] text-6xl font-semibold leading-none tracking-tight" style={{ color: "#01304a" }}>{levelProgress}</span>
                 <span className="font-[family-name:var(--font-display)] text-2xl font-medium" style={{ color: "#01304a" }}>%</span>
               </div>
-              <div className="mt-1.5 text-xs text-muted-foreground">of {user.current_level}</div>
+              <div className="mt-1.5 text-xs text-muted-foreground">of {currentLevelName ?? "—"}</div>
             </div>
             <StatRing value={levelProgress} size={104} stroke={9} />
           </div>
