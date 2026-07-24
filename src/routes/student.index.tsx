@@ -342,42 +342,50 @@ function StudentDashboard() {
         </div>
       </header>
 
-      {/* KPI Metrics with circular SVG progress */}
-      <section className="grid gap-4 md:grid-cols-3">
-        <PremiumCard hover className="verbo-fade-up" style={{ animationDelay: "0ms" }}>
+      {/* KPI Metrics with circular SVG progress — Level Progress is the hero */}
+      <section
+        className="verbo-fade-up motion-reduce:animate-none grid gap-4 md:grid-cols-[1fr_1.6fr_1fr]"
+        style={{ animationDelay: "60ms" }}
+      >
+        <PremiumCard hover className="verbo-card-hover">
           <div className="flex items-center justify-between gap-4">
             <div>
               <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Current Level</div>
-              <div className="mt-3 font-[family-name:var(--font-display)] text-4xl font-semibold tracking-tight" style={{ color: "#01304a" }}>
+              <div className="mt-3 font-[family-name:var(--font-display)] text-3xl font-semibold tracking-tight" style={{ color: "#01304a" }}>
                 {user.current_level ?? "—"}
               </div>
               <div className="mt-1 text-xs text-muted-foreground">{level?.title}</div>
             </div>
-            <ProgressRing value={levelProgress} label={user.current_level ?? "—"} />
+            <StatRing value={levelProgress} label={user.current_level ?? "—"} />
           </div>
         </PremiumCard>
-        <PremiumCard hover className="verbo-fade-up" style={{ animationDelay: "50ms" }}>
-          <div className="flex items-center justify-between gap-4">
+        <PremiumCard
+          hover
+          className="verbo-card-hover ring-1 ring-primary/10"
+          style={{ background: "rgba(1, 48, 74, 0.045)" }}
+        >
+          <div className="flex items-center justify-between gap-5">
             <div>
-              <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Level Progress</div>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary/80">Level Progress</div>
               <div className="mt-3 flex items-baseline gap-2">
-                <span className="font-[family-name:var(--font-display)] text-4xl font-semibold tracking-tight" style={{ color: "#01304a" }}>{levelProgress}%</span>
+                <span className="font-[family-name:var(--font-display)] text-6xl font-semibold leading-none tracking-tight" style={{ color: "#01304a" }}>{levelProgress}</span>
+                <span className="font-[family-name:var(--font-display)] text-2xl font-medium" style={{ color: "#01304a" }}>%</span>
               </div>
-              <div className="mt-1 text-xs text-muted-foreground">of {user.current_level}</div>
+              <div className="mt-1.5 text-xs text-muted-foreground">of {user.current_level}</div>
             </div>
-            <ProgressRing value={levelProgress} />
+            <StatRing value={levelProgress} size={104} stroke={9} />
           </div>
         </PremiumCard>
-        <PremiumCard hover className="verbo-fade-up" style={{ animationDelay: "100ms" }}>
+        <PremiumCard hover className="verbo-card-hover">
           <div className="flex items-center justify-between gap-4">
             <div>
               <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Overall Attendance</div>
               <div className="mt-3 flex items-baseline gap-2">
-                <span className="font-[family-name:var(--font-display)] text-4xl font-semibold tracking-tight" style={{ color: "#01304a" }}>{attendancePct}%</span>
+                <span className="font-[family-name:var(--font-display)] text-3xl font-semibold tracking-tight" style={{ color: "#01304a" }}>{attendancePct}%</span>
               </div>
               <div className="mt-1 text-xs text-muted-foreground">last 90 days</div>
             </div>
-            <ProgressRing value={attendancePct} />
+            <StatRing value={attendancePct} />
           </div>
         </PremiumCard>
       </section>
