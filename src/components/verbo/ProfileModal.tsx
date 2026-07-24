@@ -87,8 +87,13 @@ export function ProfileModal({ open, onOpenChange }: Props) {
 
   const [lbMode, setLbMode] = useState<LeaderboardIdentityMode>("real");
   const [lbNickname, setLbNickname] = useState("");
+  const [tick, setTick] = useState(0);
+  useEffect(() => subscribeCourses(() => setTick((t) => t + 1)), []);
 
   const { badges, ctx, earned, equipped } = useProfileBadges(user?.id);
+  const progress = user
+    ? computeCurrentProgress(user.id, user.product, user.contracted_levels ?? [], tick)
+    : null;
 
   useEffect(() => {
     if (!user) return;
