@@ -11,9 +11,8 @@ import {
   subscribePerformance,
   type PerformanceRating,
 } from "@/lib/performance-store";
-import { unitPassed, getUnitAccessOverride, isMilestoneUnit } from "@/lib/activities-store";
-import { loadCourses, subscribeCourses, PRODUCT_META, type ProductId, type CourseLevel } from "@/lib/product-courses-store";
-import { unitsForStudent, vipUnitDoneMap, subscribeVipUnits, subscribeVipUnitCompletion } from "@/lib/vip-courses-store";
+import { loadCourses, subscribeCourses, PRODUCT_META, computeCurrentProgress } from "@/lib/product-courses-store";
+import { subscribeVipUnits, subscribeVipUnitCompletion } from "@/lib/vip-courses-store";
 import { useComputedMacros } from "@/components/verbo/PerformanceAnalytics";
 import { GhostButton, Pill, PrimaryButton, SectionTitle, StatRing, SuccessButton } from "@/components/verbo/ui";
 import {
