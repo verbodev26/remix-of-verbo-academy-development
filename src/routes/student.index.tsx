@@ -492,7 +492,7 @@ function StudentDashboard() {
 
 
           {/* Upcoming Sessions */}
-          <div className="verbo-fade-up motion-reduce:animate-none" style={{ animationDelay: "200ms" }}>
+          <div>
             <SectionTitle>Upcoming Sessions</SectionTitle>
             {upcoming.length === 0 ? (
               <PremiumCard className="verbo-card-hover"><div className="text-sm text-muted-foreground">No upcoming sessions scheduled.</div></PremiumCard>
