@@ -113,7 +113,16 @@ function Page() {
     const current = loadClubs();
     const next = editing
       ? current.map((c) => (c.id === editing.id ? { ...c, ...data } : c))
-      : [{ id: `c${Date.now()}`, spots_taken: 0, status: "upcoming" as TimeStatus, ...data }, ...current];
+      : [
+          {
+            id: `c${Date.now()}`,
+            spots_taken: 0,
+            status: "upcoming" as TimeStatus,
+            created_at: new Date().toISOString(),
+            ...data,
+          },
+          ...current,
+        ];
     persistClubs(next);
     setOpen(false);
   };
