@@ -52,15 +52,78 @@ export function timeToMinutes(t: string): number {
   return h * 60 + m;
 }
 
-function readAvail(): Record<string, TeacherAvailability> {
+function readAvailRaw(): Record<string, TeacherAvailability> {
   if (typeof window === "undefined") return {};
   try { return JSON.parse(localStorage.getItem(AVAIL_KEY) || "{}"); } catch { return {}; }
 }
-function writeAvail(v: Record<string, TeacherAvailability>) {
+function writeAvailRaw(v: Record<string, TeacherAvailability>) {
   if (typeof window === "undefined") return;
   localStorage.setItem(AVAIL_KEY, JSON.stringify(v));
   window.dispatchEvent(new CustomEvent(AVAIL_EVENT));
 }
+
+const LEGACY_DAY_TO_KEY: Record<string, DayKey> = Object.fromEntries(
+  DAY_KEYS.map((k) => [DAY_LABELS[k], k]),
+) as Record<string, DayKey>;
+
+function parseLegacyRange(range: string): TimeBlock | null {
+  const parts = range.split(/[–-]/).map((s) => s.trim());
+  if (parts.length !== 2) return null;
+  const startMin = timeToMinutes(parts[0]);
+  const endMin = timeToMinutes(parts[1]);
+  if (Number.isNaN(startMin) || Number.isNaN(endMin)) return null;
+  const clampedStart = Math.max(MIN_MINUTES, startMin);
+  const clampedEnd = Math.min(MAX_MINUTES, endMin);
+  if (clampedEnd <= clampedStart) return null;
+  return { startMin: clampedStart, endMin: clampedEnd };
+}
+
+let _availabilityHydrated = false;
+
+/** One-time seed: any teacher who has never saved real availability (no
+ *  entry yet under AVAIL_KEY) but carries the static demo `availability`
+ *  field from mock-data gets it converted into real Weekly blocks and
+ *  persisted — WITHOUT confirmedAt, so the teacher's own My Availability
+ *  page still offers a free "Save Availability" (not "Request Change") and
+ *  they can edit it freely before confirming. Runs automatically the first
+ *  time availability is read anywhere in the app — no page needs to call
+ *  this. Idempotent; never overwrites a teacher who already has real saved
+ *  availability (including one who deliberately saved an empty schedule). */
+function hydrateAvailabilityOnce() {
+  if (_availabilityHydrated || typeof window === "undefined") return;
+  _availabilityHydrated = true;
+  const map = readAvailRaw();
+  let changed = false;
+  for (const u of USERS as User[]) {
+    if (u.role !== "teacher" || map[u.id]) continue;
+    const legacy = u.availability;
+    if (!legacy || legacy.length === 0) continue;
+    const weekly = emptyWeekly();
+    for (const entry of legacy) {
+      const key = LEGACY_DAY_TO_KEY[entry.day];
+      if (!key) continue; // drops "Sunday" or unrecognized labels safely
+      for (const slot of entry.slots) {
+        const block = parseLegacyRange(slot);
+        if (block) weekly[key].push(block);
+      }
+    }
+    if (Object.values(weekly).some((blocks) => blocks.length > 0)) {
+      map[u.id] = { teacherId: u.id, weekly };
+      changed = true;
+    }
+  }
+  if (changed) writeAvailRaw(map);
+}
+
+function readAvail(): Record<string, TeacherAvailability> {
+  hydrateAvailabilityOnce();
+  return readAvailRaw();
+}
+
+function writeAvail(v: Record<string, TeacherAvailability>) {
+  writeAvailRaw(v);
+}
+
 function readReqs(): AvailabilityChangeRequest[] {
   if (typeof window === "undefined") return [];
   try { return JSON.parse(localStorage.getItem(REQ_KEY) || "[]"); } catch { return []; }
