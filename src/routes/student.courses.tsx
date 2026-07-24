@@ -892,8 +892,21 @@ export function UnitDetail({
           activities={activities}
           studentId={studentId}
           readOnly={readOnly}
+          previewMode={previewMode}
           onClose={() => { setOpen(false); onChange(); }}
         />
+      )}
+
+      {pdfOpen && unit.pdf_url && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={() => setPdfOpen(false)}>
+          <div className="flex h-[85vh] w-[85vw] max-w-5xl flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-elevated" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between gap-4 border-b border-border bg-card px-5 py-3">
+              <div className="text-sm font-semibold text-foreground">{unit.title} — PDF Guide</div>
+              <button onClick={() => setPdfOpen(false)} className="rounded-md p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"><X className="h-4 w-4" /></button>
+            </div>
+            <iframe src={unit.pdf_url} title={`${unit.title} PDF`} className="flex-1 w-full bg-background" />
+          </div>
+        </div>
       )}
     </div>
   );
