@@ -511,7 +511,7 @@ function StudentDashboard() {
                   }
                 }}
               >
-                Continue unit
+                Continue unit <ArrowRight className="h-4 w-4" />
               </PrimaryButton>
             </PremiumCard>
           </div>
