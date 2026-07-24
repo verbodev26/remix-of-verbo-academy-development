@@ -9,7 +9,7 @@ export type AccessPlanId = "Core" | "Advance" | "Elite" | "Signature";
 export type StudentStatus = "active" | "suspended" | "frozen";
 
 // Roughly one live session per unit; a level block = 30 units = 30 sessions.
-export const SESSIONS_PER_LEVEL = 30;
+export const SESSIONS_PER_LEVEL = 40;
 export const MAX_INSIGHT_STRIKES = 3;
 export const MAX_BOOKCLUB_STRIKES = 3;
 
