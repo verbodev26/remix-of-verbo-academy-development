@@ -374,7 +374,7 @@ function StudentCard({ student: s, onOpen }: { student: User; onOpen: () => void
   const counts = effectiveSessionCounts(s.id, { hired: s.hired_sessions, remaining: s.remaining_sessions });
   const hired = counts.hired;
   const remaining = counts.remaining;
-  const { done, pct } = sessionProgressFor(hired, remaining);
+  const { pct } = sessionProgressFor(hired, remaining);
 
   const nextPay = computeNextPayment(s);
   const payDue = nextPay ? daysUntil(nextPay) <= 3 && daysUntil(nextPay) >= 0 : false;
