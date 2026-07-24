@@ -628,7 +628,12 @@ function TeacherDashboard() {
                   <div className="flex items-start gap-3">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-secondary"><CalendarClock className="h-4 w-4" /></div>
                     <div className="min-w-0">
-                      <div className="truncate text-sm font-medium text-foreground">{student?.name} <span className="text-muted-foreground">· {student?.current_level}</span></div>
+                      {(() => {
+                        const lv = student ? computeCurrentProgress(student.id, student.product, student.contracted_levels ?? [], availTick)?.levelName : null;
+                        return (
+                          <div className="truncate text-sm font-medium text-foreground">{student?.name}{lv ? <span className="text-muted-foreground"> · {lv}</span> : null}</div>
+                        );
+                      })()}
                       <div className="text-xs text-muted-foreground">{fmt(s.date_time)} · {s.duration_minutes} min</div>
                     </div>
                     {isActive && <Pill tone="success">Live now</Pill>}
