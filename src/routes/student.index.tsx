@@ -573,62 +573,73 @@ function StudentDashboard() {
       </section>
 
       {/* History */}
-      <section>
+      <section className="verbo-fade-up motion-reduce:animate-none" style={{ animationDelay: "250ms" }}>
         <SectionTitle>Session History</SectionTitle>
-        <PremiumCard className="!p-0 overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="text-left text-xs uppercase tracking-wider text-muted-foreground">
-              <tr className="border-b border-border">
-                <th className="px-6 py-3 font-medium">Date</th>
-                <th className="px-6 py-3 font-medium">Teacher</th>
-                <th className="px-6 py-3 font-medium">Status</th>
-                <th className="px-6 py-3 font-medium">Rating</th>
-                <th className="px-6 py-3 font-medium">My Performance</th>
-                <th className="px-6 py-3 font-medium text-right">Report</th>
-              </tr>
-            </thead>
-            <tbody>
-              {history.map((s) => {
-                const teacher = userById(s.teacher_id);
-                const rating = performance[s.id];
-                return (
-                  <tr key={s.id} className="border-b border-border last:border-0">
-                    <td className="px-6 py-4 text-foreground">{fmt(s.date_time)}</td>
-                    <td className="px-6 py-4 text-muted-foreground">{teacher?.name}</td>
-                    <td className="px-6 py-4">
-                      <span className={statusBadge(s.status)}>{s.status}</span>
-                    </td>
-                    <td className="px-6 py-4 text-muted-foreground">{s.student_rating ? `${s.student_rating}★` : "—"}</td>
-                    <td className="px-6 py-4">
-                      <button
-                        disabled={!rating}
-                        onClick={() => rating && setPerfDetail({ session: s, rating })}
-                        className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-border transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-30"
-                        style={{ color: rating ? "#f38934" : undefined }}
-                        aria-label="View performance breakdown"
-                        title="View performance breakdown"
-                      >
-                        <BarChart3 className="h-3.5 w-3.5" />
-                      </button>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <button
-                        disabled={!s.report_pdf_url}
-                        onClick={() => s.report_pdf_url && window.open(s.report_pdf_url, "_blank")}
-                        className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-30"
-                        aria-label="Download report"
-                        title="Download report"
-                      >
-                        <Download className="h-3.5 w-3.5" />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        <PremiumCard className="verbo-card-hover !p-0 overflow-hidden">
+          <TooltipProvider delayDuration={200}>
+            <table className="w-full text-sm">
+              <thead className="text-left text-xs uppercase tracking-wider text-muted-foreground">
+                <tr className="border-b border-border">
+                  <th className="px-6 py-3 font-medium">Date</th>
+                  <th className="px-6 py-3 font-medium">Teacher</th>
+                  <th className="px-6 py-3 font-medium">Status</th>
+                  <th className="px-6 py-3 font-medium">Rating</th>
+                  <th className="px-6 py-3 font-medium">My Performance</th>
+                  <th className="px-6 py-3 font-medium text-right">Report</th>
+                </tr>
+              </thead>
+              <tbody>
+                {history.map((s) => {
+                  const teacher = userById(s.teacher_id);
+                  const rating = performance[s.id];
+                  return (
+                    <tr key={s.id} className="border-b border-border last:border-0">
+                      <td className="px-6 py-4 text-foreground">{fmt(s.date_time)}</td>
+                      <td className="px-6 py-4 text-muted-foreground">{teacher?.name}</td>
+                      <td className="px-6 py-4">
+                        <span className={statusBadge(s.status)}>{s.status}</span>
+                      </td>
+                      <td className="px-6 py-4 text-muted-foreground">{s.student_rating ? `${s.student_rating}★` : "—"}</td>
+                      <td className="px-6 py-4">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              disabled={!rating}
+                              onClick={() => rating && setPerfDetail({ session: s, rating })}
+                              className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-border transition-all duration-150 ease-out hover:bg-secondary active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+                              style={{ color: rating ? "#f38934" : undefined }}
+                              aria-label="View performance breakdown"
+                            >
+                              <BarChart3 className="h-3.5 w-3.5" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>View performance breakdown</TooltipContent>
+                        </Tooltip>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              disabled={!s.report_pdf_url}
+                              onClick={() => s.report_pdf_url && window.open(s.report_pdf_url, "_blank")}
+                              className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-border text-muted-foreground transition-all duration-150 ease-out hover:bg-secondary active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+                              aria-label="Download report"
+                            >
+                              <Download className="h-3.5 w-3.5" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>Download report</TooltipContent>
+                        </Tooltip>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </TooltipProvider>
         </PremiumCard>
       </section>
+
 
       {ratingSession && (
         <RatingModal
