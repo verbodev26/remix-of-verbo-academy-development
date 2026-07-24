@@ -184,11 +184,18 @@ export function computeTeacherKpis(t: User, threshold = getBonusThreshold()): Te
     return o ? o.new_value : raw;
   };
 
-  const connectionPunctuality = pick("connectionPunctuality", connectionPunctualityRaw);
-  const planningPunctuality = pick("planningPunctuality", planningPunctualityRaw);
-  const completionRate = pick("completionRate", completionRateRaw);
-  const ratingNormalized = pick("ratingNormalized", ratingNormalizedRaw);
-  const cancellationScore = pick("cancellationScore", cancellationScoreRaw);
+  // During the Onboarding month, each individual bar is frozen at the same
+  // baseline as the composite (ONBOARDING_COMPOSITE = 90) so a brand-new
+  // teacher isn't unfairly penalised by noisy raw signals. Manual admin
+  // overrides still win via pick() — same priority order as the composite.
+  const onboarding = isOnboardingMonth(t, nowKey);
+  const onbBase = (raw: number) => (onboarding ? ONBOARDING_COMPOSITE : raw);
+
+  const connectionPunctuality = pick("connectionPunctuality", onbBase(connectionPunctualityRaw));
+  const planningPunctuality = pick("planningPunctuality", onbBase(planningPunctualityRaw));
+  const completionRate = pick("completionRate", onbBase(completionRateRaw));
+  const ratingNormalized = pick("ratingNormalized", onbBase(ratingNormalizedRaw));
+  const cancellationScore = pick("cancellationScore", onbBase(cancellationScoreRaw));
 
   // Base composite = avg of the 5 real signals (no more Report punctuality row).
   const baseComposite = Math.round(
@@ -196,7 +203,6 @@ export function computeTeacherKpis(t: User, threshold = getBonusThreshold()): Te
   );
 
   // Onboarding month → composite locked at 90, penalty is 0.
-  const onboarding = isOnboardingMonth(t, nowKey);
   const penaltyStateComputed = onboarding ? 0 : penaltyStateAt(t, nowKey);
   const responsivenessRaw = Math.max(0, 100 - penaltyStateComputed);
   const responsiveness = pick("responsiveness", responsivenessRaw);
