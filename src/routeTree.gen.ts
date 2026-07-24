@@ -25,6 +25,7 @@ import { Route as TeacherTailoredContentRouteImport } from './routes/teacher.tai
 import { Route as TeacherStudentsRouteImport } from './routes/teacher.students'
 import { Route as TeacherPerformanceSessionsRouteImport } from './routes/teacher.performance-sessions'
 import { Route as TeacherMaterialsRouteImport } from './routes/teacher.materials'
+import { Route as TeacherFlashRouteImport } from './routes/teacher.flash'
 import { Route as TeacherFinancialRouteImport } from './routes/teacher.financial'
 import { Route as TeacherClubsRouteImport } from './routes/teacher.clubs'
 import { Route as TeacherChallengesRouteImport } from './routes/teacher.challenges'
@@ -137,6 +138,11 @@ const TeacherPerformanceSessionsRoute =
 const TeacherMaterialsRoute = TeacherMaterialsRouteImport.update({
   id: '/materials',
   path: '/materials',
+  getParentRoute: () => TeacherRoute,
+} as any)
+const TeacherFlashRoute = TeacherFlashRouteImport.update({
+  id: '/flash',
+  path: '/flash',
   getParentRoute: () => TeacherRoute,
 } as any)
 const TeacherFinancialRoute = TeacherFinancialRouteImport.update({
@@ -339,6 +345,7 @@ export interface FileRoutesByFullPath {
   '/teacher/challenges': typeof TeacherChallengesRoute
   '/teacher/clubs': typeof TeacherClubsRoute
   '/teacher/financial': typeof TeacherFinancialRoute
+  '/teacher/flash': typeof TeacherFlashRoute
   '/teacher/materials': typeof TeacherMaterialsRoute
   '/teacher/performance-sessions': typeof TeacherPerformanceSessionsRoute
   '/teacher/students': typeof TeacherStudentsRoute
@@ -386,6 +393,7 @@ export interface FileRoutesByTo {
   '/teacher/challenges': typeof TeacherChallengesRoute
   '/teacher/clubs': typeof TeacherClubsRoute
   '/teacher/financial': typeof TeacherFinancialRoute
+  '/teacher/flash': typeof TeacherFlashRoute
   '/teacher/materials': typeof TeacherMaterialsRoute
   '/teacher/performance-sessions': typeof TeacherPerformanceSessionsRoute
   '/teacher/students': typeof TeacherStudentsRoute
@@ -437,6 +445,7 @@ export interface FileRoutesById {
   '/teacher/challenges': typeof TeacherChallengesRoute
   '/teacher/clubs': typeof TeacherClubsRoute
   '/teacher/financial': typeof TeacherFinancialRoute
+  '/teacher/flash': typeof TeacherFlashRoute
   '/teacher/materials': typeof TeacherMaterialsRoute
   '/teacher/performance-sessions': typeof TeacherPerformanceSessionsRoute
   '/teacher/students': typeof TeacherStudentsRoute
@@ -489,6 +498,7 @@ export interface FileRouteTypes {
     | '/teacher/challenges'
     | '/teacher/clubs'
     | '/teacher/financial'
+    | '/teacher/flash'
     | '/teacher/materials'
     | '/teacher/performance-sessions'
     | '/teacher/students'
@@ -536,6 +546,7 @@ export interface FileRouteTypes {
     | '/teacher/challenges'
     | '/teacher/clubs'
     | '/teacher/financial'
+    | '/teacher/flash'
     | '/teacher/materials'
     | '/teacher/performance-sessions'
     | '/teacher/students'
@@ -586,6 +597,7 @@ export interface FileRouteTypes {
     | '/teacher/challenges'
     | '/teacher/clubs'
     | '/teacher/financial'
+    | '/teacher/flash'
     | '/teacher/materials'
     | '/teacher/performance-sessions'
     | '/teacher/students'
@@ -720,6 +732,13 @@ declare module '@tanstack/react-router' {
       path: '/materials'
       fullPath: '/teacher/materials'
       preLoaderRoute: typeof TeacherMaterialsRouteImport
+      parentRoute: typeof TeacherRoute
+    }
+    '/teacher/flash': {
+      id: '/teacher/flash'
+      path: '/flash'
+      fullPath: '/teacher/flash'
+      preLoaderRoute: typeof TeacherFlashRouteImport
       parentRoute: typeof TeacherRoute
     }
     '/teacher/financial': {
@@ -1030,6 +1049,7 @@ interface TeacherRouteChildren {
   TeacherChallengesRoute: typeof TeacherChallengesRoute
   TeacherClubsRoute: typeof TeacherClubsRoute
   TeacherFinancialRoute: typeof TeacherFinancialRoute
+  TeacherFlashRoute: typeof TeacherFlashRoute
   TeacherMaterialsRoute: typeof TeacherMaterialsRoute
   TeacherPerformanceSessionsRoute: typeof TeacherPerformanceSessionsRoute
   TeacherStudentsRoute: typeof TeacherStudentsRoute
@@ -1045,6 +1065,7 @@ const TeacherRouteChildren: TeacherRouteChildren = {
   TeacherChallengesRoute: TeacherChallengesRoute,
   TeacherClubsRoute: TeacherClubsRoute,
   TeacherFinancialRoute: TeacherFinancialRoute,
+  TeacherFlashRoute: TeacherFlashRoute,
   TeacherMaterialsRoute: TeacherMaterialsRoute,
   TeacherPerformanceSessionsRoute: TeacherPerformanceSessionsRoute,
   TeacherStudentsRoute: TeacherStudentsRoute,
