@@ -17,10 +17,6 @@ import {
 import {
   getCoverageNote, setCoverageNote, subscribeCoverageNotes,
 } from "@/lib/coverage-notes-store";
-import {
-  attendanceFor, attendancePct, attendanceAlert, attendanceTotal,
-  type StudentAttendance,
-} from "@/lib/attendance-store";
 import { addStudentReport } from "@/lib/student-reports-store";
 import {
   PerformanceAnalyticsModal, useComputedMacros,
