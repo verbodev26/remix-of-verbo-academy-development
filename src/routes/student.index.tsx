@@ -527,18 +527,27 @@ function StudentDashboard() {
               <div className="grid gap-4 sm:grid-cols-2">
                 {upcoming.map((s) => {
                   const teacher = userById(s.teacher_id);
+                  const startsInMs = +new Date(s.date_time) - Date.now();
+                  const isImminent = startsInMs > 0 && startsInMs <= 60 * 60 * 1000;
                   return (
-                    <PremiumCard key={s.id} hover className="verbo-card-hover flex flex-col gap-4 border-l-4">
+                    <PremiumCard key={s.id} hover className="verbo-card-hover flex flex-col gap-4">
                       <div
                         className="-m-6 mb-0 rounded-t-2xl p-4"
                         style={{ background: "linear-gradient(135deg, #01304a, #014a6e)" }}
                       >
                         <div className="flex items-center gap-3 text-white">
                           <CalendarClock className="h-5 w-5" />
-                          <div>
+                          <div className="flex-1">
                             <div className="text-sm font-semibold capitalize">{fmtDay(s.date_time)}</div>
                             <div className="text-xs opacity-80">{fmt(s.date_time)}</div>
                           </div>
+                          {isImminent && (
+                            <span
+                              className="verbo-status-dot verbo-live-pulse"
+                              style={{ background: "var(--green-500)" }}
+                              aria-label="Starts within the next hour"
+                            />
+                          )}
                         </div>
                       </div>
                       <div className="space-y-1 pt-2">
@@ -547,7 +556,7 @@ function StudentDashboard() {
                       </div>
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <span>{fmtTime(s.date_time)} · {s.duration_minutes} min</span>
-                        <Pill tone="muted">{s.status}</Pill>
+                        <Pill tone={s.status === "rescheduled" ? "warning" : "muted"}>{s.status}</Pill>
                       </div>
                       <div className="mt-auto flex items-center gap-2 pt-2">
                         <GhostButton className="flex-1" onClick={() => setToCancel(s)}>
