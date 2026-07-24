@@ -384,6 +384,25 @@ export function decrementGroupRemaining(groupId: string) {
   });
 }
 
+/** Symmetric refund helper — bump the shared counter back up by one, capped
+ *  at the group's Hired Sessions so a refund can never exceed the contract. */
+export function incrementGroupRemaining(groupId: string) {
+  const g = groupById(groupId); if (!g) return;
+  const hired = g.hired_sessions ?? 0;
+  updateGroup(groupId, {
+    remaining_sessions: Math.min(hired, (g.remaining_sessions ?? 0) + 1),
+  });
+}
+
+/** Shared "% of the contracted sessions used" helper — single source of
+ *  truth for the progress-bar math previously duplicated across Admin and
+ *  Teacher student cards + Group Detail modal. */
+export function sessionProgressFor(hired: number, remaining: number): { done: number; pct: number } {
+  const done = Math.max(0, hired - remaining);
+  const pct = hired > 0 ? (done / hired) * 100 : 0;
+  return { done, pct };
+}
+
 /** Read the group each student belongs to as a lookup map (studentId → group). */
 export function groupsByStudentId(): Map<string, Group> {
   const groups = loadGroups();
