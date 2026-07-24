@@ -385,11 +385,11 @@ function StudentDashboard() {
             <div>
               <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Current Level</div>
               <div className="mt-3 font-[family-name:var(--font-display)] text-3xl font-semibold tracking-tight" style={{ color: "#01304a" }}>
-                {user.current_level ?? "—"}
+                {currentLevelName ?? "—"}
               </div>
-              <div className="mt-1 text-xs text-muted-foreground">{level?.title}</div>
+              <div className="mt-1 text-xs text-muted-foreground">{productLabel}</div>
             </div>
-            <StatRing value={levelProgress} label={user.current_level ?? "—"} />
+            <StatRing value={levelProgress} label={currentLevelRingLabel} />
           </div>
         </PremiumCard>
         <PremiumCard
