@@ -34,6 +34,7 @@ import { setLevelReopened } from "@/lib/students-store";
 import { RotateCcw, Unlock as UnlockIcon, Lock as LockIcon, Trophy } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { loadCourses, subscribeCourses, type CourseLevel } from "@/lib/product-courses-store";
+import { reportsForStudent, subscribeStudentReports } from "@/lib/student-reports-store";
 import {
   isMilestoneUnit, getUnitAccessOverride, setUnitAccess,
 } from "@/lib/activities-store";
