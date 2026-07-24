@@ -1078,7 +1078,7 @@ function StudentFormModal({
 // ===========================================================================
 // DETAIL MODAL (tabs + actions)
 // ===========================================================================
-type Tab = "overview" | "performance" | "progress" | "notes";
+type Tab = "overview" | "performance" | "progress" | "reports" | "notes";
 
 function StudentDetailModal({
   student, teachers, onClose, onUpdate, onEdit,
