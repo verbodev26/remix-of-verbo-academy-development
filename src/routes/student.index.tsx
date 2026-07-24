@@ -540,7 +540,7 @@ function StudentDashboard() {
         </div>
 
         {/* RIGHT SIDEBAR ~35% */}
-        <aside className="space-y-6">
+        <aside className="verbo-fade-up motion-reduce:animate-none space-y-6" style={{ animationDelay: "240ms" }}>
           {/* Verbo Experiences */}
           <PremiumCard hover className="relative overflow-hidden">
             <div
