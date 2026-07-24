@@ -101,6 +101,8 @@ function Page() {
   const isSignature = user.access_plan === "Signature";
   const isCore = user.access_plan === "Core";
   const spotlightCapNum = resolvedMonthlyCap(user.id, "spotlight");
+  const spotlightUsedNum = spotlightRequestsThisMonth(user.id);
+  const spotlightRemaining = resolvedRemainingSeats(user.id, "spotlight");
   const spotlightCapDisplay = isSignature ? "∞" : String(spotlightCapNum);
   const spotlightVisible = isSignature || spotlightCapNum > 0;
 
