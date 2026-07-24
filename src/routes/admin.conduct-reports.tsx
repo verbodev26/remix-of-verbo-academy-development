@@ -5,13 +5,15 @@
 // yet by design.
 import { createFileRoute } from "@tanstack/react-router";
 import { useSyncExternalStore } from "react";
-import { ShieldAlert } from "lucide-react";
+import { ShieldAlert, Check, X } from "lucide-react";
 import { Card, Pill } from "@/components/verbo/ui";
 import { USERS, userById } from "@/lib/mock-data";
 import {
   loadConductReports,
   subscribeConductReports,
+  updateConductReport,
   type ConductReport,
+  type ConductReportStatus,
 } from "@/lib/conduct-reports-store";
 
 export const Route = createFileRoute("/admin/conduct-reports")({ component: Page });
@@ -25,6 +27,18 @@ function fmt(iso: string) {
 function nameFor(id: string) {
   return userById(id)?.name ?? USERS.find((u) => u.id === id)?.name ?? "Unknown";
 }
+
+const STATUS_TONE: Record<ConductReportStatus, "warning" | "success" | "muted"> = {
+  pending: "warning",
+  reviewed: "success",
+  dismissed: "muted",
+};
+
+const STATUS_LABEL: Record<ConductReportStatus, string> = {
+  pending: "Pending",
+  reviewed: "Reviewed",
+  dismissed: "Dismissed",
+};
 
 function Page() {
   const reports = useSyncExternalStore(
@@ -65,6 +79,8 @@ function Page() {
                 <th className="px-6 py-3 font-medium">Reported</th>
                 <th className="px-6 py-3 font-medium">Category</th>
                 <th className="px-6 py-3 font-medium">Details</th>
+                <th className="px-6 py-3 font-medium">Status</th>
+                <th className="px-6 py-3 font-medium text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -91,6 +107,38 @@ function Page() {
                       {r.text}
                     </p>
                   </td>
+                  <td className="px-6 py-4">
+                    <Pill tone={STATUS_TONE[r.status]}>{STATUS_LABEL[r.status]}</Pill>
+                    {r.reviewed_at && (
+                      <div className="mt-1 text-[11px] text-muted-foreground">
+                        {fmt(r.reviewed_at)}
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex justify-end gap-1">
+                      <button
+                        type="button"
+                        onClick={() => updateConductReport(r.id, { status: "reviewed" })}
+                        disabled={r.status === "reviewed"}
+                        aria-label="Mark as reviewed"
+                        title="Mark as reviewed"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-success/10 hover:text-success disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        <Check className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => updateConductReport(r.id, { status: "dismissed" })}
+                        disabled={r.status === "dismissed"}
+                        aria-label="Dismiss"
+                        title="Dismiss"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -100,3 +148,4 @@ function Page() {
     </div>
   );
 }
+
