@@ -771,7 +771,16 @@ function StudentFormModal({
               <input value={f.name} onChange={(e) => set("name", e.target.value)} placeholder="Full name" className={inputCls} />
             </Field>
             <Field label="Email" icon={<Mail className="h-3.5 w-3.5" />}>
-              <input type="email" value={f.email} onChange={(e) => set("email", e.target.value)} placeholder="student@company.com" className={inputCls} />
+              <input
+                type="email"
+                value={f.email}
+                onChange={(e) => set("email", e.target.value)}
+                onBlur={() => setEmailTouched(true)}
+                placeholder="student@company.com"
+                className={`${inputCls} ${emailFormatError ? "border-destructive focus:border-destructive focus:ring-destructive" : ""}`}
+                aria-invalid={emailFormatError ? "true" : "false"}
+              />
+              {emailFormatError && <p className="mt-1 text-xs text-destructive">Enter a valid email address</p>}
             </Field>
             <Field label="Initial Password" icon={<KeyRound className="h-3.5 w-3.5" />}>
               <div className="relative">
