@@ -242,13 +242,15 @@ function Page() {
 // Logistics only (no Lesson Plan surface here).
 // ---------------------------------------------------------------------------
 function EventDetailsModal({
-  event, onClose, onCantAttend,
+  event, onClose, onCantAttend, onCancelSpotlight,
 }: {
   event: CalendarEvent;
   onClose: () => void;
   onCantAttend: (session: ExtSession) => void;
+  onCancelSpotlight: (session: ExtSession) => void;
 }) {
   const isClass = event.kind === "class";
+  const isSpotlight = event.kind === "spotlight";
   const session = event.session;
   const teacherName = session ? userById(session.teacher_id)?.name : undefined;
   const status = event.status as ExtSessionStatus | undefined;
@@ -256,6 +258,9 @@ function EventDetailsModal({
   const kindMeta = EVENT_KIND_META[event.kind];
   const canAct =
     isClass && session &&
+    (status === "scheduled" || status === "ready" || status === "rescheduled");
+  const canConnectSpotlight =
+    isSpotlight && session &&
     (status === "scheduled" || status === "ready" || status === "rescheduled");
   const connect = () => {
     if (session?.teams_link) window.open(session.teams_link, "_blank");
@@ -272,13 +277,13 @@ function EventDetailsModal({
           </span>
         </div>
         <h3 className="mt-2 text-lg font-semibold tracking-tight text-foreground">
-          {isClass && teacherName ? `Session with ${teacherName}` : event.title}
+          {isSpotlight && teacherName ? `Spotlight with ${teacherName}` : isClass && teacherName ? `Session with ${teacherName}` : event.title}
         </h3>
         <p className="mt-1 text-sm text-muted-foreground">
           {fmtDT(event.date)} · {event.duration_minutes} min
         </p>
 
-        {isClass && session && (
+        {(isClass || isSpotlight) && session && (
           <div className="mt-4 space-y-2 text-sm">
             <Row label="Teacher" value={teacherName ?? "—"} />
             <Row
@@ -307,6 +312,17 @@ function EventDetailsModal({
               <GhostButton className="flex-1" onClick={() => session && onCantAttend(session)}>
                 Can't Attend
               </GhostButton>
+            </>
+          ) : canConnectSpotlight ? (
+            <>
+              <PrimaryButton className="flex-1" onClick={connect}>
+                <Video className="h-4 w-4" /> Connect
+              </PrimaryButton>
+              {status === "scheduled" && (
+                <GhostButton className="flex-1" onClick={() => session && onCancelSpotlight(session)}>
+                  Cancel Spotlight
+                </GhostButton>
+              )}
             </>
           ) : (
             <GhostButton className="w-full" onClick={onClose}>Close</GhostButton>
