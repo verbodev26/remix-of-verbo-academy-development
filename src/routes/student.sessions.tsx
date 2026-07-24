@@ -52,6 +52,7 @@ import { isTeacherAvailableAt, findAvailableStartSlots } from "@/lib/availabilit
 import { ClubReservationModal } from "@/components/verbo/ClubReservationModal";
 import type { Club } from "@/lib/clubs-store";
 import { resolvedRemainingSeats, resolvedMonthlyCap } from "@/lib/club-bookings-store";
+import { groupOfStudent, incrementGroupRemaining, effectiveSessionCounts, sessionProgressFor } from "@/lib/groups-store";
 import { useCoreFreemiumGate } from "@/components/verbo/CoreFreemiumFlow";
 import { isSilenced, hasCreditUsed as freemiumUsed, markCreditUsed as markFreemiumUsed } from "@/lib/core-freemium-store";
 
