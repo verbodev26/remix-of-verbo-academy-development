@@ -33,6 +33,19 @@ import {
 import { ASSIGNMENTS } from "./mock-data";
 import { loadChallenges, CHALLENGES_EVENT } from "./challenges-store";
 import { STUDENTS_EVENT } from "./students-store";
+import {
+  loadStudentRequests, REQUESTS_EVENT,
+} from "./student-requests-store";
+import { loadVipUnits, VIP_UNITS_EVENT } from "./vip-courses-store";
+import {
+  loadTailoredUnits, TAILORED_UNITS_EVENT,
+} from "./tailored-content-store";
+import { loadEvents, EVENT as LP_EVENT } from "./learning-path-events";
+import { loadLessonPlans, LESSON_PLANS_EVENT } from "./lesson-plans-store";
+import {
+  resolvedRemainingSeats, type AccessKind,
+} from "./club-bookings-store";
+import { groupsByStudentId } from "./groups-store";
 
 function readStudentReportsRaw(): StudentReport[] {
   if (typeof window === "undefined") return [];
@@ -62,7 +75,17 @@ export type NotificationKind =
   | "teacher_three_strikes"
   | "student_report_filed"
   | "conduct_report_filed"
-  | "financial_issue_reported";
+  | "financial_issue_reported"
+  // student-facing
+  | "reschedule_request_updated"
+  | "personalized_content_added"
+  | "conduct_report_reviewed"
+  | "learning_path_milestone"
+  | "session_ready_to_prepare"
+  | "session_changed"
+  | "club_opened"
+  | "payment_or_sessions_ending_soon"
+  | "new_challenge_available";
 
 export interface Notification {
   id: string;
@@ -465,10 +488,227 @@ function adminNotifications(): Notification[] {
 }
 
 // ---------------------------------------------------------------------------
+// Derivation — Student
+// ---------------------------------------------------------------------------
+function computeNextPayment(u: User): string | null {
+  if (u.next_payment) return u.next_payment;
+  if (!u.payment_day) return null;
+  const now = new Date();
+  const daysInThisMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const dayThis = Math.min(u.payment_day, daysInThisMonth);
+  const thisMonth = new Date(now.getFullYear(), now.getMonth(), dayThis);
+  if (thisMonth >= now) return thisMonth.toISOString();
+  const daysInNextMonth = new Date(now.getFullYear(), now.getMonth() + 2, 0).getDate();
+  const dayNext = Math.min(u.payment_day, daysInNextMonth);
+  return new Date(now.getFullYear(), now.getMonth() + 1, dayNext).toISOString();
+}
+
+function studentNotifications(studentId: string): Notification[] {
+  const out: Notification[] = [];
+  const now = Date.now();
+  const uu = USERS.find((x) => x.id === studentId);
+
+  // ---- Reschedule request status updates ---------------------------------
+  for (const r of loadStudentRequests()) {
+    if (r.student_id !== studentId) continue;
+    if (r.kind !== "reschedule") continue;
+    if (r.status !== "claimed" && r.status !== "assigned" && r.status !== "cancelled") continue;
+    const title =
+      r.status === "claimed" ? "Your reschedule request was claimed" :
+      r.status === "assigned" ? "Your reschedule request was scheduled" :
+      "Your reschedule request was cancelled";
+    out.push({
+      id: `sr-updated:${r.id}:${r.status}`,
+      kind: "reschedule_request_updated",
+      title,
+      body: fmtDate(r.proposed_datetime),
+      createdAt: r.claimed_at ?? r.requested_at,
+      to: "/student/sessions",
+      read: false,
+    });
+  }
+
+  // ---- Personalized content added — VIP ---------------------------------
+  if (uu?.product === "vip") {
+    for (const unit of loadVipUnits()) {
+      if (unit.student_id !== studentId) continue;
+      out.push({
+        id: `vip-unit-added:${unit.id}`,
+        kind: "personalized_content_added",
+        title: "New content added to your course",
+        body: unit.title,
+        createdAt: unit.created_at,
+        to: "/student/my-course",
+        read: false,
+      });
+    }
+  }
+  // ---- Personalized content added — Tailored (Elite) --------------------
+  if (uu?.access_plan === "Elite") {
+    for (const unit of loadTailoredUnits()) {
+      if (unit.student_id !== studentId) continue;
+      out.push({
+        id: `tc-unit-added:${unit.id}`,
+        kind: "personalized_content_added",
+        title: "New Tailored Content added",
+        body: unit.title,
+        createdAt: unit.created_at,
+        to: "/student/courses",
+        read: false,
+      });
+    }
+  }
+
+  // ---- Conduct report reviewed/dismissed --------------------------------
+  for (const r of loadConductReports()) {
+    if (r.reporter_id !== studentId) continue;
+    if (r.status !== "reviewed" && r.status !== "dismissed") continue;
+    out.push({
+      id: `conduct-reviewed:${r.id}:${r.status}`,
+      kind: "conduct_report_reviewed",
+      title: "Your report was reviewed",
+      body: r.status === "dismissed" ? "Marked as dismissed." : "Marked as reviewed.",
+      createdAt: r.reviewed_at ?? r.created_at,
+      to: "/student",
+      read: false,
+    });
+  }
+
+  // ---- Learning Path milestones -----------------------------------------
+  for (const ev of loadEvents(studentId)) {
+    if (ev.kind !== "unit_completed" && ev.kind !== "level_completed") continue;
+    out.push({
+      id: `lp:${ev.kind}:${ev.ref}:${ev.ts}`,
+      kind: "learning_path_milestone",
+      title: ev.kind === "level_completed" ? "Level completed" : "Unit completed",
+      body: ev.label ?? ev.ref,
+      createdAt: ev.ts,
+      to: "/student/courses",
+      read: false,
+    });
+  }
+
+  // ---- Session ready to prepare (lesson plan saved) ---------------------
+  const plans = loadLessonPlans();
+  for (const s of loadSessions()) {
+    if (s.student_id !== studentId) continue;
+    if (s.status !== "ready") continue;
+    if (+new Date(s.date_time) < now) continue;
+    const plan = plans[s.id];
+    if (!plan) continue;
+    out.push({
+      id: `session-ready:${s.id}`,
+      kind: "session_ready_to_prepare",
+      title: "Your session is ready — review the content",
+      body: `${plan.title} · ${fmtDate(s.date_time)}`,
+      createdAt: plan.saved_at,
+      to: "/student/sessions",
+      read: false,
+    });
+  }
+
+  // ---- Session changed --------------------------------------------------
+  const CHANGED_TITLES: Record<string, string> = {
+    rescheduled: "Your session was rescheduled",
+    cancelled: "Your session was cancelled",
+    pending_reschedule: "Your session is pending reschedule",
+    delayed: "Your session was delayed",
+    converted_to_spotlight: "Your session was converted to Spotlight",
+  };
+  for (const s of loadSessions()) {
+    if (s.student_id !== studentId) continue;
+    const title = CHANGED_TITLES[s.status];
+    if (!title) continue;
+    out.push({
+      id: `session-changed:${s.id}:${s.status}`,
+      kind: "session_changed",
+      title,
+      body: fmtDate(s.date_time),
+      createdAt: s.date_time,
+      to: "/student/sessions",
+      read: false,
+    });
+  }
+
+  // ---- Newly opened Clubs (last 7 days, only if student has a seat) -----
+  const SEVEN_DAYS = 7 * 24 * 3600 * 1000;
+  for (const c of loadClubs()) {
+    if (c.status !== "upcoming") continue;
+    const createdIso = c.created_at ?? c.date;
+    if (now - +new Date(createdIso) > SEVEN_DAYS) continue;
+    const kind: AccessKind = c.type === "book" ? "book" : "insight";
+    if (resolvedRemainingSeats(studentId, kind) <= 0) continue;
+    out.push({
+      id: `club-opened:${c.id}`,
+      kind: "club_opened",
+      title: `New Club open: ${c.title}`,
+      body: fmtDate(c.date),
+      createdAt: createdIso,
+      to: "/student/sessions",
+      read: false,
+    });
+  }
+
+  // ---- Payment / sessions ending soon (individuals only) ----------------
+  if (uu && !groupsByStudentId().has(studentId)) {
+    if (typeof uu.remaining_sessions === "number" && uu.remaining_sessions <= 3) {
+      const monthKey = new Date().toISOString().slice(0, 7);
+      out.push({
+        id: `sessions-ending:${studentId}:${monthKey}`,
+        kind: "payment_or_sessions_ending_soon",
+        title: "Your contracted sessions are almost over",
+        body: `${uu.remaining_sessions} session(s) remaining.`,
+        createdAt: new Date().toISOString(),
+        to: "/student",
+        read: false,
+      });
+    }
+    const nextIso = computeNextPayment(uu);
+    if (nextIso) {
+      const days = Math.ceil((+new Date(nextIso) - now) / (24 * 3600 * 1000));
+      if (days >= 0 && days <= 5) {
+        out.push({
+          id: `payment-due:${studentId}:${nextIso.slice(0, 10)}`,
+          kind: "payment_or_sessions_ending_soon",
+          title: "Your payment is due soon",
+          body: `Due ${new Date(nextIso).toLocaleDateString(undefined, { month: "short", day: "numeric" })}.`,
+          createdAt: new Date().toISOString(),
+          to: "/student",
+          read: false,
+        });
+      }
+    }
+  }
+
+  // ---- New Challenge available (for the student's product) --------------
+  const studentProduct = uu?.product;
+  if (studentProduct) {
+    for (const ch of loadChallenges()) {
+      if (!ch.created_at) continue;
+      if (ch.product !== studentProduct) continue;
+      out.push({
+        id: `new-challenge:${ch.id}`,
+        kind: "new_challenge_available",
+        title: "New Challenge available",
+        body: ch.title,
+        createdAt: ch.created_at,
+        to: "/student/challenges",
+        read: false,
+      });
+    }
+  }
+
+  return out;
+}
+
+// ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 export function buildNotifications(role: Role, userId: string): Notification[] {
-  const raw = role === "admin" ? adminNotifications() : teacherNotifications(userId);
+  const raw =
+    role === "admin" ? adminNotifications() :
+    role === "teacher" ? teacherNotifications(userId) :
+    studentNotifications(userId);
   const readSet = readSetFor(userId);
   return raw
     .map((n) => ({ ...n, read: !!readSet[n.id] }))
@@ -482,6 +722,7 @@ const SOURCE_EVENTS = [
   SESSIONS_EVENT, CLUBS_EVENT, RELEASE_REQUESTS_EVENT,
   AVAIL_EVENT, STRIKES_EVENT, ANN_EVENT, NOTIF_EVENT,
   REPORTS_EVENT, CONDUCT_REPORTS_EVENT, FIN_ISSUES_EVENT, STUDENTS_EVENT, CHALLENGES_EVENT,
+  REQUESTS_EVENT, VIP_UNITS_EVENT, TAILORED_UNITS_EVENT, LP_EVENT, LESSON_PLANS_EVENT,
 ];
 
 function subscribe(cb: () => void): () => void {

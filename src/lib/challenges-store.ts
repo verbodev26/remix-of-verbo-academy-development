@@ -22,6 +22,10 @@ export interface Challenge {
   video_url: string; // optional; empty = no attachment shown to students
   premium?: boolean; // exclusive for Advance/Elite plans
   skill_tags?: string[]; // informative tags: Speaking / Writing / Reading / Listening
+  /** ISO timestamp of admin authorship. Optional because seed challenges
+   *  predate this field — student-facing "New Challenge available"
+   *  notifications only trigger for challenges that carry this value. */
+  created_at?: string;
 }
 
 export const PRODUCT_META: Record<ChallengeProductId, { label: string; description: string }> = {

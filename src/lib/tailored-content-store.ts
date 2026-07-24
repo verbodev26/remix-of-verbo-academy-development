@@ -13,7 +13,8 @@ export interface TailoredUnit {
 }
 
 const KEY = "verbo:tailored-content";
-const EVENT = "verbo:tailored-content-updated";
+export const TAILORED_UNITS_EVENT = "verbo:tailored-content-updated";
+const EVENT = TAILORED_UNITS_EVENT;
 
 function safeRead(): TailoredUnit[] {
   if (typeof window === "undefined") return [];

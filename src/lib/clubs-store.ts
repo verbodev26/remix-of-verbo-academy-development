@@ -29,6 +29,11 @@ export interface Club {
    *  when the club is released back to "Created". Drives the 5-minute
    *  free-release window on the teacher side. */
   claimed_at?: string;
+  /** ISO timestamp of when the club was authored by Admin. Optional because
+   *  legacy/seed clubs predate this field — consumers should fall back to
+   *  `date` when it's missing. Used by the student-facing "New Club open"
+   *  notification to only surface recently opened clubs. */
+  created_at?: string;
 }
 
 export const CLUB_SEED: Club[] = [
