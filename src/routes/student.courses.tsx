@@ -750,17 +750,19 @@ function UnitVideoPlayer({ url }: { url: string }) {
   return <video src={url} controls className="absolute inset-0 h-full w-full object-cover" />;
 }
 
-function UnitDetail({
-  level, unit, studentId, readOnly, onBack, onChange,
+export function UnitDetail({
+  level, unit, studentId, readOnly, previewMode = false, onBack, onChange,
 }: {
   level: CourseLevel;
   unit: CourseUnit;
   studentId: string;
   readOnly: boolean;
+  previewMode?: boolean;
   onBack: () => void;
   onChange: () => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [pdfOpen, setPdfOpen] = useState(false);
   const activities = activitiesForUnit(unit.id);
   const catProgress = unitCategoryProgress(studentId, unit.id);
   const passed = unitPassed(studentId, unit.id);
@@ -816,12 +818,18 @@ function UnitDetail({
               </div>
             </div>
             {unit.pdf_url ? (
-              <a href={unit.pdf_url} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-secondary">
-                <Download className="h-4 w-4" /> Download PDF Guide
-              </a>
+              previewMode ? (
+                <button onClick={() => setPdfOpen(true)} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-secondary">
+                  <BookOpen className="h-4 w-4" /> View PDF Guide
+                </button>
+              ) : (
+                <a href={unit.pdf_url} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-secondary">
+                  <Download className="h-4 w-4" /> Download PDF Guide
+                </a>
+              )
             ) : (
               <button disabled className="mt-4 inline-flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-medium text-muted-foreground shadow-sm opacity-50">
-                <Download className="h-4 w-4" /> Download PDF Guide
+                <Download className="h-4 w-4" /> {previewMode ? "View PDF Guide" : "Download PDF Guide"}
               </button>
             )}
           </Card>
@@ -884,8 +892,21 @@ function UnitDetail({
           activities={activities}
           studentId={studentId}
           readOnly={readOnly}
+          previewMode={previewMode}
           onClose={() => { setOpen(false); onChange(); }}
         />
+      )}
+
+      {pdfOpen && unit.pdf_url && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={() => setPdfOpen(false)}>
+          <div className="flex h-[85vh] w-[85vw] max-w-5xl flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-elevated" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between gap-4 border-b border-border bg-card px-5 py-3">
+              <div className="text-sm font-semibold text-foreground">{unit.title} — PDF Guide</div>
+              <button onClick={() => setPdfOpen(false)} className="rounded-md p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"><X className="h-4 w-4" /></button>
+            </div>
+            <iframe src={unit.pdf_url} title={`${unit.title} PDF`} className="flex-1 w-full bg-background" />
+          </div>
+        </div>
       )}
     </div>
   );
@@ -894,13 +915,14 @@ function UnitDetail({
 /* -------------------------------------------------------------------------- */
 /* Activity runner                                                             */
 /* -------------------------------------------------------------------------- */
-function ActivityRunner({
-  unit, activities, studentId, readOnly, onClose,
+export function ActivityRunner({
+  unit, activities, studentId, readOnly, previewMode = false, onClose,
 }: {
   unit: CourseUnit;
   activities: Activity[];
   studentId: string;
   readOnly: boolean;
+  previewMode?: boolean;
   onClose: () => void;
 }) {
   const orderedCats = useMemo(() => {
@@ -925,16 +947,16 @@ function ActivityRunner({
 
   const check = () => {
     if (!current) return;
-    // Milestone units get exactly one attempt per activity.
-    if (!readOnly && isMilestoneUnit(unit.id) && attemptsFor(studentId, current.id) >= 1) {
+    // Milestone units get exactly one attempt per activity (skipped in preview mode).
+    if (!readOnly && !previewMode && isMilestoneUnit(unit.id) && attemptsFor(studentId, current.id) >= 1) {
       setAttemptBlocked(true);
       return;
     }
     const ok = evaluate(current, draft[current.id] ?? "");
     const score = ok ? 100 : 0;
-    if (!readOnly) recordActivityScore(studentId, current.id, score);
+    if (!readOnly && !previewMode) recordActivityScore(studentId, current.id, score);
     // Auto-complete unit when the mandatory rule is satisfied.
-    if (!readOnly && unitPassed(studentId, unit.id)) setUnitCompleted(studentId, unit.id, true);
+    if (!readOnly && !previewMode && unitPassed(studentId, unit.id)) setUnitCompleted(studentId, unit.id, true);
     setFeedback({ ok, score });
   };
 
