@@ -145,7 +145,7 @@ function NavGroupDropdown({ group, pathname, isDark }: { group: NavGroup; pathna
         aria-expanded={open}
         aria-haspopup="menu"
         aria-controls={menuId}
-        className={`${tabCls} ${activeTabCls}`}
+        className={isDark ? darkTabCls : `${tabCls} ${activeTabCls}`}
       >
         {group.label}
         <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
