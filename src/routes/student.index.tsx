@@ -657,7 +657,7 @@ function StudentDashboard() {
                   const teacher = userById(s.teacher_id);
                   const rating = performance[s.id];
                   return (
-                    <tr key={s.id} className="border-b border-border last:border-0">
+                    <tr key={s.id} className="border-b border-border last:border-0 transition-colors hover:bg-secondary/40">
                       <td className="px-6 py-4 text-foreground">{fmt(s.date_time)}</td>
                       <td className="px-6 py-4 text-muted-foreground">{teacher?.name}</td>
                       <td className="px-6 py-4">
