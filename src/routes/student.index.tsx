@@ -239,16 +239,9 @@ function StudentDashboard() {
   const level = LEVELS.find((l) => l.id === user.current_level);
 
 
-  // Overall Attendance — mirror Admin > Students fallback formula so the
-  // tile reflects real completed vs absent sessions when the static
-  // `attendance_percentage` field isn't set.
-  const completedCount = mySessions.filter((s) => s.status === "completed").length;
-  const absentCount = mySessions.filter((s) => s.status === "absent").length;
-  const attendancePct = user.attendance_percentage ?? (
-    completedCount + absentCount > 0
-      ? Math.round((completedCount / (completedCount + absentCount)) * 100)
-      : 0
-  );
+  // Overall Attendance — shared helper (studentAttendance) so Admin, Teacher
+  // and Student always show the exact same % for a given student.
+  const { pct: attendancePct } = studentAttendance(mySessions, user);
 
   // Quick Review Dock — real teacher notes (report_comments) from completed
   // sessions. No synthetic tips. Empty state kept when no session has one.
