@@ -33,6 +33,19 @@ import {
 import { ASSIGNMENTS } from "./mock-data";
 import { loadChallenges, CHALLENGES_EVENT } from "./challenges-store";
 import { STUDENTS_EVENT } from "./students-store";
+import {
+  loadStudentRequests, REQUESTS_EVENT,
+} from "./student-requests-store";
+import { loadVipUnits, VIP_UNITS_EVENT } from "./vip-courses-store";
+import {
+  loadTailoredUnits, TAILORED_UNITS_EVENT,
+} from "./tailored-content-store";
+import { loadEvents, EVENT as LP_EVENT } from "./learning-path-events";
+import { loadLessonPlans, LESSON_PLANS_EVENT } from "./lesson-plans-store";
+import {
+  resolvedRemainingSeats, type AccessKind,
+} from "./club-bookings-store";
+import { groupsByStudentId } from "./groups-store";
 
 function readStudentReportsRaw(): StudentReport[] {
   if (typeof window === "undefined") return [];
@@ -62,7 +75,17 @@ export type NotificationKind =
   | "teacher_three_strikes"
   | "student_report_filed"
   | "conduct_report_filed"
-  | "financial_issue_reported";
+  | "financial_issue_reported"
+  // student-facing
+  | "reschedule_request_updated"
+  | "personalized_content_added"
+  | "conduct_report_reviewed"
+  | "learning_path_milestone"
+  | "session_ready_to_prepare"
+  | "session_changed"
+  | "club_opened"
+  | "payment_or_sessions_ending_soon"
+  | "new_challenge_available";
 
 export interface Notification {
   id: string;
