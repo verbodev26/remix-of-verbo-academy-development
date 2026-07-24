@@ -270,9 +270,10 @@ function StudentCard({ student: s, onOpen }: { student: User; onOpen: () => void
           <div className="truncate font-semibold text-foreground">
             {s.name}{s.company ? <span className="text-muted-foreground"> · {s.company}</span> : null}
           </div>
-          {s.current_level && (
-            <div className="truncate text-xs text-muted-foreground">Level {s.current_level}</div>
-          )}
+          {(() => {
+            const lv = computeCurrentProgress(s.id, s.product, s.contracted_levels ?? [], 0)?.levelName;
+            return lv ? <div className="truncate text-xs text-muted-foreground">{lv}</div> : null;
+          })()}
         </div>
       </div>
 
