@@ -750,17 +750,19 @@ function UnitVideoPlayer({ url }: { url: string }) {
   return <video src={url} controls className="absolute inset-0 h-full w-full object-cover" />;
 }
 
-function UnitDetail({
-  level, unit, studentId, readOnly, onBack, onChange,
+export function UnitDetail({
+  level, unit, studentId, readOnly, previewMode = false, onBack, onChange,
 }: {
   level: CourseLevel;
   unit: CourseUnit;
   studentId: string;
   readOnly: boolean;
+  previewMode?: boolean;
   onBack: () => void;
   onChange: () => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [pdfOpen, setPdfOpen] = useState(false);
   const activities = activitiesForUnit(unit.id);
   const catProgress = unitCategoryProgress(studentId, unit.id);
   const passed = unitPassed(studentId, unit.id);
