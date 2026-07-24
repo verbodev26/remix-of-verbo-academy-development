@@ -110,6 +110,33 @@
   --border: oklch(0.92 0.004 250);
   --input: oklch(0.92 0.004 250);
   --ring: #f38934;
+
+  --navy-50: oklch(0.97 0.006 240);
+  --navy-100: oklch(0.93 0.014 240);
+  --navy-200: oklch(0.86 0.024 240);
+  --navy-300: oklch(0.74 0.036 240);
+  --navy-400: oklch(0.58 0.050 240);
+  --navy-500: oklch(0.44 0.058 240);
+  --navy-600: oklch(0.366 0.084 241);
+  --navy-700: #01304a;
+  --navy-800: oklch(0.22 0.050 240);
+  --navy-900: oklch(0.166 0.013 249);
+  --orange-50: oklch(0.97 0.02 55);
+  --orange-100: oklch(0.93 0.045 55);
+  --orange-200: oklch(0.87 0.075 55);
+  --orange-300: oklch(0.80 0.11 55);
+  --orange-400: oklch(0.75 0.145 55);
+  --orange-500: #f38934;
+  --orange-600: oklch(0.64 0.16 45);
+  --orange-700: oklch(0.54 0.15 35);
+  --violet-100: oklch(0.90 0.06 305);
+  --violet-300: oklch(0.75 0.15 305);
+  --violet-500: #7e22ce;
+  --violet-700: oklch(0.38 0.17 312);
+  --violet-900: #4a044e;
+  --tier-elite: var(--violet-500);
+  --tier-elite-soft: var(--violet-100);
+  --brand-flash: var(--violet-500);
 }
 
 .dark {
