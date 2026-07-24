@@ -35,6 +35,7 @@ function Page() {
   const [cover, setCover] = useState<string | undefined>(undefined);
   const [restrictProduct, setRestrictProduct] = useState<RestrictProduct | "">("");
   const [restrictLevel, setRestrictLevel] = useState("");
+  const [premium, setPremium] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<StoredMaterial | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -48,7 +49,9 @@ function Page() {
     setCover(undefined);
     setRestrictProduct("");
     setRestrictLevel("");
+    setPremium(false);
   };
+
 
   const onPickCategory = (v: string) => {
     if (v === "__new__") {
