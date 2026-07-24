@@ -12,6 +12,7 @@
 
 import { USERS } from "./mock-data";
 import { loadSessions, persistSessions, updateSession, type ExtSessionStatus } from "./sessions-store";
+import { getStudentVideoLink } from "./students-store";
 
 export type StudentRequestKind = "reschedule" | "spotlight";
 
