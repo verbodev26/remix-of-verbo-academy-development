@@ -183,7 +183,11 @@ function Page() {
           </div>
           {spotlightVisible && (
             <div className="text-muted-foreground">
-              Spotlight cap: <span className="font-semibold text-foreground">{spotlightCapDisplay}/month</span>
+              {isSignature ? (
+                <>Spotlight: <span className="font-semibold text-foreground">{spotlightUsedNum} used this month</span></>
+              ) : (
+                <>Spotlight: <span className="font-semibold text-foreground">{spotlightUsedNum} of {spotlightCapDisplay} used this month</span></>
+              )}
             </div>
           )}
         </div>
