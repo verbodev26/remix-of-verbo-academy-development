@@ -189,10 +189,10 @@ function StudentCard({ student: s, onOpen }: { student: User; onOpen: () => void
   const bcStrikes = s.bookclub_strikes ?? 0;
   const bcBlocked = bcStrikes >= MAX_BOOKCLUB_STRIKES;
   const hasBookClubs = (s.addon_bookclubs_per_month ?? 0) > 0;
-  const hired = s.hired_sessions ?? 0;
-  const remaining = s.remaining_sessions ?? 0;
-  const done = Math.max(0, hired - remaining);
-  const pct = hired > 0 ? (done / hired) * 100 : 0;
+  const counts = effectiveSessionCounts(s.id, { hired: s.hired_sessions, remaining: s.remaining_sessions });
+  const hired = counts.hired;
+  const remaining = counts.remaining;
+  const { pct } = sessionProgressFor(hired, remaining);
   const productType = s.product_type ?? "performance";
   const showInsightsBadge = productType === "performance" || productType === "insights";
   const isVip = s.product === "vip";
