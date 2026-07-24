@@ -767,6 +767,26 @@ function PerfStars({ label, value }: { label: string; value: number }) {
   );
 }
 
+function RatingStarsCompact({ value }: { value: number }) {
+  return (
+    <div className="inline-flex items-center gap-0.5" aria-label={`Rating ${value} out of 5`}>
+      {[1, 2, 3, 4, 5].map((n) => {
+        const active = n <= value;
+        return (
+          <Star
+            key={n}
+            className="h-3.5 w-3.5"
+            style={{
+              color: active ? "#f38934" : "#e5e7eb",
+              fill: active ? "#f38934" : "transparent",
+            }}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
 /* --------------------------------------------------------------------------
  * FeaturedProfileBadge — replaces the old fixed "On Fire" flame in the
  * dashboard header. Renders the student's currently featured profile badge
