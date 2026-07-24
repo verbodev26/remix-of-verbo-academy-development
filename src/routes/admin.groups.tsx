@@ -17,7 +17,7 @@ import {
   loadGroups, loadGroupMembers, subscribeGroups, registerGroupWithMembers,
   updateGroup, addMember, removeMember, restoreMember, archiveMember,
   moveMember, markGroupAsPaid, activeMembersOf, membersOf, pendingCountdownDays,
-  groupById, type Group, type GroupMember,
+  groupById, sessionProgressFor, type Group, type GroupMember,
 } from "@/lib/groups-store";
 import { Card, GhostButton, PrimaryButton } from "@/components/verbo/ui";
 import { loadSessions, type ExtSession } from "@/lib/sessions-store";
