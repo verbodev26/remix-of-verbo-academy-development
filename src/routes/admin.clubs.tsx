@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Card, GhostButton, Pill, PrimaryButton, SectionTitle } from "@/components/verbo/ui";
-import { USERS, type User } from "@/lib/mock-data";
+import { USERS } from "@/lib/mock-data";
 import { appendTeacherAdjustment } from "@/lib/teacher-tiers";
 import {
   type Club, type ClubType, type TimeStatus, type ClubReleaseRequest,
