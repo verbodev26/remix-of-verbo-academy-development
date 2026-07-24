@@ -478,14 +478,23 @@ function StudentDashboard() {
           <div>
             <SectionTitle>Current Course</SectionTitle>
             <PremiumCard hover className="verbo-card-hover flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
-              <div>
-                <Pill tone="muted">{currentLevelName ?? "Learning Path"}</Pill>
-                <h3 className="mt-3 text-xl font-semibold tracking-tight" style={{ color: "#01304a" }}>
-                  {currentUnitTitle ?? "No unit available yet"}
-                </h3>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Pick up exactly where you left off. Video, materials and practice activities included.
-                </p>
+              <div className="flex items-start gap-4">
+                <div
+                  className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10"
+                  style={{ color: "#01304a" }}
+                  aria-hidden
+                >
+                  <BookOpen className="h-6 w-6" strokeWidth={1.6} />
+                </div>
+                <div>
+                  <Pill tone="muted">{currentLevelName ?? "Learning Path"}</Pill>
+                  <h3 className="mt-3 text-xl font-semibold tracking-tight" style={{ color: "#01304a" }}>
+                    {currentUnitTitle ?? "No unit available yet"}
+                  </h3>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Pick up exactly where you left off. Video, materials and practice activities included.
+                  </p>
+                </div>
               </div>
               <PrimaryButton
                 className="verbo-btn-glow"
