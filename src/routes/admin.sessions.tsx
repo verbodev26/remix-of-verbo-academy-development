@@ -149,7 +149,10 @@ function Page() {
                       {s.company ?? "—"}
                     </div>
                   </div>
-                  <Pill tone="muted">{s.current_level ?? "—"}</Pill>
+                  {(() => {
+                    const lv = computeCurrentProgress(s.id, s.product, s.contracted_levels ?? [], 0)?.levelName;
+                    return <Pill tone="muted">{lv ?? "—"}</Pill>;
+                  })()}
                 </div>
 
                 <div className="mt-5 rounded-xl border border-border bg-secondary/30 p-3">
