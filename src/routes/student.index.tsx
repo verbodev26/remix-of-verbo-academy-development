@@ -429,9 +429,9 @@ function StudentDashboard() {
         {/* LEFT COLUMN ~65% */}
         <div className="space-y-8">
           {/* Current Course */}
-          <div>
+          <div className="verbo-fade-up motion-reduce:animate-none" style={{ animationDelay: "150ms" }}>
             <SectionTitle>Current Course</SectionTitle>
-            <PremiumCard hover className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
+            <PremiumCard hover className="verbo-card-hover flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
               <div>
                 <Pill tone="muted">{currentLevelName ?? "Learning Path"}</Pill>
                 <h3 className="mt-3 text-xl font-semibold tracking-tight" style={{ color: "#01304a" }}>
@@ -460,6 +460,7 @@ function StudentDashboard() {
               </PrimaryButton>
             </PremiumCard>
           </div>
+
 
 
           {/* Upcoming Sessions */}
