@@ -39,6 +39,7 @@
 | email | string | requerido | |
 | password | string | requerido | ⚠️ texto plano en seed data |
 | role | `"student" \| "teacher" \| "admin"` | requerido | |
+| must_change_password | boolean | opcional | `true` cuando un admin registra un alumno nuevo; obliga a cambio de contraseña en el próximo login y bloquea navegación hasta `/change-password`. Se limpia a `false` al completar el cambio. Ausente/`false` para usuarios ya existentes (no aplica retroactivo). |
 | current_level | string | opcional | referencia informal a `Level.id`, sin FK tipada |
 | admin_type | `"super_admin" \| "coordinator_ops" \| "coordinator_fin"` | opcional | solo relevante si `role === "admin"` |
 | attendance_percentage | number | opcional | |
