@@ -935,10 +935,7 @@ function CancelSpotlightModal({ session, onClose }: { session: ExtSession; onClo
       <div onClick={(e) => e.stopPropagation()} className="relative w-full max-w-md rounded-2xl bg-card p-6 shadow-floating">
         <h3 className="text-lg font-semibold tracking-tight text-foreground">Cancel Spotlight Session?</h3>
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-          This Spotlight with <strong>{teacherName}</strong> will be cancelled. It cannot be rescheduled or made up — this credit is not returned.
-        </p>
-        <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-          If you cancel with less than 24h notice, your teacher will still be paid for the reserved hour.
+          This Spotlight with <strong>{teacherName}</strong> will be cancelled. It cannot be rescheduled or made up.
         </p>
         <div className="mt-6 flex justify-end gap-2">
           <GhostButton onClick={onClose}>Go Back</GhostButton>

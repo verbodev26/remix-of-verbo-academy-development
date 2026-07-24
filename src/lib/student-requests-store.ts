@@ -10,8 +10,8 @@
 // same 8h escalation) but carry a mandatory description text and consume the
 // monthly Spotlight cap on the student side.
 
-import { USERS } from "./mock-data";
 import { loadSessions, persistSessions, updateSession, type ExtSessionStatus } from "./sessions-store";
+import { getStudentVideoLink } from "./students-store";
 
 export type StudentRequestKind = "reschedule" | "spotlight";
 
@@ -214,8 +214,7 @@ function requireHelpers() {
       const teacherId = req.claimed_by;
       if (!teacherId) return;
       const now = new Date().toISOString();
-      const teacherUser = USERS.find((u) => u.id === teacherId);
-      const link = teacherUser?.video_call_link ?? "";
+      const link = getStudentVideoLink(req.student_id) || `https://teams.microsoft.com/l/meetup/${req.student_id}`;
       const status: ExtSessionStatus = "scheduled";
       const newSession = {
         id: `${req.kind === "spotlight" ? "sp" : "rs"}-${req.id}`,
