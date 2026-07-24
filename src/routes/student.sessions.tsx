@@ -55,6 +55,7 @@ import { resolvedRemainingSeats, resolvedMonthlyCap } from "@/lib/club-bookings-
 import { groupOfStudent, incrementGroupRemaining, effectiveSessionCounts, sessionProgressFor } from "@/lib/groups-store";
 import { useCoreFreemiumGate } from "@/components/verbo/CoreFreemiumFlow";
 import { isSilenced, hasCreditUsed as freemiumUsed, markCreditUsed as markFreemiumUsed } from "@/lib/core-freemium-store";
+import { effectiveHourlyRate, appendTeacherAdjustment } from "@/lib/teacher-tiers";
 
 
 
