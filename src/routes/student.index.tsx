@@ -49,6 +49,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 
 export const Route = createFileRoute("/student/")({
   component: StudentDashboard,
@@ -428,9 +429,9 @@ function StudentDashboard() {
         {/* LEFT COLUMN ~65% */}
         <div className="space-y-8">
           {/* Current Course */}
-          <div>
+          <div className="verbo-fade-up motion-reduce:animate-none" style={{ animationDelay: "150ms" }}>
             <SectionTitle>Current Course</SectionTitle>
-            <PremiumCard hover className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
+            <PremiumCard hover className="verbo-card-hover flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
               <div>
                 <Pill tone="muted">{currentLevelName ?? "Learning Path"}</Pill>
                 <h3 className="mt-3 text-xl font-semibold tracking-tight" style={{ color: "#01304a" }}>
@@ -461,17 +462,18 @@ function StudentDashboard() {
           </div>
 
 
+
           {/* Upcoming Sessions */}
-          <div>
+          <div className="verbo-fade-up motion-reduce:animate-none" style={{ animationDelay: "200ms" }}>
             <SectionTitle>Upcoming Sessions</SectionTitle>
             {upcoming.length === 0 ? (
-              <PremiumCard><div className="text-sm text-muted-foreground">No upcoming sessions scheduled.</div></PremiumCard>
+              <PremiumCard className="verbo-card-hover"><div className="text-sm text-muted-foreground">No upcoming sessions scheduled.</div></PremiumCard>
             ) : (
               <div className="grid gap-4 sm:grid-cols-2">
                 {upcoming.map((s) => {
                   const teacher = userById(s.teacher_id);
                   return (
-                    <PremiumCard key={s.id} hover className="flex flex-col gap-4 border-l-4">
+                    <PremiumCard key={s.id} hover className="verbo-card-hover flex flex-col gap-4 border-l-4">
                       <div
                         className="-m-6 mb-0 rounded-t-2xl p-4"
                         style={{ background: "linear-gradient(135deg, #01304a, #014a6e)" }}
@@ -506,6 +508,7 @@ function StudentDashboard() {
               </div>
             )}
           </div>
+
         </div>
 
         {/* RIGHT SIDEBAR ~35% */}
@@ -570,62 +573,73 @@ function StudentDashboard() {
       </section>
 
       {/* History */}
-      <section>
+      <section className="verbo-fade-up motion-reduce:animate-none" style={{ animationDelay: "250ms" }}>
         <SectionTitle>Session History</SectionTitle>
-        <PremiumCard className="!p-0 overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="text-left text-xs uppercase tracking-wider text-muted-foreground">
-              <tr className="border-b border-border">
-                <th className="px-6 py-3 font-medium">Date</th>
-                <th className="px-6 py-3 font-medium">Teacher</th>
-                <th className="px-6 py-3 font-medium">Status</th>
-                <th className="px-6 py-3 font-medium">Rating</th>
-                <th className="px-6 py-3 font-medium">My Performance</th>
-                <th className="px-6 py-3 font-medium text-right">Report</th>
-              </tr>
-            </thead>
-            <tbody>
-              {history.map((s) => {
-                const teacher = userById(s.teacher_id);
-                const rating = performance[s.id];
-                return (
-                  <tr key={s.id} className="border-b border-border last:border-0">
-                    <td className="px-6 py-4 text-foreground">{fmt(s.date_time)}</td>
-                    <td className="px-6 py-4 text-muted-foreground">{teacher?.name}</td>
-                    <td className="px-6 py-4">
-                      <span className={statusBadge(s.status)}>{s.status}</span>
-                    </td>
-                    <td className="px-6 py-4 text-muted-foreground">{s.student_rating ? `${s.student_rating}★` : "—"}</td>
-                    <td className="px-6 py-4">
-                      <button
-                        disabled={!rating}
-                        onClick={() => rating && setPerfDetail({ session: s, rating })}
-                        className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-border transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-30"
-                        style={{ color: rating ? "#f38934" : undefined }}
-                        aria-label="View performance breakdown"
-                        title="View performance breakdown"
-                      >
-                        <BarChart3 className="h-3.5 w-3.5" />
-                      </button>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <button
-                        disabled={!s.report_pdf_url}
-                        onClick={() => s.report_pdf_url && window.open(s.report_pdf_url, "_blank")}
-                        className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-30"
-                        aria-label="Download report"
-                        title="Download report"
-                      >
-                        <Download className="h-3.5 w-3.5" />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        <PremiumCard className="verbo-card-hover !p-0 overflow-hidden">
+          <TooltipProvider delayDuration={200}>
+            <table className="w-full text-sm">
+              <thead className="text-left text-xs uppercase tracking-wider text-muted-foreground">
+                <tr className="border-b border-border">
+                  <th className="px-6 py-3 font-medium">Date</th>
+                  <th className="px-6 py-3 font-medium">Teacher</th>
+                  <th className="px-6 py-3 font-medium">Status</th>
+                  <th className="px-6 py-3 font-medium">Rating</th>
+                  <th className="px-6 py-3 font-medium">My Performance</th>
+                  <th className="px-6 py-3 font-medium text-right">Report</th>
+                </tr>
+              </thead>
+              <tbody>
+                {history.map((s) => {
+                  const teacher = userById(s.teacher_id);
+                  const rating = performance[s.id];
+                  return (
+                    <tr key={s.id} className="border-b border-border last:border-0">
+                      <td className="px-6 py-4 text-foreground">{fmt(s.date_time)}</td>
+                      <td className="px-6 py-4 text-muted-foreground">{teacher?.name}</td>
+                      <td className="px-6 py-4">
+                        <span className={statusBadge(s.status)}>{s.status}</span>
+                      </td>
+                      <td className="px-6 py-4 text-muted-foreground">{s.student_rating ? `${s.student_rating}★` : "—"}</td>
+                      <td className="px-6 py-4">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              disabled={!rating}
+                              onClick={() => rating && setPerfDetail({ session: s, rating })}
+                              className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-border transition-all duration-150 ease-out hover:bg-secondary active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+                              style={{ color: rating ? "#f38934" : undefined }}
+                              aria-label="View performance breakdown"
+                            >
+                              <BarChart3 className="h-3.5 w-3.5" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>View performance breakdown</TooltipContent>
+                        </Tooltip>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              disabled={!s.report_pdf_url}
+                              onClick={() => s.report_pdf_url && window.open(s.report_pdf_url, "_blank")}
+                              className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-border text-muted-foreground transition-all duration-150 ease-out hover:bg-secondary active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+                              aria-label="Download report"
+                            >
+                              <Download className="h-3.5 w-3.5" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>Download report</TooltipContent>
+                        </Tooltip>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </TooltipProvider>
         </PremiumCard>
       </section>
+
 
       {ratingSession && (
         <RatingModal
