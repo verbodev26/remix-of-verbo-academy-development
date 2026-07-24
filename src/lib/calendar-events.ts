@@ -202,6 +202,8 @@ export function adminCalendarEvents(opts?: {
     } else if (s.group_id) {
       const g = gMap.get(s.student_id);
       title = g ? g.name : "Group session";
+    } else if (s.origin === "spotlight") {
+      title = "Spotlight Session";
     } else {
       title = "1:1 Session";
     }
