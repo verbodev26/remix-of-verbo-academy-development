@@ -842,3 +842,37 @@ function SpotlightFormModal({ studentId, onClose }: { studentId: string; onClose
 
 // Ensures the UsersIcon import is referenced (linter placation for tree-shake).
 void UsersIcon;
+
+// ---------------------------------------------------------------------------
+// Sessions Remaining — shared source of truth for the balance. Reads from
+// `effectiveSessionCounts` so group members see the group's shared counter
+// automatically, and hides itself for non-performance products.
+// ---------------------------------------------------------------------------
+function SessionsRemainingCard({ studentId }: { studentId: string }) {
+  const u = USERS.find((x) => x.id === studentId);
+  if (!u) return null;
+  if (u.product_type !== "performance") return null;
+  const { hired, remaining } = effectiveSessionCounts(studentId, {
+    hired: u.hired_sessions,
+    remaining: u.remaining_sessions,
+  });
+  const { done, pct } = sessionProgressFor(hired, remaining);
+  const g = groupOfStudent(studentId);
+  return (
+    <Card className="!p-4">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sessions remaining</div>
+          <div className="mt-1 text-lg font-semibold text-foreground">{remaining} <span className="text-sm font-normal text-muted-foreground">of {hired} sessions</span></div>
+          {g && (
+            <div className="mt-0.5 text-[11px] text-muted-foreground">Shared with your group</div>
+          )}
+        </div>
+        <div className="text-right text-xs text-muted-foreground">{done} used</div>
+      </div>
+      <div className="mt-3 h-2 w-full rounded-full bg-secondary">
+        <div className="h-2 rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
+      </div>
+    </Card>
+  );
+}
