@@ -37,7 +37,7 @@ export function PrimaryButton({ children, className = "", ...rest }: React.Butto
   return (
     <button
       {...rest}
-      className={`inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground shadow-soft transition-opacity hover:opacity-90 disabled:opacity-40 shadow-sm ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground shadow-soft transition-opacity hover:opacity-90 disabled:opacity-40 shadow-sm transition-transform duration-150 ease-out active:scale-[0.97] ${className}`}
     >
       {children}
     </button>
@@ -48,7 +48,7 @@ export function GhostButton({ children, className = "", ...rest }: React.ButtonH
   return (
     <button
       {...rest}
-      className={`inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary transition-transform duration-150 ease-out active:scale-[0.97] ${className}`}
     >
       {children}
     </button>
@@ -59,10 +59,52 @@ export function SuccessButton({ children, className = "", ...rest }: React.Butto
   return (
     <button
       {...rest}
-      className={`inline-flex items-center justify-center gap-2 rounded-lg bg-success px-4 py-2 text-sm font-medium text-success-foreground shadow-soft transition-opacity hover:opacity-90 ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-lg bg-success px-4 py-2 text-sm font-medium text-success-foreground shadow-soft transition-opacity hover:opacity-90 transition-transform duration-150 ease-out active:scale-[0.97] ${className}`}
     >
       {children}
     </button>
+  );
+}
+
+/** Minimal SVG circular progress ring (right-aligned inside KPI cards). */
+export function StatRing({
+  value,
+  size = 64,
+  stroke = 6,
+  label,
+}: { value: number; size?: number; stroke?: number; label?: string }) {
+  const pct = Math.max(0, Math.min(100, value));
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const offset = c - (pct / 100) * c;
+  return (
+    <div className="relative shrink-0" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke="rgba(1, 48, 74, 0.08)"
+          strokeWidth={stroke}
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke="#f38934"
+          strokeWidth={stroke}
+          strokeLinecap="round"
+          strokeDasharray={c}
+          strokeDashoffset={offset}
+          style={{ transition: "stroke-dashoffset 700ms ease" }}
+        />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center text-[11px] font-semibold tabular-nums" style={{ color: "#01304a" }}>
+        {label ?? `${Math.round(pct)}%`}
+      </div>
+    </div>
   );
 }
 
