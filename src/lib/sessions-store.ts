@@ -263,6 +263,19 @@ export function submitSessionReport(input: {
     saveSubskillEvaluation(input.sessionId, input.subskills);
   }
   setCoverageNote(input.teacherId, input.studentId, "");
+
+  // Decrement remaining_sessions for 1:1 individual sessions when the class
+  // actually occurred. Mirrors the group-side rule in submitGroupSessionReport:
+  // if the teacher no-showed (absent with cause "teacher"), the student keeps
+  // the credit. Explicit guard so future re-use of this function for group,
+  // spotlight, or workshop sessions doesn't accidentally consume a credit.
+  const src = next.find((s) => s.id === input.sessionId);
+  const isOneOnOne =
+    !!src && !src.origin && !src.group_id && !src.workshop_cohort_id && !src.workshop_template_id;
+  const classOccurred = !(status === "absent" && input.absentCause === "teacher");
+  if (isOneOnOne && classOccurred) {
+    adjustRemainingSessions(input.studentId, -1);
+  }
   return updated;
 }
 
