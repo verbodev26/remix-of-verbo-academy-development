@@ -511,7 +511,7 @@ function StudentDashboard() {
                   }
                 }}
               >
-                Continue unit
+                Continue unit <ArrowRight className="h-4 w-4" />
               </PrimaryButton>
             </PremiumCard>
           </div>
@@ -639,67 +639,77 @@ function StudentDashboard() {
       {/* History */}
       <section className="verbo-fade-up motion-reduce:animate-none" style={{ animationDelay: "300ms" }}>
         <SectionTitle>Session History</SectionTitle>
-        <PremiumCard className="verbo-card-hover !p-0 overflow-hidden">
+        <PremiumCard className="verbo-card-hover">
           <TooltipProvider delayDuration={200}>
-            <table className="w-full text-sm">
-              <thead className="text-left text-xs uppercase tracking-wider text-muted-foreground">
-                <tr className="border-b border-border">
-                  <th className="px-6 py-3 font-medium">Date</th>
-                  <th className="px-6 py-3 font-medium">Teacher</th>
-                  <th className="px-6 py-3 font-medium">Status</th>
-                  <th className="px-6 py-3 font-medium">Rating</th>
-                  <th className="px-6 py-3 font-medium">My Performance</th>
-                  <th className="px-6 py-3 font-medium text-right">Report</th>
-                </tr>
-              </thead>
-              <tbody>
-                {history.map((s) => {
-                  const teacher = userById(s.teacher_id);
-                  const rating = performance[s.id];
-                  return (
-                    <tr key={s.id} className="border-b border-border last:border-0 transition-colors hover:bg-secondary/40">
-                      <td className="px-6 py-4 text-foreground">{fmt(s.date_time)}</td>
-                      <td className="px-6 py-4 text-muted-foreground">{teacher?.name}</td>
-                      <td className="px-6 py-4">
-                        <span className={statusBadge(s.status)}>{s.status}</span>
-                      </td>
-                      <td className="px-6 py-4">{s.student_rating ? <RatingStarsCompact value={s.student_rating} /> : <span className="text-muted-foreground">—</span>}</td>
-                      <td className="px-6 py-4">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              disabled={!rating}
-                              onClick={() => rating && setPerfDetail({ session: s, rating })}
-                              className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-border transition-all duration-150 ease-out hover:bg-secondary active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
-                              style={{ color: rating ? "#f38934" : undefined }}
-                              aria-label="View performance breakdown"
-                            >
-                              <BarChart3 className="h-3.5 w-3.5" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent>View performance breakdown</TooltipContent>
-                        </Tooltip>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              disabled={!s.report_pdf_url}
-                              onClick={() => s.report_pdf_url && window.open(s.report_pdf_url, "_blank")}
-                              className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-border text-muted-foreground transition-all duration-150 ease-out hover:bg-secondary active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
-                              aria-label="Download report"
-                            >
-                              <Download className="h-3.5 w-3.5" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent>Download report</TooltipContent>
-                        </Tooltip>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            <div className="hidden md:grid md:grid-cols-[1fr_1fr_auto_auto_auto_auto] gap-4 px-4 pb-3 text-[10px] uppercase tracking-wider text-muted-foreground">
+              <div>Date</div>
+              <div>Teacher</div>
+              <div>Status</div>
+              <div>Rating</div>
+              <div>My Performance</div>
+              <div className="text-right">Report</div>
+            </div>
+            <div className="divide-y divide-border">
+              {history.map((s) => {
+                const teacher = userById(s.teacher_id);
+                const rating = performance[s.id];
+                const teacherName = teacher?.name ?? "Teacher";
+                const initial = teacherName.charAt(0).toUpperCase();
+                return (
+                  <div
+                    key={s.id}
+                    className="flex flex-wrap items-center gap-4 rounded-xl px-4 py-4 transition-colors hover:bg-secondary/40"
+                  >
+                    <div className="flex min-w-0 flex-1 items-center gap-3">
+                      <div
+                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold"
+                        style={{ color: "#01304a" }}
+                        aria-hidden
+                      >
+                        {initial}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-semibold" style={{ color: "#01304a" }}>{teacherName}</div>
+                        <div className="truncate text-xs text-muted-foreground">{fmt(s.date_time)}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className={statusBadge(s.status)}>{s.status}</span>
+                      {s.student_rating ? <RatingStarsCompact value={s.student_rating} /> : <span className="text-xs text-muted-foreground">—</span>}
+                    </div>
+                    <div className="ml-auto flex items-center gap-2">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            disabled={!rating}
+                            onClick={() => rating && setPerfDetail({ session: s, rating })}
+                            className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-border transition-all duration-150 ease-out hover:bg-secondary active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+                            style={{ color: rating ? "#f38934" : undefined }}
+                            aria-label="View performance breakdown"
+                          >
+                            <BarChart3 className="h-3.5 w-3.5" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>View performance breakdown</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            disabled={!s.report_pdf_url}
+                            onClick={() => s.report_pdf_url && window.open(s.report_pdf_url, "_blank")}
+                            className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-border text-muted-foreground transition-all duration-150 ease-out hover:bg-secondary active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+                            aria-label="Download report"
+                          >
+                            <Download className="h-3.5 w-3.5" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>Download report</TooltipContent>
+                      </Tooltip>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </TooltipProvider>
         </PremiumCard>
       </section>
