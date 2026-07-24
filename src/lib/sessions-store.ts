@@ -3,6 +3,7 @@ import { SESSIONS as SEED_SESSIONS, type Session } from "./mock-data";
 import { setCoverageNote } from "./coverage-notes-store";
 import { saveSubskillEvaluation } from "./performance-store";
 import { decrementGroupRemaining, activeMembersOf } from "./groups-store";
+import { adjustRemainingSessions } from "./students-store";
 
 export type ExtSessionStatus =
   | "scheduled"
