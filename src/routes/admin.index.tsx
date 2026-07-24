@@ -120,7 +120,7 @@ function Overview() {
         <MetricCard label="Students" value={String(students.length)} />
         <MetricCard label="Teachers" value={String(teachers.length)} />
         <MetricCard label="Sessions scheduled" value={String(scheduled)} />
-        <MetricCard label="Active levels" value={String(LEVELS.length)} />
+        <MetricCard label="Active levels" value={String(new Set(students.flatMap((s) => s.contracted_levels ?? [])).size)} />
         <MetricCard label="Avg composite score" value={`${avgComposite}%`} />
       </div>
 
