@@ -48,6 +48,7 @@ import { Route as AdminHolidaysRouteImport } from './routes/admin.holidays'
 import { Route as AdminGroupsRouteImport } from './routes/admin.groups'
 import { Route as AdminFlashRouteImport } from './routes/admin.flash'
 import { Route as AdminCoursesRouteImport } from './routes/admin.courses'
+import { Route as AdminConductReportsRouteImport } from './routes/admin.conduct-reports'
 import { Route as AdminClubsRouteImport } from './routes/admin.clubs'
 import { Route as AdminChallengesRouteImport } from './routes/admin.challenges'
 import { Route as AdminCalendarRouteImport } from './routes/admin.calendar'
@@ -249,6 +250,11 @@ const AdminCoursesRoute = AdminCoursesRouteImport.update({
   path: '/courses',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminConductReportsRoute = AdminConductReportsRouteImport.update({
+  id: '/conduct-reports',
+  path: '/conduct-reports',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminClubsRoute = AdminClubsRouteImport.update({
   id: '/clubs',
   path: '/clubs',
@@ -287,6 +293,7 @@ export interface FileRoutesByFullPath {
   '/admin/calendar': typeof AdminCalendarRoute
   '/admin/challenges': typeof AdminChallengesRoute
   '/admin/clubs': typeof AdminClubsRoute
+  '/admin/conduct-reports': typeof AdminConductReportsRoute
   '/admin/courses': typeof AdminCoursesRoute
   '/admin/flash': typeof AdminFlashRoute
   '/admin/groups': typeof AdminGroupsRoute
@@ -330,6 +337,7 @@ export interface FileRoutesByTo {
   '/admin/calendar': typeof AdminCalendarRoute
   '/admin/challenges': typeof AdminChallengesRoute
   '/admin/clubs': typeof AdminClubsRoute
+  '/admin/conduct-reports': typeof AdminConductReportsRoute
   '/admin/courses': typeof AdminCoursesRoute
   '/admin/flash': typeof AdminFlashRoute
   '/admin/groups': typeof AdminGroupsRoute
@@ -377,6 +385,7 @@ export interface FileRoutesById {
   '/admin/calendar': typeof AdminCalendarRoute
   '/admin/challenges': typeof AdminChallengesRoute
   '/admin/clubs': typeof AdminClubsRoute
+  '/admin/conduct-reports': typeof AdminConductReportsRoute
   '/admin/courses': typeof AdminCoursesRoute
   '/admin/flash': typeof AdminFlashRoute
   '/admin/groups': typeof AdminGroupsRoute
@@ -425,6 +434,7 @@ export interface FileRouteTypes {
     | '/admin/calendar'
     | '/admin/challenges'
     | '/admin/clubs'
+    | '/admin/conduct-reports'
     | '/admin/courses'
     | '/admin/flash'
     | '/admin/groups'
@@ -468,6 +478,7 @@ export interface FileRouteTypes {
     | '/admin/calendar'
     | '/admin/challenges'
     | '/admin/clubs'
+    | '/admin/conduct-reports'
     | '/admin/courses'
     | '/admin/flash'
     | '/admin/groups'
@@ -514,6 +525,7 @@ export interface FileRouteTypes {
     | '/admin/calendar'
     | '/admin/challenges'
     | '/admin/clubs'
+    | '/admin/conduct-reports'
     | '/admin/courses'
     | '/admin/flash'
     | '/admin/groups'
@@ -834,6 +846,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCoursesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/conduct-reports': {
+      id: '/admin/conduct-reports'
+      path: '/conduct-reports'
+      fullPath: '/admin/conduct-reports'
+      preLoaderRoute: typeof AdminConductReportsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/clubs': {
       id: '/admin/clubs'
       path: '/clubs'
@@ -877,6 +896,7 @@ interface AdminRouteChildren {
   AdminCalendarRoute: typeof AdminCalendarRoute
   AdminChallengesRoute: typeof AdminChallengesRoute
   AdminClubsRoute: typeof AdminClubsRoute
+  AdminConductReportsRoute: typeof AdminConductReportsRoute
   AdminCoursesRoute: typeof AdminCoursesRoute
   AdminFlashRoute: typeof AdminFlashRoute
   AdminGroupsRoute: typeof AdminGroupsRoute
@@ -897,6 +917,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCalendarRoute: AdminCalendarRoute,
   AdminChallengesRoute: AdminChallengesRoute,
   AdminClubsRoute: AdminClubsRoute,
+  AdminConductReportsRoute: AdminConductReportsRoute,
   AdminCoursesRoute: AdminCoursesRoute,
   AdminFlashRoute: AdminFlashRoute,
   AdminGroupsRoute: AdminGroupsRoute,
@@ -984,13 +1005,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

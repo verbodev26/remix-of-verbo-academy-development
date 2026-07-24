@@ -27,6 +27,9 @@ import { teacherTier } from "./teacher-tiers";
 import { activeAnnouncements, ANN_EVENT } from "./announcements-store";
 import { loadFinancialIssues, FIN_ISSUES_EVENT } from "./financial-issues-store";
 import { REPORTS_KEY, REPORTS_EVENT, type StudentReport } from "./student-reports-store";
+import {
+  loadConductReports, CONDUCT_REPORTS_EVENT,
+} from "./conduct-reports-store";
 import { ASSIGNMENTS } from "./mock-data";
 import { loadChallenges, CHALLENGES_EVENT } from "./challenges-store";
 import { STUDENTS_EVENT } from "./students-store";
@@ -58,6 +61,7 @@ export type NotificationKind =
   | "avail_change_request"
   | "teacher_three_strikes"
   | "student_report_filed"
+  | "conduct_report_filed"
   | "financial_issue_reported";
 
 export interface Notification {
@@ -428,6 +432,21 @@ function adminNotifications(): Notification[] {
     });
   }
 
+  // ---- Conduct reports filed by students --------------------------------
+  for (const r of loadConductReports()) {
+    const reporter = USERS.find((u) => u.id === r.reporter_id);
+    const target = USERS.find((u) => u.id === r.target_id);
+    out.push({
+      id: `conduct-report:${r.id}`,
+      kind: "conduct_report_filed",
+      title: "New conduct report filed",
+      body: `${reporter?.name ?? "Student"} → ${target?.name ?? r.target_type} · ${r.category}`,
+      createdAt: r.created_at,
+      to: "/admin/conduct-reports",
+      read: false,
+    });
+  }
+
   // ---- Financial issues reported by teachers ----------------------------
   for (const i of loadFinancialIssues()) {
     const t = USERS.find((u) => u.id === i.teacher_id);
@@ -462,7 +481,7 @@ export function buildNotifications(role: Role, userId: string): Notification[] {
 const SOURCE_EVENTS = [
   SESSIONS_EVENT, CLUBS_EVENT, RELEASE_REQUESTS_EVENT,
   AVAIL_EVENT, STRIKES_EVENT, ANN_EVENT, NOTIF_EVENT,
-  REPORTS_EVENT, FIN_ISSUES_EVENT, STUDENTS_EVENT, CHALLENGES_EVENT,
+  REPORTS_EVENT, CONDUCT_REPORTS_EVENT, FIN_ISSUES_EVENT, STUDENTS_EVENT, CHALLENGES_EVENT,
 ];
 
 function subscribe(cb: () => void): () => void {

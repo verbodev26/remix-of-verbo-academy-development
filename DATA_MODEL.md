@@ -468,6 +468,10 @@ Log de actividad administrativa (Super Admin), recomputado on-demand. `id, kind:
 ### `StudentReport` (`src/lib/student-reports-store.ts`)
 `id, student_id, teacher_id, created_at, text`. ⚠️ TODO explícito en el código: no hay canal de entrega implementado (chat interno o WhatsApp, decisión pendiente) — el reporte se persiste pero no se notifica a nadie todavía.
 
+### `ConductReport` (`src/lib/conduct-reports-store.ts`)
+Dirección **STUDENT → TEACHER o STUDENT** (opuesto e independiente de `StudentReport`). `id, reporter_id` (alumno real, siempre visible a Admin), `target_type: "teacher"|"student", target_id, category: "Inappropriate behavior"|"Harassment"|"Academic non-compliance"|"Other", text, created_at`. Persistido en `localStorage` (`verbo:conduct-reports`) + `CustomEvent verbo:conduct-reports-updated`. Anónimo únicamente frente a la persona reportada — Admin ve al reporter. Dispara la notificación `conduct_report_filed` (→ `/admin/conduct-reports`). Sin workflow de resolver/descartar por diseño.
+
+
 ### `StudentRequest` (`src/lib/student-requests-store.ts`)
 `id, kind: "reschedule"|"spotlight", student_id, assigned_teacher_id?, origin_session_id?, proposed_datetime, duration_minutes, spotlight_context?, last_report_summary?, requested_at, status: "open"|"claimed"|"escalated"|"assigned"|"cancelled", claimed_by?, claimed_at?`.
 

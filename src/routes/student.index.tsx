@@ -21,6 +21,7 @@ import {
   CalendarClock,
   Download,
   Flame,
+  ShieldAlert,
   Sparkles,
   Star,
   Users,
@@ -28,6 +29,7 @@ import {
   X,
 } from "lucide-react";
 import { RatingModal } from "@/components/verbo/RatingModal";
+import { ReportConductModal } from "@/components/verbo/ReportConductModal";
 import {
   Dialog,
   DialogContent,
@@ -206,6 +208,7 @@ function StudentDashboard() {
   });
 
   const [toCancel, setToCancel] = useState<ExtSession | null>(null);
+  const [reportOpen, setReportOpen] = useState(false);
 
   const [coursesRev, setCoursesRev] = useState(0);
   useEffect(() => subscribeCourses(() => setCoursesRev((r) => r + 1)), []);
@@ -358,6 +361,9 @@ function StudentDashboard() {
             </div>
           </div>
         </div>
+        <GhostButton onClick={() => setReportOpen(true)}>
+          <ShieldAlert className="h-4 w-4" /> Report
+        </GhostButton>
       </header>
 
       {/* KPI Metrics with circular SVG progress */}
@@ -653,6 +659,12 @@ function StudentDashboard() {
           onClose={handleClose}
         />
       )}
+
+      <ReportConductModal
+        studentId={user.id}
+        open={reportOpen}
+        onClose={() => setReportOpen(false)}
+      />
 
       {/* Cancellation Modal */}
       <Dialog open={!!toCancel} onOpenChange={(o) => !o && setToCancel(null)}>
