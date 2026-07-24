@@ -127,13 +127,8 @@ function CategoryBadge({ name }: { name: string }) {
   );
 }
 
-function PremiumBadge() {
-  return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-600">
-      <Lock className="h-3 w-3" /> Premium
-    </span>
-  );
-}
+
+
 
 function SkillChip({ label }: { label: string }) {
   return (
