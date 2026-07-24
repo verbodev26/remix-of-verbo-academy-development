@@ -214,9 +214,16 @@ function StudentDashboard() {
   const currentUnitTitle = progress?.currentUnitTitle ?? null;
   const currentLevelName = progress?.levelName ?? null;
 
-  // Legacy tile ("Current Level") still uses the LEVELS catalog by design —
-  // the request scoped this migration to Level Progress and Current Course.
-  const level = LEVELS.find((l) => l.id === user.current_level);
+  // Product label — VIP lives outside PRODUCT_META, handle it literally.
+  const productLabel = user.product === "vip" ? "VIP" : (user.product ? PRODUCT_META[user.product as ProductId]?.label : undefined);
+
+  // Ordinal position of current level within contracted levels ("2/3").
+  const contractedLevels = user.contracted_levels ?? [];
+  const currentLevelIdx = currentLevelName ? contractedLevels.indexOf(currentLevelName) : -1;
+  const currentLevelRingLabel =
+    currentLevelIdx >= 0 && contractedLevels.length > 0
+      ? `${currentLevelIdx + 1}/${contractedLevels.length}`
+      : "";
 
 
   // Overall Attendance — shared helper (studentAttendance) so Admin, Teacher
