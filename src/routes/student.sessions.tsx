@@ -737,6 +737,10 @@ function SpotlightFormModal({ studentId, onClose }: { studentId: string; onClose
   );
 
   const submit = () => {
+    if (resolvedRemainingSeats(studentId, "spotlight") <= 0) {
+      setError("You've used all your Spotlight requests for this month.");
+      return;
+    }
     if (!slotISO) { setError("Pick one of the available start times."); return; }
     if (context.trim().length === 0) { setError("Please describe what you need for your Spotlight."); return; }
     // Overlap check with an existing regular 1:1 for this student at the
