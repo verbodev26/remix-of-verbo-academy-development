@@ -7,7 +7,7 @@ import {
   getProduct,
 } from "@/lib/student-model";
 import { hydrateStudents, subscribeStudents } from "@/lib/students-store";
-import { groupOfStudent, subscribeGroups } from "@/lib/groups-store";
+import { groupOfStudent, subscribeGroups, effectiveSessionCounts, sessionProgressFor } from "@/lib/groups-store";
 import {
   loadChallenges, subscribeChallenges, challengesFor, categoryColor,
   DIFFICULTY_META, DIFFICULTY_ORDER,
@@ -189,10 +189,10 @@ function StudentCard({ student: s, onOpen }: { student: User; onOpen: () => void
   const bcStrikes = s.bookclub_strikes ?? 0;
   const bcBlocked = bcStrikes >= MAX_BOOKCLUB_STRIKES;
   const hasBookClubs = (s.addon_bookclubs_per_month ?? 0) > 0;
-  const hired = s.hired_sessions ?? 0;
-  const remaining = s.remaining_sessions ?? 0;
-  const done = Math.max(0, hired - remaining);
-  const pct = hired > 0 ? (done / hired) * 100 : 0;
+  const counts = effectiveSessionCounts(s.id, { hired: s.hired_sessions, remaining: s.remaining_sessions });
+  const hired = counts.hired;
+  const remaining = counts.remaining;
+  const { pct } = sessionProgressFor(hired, remaining);
   const productType = s.product_type ?? "performance";
   const showInsightsBadge = productType === "performance" || productType === "insights";
   const isVip = s.product === "vip";
@@ -405,8 +405,10 @@ function StudentDetailModal({
       ? s.product
       : null;
 
-  const hired = s.hired_sessions ?? 0;
-  const remaining = s.remaining_sessions ?? 0;
+  const counts = effectiveSessionCounts(s.id, { hired: s.hired_sessions, remaining: s.remaining_sessions });
+  const hired = counts.hired;
+  const remaining = counts.remaining;
+  const used = sessionProgressFor(hired, remaining).done;
 
   type DetailTab = "overview" | "progress" | "challenges";
   const [tab, setTab] = useState<DetailTab>("overview");
@@ -470,7 +472,7 @@ function StudentDetailModal({
                 <div className="mt-3 grid grid-cols-3 gap-4">
                   <Stat label="Contracted" value={String(hired)} />
                   <Stat label="Remaining" value={String(remaining)} />
-                  <Stat label="Used" value={String(Math.max(0, hired - remaining))} />
+                  <Stat label="Used" value={String(used)} />
                 </div>
                 <p className="mt-3 text-xs text-muted-foreground">
                   Use this balance to decide how many sessions to dedicate to Additional Content, Review Session

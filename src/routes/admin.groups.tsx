@@ -17,11 +17,13 @@ import {
   loadGroups, loadGroupMembers, subscribeGroups, registerGroupWithMembers,
   updateGroup, addMember, removeMember, restoreMember, archiveMember,
   moveMember, markGroupAsPaid, activeMembersOf, membersOf, pendingCountdownDays,
-  groupById, type Group, type GroupMember,
+  groupById, sessionProgressFor, type Group, type GroupMember,
 } from "@/lib/groups-store";
 import { Card, GhostButton, PrimaryButton } from "@/components/verbo/ui";
-import { loadSessions, type ExtSession } from "@/lib/sessions-store";
+import { loadSessions, addGroupSession, type ExtSession } from "@/lib/sessions-store";
+import { loadHolidays } from "@/lib/holidays-store";
 import { RescheduleModal } from "@/components/verbo/RescheduleModal";
+import { CalendarPlus, AlertTriangle } from "lucide-react";
 
 export const Route = createFileRoute("/admin/groups")({ component: Page });
 
@@ -104,8 +106,7 @@ function GroupCard({ group, onOpen }: { group: Group; onOpen: () => void }) {
   const product = getProduct(group.product);
   const hired = group.hired_sessions ?? 0;
   const remaining = group.remaining_sessions ?? 0;
-  const done = Math.max(0, hired - remaining);
-  const pct = hired > 0 ? (done / hired) * 100 : 0;
+  const { done, pct } = sessionProgressFor(hired, remaining);
   const nextPay = group.next_payment
     ? new Date(group.next_payment)
     : group.payment_day ? nextPaymentDate(group.payment_day, new Date()) : null;
@@ -441,8 +442,7 @@ function GroupDetailModal({ groupId, onClose }: { groupId: string; onClose: () =
 
   const hired = g.hired_sessions ?? 0;
   const remaining = g.remaining_sessions ?? 0;
-  const done = Math.max(0, hired - remaining);
-  const pct = hired > 0 ? (done / hired) * 100 : 0;
+  const { pct } = sessionProgressFor(hired, remaining);
 
   return (
     <Overlay onClose={onClose}>
@@ -558,6 +558,12 @@ function GroupDetailModal({ groupId, onClose }: { groupId: string; onClose: () =
               <div className="h-full rounded-full bg-accent" style={{ width: `${Math.min(100, pct)}%` }} />
             </div>
           </Card>
+
+          {/* Schedule Sessions — group-level bulk generator. Mirrors the
+              recurrence + holiday-cascade UX of the Bulk Scheduler on
+              Admin > Sessions, but produces ONE group session per date. */}
+          <GroupBulkScheduler groupId={groupId} />
+
 
           {/* Roster */}
           <div>
@@ -916,5 +922,171 @@ function ConfirmModal({ title, message, confirmLabel, onCancel, onConfirm }: {
         </div>
       </div>
     </Overlay>
+  );
+}
+// ---------------------------------------------------------------------------
+// Group Bulk Scheduler — mirrors the Bulk Scheduler on Admin > Sessions
+// (recurrence + holiday cascade), but generates ONE group session per date
+// via `addGroupSession`. Consumes the group's shared Remaining counter.
+// ---------------------------------------------------------------------------
+const GBS_DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const GBS_DAY_INDEX = [1, 2, 3, 4, 5, 6];
+const GBS_BRAND = "#01304a";
+const GBS_ORANGE = "#f38934";
+
+function GroupBulkScheduler({ groupId }: { groupId: string }) {
+  const g = groupById(groupId);
+  const [, tick] = useState(0);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [time, setTime] = useState("19:00");
+  const [days, setDays] = useState<number[]>([1, 3]);
+
+  if (!g) return null;
+
+  const teacherId = g.teacher_id ?? "";
+  const teamsLink = g.video_call_link ?? "";
+  const hired = g.hired_sessions ?? 0;
+  const remaining = g.remaining_sessions ?? 0;
+
+  type Slot = { date: Date; holiday: boolean; makeup: boolean };
+  const generated: Slot[] = (() => {
+    if (!startDate || !endDate || days.length === 0) return [];
+    const [hh, mm] = time.split(":").map(Number);
+    const start = new Date(startDate + "T00:00:00");
+    const end = new Date(endDate + "T00:00:00");
+    if (end < start) return [];
+    const holidaySet = new Set(loadHolidays().map((h) => h.date));
+    const localKey = (d: Date) =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const out: Slot[] = [];
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      if (days.includes(d.getDay())) {
+        const dt = new Date(d); dt.setHours(hh, mm, 0, 0);
+        out.push({ date: dt, holiday: holidaySet.has(localKey(dt)), makeup: false });
+      }
+    }
+    let pending = out.filter((x) => x.holiday).length;
+    let cursor = out.length ? new Date(out[out.length - 1].date) : new Date(end);
+    let safety = 0;
+    while (pending > 0 && safety < 366) {
+      cursor = new Date(cursor);
+      do { cursor.setDate(cursor.getDate() + 1); } while (!days.includes(cursor.getDay()));
+      const dt = new Date(cursor); dt.setHours(hh, mm, 0, 0);
+      const isHol = holidaySet.has(localKey(dt));
+      out.push({ date: dt, holiday: isHol, makeup: !isHol });
+      if (isHol) pending += 1;
+      pending -= 1; safety += 1;
+    }
+    return out;
+  })();
+
+  const holidayHits = generated.filter((x) => x.holiday).length;
+  const makeupCount = generated.filter((x) => x.makeup).length;
+  const consumingCount = generated.length - holidayHits;
+  const overLimit = consumingCount > remaining;
+
+  const toggleDay = (d: number) => setDays((p) => (p.includes(d) ? p.filter((x) => x !== d) : [...p, d]));
+
+  const assign = () => {
+    if (!teacherId || generated.length === 0 || overLimit) return;
+    const duration = g.session_duration ?? 60;
+    let created = 0;
+    generated.forEach((slot) => {
+      if (slot.holiday) return; // holiday hits are auto-skipped (no session created)
+      const s = addGroupSession({
+        groupId,
+        teacherId,
+        teamsLink,
+        dateISO: slot.date.toISOString(),
+        durationMinutes: duration,
+      });
+      if (s) created += 1;
+    });
+    if (created > 0) toast.success(`${created} group session${created === 1 ? "" : "s"} scheduled`);
+    setStartDate(""); setEndDate("");
+    tick((n) => n + 1);
+  };
+
+  return (
+    <Card className="!p-4">
+      <div className="mb-3 flex items-center justify-between">
+        <div className="text-xs font-semibold uppercase text-muted-foreground">Schedule Sessions</div>
+        <div className="text-[11px] text-muted-foreground">
+          Hired Sessions: <span className="font-semibold text-foreground">{hired}</span> · Remaining: <span className="font-semibold text-foreground">{remaining}</span>
+        </div>
+      </div>
+
+      {!teacherId && (
+        <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800">
+          Assign a teacher above before scheduling group sessions.
+        </div>
+      )}
+
+      <div className="grid gap-3 md:grid-cols-3">
+        <div>
+          <label className="text-xs font-medium text-foreground">Start date</label>
+          <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="mt-1.5 w-full cursor-pointer rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground" />
+        </div>
+        <div>
+          <label className="text-xs font-medium text-foreground">End date</label>
+          <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="mt-1.5 w-full cursor-pointer rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground" />
+        </div>
+        <div>
+          <label className="text-xs font-medium text-foreground">Session start time</label>
+          <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="mt-1.5 w-full cursor-pointer rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground" />
+        </div>
+      </div>
+
+      <div className="mt-3">
+        <label className="text-xs font-medium text-foreground">Frequency (days of week)</label>
+        <div className="mt-1 flex flex-wrap gap-2">
+          {GBS_DAY_LABELS.map((lbl, i) => {
+            const v = GBS_DAY_INDEX[i]; const active = days.includes(v);
+            return (
+              <button key={v} onClick={() => toggleDay(v)}
+                className="cursor-pointer rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors"
+                style={active
+                  ? { backgroundColor: GBS_BRAND, color: "white", borderColor: GBS_BRAND }
+                  : { backgroundColor: "transparent", color: "var(--foreground)", borderColor: "var(--border)" }}>
+                {lbl}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {generated.length > 0 && (
+        <div className="mt-3 flex items-start gap-3 rounded-xl border p-3 text-sm"
+          style={overLimit
+            ? { backgroundColor: "#fff4e6", borderColor: GBS_ORANGE, color: "#7a3d00" }
+            : { backgroundColor: "var(--secondary)", borderColor: "var(--border)", color: "var(--foreground)" }}>
+          {overLimit ? <AlertTriangle className="mt-0.5 h-4 w-4" style={{ color: GBS_ORANGE }} /> : <CalendarClock className="mt-0.5 h-4 w-4" />}
+          <div>
+            {overLimit ? (
+              <>
+                <div className="font-semibold">This range generates {consumingCount} sessions, but the group only has {remaining} remaining.</div>
+                <div className="mt-0.5 text-xs">Reduce the range or edit the group's Hired Sessions.</div>
+              </>
+            ) : (
+              <div>Will create <span className="font-semibold">{consumingCount}</span> group session{consumingCount === 1 ? "" : "s"}. Group has <span className="font-semibold">{remaining}</span> remaining.</div>
+            )}
+            {holidayHits > 0 && (
+              <div className="mt-1 text-xs">
+                {holidayHits} date{holidayHits === 1 ? "" : "s"} fall on a holiday and were skipped; {makeupCount} replacement date{makeupCount === 1 ? "" : "s"} appended at the end.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div className="mt-3 flex justify-end">
+        <button onClick={assign} disabled={!teacherId || overLimit || generated.length === 0}
+          className="inline-flex cursor-pointer items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white shadow-soft transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+          style={{ backgroundColor: GBS_ORANGE }}>
+          <CalendarPlus className="h-4 w-4" /> Schedule {generated.length > 0 ? `(${consumingCount})` : ""}
+        </button>
+      </div>
+    </Card>
   );
 }

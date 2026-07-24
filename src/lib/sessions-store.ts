@@ -147,6 +147,40 @@ export function addWorkshopSession(input: {
   return s;
 }
 
+/** Create one Performance Session for a Group. Mirrors `addWorkshopSession`:
+ *  `student_id` is a sentinel (any active roster member id) so surfaces that
+ *  resolve group membership via `groupsByStudentId()` still work, while
+ *  `group_id` is the real link. Initialises `member_statuses` for every
+ *  active member so `studentCalendarEvents` (which matches by both
+ *  `student_id` and `Object.keys(member_statuses)`) shows the class in every
+ *  member's calendar from the moment it is scheduled — no need to wait for
+ *  the Session Report to be submitted. */
+export function addGroupSession(input: {
+  groupId: string;
+  teacherId: string;
+  teamsLink: string;
+  dateISO?: string;
+  durationMinutes?: number;
+}): ExtSession | null {
+  const roster = activeMembersOf(input.groupId);
+  if (roster.length === 0) return null;
+  const memberStatuses: Record<string, ExtSessionStatus> = {};
+  for (const m of roster) memberStatuses[m.student_id] = "scheduled";
+  const s: ExtSession = {
+    id: `grp-${input.groupId}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    student_id: roster[0].student_id, // sentinel; the roster lives in Group
+    group_id: input.groupId,
+    teacher_id: input.teacherId,
+    date_time: input.dateISO ?? "",
+    duration_minutes: input.durationMinutes ?? 60,
+    teams_link: input.teamsLink,
+    status: "scheduled",
+    member_statuses: memberStatuses,
+  };
+  persistSessions([s, ...loadSessions()]);
+  return s;
+}
+
 export function updateWorkshopSession(id: string, patch: Partial<ExtSession>) {
   const next = loadSessions().map((s) => (s.id === id ? { ...s, ...patch } : s));
   persistSessions(next);

@@ -171,6 +171,11 @@ Extiende `Session` (con `Omit<Session,"status">`), agregando el ciclo de vida re
 | report_comments | string | opcional | |
 | holiday_makeup | boolean | opcional | `true` solo en sesiones auto-generadas por el Bulk Scheduler de Admin > Sessions como reposición de una fecha que cayó en un `Holiday` (§10). Las fechas holiday-hit se crean con `status: "cancelled"` + `attendance_sub_status: "cancelled_holiday"`; las de reposición se crean con `status: "scheduled"` + `holiday_makeup: true`. |
 
+**Creación de sesiones de grupo (`addGroupSession`)**: crea una `ExtSession` con `group_id` real, `student_id = roster[0]` (sentinel — mismo patrón que `addWorkshopSession` con `student_id = cohortId`), y `member_statuses` inicializado con TODOS los miembros activos del roster en `"scheduled"`. Esto último es necesario porque `studentCalendarEvents` (en `calendar-events.ts`) filtra la sesión por `s.student_id === studentId || Object.keys(member_statuses).includes(studentId)` — sin poblar `member_statuses` desde la creación, solo el miembro sentinel vería la clase en su calendario hasta que se sometiera el Session Report.
+
+**Contador compartido del grupo**: `decrementGroupRemaining(groupId)` (al reportarse la sesión, si al menos alguien asistió o si algún ausente fue por causa `"student"`) y `incrementGroupRemaining(groupId)` (refund simétrico, usado por ejemplo al convertir una sesión a Spotlight desde un alumno de grupo). El increment se cappea en `hired_sessions`.
+
+
 
 ### `ReportAdminEdit` (`src/lib/sessions-store.ts`)
 | campo | tipo | requerido/opcional |
@@ -668,7 +673,7 @@ Sin sub-tipos. Nav varía por `product_type` y por `product === "vip"`. No requi
 5. **Duplicación masiva `Group` ↔ `User`**: ~15 campos replicados y sincronizados a mano vía `propagateGroupToMembers()` (ver §6).
 6. **Relación maestro-alumno en dos lugares**: `ASSIGNMENTS` (array plano) vs. `Group.teacher_id` + membresía de grupo — sincronizados manualmente en `groups-store.ts`.
 7. **`hired_plan` vs `access_plan`** en `User` — alias legacy documentado como tal en el propio código, nunca limpiado.
-8. **Cálculo de "% de progreso" (`done = hired - remaining; pct = done/hired*100`) duplicado en al menos 3 componentes** (`admin.students.tsx`, `admin.sessions.tsx`, `teacher.students.tsx`) en vez de vivir en un store.
+8. **~~Cálculo de "% de progreso" duplicado~~ RESUELTO**: consolidado en `sessionProgressFor(hired, remaining) → { done, pct }` en `groups-store.ts`, consumido por `admin.students.tsx`, `admin.sessions.tsx`, `admin.groups.tsx` (GroupCard + GroupDetailModal) y `teacher.students.tsx`.
 9. **Promedio de ratings de sesión calculado 3 veces** en 3 componentes distintos (`PerformanceAnalytics.tsx`, `RatingTrendModal.tsx`, `admin.students.tsx`), ninguna en un store.
 10. **"Profesores calificados para un producto" implementado de 3 formas distintas**: helper correcto (`teachersForProduct()`), sin filtrar en absoluto, y un filtro manual reinventado — todo dentro de `admin.sessions.tsx` y `admin.students.tsx`.
 

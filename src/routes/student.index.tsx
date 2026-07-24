@@ -3,6 +3,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useAuth } from "@/lib/auth";
 import { LEVELS, userById } from "@/lib/mock-data";
+import { effectiveSessionCounts, groupOfStudent } from "@/lib/groups-store";
 import { persistSessions, subscribeSessions, getSessionsSnapshot, getServerSessionsSnapshot, submitStudentRating, type ExtSession } from "@/lib/sessions-store";
 import {
   getPerformanceSnapshot,
@@ -361,9 +362,24 @@ function StudentDashboard() {
             </div>
           </div>
         </div>
-        <GhostButton onClick={() => setReportOpen(true)}>
-          <ShieldAlert className="h-4 w-4" /> Report
-        </GhostButton>
+        <div className="flex items-center gap-3">
+          {user.product_type === "performance" && (() => {
+            const c = effectiveSessionCounts(user.id, { hired: user.hired_sessions, remaining: user.remaining_sessions });
+            const grp = groupOfStudent(user.id);
+            return (
+              <div
+                className="rounded-full bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary"
+                title={grp ? "Shared with your group" : undefined}
+              >
+                {c.remaining} of {c.hired} sessions remaining
+                {grp && <span className="ml-1 font-normal text-muted-foreground">· group</span>}
+              </div>
+            );
+          })()}
+          <GhostButton onClick={() => setReportOpen(true)}>
+            <ShieldAlert className="h-4 w-4" /> Report
+          </GhostButton>
+        </div>
       </header>
 
       {/* KPI Metrics with circular SVG progress */}

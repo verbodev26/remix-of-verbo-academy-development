@@ -122,11 +122,18 @@ function Page() {
         <SectionTitle>Students</SectionTitle>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {students.map((s) => {
-            const scheduled = sessions.filter(
-              (x) => x.student_id === s.id && !["completed", "absent"].includes(x.status),
-            ).length;
-            const hired = effectiveSessionCounts(s.id, { hired: s.hired_sessions }).hired;
-            const remaining = Math.max(0, hired - scheduled);
+            const scheduled = sessions.filter((x) => {
+              const belongs = x.student_id === s.id
+                || (!!x.member_statuses && Object.prototype.hasOwnProperty.call(x.member_statuses, s.id));
+              if (!belongs) return false;
+              // For group sessions look at THIS student's per-member status
+              // when it exists; fall back to the top-level status otherwise.
+              const status = x.member_statuses?.[s.id] ?? x.status;
+              return !["completed", "absent"].includes(status);
+            }).length;
+            const counts = effectiveSessionCounts(s.id, { hired: s.hired_sessions, remaining: s.remaining_sessions });
+            const hired = counts.hired;
+            const remaining = counts.remaining;
             const pct = hired ? Math.min(100, (scheduled / hired) * 100) : 0;
             return (
               <button
