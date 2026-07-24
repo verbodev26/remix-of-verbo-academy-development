@@ -550,8 +550,10 @@
 .Btn:hover {
   width: 112px;
   border-radius: 28px;
-  transition-duration: 0.3s;
+  background-color: rgb(255, 65, 65);
+  box-shadow: 1.5px 1.5px 7px rgba(0, 0, 0, 0.199);
 }
+
 
 .Btn:hover .sign {
   width: 20%;
