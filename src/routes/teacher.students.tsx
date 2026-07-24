@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/lib/auth";
-import { ASSIGNMENTS, USERS, type User } from "@/lib/mock-data";
+import { ASSIGNMENTS, USERS, SESSIONS, type User } from "@/lib/mock-data";
+import { studentAttendance } from "@/lib/sessions-store";
 import {
   MAX_INSIGHT_STRIKES, MAX_BOOKCLUB_STRIKES,
   getProduct,
