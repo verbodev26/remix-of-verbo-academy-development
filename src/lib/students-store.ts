@@ -52,6 +52,23 @@ export function setStudentVideoLink(studentId: string, link: string) {
   window.dispatchEvent(new CustomEvent(STUDENTS_EVENT));
 }
 
+/** Adjust an individual student's remaining_sessions by `delta` (can be negative).
+ *  Result is clamped to [0, hired_sessions]. Persists via the same override map
+ *  used by setStudentVideoLink and broadcasts STUDENTS_EVENT. */
+export function adjustRemainingSessions(studentId: string, delta: number) {
+  const u = USERS.find((x) => x.id === studentId);
+  if (!u) return;
+  const hired = u.hired_sessions ?? 0;
+  const current = u.remaining_sessions ?? 0;
+  const next = Math.max(0, Math.min(hired, current + delta));
+  u.remaining_sessions = next;
+  if (typeof window === "undefined") return;
+  const overrides = readProfileOverrides();
+  overrides[studentId] = { ...(overrides[studentId] ?? {}), remaining_sessions: next };
+  writeProfileOverrides(overrides);
+  window.dispatchEvent(new CustomEvent(STUDENTS_EVENT));
+}
+
 /** Toggle a completed level into "Reopened for Review" (read-only student access). */
 export function setLevelReopened(studentId: string, levelName: string, on: boolean) {
   const u = USERS.find((x) => x.id === studentId);
