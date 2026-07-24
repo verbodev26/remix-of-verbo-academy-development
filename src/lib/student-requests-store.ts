@@ -10,7 +10,6 @@
 // same 8h escalation) but carry a mandatory description text and consume the
 // monthly Spotlight cap on the student side.
 
-import { USERS } from "./mock-data";
 import { loadSessions, persistSessions, updateSession, type ExtSessionStatus } from "./sessions-store";
 import { getStudentVideoLink } from "./students-store";
 
