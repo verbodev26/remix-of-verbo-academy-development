@@ -45,6 +45,16 @@ export function reportsFor(teacherId: string, studentId: string): StudentReport[
   return readAll().filter((r) => r.teacher_id === teacherId && r.student_id === studentId);
 }
 
+/**
+ * All reports about a given student, regardless of which teacher wrote them,
+ * sorted newest-first. Used by the Admin student detail modal.
+ */
+export function reportsForStudent(studentId: string): StudentReport[] {
+  return loadStudentReports()
+    .filter((r) => r.student_id === studentId)
+    .sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+}
+
 export function loadStudentReports(): StudentReport[] {
   return readAll();
 }

@@ -34,6 +34,7 @@ import { setLevelReopened } from "@/lib/students-store";
 import { RotateCcw, Unlock as UnlockIcon, Lock as LockIcon, Trophy } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { loadCourses, subscribeCourses, type CourseLevel } from "@/lib/product-courses-store";
+import { reportsForStudent, subscribeStudentReports } from "@/lib/student-reports-store";
 import {
   isMilestoneUnit, getUnitAccessOverride, setUnitAccess,
 } from "@/lib/activities-store";
@@ -1078,7 +1079,7 @@ function StudentFormModal({
 // ===========================================================================
 // DETAIL MODAL (tabs + actions)
 // ===========================================================================
-type Tab = "overview" | "performance" | "progress" | "notes";
+type Tab = "overview" | "performance" | "progress" | "reports" | "notes";
 
 function StudentDetailModal({
   student, teachers, onClose, onUpdate, onEdit,
@@ -1179,7 +1180,7 @@ function StudentDetailModal({
 
         {/* Tabs */}
         <div className="flex gap-1 border-b border-border px-6 pt-3">
-          {([["overview", "Overview"], ["performance", "Performance & Attendance"], ["progress", "Course Progress"], ["notes", "Admin Notes"]] as [Tab, string][]).map(([id, label]) => (
+          {([["overview", "Overview"], ["performance", "Performance & Attendance"], ["progress", "Course Progress"], ["reports", "Reports"], ["notes", "Admin Notes"]] as [Tab, string][]).map(([id, label]) => (
             <button
               key={id}
               onClick={() => setTab(id)}
@@ -1313,6 +1314,8 @@ function StudentDetailModal({
           {tab === "performance" && <PerformanceTab student={student} />}
 
           {tab === "progress" && <CourseProgressTab student={student} />}
+
+          {tab === "reports" && <ReportsTab student={student} />}
 
           {tab === "notes" && (
             <div>
@@ -1519,6 +1522,32 @@ function UnitAccessPanel({ student, actorRole }: { student: User; actorRole: "ad
           );
         })}
       </div>
+    </div>
+  );
+}
+
+// ---- Reports tab (read-only teacher reports for this student) ----
+function ReportsTab({ student }: { student: User }) {
+  const [, forceTick] = useState(0);
+  useEffect(() => subscribeStudentReports(() => forceTick((n) => n + 1)), []);
+  const reports = reportsForStudent(student.id);
+  if (reports.length === 0) {
+    return <p className="text-sm text-muted-foreground">No reports yet.</p>;
+  }
+  return (
+    <div className="space-y-3">
+      {reports.map((r) => {
+        const teacher = USERS.find((u) => u.id === r.teacher_id);
+        return (
+          <div key={r.id} className="rounded-lg border border-border bg-background p-4">
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <div className="text-sm font-medium text-foreground">{teacher?.name ?? "Teacher"}</div>
+              <div className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleString()}</div>
+            </div>
+            <p className="whitespace-pre-wrap text-sm text-foreground">{r.text}</p>
+          </div>
+        );
+      })}
     </div>
   );
 }

@@ -26,7 +26,7 @@ import { teacherStatus } from "./teacher-model";
 import { teacherTier } from "./teacher-tiers";
 import { activeAnnouncements, ANN_EVENT } from "./announcements-store";
 import { loadFinancialIssues, FIN_ISSUES_EVENT } from "./financial-issues-store";
-import { REPORTS_KEY, REPORTS_EVENT, type StudentReport } from "./student-reports-store";
+import { REPORTS_EVENT, loadStudentReports } from "./student-reports-store";
 import {
   loadConductReports, CONDUCT_REPORTS_EVENT,
 } from "./conduct-reports-store";
@@ -47,11 +47,6 @@ import {
 } from "./club-bookings-store";
 import { groupsByStudentId } from "./groups-store";
 
-function readStudentReportsRaw(): StudentReport[] {
-  if (typeof window === "undefined") return [];
-  try { return JSON.parse(localStorage.getItem(REPORTS_KEY) || "[]") as StudentReport[]; }
-  catch { return []; }
-}
 
 export type NotificationKind =
   // teacher-facing
@@ -459,7 +454,7 @@ function adminNotifications(): Notification[] {
   }
 
   // ---- Student reports filed by teachers --------------------------------
-  for (const r of readStudentReportsRaw()) {
+  for (const r of loadStudentReports()) {
     const t = USERS.find((u) => u.id === r.teacher_id);
     const st = USERS.find((u) => u.id === r.student_id);
     out.push({
@@ -468,7 +463,7 @@ function adminNotifications(): Notification[] {
       title: "New student report filed",
       body: `${t?.name ?? "Teacher"} → ${st?.name ?? "Student"}`,
       createdAt: r.created_at,
-      to: "/admin/students",
+      to: `/admin/students?student=${r.student_id}`,
       read: false,
     });
   }
