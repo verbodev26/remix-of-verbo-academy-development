@@ -20,6 +20,7 @@ import {
   ArrowRight,
   Award,
   BarChart3,
+  BookOpen,
   CalendarClock,
   Download,
   ShieldAlert,
