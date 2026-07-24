@@ -10,6 +10,7 @@ import { hydrateStudents } from "@/lib/students-store";
 import { nextPaymentDate, daysUntil, MAX_INSIGHT_STRIKES, getProduct } from "@/lib/student-model";
 import { computeTeacherKpis } from "@/lib/teacher-kpis";
 import { pendingReviews } from "@/lib/teacher-model";
+import { monthlySnapshot } from "@/lib/teacher-kpi-history-store";
 import { loadClubs, subscribeClubs, upcomingCreatedClubs } from "@/lib/clubs-store";
 import {
   useAnnouncements, activeAnnouncements, publishAnnouncement, endAnnouncement,
