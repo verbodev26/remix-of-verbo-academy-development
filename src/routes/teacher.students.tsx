@@ -194,10 +194,11 @@ function StudentCard({ student: s, onOpen }: { student: User; onOpen: () => void
   const showInsightsBadge = productType === "performance" || productType === "insights";
   const isVip = s.product === "vip";
 
-  // Attendance (mock — schema matches Admin > Sessions so real data plugs in later).
-  const attendance = attendanceFor(s.id);
-  const attPct = attendancePct(attendance);
-  const attAlert = attendanceAlert(attendance);
+  // Attendance — shared helper (studentAttendance) so Admin, Teacher and
+  // Student always show the exact same % for a given student.
+  const attendance = studentAttendance(SESSIONS, s);
+  const attPct = attendance.pct;
+  const attAlert = attendance.absent > attendance.completed;
 
   // Overall 4-skill scores (shared component / same source as student dashboard).
   const macros = useComputedMacros(s.id);
