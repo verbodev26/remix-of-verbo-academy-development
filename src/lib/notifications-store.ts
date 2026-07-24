@@ -47,11 +47,6 @@ import {
 } from "./club-bookings-store";
 import { groupsByStudentId } from "./groups-store";
 
-function readStudentReportsRaw(): StudentReport[] {
-  if (typeof window === "undefined") return [];
-  try { return JSON.parse(localStorage.getItem(REPORTS_KEY) || "[]") as StudentReport[]; }
-  catch { return []; }
-}
 
 export type NotificationKind =
   // teacher-facing
