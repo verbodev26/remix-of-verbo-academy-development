@@ -262,6 +262,7 @@ export function convertSessionToSpotlight(input: {
     duration_minutes: Math.min(60, orig.duration_minutes),
     teams_link: orig.teams_link,
     status: "scheduled" as const,
+    origin: "spotlight" as const,
     notes: `Spotlight (converted) — ${input.spotlightContext}`,
   };
   persistSessions([spotlightSession as never, ...loadSessions()]);
