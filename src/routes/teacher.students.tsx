@@ -90,7 +90,7 @@ function Page() {
       let key = "—";
       if (groupBy === "company") key = s.company || "Sin empresa";
       else if (groupBy === "product") key = getProduct(s.product)?.name || "Sin producto";
-      else if (groupBy === "level") key = s.current_level || "Sin nivel";
+      else if (groupBy === "level") key = curriculumLevelName(s) || "No level yet";
       const list = map.get(key) ?? [];
       list.push(s);
       map.set(key, list);
