@@ -92,6 +92,10 @@ function initials(name: string) {
   return name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
 }
 
+function isValidEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+}
+
 function computeNextPayment(u: User): Date | null {
   if (u.next_payment) return new Date(u.next_payment);
   if (!u.payment_day) return null;
@@ -557,6 +561,8 @@ function StudentFormModal({
     selected_cohort_ids: initial ? cohortsForStudent(initial.id).map((x) => x.cohort.id) : [],
   }));
   const [showPassword, setShowPassword] = useState(false);
+  const [emailTouched, setEmailTouched] = useState(false);
+  const [attemptedSave, setAttemptedSave] = useState(false);
   const prevPerWeek = useRef(f.sessions_per_week);
 
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) => setF((p) => ({ ...p, [k]: v }));
@@ -658,7 +664,8 @@ function StudentFormModal({
     ? nextPaymentDate(f.payment_day, f.cycle_start ? new Date(f.cycle_start) : new Date())
     : null;
 
-  const baseValid = f.name.trim() && f.email.trim() && f.password.trim();
+  const baseValid = f.name.trim() && isValidEmail(f.email) && f.password.trim();
+  const emailFormatError = (emailTouched || attemptedSave) && f.email.trim() && !isValidEmail(f.email);
   const isValid = f.product_type === "performance"
     ? (baseValid && f.product && f.video_call_link.trim() && (!isEnterprise || f.company.trim()))
     : f.product_type === "workshops"
@@ -696,6 +703,7 @@ function StudentFormModal({
   };
 
   const handleSave = () => {
+    setAttemptedSave(true);
     if (!isValid) return;
     const accessPlan = (f.access_plan || undefined) as AccessPlanId | undefined;
     const id = initial?.id ?? `u${Date.now()}`;
@@ -763,7 +771,16 @@ function StudentFormModal({
               <input value={f.name} onChange={(e) => set("name", e.target.value)} placeholder="Full name" className={inputCls} />
             </Field>
             <Field label="Email" icon={<Mail className="h-3.5 w-3.5" />}>
-              <input type="email" value={f.email} onChange={(e) => set("email", e.target.value)} placeholder="student@company.com" className={inputCls} />
+              <input
+                type="email"
+                value={f.email}
+                onChange={(e) => set("email", e.target.value)}
+                onBlur={() => setEmailTouched(true)}
+                placeholder="student@company.com"
+                className={`${inputCls} ${emailFormatError ? "!border-destructive focus:!border-destructive focus:!ring-destructive" : ""}`}
+                aria-invalid={emailFormatError ? "true" : "false"}
+              />
+              {emailFormatError && <p className="mt-1 text-xs text-destructive">Enter a valid email address</p>}
             </Field>
             <Field label="Initial Password" icon={<KeyRound className="h-3.5 w-3.5" />}>
               <div className="relative">
