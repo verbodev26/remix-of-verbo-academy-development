@@ -664,7 +664,8 @@ function StudentFormModal({
     ? nextPaymentDate(f.payment_day, f.cycle_start ? new Date(f.cycle_start) : new Date())
     : null;
 
-  const baseValid = f.name.trim() && f.email.trim() && f.password.trim();
+  const baseValid = f.name.trim() && isValidEmail(f.email) && f.password.trim();
+  const emailFormatError = (emailTouched || attemptedSave) && f.email.trim() && !isValidEmail(f.email);
   const isValid = f.product_type === "performance"
     ? (baseValid && f.product && f.video_call_link.trim() && (!isEnterprise || f.company.trim()))
     : f.product_type === "workshops"
