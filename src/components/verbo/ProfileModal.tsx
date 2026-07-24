@@ -311,8 +311,8 @@ export function ProfileModal({ open, onOpenChange }: Props) {
                 </div>
                 <div className="mt-2 grid grid-cols-2 gap-3 text-sm">
                   <div>
-                    <div className="text-muted-foreground text-xs">Level</div>
-                    <div className="font-semibold text-foreground">{user.current_level ?? "—"}</div>
+                    <div className="text-muted-foreground text-xs">Current Level</div>
+                    <div className="font-semibold text-foreground">{progress?.levelName ?? "—"}</div>
                   </div>
                   <div>
                     <div className="text-muted-foreground text-xs">Attendance</div>
