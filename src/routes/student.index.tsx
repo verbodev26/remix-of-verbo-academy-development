@@ -455,9 +455,9 @@ function StudentDashboard() {
       {/* Two-column productivity layout */}
       <section className="grid gap-6 lg:grid-cols-[1.85fr_1fr]">
         {/* LEFT COLUMN ~65% */}
-        <div className="space-y-8">
+        <div className="verbo-fade-up motion-reduce:animate-none space-y-8" style={{ animationDelay: "180ms" }}>
           {/* Current Course */}
-          <div className="verbo-fade-up motion-reduce:animate-none" style={{ animationDelay: "150ms" }}>
+          <div>
             <SectionTitle>Current Course</SectionTitle>
             <PremiumCard hover className="verbo-card-hover flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
               <div>
