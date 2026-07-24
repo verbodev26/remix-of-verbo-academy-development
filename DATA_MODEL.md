@@ -689,7 +689,7 @@ Sin sub-tipos. Nav varía por `product_type` y por `product === "vip"`. No requi
 
 ### Datos sintéticos / no persistidos que parecen reales
 
-16. **`attendance-store.ts` es 100% sintético** — no hay ningún registro real de asistencia, se genera con un hash del `studentId`. El motor real ("Session Report engine") aún no existe según el propio comentario del código.
+16. ~~`attendance-store.ts` es 100% sintético~~ — **eliminado**. El % de asistencia hoy se calcula con `studentAttendance()` en `sessions-store.ts` a partir de sesiones reales (completed vs absent), con fallback a `User.attendance_percentage`.
 17. **`activity-logs-store.ts` y `notifications-store.ts` no son fuentes de verdad** — son vistas computadas on-demand desde otros stores. Necesitarán tablas reales o vistas materializadas en Supabase, no una migración 1:1.
 18. **IDs generados como `prefijo-${Date.now()}-${random}`** en casi todos los stores — no son UUIDs reales, riesgo de colisión a escala; deben migrar a `uuid`/identity columns.
 
