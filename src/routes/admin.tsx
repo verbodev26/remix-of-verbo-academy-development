@@ -40,7 +40,10 @@ const NAV_GROUPS: NavGroup[] = [
     { to: "/admin/financial/money-lab", label: "The Money Lab" },
   ]},
   { label: "Users", items: [{ to: "/admin/users", label: "User Management" }] },
-  { label: "Activity", items: [{ to: "/admin/activity-logs", label: "Activity Logs" }] },
+  { label: "Activity", items: [
+    { to: "/admin/activity-logs", label: "Activity Logs" },
+    { to: "/admin/conduct-reports", label: "Conduct Reports" },
+  ]},
 ];
 
 const tabCls =
