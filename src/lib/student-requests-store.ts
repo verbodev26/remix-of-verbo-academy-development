@@ -225,6 +225,7 @@ function requireHelpers() {
         duration_minutes: req.duration_minutes,
         teams_link: link,
         status,
+        origin: req.kind === "spotlight" ? "spotlight" : undefined,
         notes: req.kind === "spotlight" ? `Spotlight Session — ${req.spotlight_context ?? ""}` : `Reschedule — original ${req.origin_session_id}`,
       };
       persistSessions([newSession as never, ...loadSessions()]);
