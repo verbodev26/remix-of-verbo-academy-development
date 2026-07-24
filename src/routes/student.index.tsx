@@ -15,7 +15,7 @@ import { unitPassed, getUnitAccessOverride, isMilestoneUnit } from "@/lib/activi
 import { loadCourses, subscribeCourses, type ProductId, type CourseLevel } from "@/lib/product-courses-store";
 import { unitsForStudent, vipUnitDoneMap, subscribeVipUnits, subscribeVipUnitCompletion } from "@/lib/vip-courses-store";
 import { useComputedMacros } from "@/components/verbo/PerformanceAnalytics";
-import { GhostButton, Pill, PrimaryButton, SectionTitle, SuccessButton } from "@/components/verbo/ui";
+import { GhostButton, Pill, PrimaryButton, SectionTitle, StatRing, SuccessButton } from "@/components/verbo/ui";
 import {
   ArrowRight,
   Award,
@@ -78,47 +78,7 @@ function PremiumCard({ children, className = "", hover = false }: { children: Re
   );
 }
 
-/** Minimal SVG circular progress ring (right-aligned inside KPI cards). */
-function ProgressRing({
-  value,
-  size = 64,
-  stroke = 6,
-  label,
-}: { value: number; size?: number; stroke?: number; label?: string }) {
-  const pct = Math.max(0, Math.min(100, value));
-  const r = (size - stroke) / 2;
-  const c = 2 * Math.PI * r;
-  const offset = c - (pct / 100) * c;
-  return (
-    <div className="relative shrink-0" style={{ width: size, height: size }}>
-      <svg width={size} height={size} className="-rotate-90">
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={r}
-          fill="none"
-          stroke="rgba(1, 48, 74, 0.08)"
-          strokeWidth={stroke}
-        />
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={r}
-          fill="none"
-          stroke="#f38934"
-          strokeWidth={stroke}
-          strokeLinecap="round"
-          strokeDasharray={c}
-          strokeDashoffset={offset}
-          style={{ transition: "stroke-dashoffset 700ms ease" }}
-        />
-      </svg>
-      <div className="absolute inset-0 flex items-center justify-center text-[11px] font-semibold tabular-nums" style={{ color: "#01304a" }}>
-        {label ?? `${Math.round(pct)}%`}
-      </div>
-    </div>
-  );
-}
+const ProgressRing = StatRing;
 
 const PRODUCT_TO_COURSE: Record<string, ProductId> = {
   enterprise: "enterprise",
