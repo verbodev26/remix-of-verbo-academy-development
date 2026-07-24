@@ -86,9 +86,30 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Outlet />
+        <PasswordChangeGate>
+          <Outlet />
+        </PasswordChangeGate>
         <Toaster />
       </AuthProvider>
     </QueryClientProvider>
   );
+}
+
+function PasswordChangeGate({ children }: { children: React.ReactNode }) {
+  const { user } = useAuthCtx();
+  const router = useRouter();
+  const path = router.state.location.pathname;
+  const allowed = path === "/change-password" || path === "/login" || path === "/";
+  if (user?.must_change_password && !allowed) {
+    return <RedirectToChangePassword />;
+  }
+  return <>{children}</>;
+}
+
+function RedirectToChangePassword() {
+  const router = useRouter();
+  React.useEffect(() => {
+    router.navigate({ to: "/change-password" });
+  }, [router]);
+  return null;
 }
