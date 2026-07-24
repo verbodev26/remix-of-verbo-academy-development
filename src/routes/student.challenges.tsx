@@ -84,34 +84,8 @@ const COOLDOWN_MSG =
 const MYSTERY_COOLDOWN_MSG =
   "You've already opened today's Mystery Box — come back tomorrow!";
 
-/**
- * Access-level gate shown when a challenge is locked behind Advance tier.
- * For Group members we swap "Upgrade your access level" (which reads as a
- * payment call-to-action) for a neutral note that upgrades happen at the
- * group level via the admin — no billing surface is exposed to the student.
- */
-function AccessGateNotice({ accent }: { accent?: string }) {
-  const { user } = useAuth();
-  const isGroup = !!(user && groupsByStudentId().has(user.id));
-  return (
-    <>
-      <p className="max-w-sm text-sm font-medium text-foreground">
-        {isGroup
-          ? "This challenge is for Advance tier+. It's not included in your group's plan — contact your admin to expand access."
-          : "This challenge is for Advance tier+. Upgrade your access level to access them."}
-      </p>
-      {!isGroup && (
-        <Link
-          to="/student/access-levels"
-          className="text-xs font-semibold underline underline-offset-4 hover:opacity-80"
-          style={accent ? { color: accent } : undefined}
-        >
-          Learn more
-        </Link>
-      )}
-    </>
-  );
-}
+import { PREMIUM_ACCESS, PremiumBadge, AccessGateNotice } from "@/components/verbo/PremiumGate";
+
 
 
 
@@ -125,7 +99,7 @@ const PRODUCT_GRADIENTS: Record<string, string> = {
   vip: "from-[#4a044e] via-[#7e22ce] to-[#a855f7]",
 };
 
-const PREMIUM_ACCESS: readonly string[] = ["Advance", "Elite"];
+
 
 /* -------------------------------------------------------------------------- */
 /* Reusable atoms                                                              */
@@ -153,13 +127,8 @@ function CategoryBadge({ name }: { name: string }) {
   );
 }
 
-function PremiumBadge() {
-  return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-600">
-      <Lock className="h-3 w-3" /> Premium
-    </span>
-  );
-}
+
+
 
 function SkillChip({ label }: { label: string }) {
   return (
