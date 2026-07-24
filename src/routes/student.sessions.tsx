@@ -29,6 +29,7 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { USERS, userById } from "@/lib/mock-data";
+import { adjustRemainingSessions } from "@/lib/students-store";
 import {
   loadSessions, subscribeSessions, updateSession, applyGroupMemberCancellation,
   SUB_STATUS_META,
