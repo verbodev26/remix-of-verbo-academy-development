@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useAuth } from "@/lib/auth";
 import { LEVELS, userById } from "@/lib/mock-data";
 import { effectiveSessionCounts, groupOfStudent } from "@/lib/groups-store";
-import { persistSessions, subscribeSessions, getSessionsSnapshot, getServerSessionsSnapshot, submitStudentRating, type ExtSession } from "@/lib/sessions-store";
+import { persistSessions, subscribeSessions, getSessionsSnapshot, getServerSessionsSnapshot, submitStudentRating, studentAttendance, type ExtSession } from "@/lib/sessions-store";
 import {
   getPerformanceSnapshot,
   getServerPerformanceSnapshot,
