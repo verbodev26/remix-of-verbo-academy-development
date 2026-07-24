@@ -790,8 +790,7 @@ function SpotlightFormModal({ studentId, onClose }: { studentId: string; onClose
               if (g) {
                 incrementGroupRemaining(g.group.id);
               } else {
-                const u = USERS.find((x) => x.id === studentId);
-                if (u && typeof u.remaining_sessions === "number") u.remaining_sessions += 1;
+                adjustRemainingSessions(studentId, 1);
               }
               // Core freemium: consume the one-shot courtesy credit.
               if (studentUser?.access_plan === "Core" && !freemiumUsed(studentId, "spotlight")) {
