@@ -20,6 +20,7 @@ import {
   ArrowRight,
   Award,
   BarChart3,
+  BookOpen,
   CalendarClock,
   Download,
   ShieldAlert,
@@ -316,6 +317,22 @@ function StudentDashboard() {
     }
   };
 
+  // Dynamic welcome line — first matching condition wins.
+  const welcomeLine = (() => {
+    const now = Date.now();
+    const soon = upcoming.find((s) => {
+      const dt = +new Date(s.date_time);
+      return dt >= now && dt - now <= 48 * 60 * 60 * 1000;
+    });
+    if (soon) {
+      const t = userById(soon.teacher_id)?.name?.split(" ")[0] ?? "your teacher";
+      return `Your next session with ${t} is ${fmtDay(soon.date_time)} at ${fmtTime(soon.date_time)}.`;
+    }
+    if (levelProgress >= 80) return "You're close to leveling up to your next stage — keep going.";
+    if (attendancePct >= 90) return `Your ${attendancePct}% attendance is paying off. Keep it up.`;
+    return "Every session brings you closer to fluency.";
+  })();
+
   return (
     <div className="space-y-10">
       <header className="verbo-fade-up motion-reduce:animate-none flex flex-wrap items-center justify-between gap-4" style={{ animationDelay: "0ms" }}>
@@ -328,6 +345,7 @@ function StudentDashboard() {
             <FeaturedProfileBadge user={user} />
             {user.access_plan === "Elite" && <Pill tone="elite">Elite</Pill>}
           </div>
+          <p className="mt-1.5 text-xs text-muted-foreground">{welcomeLine}</p>
         </div>
         <div className="flex items-center gap-3">
           {user.product_type === "performance" && (() => {
@@ -460,14 +478,23 @@ function StudentDashboard() {
           <div>
             <SectionTitle>Current Course</SectionTitle>
             <PremiumCard hover className="verbo-card-hover flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
-              <div>
-                <Pill tone="muted">{currentLevelName ?? "Learning Path"}</Pill>
-                <h3 className="mt-3 text-xl font-semibold tracking-tight" style={{ color: "#01304a" }}>
-                  {currentUnitTitle ?? "No unit available yet"}
-                </h3>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Pick up exactly where you left off. Video, materials and practice activities included.
-                </p>
+              <div className="flex items-start gap-4">
+                <div
+                  className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10"
+                  style={{ color: "#01304a" }}
+                  aria-hidden
+                >
+                  <BookOpen className="h-6 w-6" strokeWidth={1.6} />
+                </div>
+                <div>
+                  <Pill tone="muted">{currentLevelName ?? "Learning Path"}</Pill>
+                  <h3 className="mt-3 text-xl font-semibold tracking-tight" style={{ color: "#01304a" }}>
+                    {currentUnitTitle ?? "No unit available yet"}
+                  </h3>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Pick up exactly where you left off. Video, materials and practice activities included.
+                  </p>
+                </div>
               </div>
               <PrimaryButton
                 className="verbo-btn-glow"
@@ -500,18 +527,27 @@ function StudentDashboard() {
               <div className="grid gap-4 sm:grid-cols-2">
                 {upcoming.map((s) => {
                   const teacher = userById(s.teacher_id);
+                  const startsInMs = +new Date(s.date_time) - Date.now();
+                  const isImminent = startsInMs > 0 && startsInMs <= 60 * 60 * 1000;
                   return (
-                    <PremiumCard key={s.id} hover className="verbo-card-hover flex flex-col gap-4 border-l-4">
+                    <PremiumCard key={s.id} hover className="verbo-card-hover flex flex-col gap-4">
                       <div
                         className="-m-6 mb-0 rounded-t-2xl p-4"
                         style={{ background: "linear-gradient(135deg, #01304a, #014a6e)" }}
                       >
                         <div className="flex items-center gap-3 text-white">
                           <CalendarClock className="h-5 w-5" />
-                          <div>
+                          <div className="flex-1">
                             <div className="text-sm font-semibold capitalize">{fmtDay(s.date_time)}</div>
                             <div className="text-xs opacity-80">{fmt(s.date_time)}</div>
                           </div>
+                          {isImminent && (
+                            <span
+                              className="verbo-status-dot verbo-live-pulse"
+                              style={{ background: "var(--green-500)" }}
+                              aria-label="Starts within the next hour"
+                            />
+                          )}
                         </div>
                       </div>
                       <div className="space-y-1 pt-2">
@@ -520,7 +556,7 @@ function StudentDashboard() {
                       </div>
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <span>{fmtTime(s.date_time)} · {s.duration_minutes} min</span>
-                        <Pill tone="muted">{s.status}</Pill>
+                        <Pill tone={s.status === "rescheduled" ? "warning" : "muted"}>{s.status}</Pill>
                       </div>
                       <div className="mt-auto flex items-center gap-2 pt-2">
                         <GhostButton className="flex-1" onClick={() => setToCancel(s)}>
@@ -544,14 +580,14 @@ function StudentDashboard() {
           {/* Verbo Experiences */}
           <PremiumCard hover className="relative overflow-hidden">
             <div
-              className="absolute inset-0 opacity-[0.07] pointer-events-none"
-              style={{ background: "radial-gradient(circle at top right, #f38934, transparent 65%)" }}
+              className="absolute inset-0 opacity-[0.09] pointer-events-none"
+              style={{ background: "radial-gradient(circle at top right, var(--green-500), transparent 65%)" }}
             />
             <div className="relative">
               <div className="flex items-center gap-2">
                 <div
                   className="flex h-9 w-9 items-center justify-center rounded-lg"
-                  style={{ background: "rgba(243, 137, 52, 0.12)", color: "#f38934" }}
+                  style={{ background: "color-mix(in oklab, var(--green-500) 12%, transparent)", color: "var(--green-500)" }}
                 >
                   <Users className="h-4 w-4" />
                 </div>
@@ -621,7 +657,7 @@ function StudentDashboard() {
                   const teacher = userById(s.teacher_id);
                   const rating = performance[s.id];
                   return (
-                    <tr key={s.id} className="border-b border-border last:border-0">
+                    <tr key={s.id} className="border-b border-border last:border-0 transition-colors hover:bg-secondary/40">
                       <td className="px-6 py-4 text-foreground">{fmt(s.date_time)}</td>
                       <td className="px-6 py-4 text-muted-foreground">{teacher?.name}</td>
                       <td className="px-6 py-4">
