@@ -218,7 +218,7 @@ export function adminCalendarEvents(opts?: {
     events.push(ev);
   }
 
-  // TODO(spotlight): filter by teacher/student assignment once its store exists.
+
 
   return events;
 }
