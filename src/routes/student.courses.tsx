@@ -818,12 +818,18 @@ export function UnitDetail({
               </div>
             </div>
             {unit.pdf_url ? (
-              <a href={unit.pdf_url} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-secondary">
-                <Download className="h-4 w-4" /> Download PDF Guide
-              </a>
+              previewMode ? (
+                <button onClick={() => setPdfOpen(true)} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-secondary">
+                  <BookOpen className="h-4 w-4" /> View PDF Guide
+                </button>
+              ) : (
+                <a href={unit.pdf_url} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-secondary">
+                  <Download className="h-4 w-4" /> Download PDF Guide
+                </a>
+              )
             ) : (
               <button disabled className="mt-4 inline-flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-medium text-muted-foreground shadow-sm opacity-50">
-                <Download className="h-4 w-4" /> Download PDF Guide
+                <Download className="h-4 w-4" /> {previewMode ? "View PDF Guide" : "Download PDF Guide"}
               </button>
             )}
           </Card>
