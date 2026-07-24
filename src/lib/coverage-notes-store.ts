@@ -69,10 +69,3 @@ export function subscribeCoverageNotes(cb: () => void): () => void {
     window.removeEventListener("storage", onStorage);
   };
 }
-
-// Small helper so views don't have to import USERS directly.
-export function teacherIsTitularOf(teacherId: string, studentId: string): boolean {
-  // Titular status lives in ASSIGNMENTS; but callers already scope by that.
-  // Keep this here as a hook for future refinement.
-  return Boolean(USERS.find((u) => u.id === teacherId && u.role === "teacher"));
-}

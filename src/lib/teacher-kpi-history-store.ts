@@ -254,16 +254,6 @@ export function monthlySnapshot(
   return { monthKey, baseComposite, penaltyState, composite, responsiveness, onboarding: false };
 }
 
-// Kept for back-compat with callers that only need the final composite value.
-export function monthlyComposite(
-  teacher: User,
-  monthKey: string,
-  currentMonthComposite: number,
-): number {
-  const nowKey = monthKeyOf(new Date());
-  if (monthKey === nowKey) return currentMonthComposite;
-  return monthlySnapshot(teacher, monthKey).composite;
-}
 
 // ----- Bonus streak status --------------------------------------------------
 // Business rules:
