@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
-    <div className={`rounded-2xl border border-border bg-card p-6 shadow-soft ${className}`}>
+    <div className={`rounded-3xl border border-border bg-card p-6 shadow-soft ${className}`}>
       {children}
     </div>
   );
@@ -37,7 +37,7 @@ export function PrimaryButton({ children, className = "", ...rest }: React.Butto
   return (
     <button
       {...rest}
-      className={`inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground shadow-soft transition-opacity hover:opacity-90 disabled:opacity-40 shadow-sm transition-transform duration-150 ease-out active:scale-[0.97] ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-medium text-accent-foreground shadow-soft transition-opacity hover:opacity-90 disabled:opacity-40 shadow-sm transition-transform duration-150 ease-out active:scale-[0.97] ${className}`}
     >
       {children}
     </button>
@@ -48,7 +48,7 @@ export function GhostButton({ children, className = "", ...rest }: React.ButtonH
   return (
     <button
       {...rest}
-      className={`inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary transition-transform duration-150 ease-out active:scale-[0.97] ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary transition-transform duration-150 ease-out active:scale-[0.97] ${className}`}
     >
       {children}
     </button>
@@ -59,7 +59,7 @@ export function SuccessButton({ children, className = "", ...rest }: React.Butto
   return (
     <button
       {...rest}
-      className={`inline-flex items-center justify-center gap-2 rounded-lg bg-success px-4 py-2 text-sm font-medium text-success-foreground shadow-soft transition-opacity hover:opacity-90 transition-transform duration-150 ease-out active:scale-[0.97] ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-full bg-success px-4 py-2 text-sm font-medium text-success-foreground shadow-soft transition-opacity hover:opacity-90 transition-transform duration-150 ease-out active:scale-[0.97] ${className}`}
     >
       {children}
     </button>
