@@ -32,6 +32,10 @@ function LoginPage() {
 
   useEffect(() => {
     if (user) {
+      if (user.must_change_password) {
+        navigate({ to: "/change-password" });
+        return;
+      }
       const dest = user.role === "admin" ? "/admin" : user.role === "teacher" ? "/teacher" : "/student";
       navigate({ to: dest });
     }
@@ -46,6 +50,11 @@ function LoginPage() {
       if (!res.ok) {
         setError(res.error);
         setSubmitting(false);
+        return;
+      }
+      const match = USERS.find((u) => u.email.toLowerCase() === email.trim().toLowerCase());
+      if (match?.must_change_password) {
+        navigate({ to: "/change-password" });
         return;
       }
       const dest = res.role === "admin" ? "/admin" : res.role === "teacher" ? "/teacher" : "/student";
