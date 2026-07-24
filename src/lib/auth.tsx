@@ -8,8 +8,17 @@ interface AuthCtx {
   login: (email: string, password: string) => { ok: true; role: Role } | { ok: false; error: string };
   logout: () => void;
   updateProfile: (
-    updates: { name?: string; currentPassword?: string; newPassword?: string },
+    updates: { name?: string; currentPassword?: string; newPassword?: string; forceChange?: boolean },
   ) => { ok: true } | { ok: false; error: string };
+}
+
+/** Password complexity rule shared by forced-change and normal profile flow.
+ *  At least 4 chars, at least one uppercase letter, and at least one digit. */
+export function validatePasswordComplexity(pwd: string): string | null {
+  if (!pwd || pwd.length < 4) return "Password must be at least 4 characters.";
+  if (!/[A-Z]/.test(pwd)) return "Password must include at least one uppercase letter.";
+  if (!/[0-9]/.test(pwd)) return "Password must include at least one number.";
+  return null;
 }
 
 const Ctx = createContext<AuthCtx | null>(null);
@@ -71,18 +80,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) return { ok: false, error: "No active session." };
 
     if (updates.newPassword) {
-      if (updates.currentPassword !== user.password) {
+      if (!updates.forceChange && updates.currentPassword !== user.password) {
         return { ok: false, error: "Current password is incorrect." };
       }
-      if (updates.newPassword.length < 4) {
-        return { ok: false, error: "New password must be at least 4 characters." };
+      const complexityError = validatePasswordComplexity(updates.newPassword);
+      if (complexityError) {
+        return { ok: false, error: complexityError };
       }
     }
 
     const next: User = {
       ...user,
       ...(updates.name ? { name: updates.name.trim() } : {}),
-      ...(updates.newPassword ? { password: updates.newPassword } : {}),
+      ...(updates.newPassword ? { password: updates.newPassword, must_change_password: false } : {}),
     };
 
     // Keep the in-memory mock DB in sync so a re-login reflects the change.

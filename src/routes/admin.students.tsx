@@ -736,6 +736,7 @@ function StudentFormModal({
       cycle_start: isPerf ? (f.cycle_start || undefined) : undefined,
       video_call_link: isPerf ? f.video_call_link.trim() : undefined,
       status: initial?.status ?? "active",
+      must_change_password: initial ? initial.must_change_password : true,
       insights_strikes: initial?.insights_strikes ?? 0,
       admin_notes: initial?.admin_notes,
       next_payment: initial?.next_payment,

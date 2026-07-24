@@ -8,6 +8,9 @@ export interface User {
   email: string;
   password: string;
   role: Role;
+  /** When true, the user is forced to change their password on next sign-in
+   *  (e.g. new student just registered by an admin). Cleared on completion. */
+  must_change_password?: boolean;
   current_level?: string;
   admin_type?: AdminType; // only meaningful when role === "admin"
   attendance_percentage?: number;

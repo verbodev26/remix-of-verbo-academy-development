@@ -1,3 +1,4 @@
+import * as React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
@@ -9,7 +10,7 @@ import {
 } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
-import { AuthProvider } from "@/lib/auth";
+import { AuthProvider, useAuth as useAuthCtx } from "@/lib/auth";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
@@ -86,9 +87,30 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Outlet />
+        <PasswordChangeGate>
+          <Outlet />
+        </PasswordChangeGate>
         <Toaster />
       </AuthProvider>
     </QueryClientProvider>
   );
+}
+
+function PasswordChangeGate({ children }: { children: React.ReactNode }) {
+  const { user } = useAuthCtx();
+  const router = useRouter();
+  const path = router.state.location.pathname;
+  const allowed = path === "/change-password" || path === "/login" || path === "/";
+  if (user?.must_change_password && !allowed) {
+    return <RedirectToChangePassword />;
+  }
+  return <>{children}</>;
+}
+
+function RedirectToChangePassword() {
+  const router = useRouter();
+  React.useEffect(() => {
+    router.navigate({ to: "/change-password" });
+  }, [router]);
+  return null;
 }
