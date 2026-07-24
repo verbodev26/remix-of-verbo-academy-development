@@ -364,10 +364,10 @@ function StudentDetailModal({
   const isVip = s.product === "vip";
   const productType = s.product_type ?? "performance";
 
-  // Attendance breakdown (mock, matches Admin > Sessions status schema).
-  const attendance = attendanceFor(s.id);
-  const attPct = attendancePct(attendance);
-  const attAlert = attendanceAlert(attendance);
+  // Attendance breakdown — shared helper (same source as Admin & Student).
+  const attendance = studentAttendance(SESSIONS, s);
+  const attPct = attendance.pct;
+  const attAlert = attendance.absent > attendance.completed;
 
   // Shared Advanced Performance Analytics modal.
   const [showAnalytics, setShowAnalytics] = useState(false);
