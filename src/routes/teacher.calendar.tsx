@@ -296,6 +296,40 @@ function Page() {
 }
 
 // ---------------------------------------------------------------------------
+// Spotlight preview modal — shown before the session ends, with connect link.
+// ---------------------------------------------------------------------------
+function SpotlightPreviewModal({ session, onClose }: { session: ExtSession; onClose: () => void }) {
+  const student = userById(session.student_id);
+  const connect = () => { if (session.teams_link) window.open(session.teams_link, "_blank"); };
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+      <div onClick={(e) => e.stopPropagation()} className="relative w-full max-w-md rounded-2xl bg-card p-6 shadow-floating">
+        <button onClick={onClose} aria-label="Close" className="absolute right-4 top-4 rounded-md p-1 text-muted-foreground hover:bg-secondary hover:text-foreground">
+          <X className="h-4 w-4" />
+        </button>
+        <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white" style={{ background: EVENT_KIND_META.spotlight.color }}>
+          Spotlight
+        </span>
+        <h3 className="mt-2 text-lg font-semibold tracking-tight text-foreground">Spotlight with {student?.name ?? "Student"}</h3>
+        <p className="mt-1 text-sm text-muted-foreground">{fmtDateTime(session.date_time)} · {session.duration_minutes} min</p>
+        {session.notes && (
+          <div className="mt-4 rounded-lg border border-border bg-secondary/30 p-3 text-sm text-foreground">
+            <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">What the student needs</div>
+            {session.notes}
+          </div>
+        )}
+        <div className="mt-6 flex gap-2">
+          <PrimaryButton className="flex-1" onClick={connect} disabled={!session.teams_link}>
+            <Video className="h-4 w-4" /> Connect
+          </PrimaryButton>
+          <GhostButton className="flex-1" onClick={onClose}>Close</GhostButton>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Club quick modal — Join / Can't Attend shortcut on the calendar. The
 // "Can't Attend" branch reuses the existing Request Release flow from
 // Fase 6 so there is exactly one release pipeline.
