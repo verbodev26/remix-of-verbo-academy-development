@@ -73,7 +73,7 @@ function fmtTime(iso: string) {
 
 function PremiumCard({ children, className = "", hover = false, style }: { children: React.ReactNode; className?: string; hover?: boolean; style?: React.CSSProperties }) {
   return (
-    <div style={style} className={`rounded-2xl border border-border p-6 verbo-card ${hover ? "verbo-card-hover" : ""} ${className}`}>
+    <div style={style} className={`rounded-3xl border border-border p-6 verbo-card ${hover ? "verbo-card-hover" : ""} ${className}`}>
       {children}
     </div>
   );
