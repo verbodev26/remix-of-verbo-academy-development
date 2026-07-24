@@ -4,7 +4,7 @@ import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from "recharts";
-import { USERS, SESSIONS, LEVELS, type User, type Session } from "@/lib/mock-data";
+import { USERS, SESSIONS, type User, type Session } from "@/lib/mock-data";
 import { MetricCard, Card, PrimaryButton, GhostButton } from "@/components/verbo/ui";
 import { hydrateStudents } from "@/lib/students-store";
 import { nextPaymentDate, daysUntil, MAX_INSIGHT_STRIKES, getProduct } from "@/lib/student-model";
