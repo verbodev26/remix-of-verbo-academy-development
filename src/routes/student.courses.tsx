@@ -56,6 +56,12 @@ import {
   type LearningPathEvent,
 } from "@/lib/learning-path-events";
 import { groupsByStudentId } from "@/lib/groups-store";
+import {
+  tailoredUnitsForStudent, tailoredUnitDoneMap,
+  subscribeTailoredUnits, subscribeTailoredUnitCompletion,
+  type TailoredUnit,
+} from "@/lib/tailored-content-store";
+import { CheckCircle2 as CheckCircle2Icon } from "lucide-react";
 
 
 export const Route = createFileRoute("/student/courses")({
@@ -221,6 +227,8 @@ function Page() {
     return subscribeCourses(() => { setCourses(loadCourses()); setRev((r) => r + 1); });
   }, []);
   useEffect(() => subscribeEvents(() => setRev((r) => r + 1)), []);
+  useEffect(() => subscribeTailoredUnits(() => setRev((r) => r + 1)), []);
+  useEffect(() => subscribeTailoredUnitCompletion(() => setRev((r) => r + 1)), []);
 
   const productId = user?.product ? PRODUCT_TO_COURSE[user.product] : undefined;
   if (!productId) {
@@ -292,6 +300,8 @@ function Page() {
   }
 
   const events = user ? loadEvents(user.id) : [];
+  const tailoredUnits = user && user.access_plan === "Elite" ? tailoredUnitsForStudent(user.id) : [];
+  const showTailored = user?.access_plan === "Elite" && tailoredUnits.length > 0;
   return (
     <>
       <LevelsView
@@ -302,6 +312,7 @@ function Page() {
         states={states}
         contracted={contracted}
         events={events}
+        tailoredSection={showTailored ? <TailoredContentSection units={tailoredUnits} /> : null}
         onOpen={(level, state) => {
           if (state.kind === "locked_progress" || state.kind === "locked_not_contracted" || state.kind === "completed") return;
           setView({ kind: "units", levelId: level.id, readOnly: state.readOnly });
@@ -311,6 +322,82 @@ function Page() {
         <LevelCompletionModal level={completionModal} studentName={user?.name ?? "Student"} onClose={() => setCompletionModal(null)} />
       )}
     </>
+  );
+}
+
+function TailoredContentSection({ units }: { units: TailoredUnit[] }) {
+  const doneMap = tailoredUnitDoneMap();
+  const doneCount = units.filter((u) => doneMap[u.id]).length;
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-accent/10 px-2.5 py-0.5 text-[11px] font-semibold text-accent">
+            <Sparkles className="h-3 w-3" /> Elite · Tailored Content
+          </div>
+          <h2 className="mt-2 text-lg font-semibold tracking-tight text-foreground">Tailored Content</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Extra units your teacher has built for you. Each unit unlocks once the previous one is
+            completed in a Performance Session.
+          </p>
+        </div>
+        <div className="text-right">
+          <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Progress</div>
+          <div className="mt-0.5 text-sm font-semibold text-foreground">
+            {doneCount} / {units.length} <span className="font-normal text-muted-foreground">units</span>
+          </div>
+        </div>
+      </div>
+      <Card className="!p-0">
+        {units.map((u, i) => {
+          const done = !!doneMap[u.id];
+          const prevDone = i === 0 || !!doneMap[units[i - 1].id];
+          const unlocked = done || prevDone;
+          return (
+            <div
+              key={u.id}
+              className={`flex items-center justify-between gap-4 px-6 py-4 ${i ? "border-t border-border" : ""} ${unlocked ? "" : "opacity-70"}`}
+            >
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Unit {i + 1}</span>
+                  {done ? (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[11px] font-medium text-success">
+                      <CheckCircle2Icon className="h-3 w-3" /> Done
+                    </span>
+                  ) : unlocked ? (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[11px] font-medium text-success">
+                      Unlocked
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                      <Lock className="h-3 w-3" /> Locked until previous unit completed
+                    </span>
+                  )}
+                </div>
+                <div className="mt-1 text-sm font-medium text-foreground truncate">{u.title}</div>
+                <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                  {unlocked && u.file_url ? (
+                    <a
+                      href={u.file_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 text-accent hover:underline"
+                    >
+                      <Download className="h-3 w-3" /> {u.file_name || "Download material"}
+                    </a>
+                  ) : unlocked ? (
+                    <span className="italic">No material attached yet</span>
+                  ) : (
+                    <span className="italic">Material unlocks when this unit is available</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </Card>
+    </div>
   );
 }
 
@@ -325,7 +412,7 @@ const PRODUCT_GRADIENTS: Record<string, string> = {
 };
 
 function LevelsView({
-  productLabel, levels, states, contracted, events, studentId, onOpen,
+  productLabel, levels, states, contracted, events, studentId, onOpen, tailoredSection,
 }: {
   productLabel: string;
   levels: CourseLevel[];
@@ -334,6 +421,7 @@ function LevelsView({
   events: LearningPathEvent[];
   studentId: string;
   onOpen: (level: CourseLevel, state: LevelState) => void;
+  tailoredSection?: React.ReactNode;
 }) {
   const contractedSet = new Set(contracted);
   const contractedLevels = levels.filter((l) => contractedSet.has(l.name));

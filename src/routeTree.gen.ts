@@ -21,6 +21,7 @@ import { Route as StudentIndexRouteImport } from './routes/student.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as TeacherWorkshopsRouteImport } from './routes/teacher.workshops'
 import { Route as TeacherVipRouteImport } from './routes/teacher.vip'
+import { Route as TeacherTailoredContentRouteImport } from './routes/teacher.tailored-content'
 import { Route as TeacherStudentsRouteImport } from './routes/teacher.students'
 import { Route as TeacherMaterialsRouteImport } from './routes/teacher.materials'
 import { Route as TeacherFinancialRouteImport } from './routes/teacher.financial'
@@ -113,6 +114,11 @@ const TeacherWorkshopsRoute = TeacherWorkshopsRouteImport.update({
 const TeacherVipRoute = TeacherVipRouteImport.update({
   id: '/vip',
   path: '/vip',
+  getParentRoute: () => TeacherRoute,
+} as any)
+const TeacherTailoredContentRoute = TeacherTailoredContentRouteImport.update({
+  id: '/tailored-content',
+  path: '/tailored-content',
   getParentRoute: () => TeacherRoute,
 } as any)
 const TeacherStudentsRoute = TeacherStudentsRouteImport.update({
@@ -321,6 +327,7 @@ export interface FileRoutesByFullPath {
   '/teacher/financial': typeof TeacherFinancialRoute
   '/teacher/materials': typeof TeacherMaterialsRoute
   '/teacher/students': typeof TeacherStudentsRoute
+  '/teacher/tailored-content': typeof TeacherTailoredContentRoute
   '/teacher/vip': typeof TeacherVipRoute
   '/teacher/workshops': typeof TeacherWorkshopsRoute
   '/admin/': typeof AdminIndexRoute
@@ -365,6 +372,7 @@ export interface FileRoutesByTo {
   '/teacher/financial': typeof TeacherFinancialRoute
   '/teacher/materials': typeof TeacherMaterialsRoute
   '/teacher/students': typeof TeacherStudentsRoute
+  '/teacher/tailored-content': typeof TeacherTailoredContentRoute
   '/teacher/vip': typeof TeacherVipRoute
   '/teacher/workshops': typeof TeacherWorkshopsRoute
   '/admin': typeof AdminIndexRoute
@@ -413,6 +421,7 @@ export interface FileRoutesById {
   '/teacher/financial': typeof TeacherFinancialRoute
   '/teacher/materials': typeof TeacherMaterialsRoute
   '/teacher/students': typeof TeacherStudentsRoute
+  '/teacher/tailored-content': typeof TeacherTailoredContentRoute
   '/teacher/vip': typeof TeacherVipRoute
   '/teacher/workshops': typeof TeacherWorkshopsRoute
   '/admin/': typeof AdminIndexRoute
@@ -462,6 +471,7 @@ export interface FileRouteTypes {
     | '/teacher/financial'
     | '/teacher/materials'
     | '/teacher/students'
+    | '/teacher/tailored-content'
     | '/teacher/vip'
     | '/teacher/workshops'
     | '/admin/'
@@ -506,6 +516,7 @@ export interface FileRouteTypes {
     | '/teacher/financial'
     | '/teacher/materials'
     | '/teacher/students'
+    | '/teacher/tailored-content'
     | '/teacher/vip'
     | '/teacher/workshops'
     | '/admin'
@@ -553,6 +564,7 @@ export interface FileRouteTypes {
     | '/teacher/financial'
     | '/teacher/materials'
     | '/teacher/students'
+    | '/teacher/tailored-content'
     | '/teacher/vip'
     | '/teacher/workshops'
     | '/admin/'
@@ -655,6 +667,13 @@ declare module '@tanstack/react-router' {
       path: '/vip'
       fullPath: '/teacher/vip'
       preLoaderRoute: typeof TeacherVipRouteImport
+      parentRoute: typeof TeacherRoute
+    }
+    '/teacher/tailored-content': {
+      id: '/teacher/tailored-content'
+      path: '/tailored-content'
+      fullPath: '/teacher/tailored-content'
+      preLoaderRoute: typeof TeacherTailoredContentRouteImport
       parentRoute: typeof TeacherRoute
     }
     '/teacher/students': {
@@ -973,6 +992,7 @@ interface TeacherRouteChildren {
   TeacherFinancialRoute: typeof TeacherFinancialRoute
   TeacherMaterialsRoute: typeof TeacherMaterialsRoute
   TeacherStudentsRoute: typeof TeacherStudentsRoute
+  TeacherTailoredContentRoute: typeof TeacherTailoredContentRoute
   TeacherVipRoute: typeof TeacherVipRoute
   TeacherWorkshopsRoute: typeof TeacherWorkshopsRoute
   TeacherIndexRoute: typeof TeacherIndexRoute
@@ -985,6 +1005,7 @@ const TeacherRouteChildren: TeacherRouteChildren = {
   TeacherFinancialRoute: TeacherFinancialRoute,
   TeacherMaterialsRoute: TeacherMaterialsRoute,
   TeacherStudentsRoute: TeacherStudentsRoute,
+  TeacherTailoredContentRoute: TeacherTailoredContentRoute,
   TeacherVipRoute: TeacherVipRoute,
   TeacherWorkshopsRoute: TeacherWorkshopsRoute,
   TeacherIndexRoute: TeacherIndexRoute,
