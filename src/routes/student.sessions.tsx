@@ -754,9 +754,16 @@ function SpotlightFormModal({ studentId, onClose }: { studentId: string; onClose
                 originalSessionId: confirmOverlap.session.id,
                 spotlightContext: context.trim(),
               });
-              // Refund remaining_sessions (as if never scheduled).
-              const u = USERS.find((x) => x.id === studentId);
-              if (u && typeof u.remaining_sessions === "number") u.remaining_sessions += 1;
+              // Refund the credit (as if never scheduled). Group students
+              // share a single counter on the Group, individual students have
+              // it on their own User record.
+              const g = groupOfStudent(studentId);
+              if (g) {
+                incrementGroupRemaining(g.id);
+              } else {
+                const u = USERS.find((x) => x.id === studentId);
+                if (u && typeof u.remaining_sessions === "number") u.remaining_sessions += 1;
+              }
               // Core freemium: consume the one-shot courtesy credit.
               if (studentUser?.access_plan === "Core" && !freemiumUsed(studentId, "spotlight")) {
                 markFreemiumUsed(studentId, "spotlight");
