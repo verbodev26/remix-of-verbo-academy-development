@@ -39,7 +39,6 @@ import { Route as StudentMyCourseRouteImport } from './routes/student.my-course'
 import { Route as StudentInsightsRouteImport } from './routes/student.insights'
 import { Route as StudentCoursesRouteImport } from './routes/student.courses'
 import { Route as StudentChallengesRouteImport } from './routes/student.challenges'
-import { Route as StudentBoostRouteImport } from './routes/student.boost'
 import { Route as StudentAccessLevelsRouteImport } from './routes/student.access-levels'
 import { Route as AdminWorkshopsRouteImport } from './routes/admin.workshops'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
@@ -211,11 +210,6 @@ const StudentChallengesRoute = StudentChallengesRouteImport.update({
   path: '/challenges',
   getParentRoute: () => StudentRoute,
 } as any)
-const StudentBoostRoute = StudentBoostRouteImport.update({
-  id: '/boost',
-  path: '/boost',
-  getParentRoute: () => StudentRoute,
-} as any)
 const StudentAccessLevelsRoute = StudentAccessLevelsRouteImport.update({
   id: '/access-levels',
   path: '/access-levels',
@@ -338,7 +332,6 @@ export interface FileRoutesByFullPath {
   '/admin/users': typeof AdminUsersRoute
   '/admin/workshops': typeof AdminWorkshopsRoute
   '/student/access-levels': typeof StudentAccessLevelsRoute
-  '/student/boost': typeof StudentBoostRoute
   '/student/challenges': typeof StudentChallengesRoute
   '/student/courses': typeof StudentCoursesRoute
   '/student/insights': typeof StudentInsightsRoute
@@ -387,7 +380,6 @@ export interface FileRoutesByTo {
   '/admin/users': typeof AdminUsersRoute
   '/admin/workshops': typeof AdminWorkshopsRoute
   '/student/access-levels': typeof StudentAccessLevelsRoute
-  '/student/boost': typeof StudentBoostRoute
   '/student/challenges': typeof StudentChallengesRoute
   '/student/courses': typeof StudentCoursesRoute
   '/student/insights': typeof StudentInsightsRoute
@@ -440,7 +432,6 @@ export interface FileRoutesById {
   '/admin/users': typeof AdminUsersRoute
   '/admin/workshops': typeof AdminWorkshopsRoute
   '/student/access-levels': typeof StudentAccessLevelsRoute
-  '/student/boost': typeof StudentBoostRoute
   '/student/challenges': typeof StudentChallengesRoute
   '/student/courses': typeof StudentCoursesRoute
   '/student/insights': typeof StudentInsightsRoute
@@ -494,7 +485,6 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin/workshops'
     | '/student/access-levels'
-    | '/student/boost'
     | '/student/challenges'
     | '/student/courses'
     | '/student/insights'
@@ -543,7 +533,6 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin/workshops'
     | '/student/access-levels'
-    | '/student/boost'
     | '/student/challenges'
     | '/student/courses'
     | '/student/insights'
@@ -595,7 +584,6 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin/workshops'
     | '/student/access-levels'
-    | '/student/boost'
     | '/student/challenges'
     | '/student/courses'
     | '/student/insights'
@@ -844,13 +832,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudentChallengesRouteImport
       parentRoute: typeof StudentRoute
     }
-    '/student/boost': {
-      id: '/student/boost'
-      path: '/boost'
-      fullPath: '/student/boost'
-      preLoaderRoute: typeof StudentBoostRouteImport
-      parentRoute: typeof StudentRoute
-    }
     '/student/access-levels': {
       id: '/student/access-levels'
       path: '/access-levels'
@@ -1035,7 +1016,6 @@ const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface StudentRouteChildren {
   StudentAccessLevelsRoute: typeof StudentAccessLevelsRoute
-  StudentBoostRoute: typeof StudentBoostRoute
   StudentChallengesRoute: typeof StudentChallengesRoute
   StudentCoursesRoute: typeof StudentCoursesRoute
   StudentInsightsRoute: typeof StudentInsightsRoute
@@ -1049,7 +1029,6 @@ interface StudentRouteChildren {
 
 const StudentRouteChildren: StudentRouteChildren = {
   StudentAccessLevelsRoute: StudentAccessLevelsRoute,
-  StudentBoostRoute: StudentBoostRoute,
   StudentChallengesRoute: StudentChallengesRoute,
   StudentCoursesRoute: StudentCoursesRoute,
   StudentInsightsRoute: StudentInsightsRoute,
@@ -1111,3 +1090,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
