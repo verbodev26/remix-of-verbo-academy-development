@@ -1179,7 +1179,7 @@ function StudentDetailModal({
 
         {/* Tabs */}
         <div className="flex gap-1 border-b border-border px-6 pt-3">
-          {([["overview", "Overview"], ["performance", "Performance & Attendance"], ["progress", "Course Progress"], ["notes", "Admin Notes"]] as [Tab, string][]).map(([id, label]) => (
+          {([["overview", "Overview"], ["performance", "Performance & Attendance"], ["progress", "Course Progress"], ["reports", "Reports"], ["notes", "Admin Notes"]] as [Tab, string][]).map(([id, label]) => (
             <button
               key={id}
               onClick={() => setTab(id)}
