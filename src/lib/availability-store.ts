@@ -1,6 +1,7 @@
 // Teacher availability + change-request queue.
 // Persisted to localStorage, broadcast via CustomEvent.
 import { loadSessions } from "./sessions-store";
+import { USERS, type User } from "./mock-data";
 
 export type DayKey = "mon" | "tue" | "wed" | "thu" | "fri" | "sat";
 export const DAY_KEYS: DayKey[] = ["mon", "tue", "wed", "thu", "fri", "sat"];
