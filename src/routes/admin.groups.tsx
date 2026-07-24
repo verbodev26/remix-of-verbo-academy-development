@@ -440,8 +440,7 @@ function GroupDetailModal({ groupId, onClose }: { groupId: string; onClose: () =
 
   const hired = g.hired_sessions ?? 0;
   const remaining = g.remaining_sessions ?? 0;
-  const done = Math.max(0, hired - remaining);
-  const pct = hired > 0 ? (done / hired) * 100 : 0;
+  const { pct } = sessionProgressFor(hired, remaining);
 
   return (
     <Overlay onClose={onClose}>
