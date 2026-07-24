@@ -6,6 +6,7 @@ import {
   saveClubReport, type ClubAttendance, type ClubReportEventType,
 } from "@/lib/club-reports-store";
 import { updateClub } from "@/lib/clubs-store";
+import { updateSession } from "@/lib/sessions-store";
 
 export interface ClubReportEventInput {
   id: string;
