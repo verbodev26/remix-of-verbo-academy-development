@@ -13,6 +13,8 @@ export type ConductCategory =
   | "Academic non-compliance"
   | "Other";
 
+export type ConductReportStatus = "pending" | "reviewed" | "dismissed";
+
 export const CONDUCT_CATEGORIES: ConductCategory[] = [
   "Inappropriate behavior",
   "Harassment",
@@ -28,6 +30,8 @@ export interface ConductReport {
   category: ConductCategory;
   text: string;
   created_at: string; // ISO
+  status: ConductReportStatus;
+  reviewed_at?: string; // ISO — when status moved to reviewed or dismissed
 }
 
 export const CONDUCT_REPORTS_KEY = "verbo:conduct-reports";
@@ -35,8 +39,11 @@ export const CONDUCT_REPORTS_EVENT = "verbo:conduct-reports-updated";
 
 function readAll(): ConductReport[] {
   if (typeof window === "undefined") return [];
-  try { return JSON.parse(localStorage.getItem(CONDUCT_REPORTS_KEY) || "[]") as ConductReport[]; }
-  catch { return []; }
+  try {
+    const raw = JSON.parse(localStorage.getItem(CONDUCT_REPORTS_KEY) || "[]") as ConductReport[];
+    // Back-fill status for reports persisted before the field existed.
+    return raw.map((r) => (r.status ? r : { ...r, status: "pending" as const }));
+  } catch { return []; }
 }
 
 function writeAll(list: ConductReport[]) {
@@ -62,6 +69,7 @@ export function addConductReport(input: {
     category: input.category,
     text: input.text.trim(),
     created_at: new Date().toISOString(),
+    status: "pending",
   };
   writeAll([report, ...readAll()]);
   return report;
@@ -69,6 +77,22 @@ export function addConductReport(input: {
 
 export function loadConductReports(): ConductReport[] {
   return readAll();
+}
+
+export function updateConductReport(
+  id: string,
+  patch: Partial<Pick<ConductReport, "status">>,
+): ConductReport | null {
+  const list = readAll();
+  const idx = list.findIndex((r) => r.id === id);
+  if (idx < 0) return null;
+  const next: ConductReport = { ...list[idx], ...patch };
+  if (patch.status && patch.status !== "pending") {
+    next.reviewed_at = new Date().toISOString();
+  }
+  list[idx] = next;
+  writeAll(list);
+  return next;
 }
 
 export function subscribeConductReports(cb: () => void): () => void {
