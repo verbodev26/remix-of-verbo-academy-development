@@ -109,6 +109,8 @@ function Page() {
     setCover(m.cover_image);
     setRestrictProduct(m.restrict_product ?? "");
     setRestrictLevel(m.restrict_level ?? "");
+    setPremium(!!m.premium);
+
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
