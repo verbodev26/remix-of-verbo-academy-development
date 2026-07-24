@@ -88,7 +88,8 @@ function TeacherDashboard() {
     const u5 = subscribeAvailability(() => setAvailTick((n) => n + 1));
     setClubReports(loadClubReports());
     const u6 = subscribeClubReports(() => setClubReports(loadClubReports()));
-    return () => { u1(); u2(); u3(); u4(); u5(); u6(); };
+    const u7 = subscribeCourses(() => setAvailTick((n) => n + 1));
+    return () => { u1(); u2(); u3(); u4(); u5(); u6(); u7(); };
   }, []);
 
   // If we arrived with ?report=<id>, auto-open Step 1 for that session
