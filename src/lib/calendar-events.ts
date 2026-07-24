@@ -7,7 +7,7 @@
 //   - Workshop live    → sessions-store (origin: "workshop")
 //   - Book Clubs       → clubs-store (type: "book")
 //   - Insights         → clubs-store (type: "insight")
-//   - Spotlights       → not yet cross-app persisted (see TODO below)
+//   - Spotlights       → sessions-store (origin: "spotlight")
 //
 // Consumers pass a `teacherId` (or `studentId`) and get back the events
 // that surface belongs to. When Spotlight Sessions get their own store,
