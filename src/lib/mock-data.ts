@@ -142,7 +142,7 @@ export interface Session {
   // For workshop sessions, `student_id` stores the cohort id (participants
   // are read from the workshop cohort itself) and teacher hours accrue via
   // `teacher_id` like any other session.
-  origin?: "course" | "workshop";
+  origin?: "course" | "workshop" | "spotlight";
   workshop_cohort_id?: string;
   workshop_template_id?: string;
   workshop_topic?: string;
