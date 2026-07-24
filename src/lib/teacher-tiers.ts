@@ -80,3 +80,19 @@ export function teacherTier(t: User): TeacherTier {
 export function effectiveHourlyRate(t: User): number {
   return typeof t.hourly_rate === "number" ? t.hourly_rate : teacherTier(t).rate;
 }
+
+export function appendTeacherAdjustment(teacherId: string, amount: number, reason: string) {
+  const teacher = USERS.find((u) => u.id === teacherId);
+  if (!teacher) return;
+  const adj = { id: "adj" + Date.now(), date: new Date().toISOString(), amount, reason };
+  teacher.adjustments = [...(teacher.adjustments ?? []), adj];
+  try {
+    const raw = localStorage.getItem("verbo:teacher-profile-overrides");
+    const overrides: Record<string, Partial<User>> = raw ? JSON.parse(raw) : {};
+    const rest = { ...teacher };
+    delete (rest as Partial<User>).id;
+    delete (rest as Partial<User>).role;
+    overrides[teacher.id] = rest;
+    localStorage.setItem("verbo:teacher-profile-overrides", JSON.stringify(overrides));
+  } catch { /* noop */ }
+}
