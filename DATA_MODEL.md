@@ -668,7 +668,7 @@ Sin sub-tipos. Nav varía por `product_type` y por `product === "vip"`. No requi
 5. **Duplicación masiva `Group` ↔ `User`**: ~15 campos replicados y sincronizados a mano vía `propagateGroupToMembers()` (ver §6).
 6. **Relación maestro-alumno en dos lugares**: `ASSIGNMENTS` (array plano) vs. `Group.teacher_id` + membresía de grupo — sincronizados manualmente en `groups-store.ts`.
 7. **`hired_plan` vs `access_plan`** en `User` — alias legacy documentado como tal en el propio código, nunca limpiado.
-8. **Cálculo de "% de progreso" (`done = hired - remaining; pct = done/hired*100`) duplicado en al menos 3 componentes** (`admin.students.tsx`, `admin.sessions.tsx`, `teacher.students.tsx`) en vez de vivir en un store.
+8. **~~Cálculo de "% de progreso" duplicado~~ RESUELTO**: consolidado en `sessionProgressFor(hired, remaining) → { done, pct }` en `groups-store.ts`, consumido por `admin.students.tsx`, `admin.sessions.tsx`, `admin.groups.tsx` (GroupCard + GroupDetailModal) y `teacher.students.tsx`.
 9. **Promedio de ratings de sesión calculado 3 veces** en 3 componentes distintos (`PerformanceAnalytics.tsx`, `RatingTrendModal.tsx`, `admin.students.tsx`), ninguna en un store.
 10. **"Profesores calificados para un producto" implementado de 3 formas distintas**: helper correcto (`teachersForProduct()`), sin filtrar en absoluto, y un filtro manual reinventado — todo dentro de `admin.sessions.tsx` y `admin.students.tsx`.
 
