@@ -609,6 +609,7 @@ function RescheduleRequestModal({ session, onClose }: { session: ExtSession; onC
       origin_session_id: session.id,
       proposed_datetime: slotISO,
       duration_minutes: durationMin,
+      last_report_summary: lastCoveredSummaryFor(loadSessions(), actingStudentId),
     });
     if (isGroup) {
       const res = applyGroupMemberCancellation(session.id, actingStudentId, "pending_reschedule");
