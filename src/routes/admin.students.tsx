@@ -561,6 +561,8 @@ function StudentFormModal({
     selected_cohort_ids: initial ? cohortsForStudent(initial.id).map((x) => x.cohort.id) : [],
   }));
   const [showPassword, setShowPassword] = useState(false);
+  const [emailTouched, setEmailTouched] = useState(false);
+  const [attemptedSave, setAttemptedSave] = useState(false);
   const prevPerWeek = useRef(f.sessions_per_week);
 
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) => setF((p) => ({ ...p, [k]: v }));
