@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/lib/auth";
+import { USERS } from "@/lib/mock-data";
 import { Logo } from "@/components/verbo/Logo";
 import { ArrowLeft, Loader2 } from "lucide-react";
 
