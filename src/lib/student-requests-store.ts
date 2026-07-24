@@ -304,4 +304,11 @@ export function convertSessionToSpotlight(input: {
     notes: `Spotlight (converted) — ${input.spotlightContext}`,
   };
   persistSessions([spotlightSession as never, ...loadSessions()]);
+  recordSpotlightConversion({
+    student_id: orig.student_id,
+    teacher_id: orig.teacher_id,
+    proposed_datetime: orig.date_time,
+    duration_minutes: spotlightSession.duration_minutes,
+    spotlight_context: input.spotlightContext,
+  });
 }
