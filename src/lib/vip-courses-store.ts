@@ -12,7 +12,8 @@ export interface VipUnit {
 }
 
 const KEY = "verbo:vip-courses";
-const EVENT = "verbo:vip-courses-updated";
+export const VIP_UNITS_EVENT = "verbo:vip-courses-updated";
+const EVENT = VIP_UNITS_EVENT;
 
 function safeRead(): VipUnit[] {
   if (typeof window === "undefined") return [];
