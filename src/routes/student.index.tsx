@@ -351,6 +351,7 @@ function StudentDashboard() {
             </h1>
             <FeaturedProfileBadge user={user} />
             {user.access_plan === "Elite" && <Pill tone="elite">Elite</Pill>}
+            {productLabel && <Pill tone="muted">{productLabel}</Pill>}
           </div>
           <p className="mt-1.5 text-xs text-muted-foreground">{welcomeLine}</p>
         </div>
