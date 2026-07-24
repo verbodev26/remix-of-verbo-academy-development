@@ -500,6 +500,8 @@ Dirección **STUDENT → TEACHER o STUDENT** (opuesto e independiente de `Studen
 
 Al reclamarse, crea una **nueva sesión** en `sessions-store` (`rs-${req.id}`/`sp-${req.id}`), copiando datos — vínculo solo por convención de ID, no FK explícita.
 
+**Conversión a Spotlight (`convertSessionToSpotlight`)**: cuando un alumno convierte una clase 1:1 traslapada a Spotlight, la sesión ya se crea directamente en `sessions-store` (con `origin: "spotlight"`). Para que el consumo mensual se contabilice correctamente, `convertSessionToSpotlight` llama a `recordSpotlightConversion`, que escribe un `StudentRequest` adicional con `kind: "spotlight"` y `status: "assigned"`. Este registro no aparece en las colas de profesor/Admin (porque su status no es `"open"` ni `"escalated"`), pero sí se cuenta en `spotlightRequestsThisMonth()`.
+
 ---
 
 ## 8. Financiero (solo tracking — nunca transacciones reales)
