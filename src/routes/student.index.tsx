@@ -404,7 +404,7 @@ function StudentDashboard() {
                 <span className="font-[family-name:var(--font-display)] text-6xl font-semibold leading-none tracking-tight" style={{ color: "#01304a" }}>{levelProgress}</span>
                 <span className="font-[family-name:var(--font-display)] text-2xl font-medium" style={{ color: "#01304a" }}>%</span>
               </div>
-              <div className="mt-1.5 text-xs text-muted-foreground">of {user.current_level}</div>
+              <div className="mt-1.5 text-xs text-muted-foreground">of {currentLevelName ?? "—"}</div>
             </div>
             <StatRing value={levelProgress} size={104} stroke={9} />
           </div>
