@@ -32,7 +32,7 @@ import { USERS, userById } from "@/lib/mock-data";
 import { adjustRemainingSessions } from "@/lib/students-store";
 import {
   loadSessions, subscribeSessions, updateSession, applyGroupMemberCancellation,
-  SUB_STATUS_META,
+  SUB_STATUS_META, lastCoveredSummaryFor,
   type ExtSession, type ExtSessionStatus,
 } from "@/lib/sessions-store";
 import { CalendarView } from "@/components/verbo/CalendarView";
