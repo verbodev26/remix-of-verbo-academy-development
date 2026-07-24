@@ -580,14 +580,14 @@ function StudentDashboard() {
           {/* Verbo Experiences */}
           <PremiumCard hover className="relative overflow-hidden">
             <div
-              className="absolute inset-0 opacity-[0.07] pointer-events-none"
-              style={{ background: "radial-gradient(circle at top right, #f38934, transparent 65%)" }}
+              className="absolute inset-0 opacity-[0.09] pointer-events-none"
+              style={{ background: "radial-gradient(circle at top right, var(--green-500), transparent 65%)" }}
             />
             <div className="relative">
               <div className="flex items-center gap-2">
                 <div
                   className="flex h-9 w-9 items-center justify-center rounded-lg"
-                  style={{ background: "rgba(243, 137, 52, 0.12)", color: "#f38934" }}
+                  style={{ background: "color-mix(in oklab, var(--green-500) 12%, transparent)", color: "var(--green-500)" }}
                 >
                   <Users className="h-4 w-4" />
                 </div>
