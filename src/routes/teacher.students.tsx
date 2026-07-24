@@ -437,7 +437,10 @@ function StudentDetailModal({
               {product && <Tag className="bg-primary/10 text-primary">{product.name}</Tag>}
               {s.access_plan && <Tag className="bg-accent/10 text-accent">{s.access_plan}</Tag>}
               {s.focus && <Tag className="bg-secondary text-secondary-foreground">{s.focus}</Tag>}
-              {s.current_level && <Tag className="bg-muted text-muted-foreground">Level {s.current_level}</Tag>}
+              {(() => {
+                const lv = computeCurrentProgress(s.id, s.product, s.contracted_levels ?? [], 0)?.levelName;
+                return lv ? <Tag className="bg-muted text-muted-foreground">{lv}</Tag> : null;
+              })()}
               {isVip && (
                 <Tag className="bg-amber-500/15 text-amber-600">
                   <Crown className="mr-1 h-3 w-3" /> VIP
