@@ -472,7 +472,7 @@ function StudentDetailModal({
                 <div className="mt-3 grid grid-cols-3 gap-4">
                   <Stat label="Contracted" value={String(hired)} />
                   <Stat label="Remaining" value={String(remaining)} />
-                  <Stat label="Used" value={String(Math.max(0, hired - remaining))} />
+                  <Stat label="Used" value={String(used)} />
                 </div>
                 <p className="mt-3 text-xs text-muted-foreground">
                   Use this balance to decide how many sessions to dedicate to Additional Content, Review Session
