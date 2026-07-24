@@ -6,6 +6,7 @@ import { GhostButton } from "@/components/verbo/ui";
 import type { LessonPlan, LessonSessionType } from "@/lib/lesson-plans-store";
 import type { ExtSession } from "@/lib/sessions-store";
 import { unitsForStudent, vipUnitDoneMap } from "@/lib/vip-courses-store";
+import { tailoredUnitsForStudent, tailoredUnitDoneMap } from "@/lib/tailored-content-store";
 
 const ALL_SESSION_TYPES: LessonSessionType[] = [
   "Syllabus content",
@@ -33,10 +34,18 @@ export function PlanModal({
   const [unitId, setUnitId] = useState(existing?.unit_id ?? "");
   const [comments, setComments] = useState(existing?.comments ?? "");
   const [vipUnitId, setVipUnitId] = useState(existing?.vip_unit_id ?? "");
+  const [tailoredUnitId, setTailoredUnitId] = useState(existing?.tailored_unit_id ?? "");
 
   const isVip = student?.product === "vip";
   const vipUnits = isVip ? unitsForStudent(student!.id) : [];
   const vipDone = isVip ? vipUnitDoneMap() : {};
+
+  // Tailored Content is exclusive to Elite access_plan. If a student is
+  // somehow both VIP (product) and Elite (access_plan), VIP takes priority
+  // and Tailored Content is not offered on top.
+  const isElite = !isVip && student?.access_plan === "Elite";
+  const tailoredUnits = isElite ? tailoredUnitsForStudent(student!.id) : [];
+  const tailoredDone = isElite ? tailoredUnitDoneMap() : {};
 
   const sessionTypes = isVip
     ? ALL_SESSION_TYPES.filter((t) => t !== "Syllabus content")
@@ -73,6 +82,7 @@ export function PlanModal({
       level_id: showLevelUnit ? levelId : undefined,
       unit_id: showLevelUnit ? unitId : undefined,
       vip_unit_id: isVip && vipUnitId ? vipUnitId : undefined,
+      tailored_unit_id: isElite && tailoredUnitId ? tailoredUnitId : undefined,
       comments: comments.trim(),
       planning_status,
       saved_at: new Date().toISOString(),
@@ -174,6 +184,28 @@ export function PlanModal({
               <p className="mt-1 text-[11px] text-muted-foreground">
                 Optional. When this session is marked <strong>Completed</strong> in the Session Report,
                 the linked VIP unit will be marked done and the next unit will unlock automatically.
+              </p>
+            </div>
+          )}
+
+          {isElite && (
+            <div>
+              <label className="text-xs font-medium text-foreground">Link to Tailored Content unit</label>
+              <select
+                value={tailoredUnitId}
+                onChange={(e) => setTailoredUnitId(e.target.value)}
+                className={`${inputCls} cursor-pointer`}
+              >
+                <option value="">— None —</option>
+                {tailoredUnits.map((u, i) => (
+                  <option key={u.id} value={u.id}>
+                    Unit {i + 1} · {u.title}{tailoredDone[u.id] ? " (Done)" : ""}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                Optional. When this session is marked <strong>Completed</strong> in the Session Report,
+                the linked Tailored Content unit will be marked done and the next unit will unlock automatically.
               </p>
             </div>
           )}
