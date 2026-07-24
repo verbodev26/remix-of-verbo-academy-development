@@ -8,8 +8,17 @@ interface AuthCtx {
   login: (email: string, password: string) => { ok: true; role: Role } | { ok: false; error: string };
   logout: () => void;
   updateProfile: (
-    updates: { name?: string; currentPassword?: string; newPassword?: string },
+    updates: { name?: string; currentPassword?: string; newPassword?: string; forceChange?: boolean },
   ) => { ok: true } | { ok: false; error: string };
+}
+
+/** Password complexity rule shared by forced-change and normal profile flow.
+ *  At least 4 chars, at least one uppercase letter, and at least one digit. */
+export function validatePasswordComplexity(pwd: string): string | null {
+  if (!pwd || pwd.length < 4) return "Password must be at least 4 characters.";
+  if (!/[A-Z]/.test(pwd)) return "Password must include at least one uppercase letter.";
+  if (!/[0-9]/.test(pwd)) return "Password must include at least one number.";
+  return null;
 }
 
 const Ctx = createContext<AuthCtx | null>(null);
