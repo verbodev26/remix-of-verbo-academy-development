@@ -314,11 +314,11 @@ function StudentDashboard() {
         <div>
           <div className="text-sm text-muted-foreground">Welcome back</div>
           <div className="mt-1 flex items-center gap-3">
-            <h1 className="text-3xl font-semibold tracking-tight" style={{ color: "#01304a" }}>
+            <h1 className="font-[family-name:var(--font-display)] text-3xl font-semibold tracking-tight" style={{ color: "#01304a" }}>
               {user.name.split(" ")[0]}
             </h1>
             <FeaturedProfileBadge user={user} />
-
+            {user.access_plan === "Elite" && <Pill tone="elite">Elite</Pill>}
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -343,11 +343,11 @@ function StudentDashboard() {
 
       {/* KPI Metrics with circular SVG progress */}
       <section className="grid gap-4 md:grid-cols-3">
-        <PremiumCard hover>
+        <PremiumCard hover className="verbo-fade-up" style={{ animationDelay: "0ms" }}>
           <div className="flex items-center justify-between gap-4">
             <div>
               <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Current Level</div>
-              <div className="mt-3 text-3xl font-semibold tracking-tight" style={{ color: "#01304a" }}>
+              <div className="mt-3 font-[family-name:var(--font-display)] text-4xl font-semibold tracking-tight" style={{ color: "#01304a" }}>
                 {user.current_level ?? "—"}
               </div>
               <div className="mt-1 text-xs text-muted-foreground">{level?.title}</div>
@@ -355,24 +355,24 @@ function StudentDashboard() {
             <ProgressRing value={levelProgress} label={user.current_level ?? "—"} />
           </div>
         </PremiumCard>
-        <PremiumCard hover>
+        <PremiumCard hover className="verbo-fade-up" style={{ animationDelay: "50ms" }}>
           <div className="flex items-center justify-between gap-4">
             <div>
               <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Level Progress</div>
               <div className="mt-3 flex items-baseline gap-2">
-                <span className="text-3xl font-semibold tracking-tight" style={{ color: "#01304a" }}>{levelProgress}%</span>
+                <span className="font-[family-name:var(--font-display)] text-4xl font-semibold tracking-tight" style={{ color: "#01304a" }}>{levelProgress}%</span>
               </div>
               <div className="mt-1 text-xs text-muted-foreground">of {user.current_level}</div>
             </div>
             <ProgressRing value={levelProgress} />
           </div>
         </PremiumCard>
-        <PremiumCard hover>
+        <PremiumCard hover className="verbo-fade-up" style={{ animationDelay: "100ms" }}>
           <div className="flex items-center justify-between gap-4">
             <div>
               <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Overall Attendance</div>
               <div className="mt-3 flex items-baseline gap-2">
-                <span className="text-3xl font-semibold tracking-tight" style={{ color: "#01304a" }}>{attendancePct}%</span>
+                <span className="font-[family-name:var(--font-display)] text-4xl font-semibold tracking-tight" style={{ color: "#01304a" }}>{attendancePct}%</span>
               </div>
               <div className="mt-1 text-xs text-muted-foreground">last 90 days</div>
             </div>
