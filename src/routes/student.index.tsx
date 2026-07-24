@@ -70,9 +70,9 @@ function fmtTime(iso: string) {
   return new Date(iso).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
 }
 
-function PremiumCard({ children, className = "", hover = false }: { children: React.ReactNode; className?: string; hover?: boolean }) {
+function PremiumCard({ children, className = "", hover = false, style }: { children: React.ReactNode; className?: string; hover?: boolean; style?: React.CSSProperties }) {
   return (
-    <div className={`rounded-2xl border border-border p-6 verbo-card ${hover ? "verbo-card-hover" : ""} ${className}`}>
+    <div style={style} className={`rounded-2xl border border-border p-6 verbo-card ${hover ? "verbo-card-hover" : ""} ${className}`}>
       {children}
     </div>
   );
