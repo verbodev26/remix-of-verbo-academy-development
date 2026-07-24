@@ -17,13 +17,14 @@ export function SectionTitle({ children, action }: { children: ReactNode; action
   );
 }
 
-export function Pill({ children, tone = "default" }: { children: ReactNode; tone?: "default" | "success" | "warning" | "danger" | "muted" }) {
+export function Pill({ children, tone = "default" }: { children: ReactNode; tone?: "default" | "success" | "warning" | "danger" | "muted" | "elite" }) {
   const tones: Record<string, string> = {
     default: "bg-secondary text-secondary-foreground",
     success: "bg-success/10 text-success",
     warning: "bg-warning/15 text-foreground",
     danger: "bg-destructive/10 text-destructive",
     muted: "bg-muted text-muted-foreground",
+    elite: "bg-[var(--tier-elite-soft)] text-[var(--tier-elite)]",
   };
   return (
     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium ${tones[tone]}`}>
