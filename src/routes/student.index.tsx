@@ -317,6 +317,22 @@ function StudentDashboard() {
     }
   };
 
+  // Dynamic welcome line — first matching condition wins.
+  const welcomeLine = (() => {
+    const now = Date.now();
+    const soon = upcoming.find((s) => {
+      const dt = +new Date(s.date_time);
+      return dt >= now && dt - now <= 48 * 60 * 60 * 1000;
+    });
+    if (soon) {
+      const t = userById(soon.teacher_id)?.name?.split(" ")[0] ?? "your teacher";
+      return `Your next session with ${t} is ${fmtDay(soon.date_time)} at ${fmtTime(soon.date_time)}.`;
+    }
+    if (levelProgress >= 80) return "You're close to leveling up to your next stage — keep going.";
+    if (attendancePct >= 90) return `Your ${attendancePct}% attendance is paying off. Keep it up.`;
+    return "Every session brings you closer to fluency.";
+  })();
+
   return (
     <div className="space-y-10">
       <header className="verbo-fade-up motion-reduce:animate-none flex flex-wrap items-center justify-between gap-4" style={{ animationDelay: "0ms" }}>
@@ -329,6 +345,7 @@ function StudentDashboard() {
             <FeaturedProfileBadge user={user} />
             {user.access_plan === "Elite" && <Pill tone="elite">Elite</Pill>}
           </div>
+          <p className="mt-1.5 text-xs text-muted-foreground">{welcomeLine}</p>
         </div>
         <div className="flex items-center gap-3">
           {user.product_type === "performance" && (() => {
