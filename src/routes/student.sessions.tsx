@@ -48,6 +48,7 @@ import {
   parseReschedulePolicy,
   reschedulesUsedThisMonth,
   rescheduleQuota,
+  spotlightRequestsThisMonth,
 } from "@/lib/student-requests-store";
 import { isTeacherAvailableAt, findAvailableStartSlots } from "@/lib/availability-store";
 import { ClubReservationModal } from "@/components/verbo/ClubReservationModal";
