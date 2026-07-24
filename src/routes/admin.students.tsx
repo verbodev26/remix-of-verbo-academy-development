@@ -703,6 +703,7 @@ function StudentFormModal({
   };
 
   const handleSave = () => {
+    setAttemptedSave(true);
     if (!isValid) return;
     const accessPlan = (f.access_plan || undefined) as AccessPlanId | undefined;
     const id = initial?.id ?? `u${Date.now()}`;
