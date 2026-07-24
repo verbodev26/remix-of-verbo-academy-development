@@ -1358,7 +1358,7 @@ function StudentDetailModal({
         {/* Footer actions */}
         <div className="flex flex-wrap items-center gap-2 border-t border-border bg-secondary/30 px-6 py-4">
           <GhostButton onClick={onEdit} className="!py-1.5 !text-xs"><Pencil className="h-3.5 w-3.5" /> Edit profile</GhostButton>
-          <GhostButton onClick={() => alert(`Recovery email sent to ${student.email}.`)} className="!py-1.5 !text-xs"><KeyRound className="h-3.5 w-3.5" /> Reset password</GhostButton>
+          <GhostButton onClick={() => { patch({ must_change_password: true }); alert("This user will be asked to set a new password the next time they log in."); }} className="!py-1.5 !text-xs"><KeyRound className="h-3.5 w-3.5" /> Reset password</GhostButton>
           <GhostButton onClick={() => setPanel((p) => (p === "reassign" ? "none" : "reassign"))} className="!py-1.5 !text-xs"><Users className="h-3.5 w-3.5" /> Reassign teacher</GhostButton>
           <GhostButton onClick={() => setPanel((p) => (p === "freeze" ? "none" : "freeze"))} className="!py-1.5 !text-xs"><Snowflake className="h-3.5 w-3.5" /> Freeze</GhostButton>
           {student.status === "suspended" ? (
