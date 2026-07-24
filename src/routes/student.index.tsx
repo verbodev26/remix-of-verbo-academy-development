@@ -464,16 +464,16 @@ function StudentDashboard() {
 
 
           {/* Upcoming Sessions */}
-          <div>
+          <div className="verbo-fade-up motion-reduce:animate-none" style={{ animationDelay: "200ms" }}>
             <SectionTitle>Upcoming Sessions</SectionTitle>
             {upcoming.length === 0 ? (
-              <PremiumCard><div className="text-sm text-muted-foreground">No upcoming sessions scheduled.</div></PremiumCard>
+              <PremiumCard className="verbo-card-hover"><div className="text-sm text-muted-foreground">No upcoming sessions scheduled.</div></PremiumCard>
             ) : (
               <div className="grid gap-4 sm:grid-cols-2">
                 {upcoming.map((s) => {
                   const teacher = userById(s.teacher_id);
                   return (
-                    <PremiumCard key={s.id} hover className="flex flex-col gap-4 border-l-4">
+                    <PremiumCard key={s.id} hover className="verbo-card-hover flex flex-col gap-4 border-l-4">
                       <div
                         className="-m-6 mb-0 rounded-t-2xl p-4"
                         style={{ background: "linear-gradient(135deg, #01304a, #014a6e)" }}
@@ -508,6 +508,7 @@ function StudentDashboard() {
               </div>
             )}
           </div>
+
         </div>
 
         {/* RIGHT SIDEBAR ~35% */}
