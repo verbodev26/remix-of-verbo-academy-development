@@ -16,7 +16,9 @@ export interface StoredMaterial {
   cover_image?: string; // dataURL (uploaded) — empty means use type fallback
   restrict_product?: RestrictProduct; // undefined = visible to everyone
   restrict_level?: string; // commercial level name (depends on product)
+  premium?: boolean; // when true, only Advance/Elite access plans see it unlocked
 }
+
 
 // Restrict-to catalog — GO / Enterprise / International (VIP excluded here).
 export const RESTRICT_PRODUCTS: { id: RestrictProduct; label: string; levels: string[] }[] = [
