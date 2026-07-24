@@ -495,6 +495,8 @@ function LevelsView({
       </div>
 
       {/* Achievement timeline */}
+      {tailoredSection}
+
       <AchievementTimeline events={events} />
     </div>
   );

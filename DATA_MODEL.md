@@ -261,6 +261,21 @@ Nombres de nivel confirmados por producto:
 
 **`VipUnitCompletion`**: `{ session_id: string; completed_at: string }`, clave = `unitId`. Se vincula a `LessonPlan.vip_unit_id` (ver §2).
 
+### `TailoredUnit` / `TailoredUnitCompletion` (`src/lib/tailored-content-store.ts`)
+
+**`TailoredUnit`**: unidad "a medida" creada por el maestro para un alumno con `access_plan === "Elite"`. Mecanismo paralelo e independiente de `VipUnit` (no comparte storage, keys ni identificadores).
+
+| campo | tipo | requerido/opcional | notas |
+|---|---|---|---|
+| id | string | requerido | patrón `TC-<studentId>-<timestamp>` |
+| student_id | string | requerido | FK → estudiante Elite |
+| title | string | requerido | |
+| file_url | string | requerido | material descargable |
+| file_name | string | opcional | |
+| created_at | string | requerido | |
+
+**`TailoredUnitCompletion`**: `{ session_id: string; completed_at: string }`, clave = `unitId`. Se vincula a `LessonPlan.tailored_unit_id`. Al marcar Completed el Session Report de la sesión vinculada, la unidad queda done y la siguiente (por `created_at`) se desbloquea automáticamente.
+
 ### `Activity` (`src/lib/activities-store.ts`)
 
 | campo | tipo | requerido/opcional | notas |
