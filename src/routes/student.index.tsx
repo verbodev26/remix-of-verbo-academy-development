@@ -627,7 +627,7 @@ function StudentDashboard() {
                       <td className="px-6 py-4">
                         <span className={statusBadge(s.status)}>{s.status}</span>
                       </td>
-                      <td className="px-6 py-4 text-muted-foreground">{s.student_rating ? `${s.student_rating}★` : "—"}</td>
+                      <td className="px-6 py-4">{s.student_rating ? <RatingStarsCompact value={s.student_rating} /> : <span className="text-muted-foreground">—</span>}</td>
                       <td className="px-6 py-4">
                         <Tooltip>
                           <TooltipTrigger asChild>
