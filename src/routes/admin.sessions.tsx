@@ -20,6 +20,7 @@ import { effectiveSessionCounts } from "@/lib/groups-store";
 import { CandidatesModal } from "@/components/verbo/CandidatesModal";
 import { RescheduleModal } from "@/components/verbo/RescheduleModal";
 import { loadHolidays } from "@/lib/holidays-store";
+import { computeCurrentProgress } from "@/lib/product-courses-store";
 
 
 // Status → dropdown options + distinct badge colors (no overlap).
