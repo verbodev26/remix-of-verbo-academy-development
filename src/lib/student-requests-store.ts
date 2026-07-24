@@ -90,6 +90,31 @@ export function addStudentRequest(input: Omit<StudentRequest, "id" | "requested_
   return req;
 }
 
+/** Records a Spotlight conversion as an already-assigned request so it counts
+ *  toward the student's monthly Spotlight cap without appearing in open queues. */
+export function recordSpotlightConversion(input: {
+  student_id: string;
+  teacher_id: string;
+  proposed_datetime: string;
+  duration_minutes: number;
+  spotlight_context: string;
+}): void {
+  const req: StudentRequest = {
+    id: `sr-conv-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    kind: "spotlight",
+    student_id: input.student_id,
+    assigned_teacher_id: input.teacher_id,
+    proposed_datetime: input.proposed_datetime,
+    duration_minutes: input.duration_minutes,
+    spotlight_context: input.spotlight_context,
+    requested_at: new Date().toISOString(),
+    status: "assigned",
+    claimed_by: input.teacher_id,
+    claimed_at: new Date().toISOString(),
+  };
+  writeAll([req, ...readAll()]);
+}
+
 export function claimStudentRequest(id: string, teacherId: string): StudentRequest | null {
   const list = readAll();
   const idx = list.findIndex((r) => r.id === id);
@@ -279,4 +304,11 @@ export function convertSessionToSpotlight(input: {
     notes: `Spotlight (converted) — ${input.spotlightContext}`,
   };
   persistSessions([spotlightSession as never, ...loadSessions()]);
+  recordSpotlightConversion({
+    student_id: orig.student_id,
+    teacher_id: orig.teacher_id,
+    proposed_datetime: orig.date_time,
+    duration_minutes: spotlightSession.duration_minutes,
+    spotlight_context: input.spotlightContext,
+  });
 }
