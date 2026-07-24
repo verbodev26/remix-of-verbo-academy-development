@@ -10,6 +10,7 @@ import { hydrateStudents } from "@/lib/students-store";
 import { nextPaymentDate, daysUntil, MAX_INSIGHT_STRIKES, getProduct } from "@/lib/student-model";
 import { computeTeacherKpis } from "@/lib/teacher-kpis";
 import { pendingReviews } from "@/lib/teacher-model";
+import { monthlySnapshot } from "@/lib/teacher-kpi-history-store";
 import { loadClubs, subscribeClubs, upcomingCreatedClubs } from "@/lib/clubs-store";
 import {
   useAnnouncements, activeAnnouncements, publishAnnouncement, endAnnouncement,
@@ -400,17 +401,25 @@ function last12Labels(): string[] {
   return out;
 }
 
-// Deterministic mock series generator (stable across renders).
-function series(seed: number, min: number, max: number): number[] {
-  const labels = last12Labels();
-  let a = seed >>> 0;
-  return labels.map(() => {
-    a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    const r = ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-    return Math.round(min + (max - min) * r);
-  });
+// Build the same 12-month window as labels(), but with YYYY-MM keys so we can
+// bucket real events by month and reuse them across every chart.
+function last12MonthKeys(): { key: string; label: string }[] {
+  const now = new Date();
+  const out: { key: string; label: string }[] = [];
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    out.push({
+      key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
+      label: MONTHS[d.getMonth()],
+    });
+  }
+  return out;
+}
+
+function monthKeyOfISO(iso: string): string | null {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
 function MetricsModal({ students, teacherRows, onClose }: {
@@ -419,12 +428,65 @@ function MetricsModal({ students, teacherRows, onClose }: {
   onClose: () => void;
 }) {
   const [tab, setTab] = useState<"students" | "teachers">("students");
-  const labels = last12Labels();
+  const months = last12MonthKeys();
+  const nowKey = months[months.length - 1].key;
 
-  const enrollment = labels.map((m, i) => ({ month: m, value: series(11, 2, 12)[i] }));
-  const dropouts = labels.map((m, i) => ({ month: m, value: series(29, 0, 4)[i] }));
-  const completions = labels.map((m, i) => ({ month: m, value: series(53, 1, 9)[i] }));
-  const logins = labels.map((m, i) => ({ month: m, value: series(97, 40, 180)[i] }));
+  // ---- Enrollment: real new-student count per month via `member_since`. -----
+  const enrollment = months.map(({ key, label }) => {
+    const value = students.filter((s) => s.member_since && monthKeyOfISO(s.member_since) === key).length;
+    return { month: label, value };
+  });
+
+  // ---- Dropouts: no per-student "left on" date exists in the model. Attribute
+  //      every currently non-active student to the current month and leave the
+  //      other months at 0. This is honest about the missing timestamp.
+  const dropoutsTotal = students.filter((s) => s.status && s.status !== "active").length;
+  const dropouts = months.map(({ key, label }) => ({
+    month: label,
+    value: key === nowKey ? dropoutsTotal : 0,
+  }));
+
+  // ---- Completions: real completed sessions per month via `date_time`. ------
+  const completions = months.map(({ key, label }) => {
+    const value = SESSIONS.filter(
+      (s) => s.status === "completed" && monthKeyOfISO(s.date_time) === key,
+    ).length;
+    return { month: label, value };
+  });
+
+  // ---- Hours taught: sum duration_minutes of completed sessions / 60. ------
+  const hoursTaught = months.map(({ key, label }) => {
+    const mins = SESSIONS.filter(
+      (s) => s.status === "completed" && monthKeyOfISO(s.date_time) === key,
+    ).reduce((a, s) => a + (s.duration_minutes ?? 0), 0);
+    return { month: label, value: Math.round(mins / 60) };
+  });
+
+  // ---- Active teachers: teacher_status !== "removed" AND hire_date <= EOM. -
+  const activeTeachers = months.map(({ key, label }) => {
+    const [y, m] = key.split("-").map(Number);
+    const endOfMonth = new Date(y, m, 0, 23, 59, 59);
+    const value = teacherRows.filter(({ t }) => {
+      if (t.teacher_status === "removed") return false;
+      if (!t.hire_date) return false;
+      return new Date(t.hire_date).getTime() <= endOfMonth.getTime();
+    }).length;
+    return { month: label, value };
+  });
+
+  // ---- Composite trend: reuse the real per-month snapshot from the history
+  //      store (has its own real-value persistence + documented fallback).
+  const compositeTrend = months.map(({ key, label }) => {
+    const eligible = teacherRows.filter(({ t }) => {
+      if (t.teacher_status === "removed") return false;
+      if (!t.hire_date) return false;
+      const [y, m] = key.split("-").map(Number);
+      return new Date(t.hire_date).getTime() <= new Date(y, m, 0, 23, 59, 59).getTime();
+    });
+    if (!eligible.length) return { month: label, value: 0 };
+    const sum = eligible.reduce((a, { t }) => a + monthlySnapshot(t, key).composite, 0);
+    return { month: label, value: Math.round(sum / eligible.length) };
+  });
 
   const byProduct = useMemo(() => {
     const map: Record<string, number> = {};
@@ -437,14 +499,6 @@ function MetricsModal({ students, teacherRows, onClose }: {
       value,
     }));
   }, [students]);
-
-  const avgComposite = teacherRows.length
-    ? Math.round(teacherRows.reduce((a, r) => a + r.kpis.composite, 0) / teacherRows.length)
-    : 75;
-  const activeTeachers = labels.map((m, i) => ({ month: m, value: series(131, 3, teacherRows.length + 2)[i] }));
-  const compositeTrend = labels.map((m, i) => ({ month: m, value: Math.max(50, Math.min(100, avgComposite - 8 + series(163, 0, 16)[i])) }));
-  const hoursTaught = labels.map((m, i) => ({ month: m, value: series(191, 120, 420)[i] }));
-  const teacherLogins = labels.map((m, i) => ({ month: m, value: series(211, 10, 60)[i] }));
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
@@ -476,8 +530,7 @@ function MetricsModal({ students, teacherRows, onClose }: {
             <>
               <ChartCard title="Enrollment trend"><BarSeries data={enrollment} color={NAVY} /></ChartCard>
               <ChartCard title="Dropout trend"><LineSeries data={dropouts} color="#ef4444" /></ChartCard>
-              <ChartCard title="Level completions"><BarSeries data={completions} color="#22c55e" /></ChartCard>
-              <ChartCard title="Student logins"><LineSeries data={logins} color={BRAND} /></ChartCard>
+              <ChartCard title="Session completions"><BarSeries data={completions} color="#22c55e" /></ChartCard>
               <ChartCard title="Students by product">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -495,7 +548,6 @@ function MetricsModal({ students, teacherRows, onClose }: {
               <ChartCard title="Active teachers trend"><LineSeries data={activeTeachers} color={NAVY} /></ChartCard>
               <ChartCard title="Avg composite score trend"><LineSeries data={compositeTrend} color={BRAND} domain={[0, 100]} /></ChartCard>
               <ChartCard title="Hours taught"><BarSeries data={hoursTaught} color="#22c55e" /></ChartCard>
-              <ChartCard title="Teacher logins"><LineSeries data={teacherLogins} color="#a855f7" /></ChartCard>
             </>
           )}
         </div>
