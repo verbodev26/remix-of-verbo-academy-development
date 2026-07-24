@@ -323,6 +323,7 @@ Reglas de gating (student.courses.tsx): el override MÁS RECIENTE por `(studentI
 | cover_image | string | opcional | |
 | restrict_product | `"go"\|"enterprise"\|"international"` | opcional | filtro de visibilidad |
 | restrict_level | string | opcional | debe coincidir con un nombre en `RESTRICT_PRODUCTS`, sin validación tipada |
+| premium | boolean | opcional | cuando `true`, sólo los alumnos con `access_plan ∈ {"Advance","Elite"}` ven el material desbloqueado; el resto ve la tarjeta con blur + candado + badge "Premium" y al hacer click se abre el `AccessGateNotice` compartido (`src/components/verbo/PremiumGate.tsx`). Teachers ven todo sin restricción (`hasPremiumAccess` default `true` en `MaterialLibrary`). |
 
 ⚠️ Coexiste con `Material`/`MATERIALS` de `mock-data.ts` (campos: `id, title, material_type, upload_url, category`, sin `restrict_product`/`restrict_level`) — dos catálogos de materiales paralelos, ver §13.
 
