@@ -1314,6 +1314,8 @@ function StudentDetailModal({
 
           {tab === "progress" && <CourseProgressTab student={student} />}
 
+          {tab === "reports" && <ReportsTab student={student} />}
+
           {tab === "notes" && (
             <div>
               <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"><ShieldAlert className="h-3.5 w-3.5" /> Internal notes (admin only)</p>
