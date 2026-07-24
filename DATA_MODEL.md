@@ -449,8 +449,8 @@ Un solo uso por tipo (`insight`/`book`/`spotlight`), válido durante todo el per
 
 ⚠️⚠️ **Duplicación masiva `Group` ↔ `User`**: `Group` replica ~15 campos que también existen en `User` individual (product, focus, access_plan, contracted_levels, video_call_link, addons, política de reagendamiento). `propagateGroupToMembers()` **copia explícitamente** estos valores hacia cada `User` miembro cada vez que se edita el grupo — dos fuentes de verdad sincronizadas a mano. Ver §13.
 
-### `StudentAttendance` (`src/lib/attendance-store.ts`) — ⚠️ **100% sintético**
-`{ present: number; late: number; absentOrNoShow: number }`. No hay persistencia real: se genera con un hash determinístico del `studentId`. El propio archivo dice que el motor real de "Session Report" que grabará asistencia real **aún no existe**.
+### `StudentAttendanceSummary` (`src/lib/sessions-store.ts`)
+`{ completed: number; absent: number; pct: number }`. Helper compartido `studentAttendance(sessions, student)` — única fuente de verdad para el % de asistencia en Admin > Students (PerformanceTab), Student Dashboard y Teacher > My Students. Regla: `pct = student.attendance_percentage` si existe; si no, `round(completed / (completed + absent) * 100)`; `0` si no hay sesiones contabilizadas. El antiguo `src/lib/attendance-store.ts` (100% sintético a partir de un hash del `studentId`) fue eliminado.
 
 ### `Strike` (`src/lib/strikes-store.ts`)
 `id, teacher_id, session_id, reason: CancelReason, note?, medical_note_name?, created_at, needs_substitute?, substitute_found?, justified?, justification_cause?: JustificationCause, justified_at?`.
