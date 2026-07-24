@@ -902,3 +902,54 @@ function SessionsRemainingCard({ studentId }: { studentId: string }) {
     </Card>
   );
 }
+
+// ---------------------------------------------------------------------------
+// Cancel Spotlight — student-side cancellation with 24h-notice pay rule.
+// The Spotlight credit is always forfeited (no reschedule, no refund).
+// If cancelled inside 24h, the teacher is paid 1 hour at their effective rate.
+// ---------------------------------------------------------------------------
+function CancelSpotlightModal({ session, onClose }: { session: ExtSession; onClose: () => void }) {
+  const teacherName = userById(session.teacher_id)?.name ?? "your teacher";
+  const confirm = () => {
+    const hours = hoursUntil(session.date_time);
+    const late = hours < 24;
+    const note = late
+      ? "Cancelled by student with less than 24h notice — teacher paid."
+      : "Cancelled by student with 24h+ notice — no payment.";
+    updateSession(session.id, { status: "cancelled", cancellation_note: note });
+    if (late) {
+      const teacher = USERS.find((u) => u.id === session.teacher_id);
+      if (teacher) {
+        appendTeacherAdjustment(
+          teacher.id,
+          Math.round(effectiveHourlyRate(teacher)),
+          "Spotlight Session — late cancellation (paid, <24h notice)",
+        );
+      }
+    }
+    toast.success("Spotlight Session cancelled.");
+    onClose();
+  };
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+      <div onClick={(e) => e.stopPropagation()} className="relative w-full max-w-md rounded-2xl bg-card p-6 shadow-floating">
+        <h3 className="text-lg font-semibold tracking-tight text-foreground">Cancel Spotlight Session?</h3>
+        <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+          This Spotlight with <strong>{teacherName}</strong> will be cancelled. It cannot be rescheduled or made up — this credit is not returned.
+        </p>
+        <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+          If you cancel with less than 24h notice, your teacher will still be paid for the reserved hour.
+        </p>
+        <div className="mt-6 flex justify-end gap-2">
+          <GhostButton onClick={onClose}>Go Back</GhostButton>
+          <button
+            onClick={confirm}
+            className="cursor-pointer rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-soft transition-opacity hover:opacity-90"
+          >
+            Confirm Cancellation
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
