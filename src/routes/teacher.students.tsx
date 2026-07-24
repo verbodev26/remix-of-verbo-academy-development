@@ -405,8 +405,10 @@ function StudentDetailModal({
       ? s.product
       : null;
 
-  const hired = s.hired_sessions ?? 0;
-  const remaining = s.remaining_sessions ?? 0;
+  const counts = effectiveSessionCounts(s.id, { hired: s.hired_sessions, remaining: s.remaining_sessions });
+  const hired = counts.hired;
+  const remaining = counts.remaining;
+  const used = sessionProgressFor(hired, remaining).done;
 
   type DetailTab = "overview" | "progress" | "challenges";
   const [tab, setTab] = useState<DetailTab>("overview");
