@@ -311,7 +311,7 @@ function StudentDashboard() {
 
   return (
     <div className="space-y-10">
-      <header className="flex flex-wrap items-center justify-between gap-4">
+      <header className="verbo-fade-up motion-reduce:animate-none flex flex-wrap items-center justify-between gap-4" style={{ animationDelay: "0ms" }}>
         <div>
           <div className="text-sm text-muted-foreground">Welcome back</div>
           <div className="mt-1 flex items-center gap-3">
