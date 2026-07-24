@@ -27,7 +27,8 @@ import {
   addStudentToCohort, cohortsForStudent, loadWorkshops,
   removeParticipantFromCohort, subscribeWorkshops,
 } from "@/lib/workshops-store";
-import { groupsByStudentId, groupOfStudent, removeMember, subscribeGroups, effectiveSessionCounts } from "@/lib/groups-store";
+import { groupsByStudentId, groupOfStudent, removeMember, subscribeGroups, effectiveSessionCounts, sessionProgressFor } from "@/lib/groups-store";
+import { studentAttendance } from "@/lib/sessions-store";
 import { logPayment, expectedAmountForStudent } from "@/lib/payments-log";
 import { setLevelReopened } from "@/lib/students-store";
 import { RotateCcw, Unlock as UnlockIcon, Lock as LockIcon, Trophy } from "lucide-react";
