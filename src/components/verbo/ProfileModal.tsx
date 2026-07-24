@@ -1,60 +1,94 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "@/lib/auth";
-import { Award, Crown, Flame, Lock, Trophy, Camera } from "lucide-react";
+import { Award, Lock, Camera, Plus, X } from "lucide-react";
 import { setAvatar, useAvatar } from "@/lib/avatar-store";
 import {
   getLeaderboardIdentity,
   setLeaderboardIdentity,
   type LeaderboardIdentityMode,
 } from "@/lib/leaderboard-identity-store";
+import {
+  loadBadges as loadProfileBadges,
+  subscribeBadges as subscribeProfileBadges,
+  isBadgeEarned,
+  buildProfileBadgeContext,
+  BADGE_METRIC_META,
+  type BadgeDef as ProfileBadgeDef,
+  type BadgeContext,
+} from "@/lib/profile-badges-store";
+import {
+  loadEquippedBadgeIds,
+  setEquippedBadgeIds,
+  subscribeEquippedBadges,
+  EQUIPPED_MAX,
+} from "@/lib/equipped-profile-badges-store";
+import { subscribeCourses } from "@/lib/product-courses-store";
 
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
 }
 
-const EQUIPPED = [
-  { icon: Crown, label: "Early Adopter", tone: "from-amber-400 to-orange-500" },
-  { icon: Trophy, label: "First Session", tone: "from-indigo-400 to-violet-500" },
-  { icon: Flame, label: "On Fire", tone: "from-rose-400 to-red-500" },
-];
+function BadgeVisual({ badge, earned, size = "md" }: { badge: ProfileBadgeDef; earned: boolean; size?: "sm" | "md" | "lg" }) {
+  const box = size === "lg" ? "h-16 w-16" : size === "sm" ? "h-12 w-12" : "h-14 w-14";
+  const icon = size === "lg" ? "h-8 w-8" : size === "sm" ? "h-6 w-6" : "h-7 w-7";
+  const gradient = earned
+    ? "bg-gradient-to-br from-[#01304a] to-[#0a4a6e] text-white"
+    : "bg-gradient-to-br from-zinc-200 to-zinc-400 text-zinc-600 grayscale";
+  if (badge.image) {
+    return (
+      <img
+        src={badge.image}
+        alt={badge.name}
+        className={`${box} rounded-full object-cover shadow-inner ${earned ? "" : "grayscale opacity-70"}`}
+      />
+    );
+  }
+  return (
+    <span className={`${box} flex items-center justify-center rounded-full shadow-inner ${gradient}`}>
+      <Award className={icon} />
+    </span>
+  );
+}
 
-const CATALOG = [
-  {
-    key: "longevity",
-    icon: Crown,
-    title: "Longevity (Loyalty)",
-    unlock: "Unlocked by staying active training in Verbo for months.",
-  },
-  {
-    key: "conqueror",
-    icon: Trophy,
-    title: "Level Conqueror",
-    unlock: "Unlocked by completing 100% of a language level.",
-  },
-  {
-    key: "streak",
-    icon: Flame,
-    title: "Streak Master",
-    unlock: "Unlocked by chaining 3 or more perfect scores in activities.",
-  },
-  {
-    key: "scholar",
-    icon: Award,
-    title: "Verbo Scholar",
-    unlock: "Unlocked by completing 25 sessions with a perfect rating.",
-  },
-];
+function useProfileBadges(userId: string | undefined): {
+  badges: ProfileBadgeDef[];
+  ctx: BadgeContext | null;
+  earned: ProfileBadgeDef[];
+  equipped: string[];
+} {
+  const { user } = useAuth();
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    const bump = () => setTick((t) => t + 1);
+    const un1 = subscribeProfileBadges(bump);
+    const un2 = subscribeEquippedBadges(bump);
+    const un3 = subscribeCourses(bump);
+    return () => { un1(); un2(); un3(); };
+  }, []);
+  return useMemo(() => {
+    if (!user || !userId) return { badges: [], ctx: null, earned: [], equipped: [] };
+    const badges = loadProfileBadges();
+    const ctx = buildProfileBadgeContext(user);
+    const earned = badges.filter((b) => isBadgeEarned(b, ctx));
+    const equipped = loadEquippedBadgeIds(userId);
+    return { badges, ctx, earned, equipped };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, userId, tick]);
+}
 
 export function ProfileModal({ open, onOpenChange }: Props) {
   const { user } = useAuth();
   const [gallery, setGallery] = useState(false);
+  const [pickerSlot, setPickerSlot] = useState<number | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const avatar = useAvatar(user?.id);
 
   const [lbMode, setLbMode] = useState<LeaderboardIdentityMode>("real");
   const [lbNickname, setLbNickname] = useState("");
+
+  const { badges, ctx, earned, equipped } = useProfileBadges(user?.id);
 
   useEffect(() => {
     if (!user) return;
@@ -63,7 +97,7 @@ export function ProfileModal({ open, onOpenChange }: Props) {
     setLbNickname(cur.nickname);
   }, [user, open]);
 
-  if (!user) return null;
+  if (!user || !ctx) return null;
   const initial = user.name?.[0] ?? "?";
 
   const onPick = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -74,6 +108,26 @@ export function ProfileModal({ open, onOpenChange }: Props) {
     reader.readAsDataURL(file);
     e.target.value = "";
   };
+
+  const slots: (ProfileBadgeDef | null)[] = Array.from({ length: EQUIPPED_MAX }, (_, i) => {
+    const id = equipped[i];
+    if (!id) return null;
+    return earned.find((b) => b.id === id) ?? null;
+  });
+
+  const unequip = (badgeId: string) => {
+    const next = equipped.filter((id) => id !== badgeId);
+    setEquippedBadgeIds(user.id, next);
+  };
+  const equip = (slotIndex: number, badgeId: string) => {
+    const next = [...equipped];
+    while (next.length < EQUIPPED_MAX) next.push("");
+    next[slotIndex] = badgeId;
+    setEquippedBadgeIds(user.id, next.filter(Boolean));
+    setPickerSlot(null);
+  };
+
+  const availableForPicker = earned.filter((b) => !equipped.includes(b.id));
 
   return (
     <>
@@ -154,20 +208,36 @@ export function ProfileModal({ open, onOpenChange }: Props) {
               </p>
 
               <div className="mt-5 grid grid-cols-3 gap-3">
-                {EQUIPPED.map((b) => {
-                  const Icon = b.icon;
+                {slots.map((b, i) => {
+                  if (!b) {
+                    return (
+                      <button
+                        key={`empty-${i}`}
+                        type="button"
+                        onClick={() => setPickerSlot(i)}
+                        className="flex flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-border bg-secondary/20 p-3 text-xs text-muted-foreground transition-colors hover:border-[#f38934]/50 hover:text-foreground"
+                      >
+                        <Plus className="h-5 w-5" />
+                        <span className="font-medium">Add</span>
+                      </button>
+                    );
+                  }
                   return (
                     <div
-                      key={b.label}
-                      className="group flex cursor-pointer flex-col items-center rounded-xl border border-border bg-card p-3 transition-all hover:-translate-y-0.5 hover:shadow-md"
+                      key={b.id}
+                      className="group relative flex flex-col items-center rounded-xl border border-border bg-card p-3"
                     >
-                      <div
-                        className={`flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br ${b.tone} text-white shadow-inner`}
+                      <button
+                        type="button"
+                        aria-label={`Unequip ${b.name}`}
+                        onClick={() => unequip(b.id)}
+                        className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-secondary text-muted-foreground opacity-0 transition-opacity hover:bg-destructive hover:text-white group-hover:opacity-100"
                       >
-                        <Icon className="h-7 w-7" />
-                      </div>
-                      <div className="mt-2 text-center text-[11px] font-medium text-foreground">
-                        {b.label}
+                        <X className="h-3 w-3" />
+                      </button>
+                      <BadgeVisual badge={b} earned size="md" />
+                      <div className="mt-2 text-center text-[11px] font-medium text-foreground line-clamp-2">
+                        {b.name}
                       </div>
                     </div>
                   );
@@ -180,8 +250,6 @@ export function ProfileModal({ open, onOpenChange }: Props) {
               >
                 View all achievements →
               </button>
-
-
 
               <div className="mt-6 rounded-xl border border-border bg-card p-4">
                 <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -232,7 +300,6 @@ export function ProfileModal({ open, onOpenChange }: Props) {
                 </div>
               </div>
 
-
               <div className="mt-8 rounded-xl border border-dashed border-border bg-secondary/30 p-4">
                 <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Profile Stats
@@ -253,12 +320,35 @@ export function ProfileModal({ open, onOpenChange }: Props) {
         </DialogContent>
       </Dialog>
 
-      <AchievementsGallery open={gallery} onOpenChange={setGallery} />
+      <AchievementsGallery
+        open={gallery}
+        onOpenChange={setGallery}
+        badges={badges}
+        ctx={ctx}
+      />
+
+      <BadgePickerModal
+        open={pickerSlot !== null}
+        onOpenChange={(v) => { if (!v) setPickerSlot(null); }}
+        available={availableForPicker}
+        earnedCount={earned.length}
+        onPick={(id) => { if (pickerSlot !== null) equip(pickerSlot, id); }}
+      />
     </>
   );
 }
 
-function AchievementsGallery({ open, onOpenChange }: Props) {
+function AchievementsGallery({
+  open,
+  onOpenChange,
+  badges,
+  ctx,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  badges: ProfileBadgeDef[];
+  ctx: BadgeContext;
+}) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
@@ -269,35 +359,98 @@ function AchievementsGallery({ open, onOpenChange }: Props) {
           Hover over any badge to see how to unlock it.
         </p>
 
-        <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
-          {CATALOG.map((b) => {
-            const Icon = b.icon;
-            return (
-              <div key={b.key} className="group relative">
-                <div className="flex cursor-pointer flex-col items-center rounded-xl border border-border bg-secondary/30 p-5 transition-all hover:border-[#f38934]/40 hover:shadow-md">
-                  <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-zinc-200 to-zinc-400 text-zinc-600 grayscale">
-                    <Icon className="h-8 w-8" />
-                    <div className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border-2 border-background bg-zinc-700 text-white">
-                      <Lock className="h-3 w-3" />
+        {badges.length === 0 ? (
+          <div className="mt-6 rounded-lg border border-dashed border-border bg-secondary/30 p-8 text-center text-sm text-muted-foreground">
+            No badges have been configured yet.
+          </div>
+        ) : (
+          <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
+            {badges.map((b) => {
+              const earned = isBadgeEarned(b, ctx);
+              const meta = BADGE_METRIC_META[b.rule.metric];
+              const progressHint =
+                !earned && meta.numeric
+                  ? `${Math.min(ctx[b.rule.metric] as number, b.rule.threshold ?? 1)}/${b.rule.threshold ?? 1}`
+                  : null;
+              return (
+                <div key={b.id} className="group relative">
+                  <div
+                    className={`flex flex-col items-center rounded-xl border border-border p-5 transition-all ${
+                      earned ? "bg-card hover:border-[#f38934]/40 hover:shadow-md" : "bg-secondary/30"
+                    }`}
+                  >
+                    <div className="relative">
+                      <BadgeVisual badge={b} earned={earned} size="lg" />
+                      {!earned && (
+                        <div className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border-2 border-background bg-zinc-700 text-white">
+                          <Lock className="h-3 w-3" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="mt-3 text-center text-sm font-semibold text-foreground">
+                      {b.name}
+                    </div>
+                    <div className="mt-0.5 text-[11px] uppercase tracking-wider text-muted-foreground">
+                      {earned ? "Earned" : progressHint ?? "Locked"}
                     </div>
                   </div>
-                  <div className="mt-3 text-center text-sm font-semibold text-foreground">
-                    {b.title}
-                  </div>
-                  <div className="mt-0.5 text-[11px] uppercase tracking-wider text-muted-foreground">
-                    Locked
-                  </div>
-                </div>
 
-                {/* Speech bubble tooltip */}
-                <div className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 w-60 -translate-x-1/2 scale-95 rounded-lg bg-[#01304a] px-3 py-2 text-xs text-white opacity-0 shadow-xl transition-all group-hover:scale-100 group-hover:opacity-100">
-                  <div className="absolute -top-1.5 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 bg-[#01304a]" />
-                  {b.unlock}
+                  <div className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 w-60 -translate-x-1/2 scale-95 rounded-lg bg-[#01304a] px-3 py-2 text-xs text-white opacity-0 shadow-xl transition-all group-hover:scale-100 group-hover:opacity-100">
+                    <div className="absolute -top-1.5 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 bg-[#01304a]" />
+                    {b.description || meta.hint}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function BadgePickerModal({
+  open,
+  onOpenChange,
+  available,
+  earnedCount,
+  onPick,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  available: ProfileBadgeDef[];
+  earnedCount: number;
+  onPick: (id: string) => void;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogTitle className="text-base font-semibold text-foreground">
+          Choose a badge to showcase
+        </DialogTitle>
+        {earnedCount === 0 ? (
+          <p className="mt-4 rounded-lg border border-dashed border-border bg-secondary/30 p-6 text-center text-sm text-muted-foreground">
+            Complete achievements to unlock badges to showcase here.
+          </p>
+        ) : available.length === 0 ? (
+          <p className="mt-4 rounded-lg border border-dashed border-border bg-secondary/30 p-6 text-center text-sm text-muted-foreground">
+            You've already equipped all of your earned badges.
+          </p>
+        ) : (
+          <div className="mt-4 grid grid-cols-3 gap-3">
+            {available.map((b) => (
+              <button
+                key={b.id}
+                type="button"
+                onClick={() => onPick(b.id)}
+                className="flex flex-col items-center gap-2 rounded-xl border border-border bg-card p-3 text-center transition-all hover:-translate-y-0.5 hover:border-[#f38934] hover:shadow-md"
+              >
+                <BadgeVisual badge={b} earned size="md" />
+                <div className="text-[11px] font-medium text-foreground line-clamp-2">{b.name}</div>
+              </button>
+            ))}
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
