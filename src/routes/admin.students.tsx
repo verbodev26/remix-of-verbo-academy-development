@@ -1526,18 +1526,15 @@ function UnitAccessPanel({ student, actorRole }: { student: User; actorRole: "ad
 // ---- Performance tab (mock data for now) ----
 function PerformanceTab({ student }: { student: User }) {
   const rows = SESSIONS.filter((s) => s.student_id === student.id);
-  const completed = rows.filter((s) => s.status === "completed").length;
-  const absent = rows.filter((s) => s.status === "absent").length;
+  const { completed, absent, pct: attendance } = studentAttendance(SESSIONS, student);
   const ratings = rows
     .filter((s) => (s.review_status ?? "pending") !== "discarded")
     .map((s) => s.student_rating)
     .filter((r): r is number => typeof r === "number");
   const avgRating = ratings.length ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1) : "—";
-  const attendance = student.attendance_percentage ?? (completed + absent > 0 ? Math.round((completed / (completed + absent)) * 100) : 0);
 
   return (
     <div className="space-y-5">
-      <p className="rounded-lg bg-muted px-3 py-2 text-[11px] text-muted-foreground">Mock metrics — wired to real data when Sessions & KPIs are built.</p>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat label="Attendance" value={`${attendance}%`} />
         <Stat label="Completed" value={String(completed)} />
