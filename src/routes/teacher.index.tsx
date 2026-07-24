@@ -365,6 +365,17 @@ function TeacherDashboard() {
     .sort((a, b) => +new Date(b.date_time) - +new Date(a.date_time))
     .slice(0, 6);
 
+  // ---- My Recent Feedback (real data, last 7 days) ----
+  const recentFeedback = [...myLive]
+    .filter(
+      (s) =>
+        typeof s.student_rating === "number" &&
+        +new Date(s.date_time) >= sevenAgo,
+    )
+    .sort((a, b) => +new Date(b.date_time) - +new Date(a.date_time))
+    .slice(0, 10);
+
+
   // ---- Recent Activity: Club Reports (Insight / Book Club / Spotlight) ----
   // Each submitted Club Report renders as its own row so the activity feed
   // stays complete without any Performance-Session-only assumptions.
