@@ -786,7 +786,74 @@ function TeacherDashboard() {
         </Card>
       </section>
 
+      <section>
+        <SectionTitle>My Recent Feedback</SectionTitle>
+        <Card className="!p-0">
+          <table className="w-full text-sm">
+            <thead className="text-left text-xs uppercase tracking-wider text-muted-foreground">
+              <tr className="border-b border-border">
+                <th className="px-6 py-3 font-medium">Student</th>
+                <th className="px-6 py-3 font-medium">Date</th>
+                <th className="px-6 py-3 font-medium">Rating</th>
+                <th className="px-6 py-3 font-medium">Comment</th>
+                <th className="px-6 py-3 font-medium">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {recentFeedback.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-6 py-6 text-center text-sm text-muted-foreground">
+                    No feedback in the last 7 days.
+                  </td>
+                </tr>
+              )}
+              {recentFeedback.map((s) => {
+                const student = userById(s.student_id);
+                const status = s.review_status ?? "pending";
+                const resolved = status === "reviewed" || status === "discarded";
+                return (
+                  <tr
+                    key={`feedback-${s.id}`}
+                    className="border-b border-border transition-colors hover:bg-secondary/40 last:border-0"
+                  >
+                    <td className="px-6 py-4 text-foreground">{student?.name ?? "—"}</td>
+                    <td className="px-6 py-4 text-muted-foreground">{fmt(s.date_time)}</td>
+                    <td className="px-6 py-4">
+                      <span className="flex items-center gap-0.5">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`h-3.5 w-3.5 ${i < (s.student_rating ?? 0) ? "fill-current text-amber-500" : "text-muted-foreground/30"}`}
+                          />
+                        ))}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-foreground">
+                      {s.student_comment ? (
+                        <span className="italic">“{s.student_comment}”</span>
+                      ) : (
+                        <span className="text-muted-foreground">No written comment</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      {resolved ? (
+                        <Pill tone={status === "reviewed" ? "success" : "muted"}>
+                          {status === "reviewed" ? "Resolved" : "Discarded"}
+                        </Pill>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </Card>
+      </section>
+
       {evaluating && (
+
         <PerformanceEvaluationModal
           session={evaluating}
           onClose={() => setEvaluating(null)}
