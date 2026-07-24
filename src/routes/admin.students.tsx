@@ -777,7 +777,7 @@ function StudentFormModal({
                 onChange={(e) => set("email", e.target.value)}
                 onBlur={() => setEmailTouched(true)}
                 placeholder="student@company.com"
-                className={`${inputCls} ${emailFormatError ? "border-destructive focus:border-destructive focus:ring-destructive" : ""}`}
+                className={`${inputCls} ${emailFormatError ? "!border-destructive focus:!border-destructive focus:!ring-destructive" : ""}`}
                 aria-invalid={emailFormatError ? "true" : "false"}
               />
               {emailFormatError && <p className="mt-1 text-xs text-destructive">Enter a valid email address</p>}
