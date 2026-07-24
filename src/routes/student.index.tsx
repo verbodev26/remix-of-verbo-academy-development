@@ -81,6 +81,13 @@ function PremiumCard({ children, className = "", hover = false, style }: { child
 
 const ProgressRing = StatRing;
 
+const SKILL_COLORS: Record<string, string> = {
+  Speaking: "#f38934",
+  Writing: "#7e22ce",
+  Listening: "#01304a",
+  Reading: "oklch(0.6 0.104 185)",
+};
+
 const PRODUCT_TO_COURSE: Record<string, ProductId> = {
   enterprise: "enterprise",
   go: "go",
