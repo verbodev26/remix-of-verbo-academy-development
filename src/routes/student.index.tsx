@@ -357,13 +357,8 @@ function StudentDashboard() {
             <h1 className="text-3xl font-semibold tracking-tight" style={{ color: "#01304a" }}>
               {user.name.split(" ")[0]}
             </h1>
-            <div
-              title="Equipped: On Fire"
-              className="flex h-11 w-11 items-center justify-center rounded-full shadow-md verbo-badge-spin"
-              style={{ background: "linear-gradient(135deg, #f38934, #ff6a3d)" }}
-            >
-              <Flame className="h-5 w-5 text-white" />
-            </div>
+            <FeaturedProfileBadge user={user} />
+
           </div>
         </div>
         <div className="flex items-center gap-3">
