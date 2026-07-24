@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Card, GhostButton, Pill, PrimaryButton, SectionTitle } from "@/components/verbo/ui";
 import type { StoredMaterial } from "@/lib/materials-store";
 import type { MaterialType } from "@/lib/mock-data";
+import { PremiumBadge, AccessGateNotice } from "@/components/verbo/PremiumGate";
 import {
   Book,
   FileText,
@@ -14,6 +15,7 @@ import {
   ArrowLeft,
   X,
   FolderOpen,
+  Lock,
 } from "lucide-react";
 
 const TYPE_ICON: Record<MaterialType, typeof Book> = {
@@ -93,9 +95,51 @@ function PreviewModal({ m, onClose }: { m: StoredMaterial; onClose: () => void }
   );
 }
 
-export function MaterialLibrary({ items, title = "Resources" }: { items: StoredMaterial[]; title?: string }) {
+function GateModal({ m, onClose }: { m: StoredMaterial; onClose: () => void }) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-sm overflow-hidden rounded-2xl border border-border bg-card shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b border-border px-5 py-4">
+          <div className="flex items-center gap-2">
+            <PremiumBadge />
+            <h3 className="text-sm font-semibold text-foreground">{m.title}</h3>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="flex flex-col items-center gap-3 p-6 text-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-amber-500/15 text-amber-600">
+            <Lock className="h-6 w-6" />
+          </div>
+          <AccessGateNotice accent="#f38934" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function MaterialLibrary({
+  items,
+  title = "Resources",
+  hasPremiumAccess = true,
+}: {
+  items: StoredMaterial[];
+  title?: string;
+  hasPremiumAccess?: boolean;
+}) {
   const [category, setCategory] = useState<string | null>(null);
   const [preview, setPreview] = useState<StoredMaterial | null>(null);
+  const [gated, setGated] = useState<StoredMaterial | null>(null);
 
   const grouped = useMemo(() => {
     return items.reduce((acc, m) => {
@@ -163,34 +207,71 @@ export function MaterialLibrary({ items, title = "Resources" }: { items: StoredM
             {active.length} {active.length === 1 ? "resource" : "resources"}
           </SectionTitle>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {active.map((m) => (
-              <Card key={m.id} className="!p-0 overflow-hidden">
-                <div className="aspect-video w-full overflow-hidden border-b border-border">
-                  <CoverArt m={m} />
-                </div>
-                <div className="space-y-3 p-4">
-                  <div>
-                    <div className="text-sm font-medium text-foreground">{m.title}</div>
-                    <div className="mt-1"><Pill tone="muted">{m.material_type}</Pill></div>
+            {active.map((m) => {
+              const locked = !!m.premium && !hasPremiumAccess;
+              if (locked) {
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => setGated(m)}
+                    className="text-left"
+                  >
+                    <Card className="relative !p-0 overflow-hidden transition-all hover:border-amber-500/50">
+                      <div className="pointer-events-none select-none blur-sm">
+                        <div className="aspect-video w-full overflow-hidden border-b border-border">
+                          <CoverArt m={m} />
+                        </div>
+                        <div className="space-y-3 p-4">
+                          <div>
+                            <div className="text-sm font-medium text-foreground">{m.title}</div>
+                            <div className="mt-1"><Pill tone="muted">{m.material_type}</Pill></div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-white/60 backdrop-blur-md">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/20 text-amber-600">
+                          <Lock className="h-5 w-5" />
+                        </div>
+                        <PremiumBadge />
+                      </div>
+                    </Card>
+                  </button>
+                );
+              }
+              return (
+                <Card key={m.id} className="!p-0 overflow-hidden">
+                  <div className="aspect-video w-full overflow-hidden border-b border-border">
+                    <CoverArt m={m} />
                   </div>
-                  <div className="flex gap-2">
-                    <GhostButton className="flex-1 justify-center" onClick={() => setPreview(m)}>
-                      <Eye className="h-3.5 w-3.5" /> Preview
-                    </GhostButton>
-                    <a href={m.upload_url} target="_blank" rel="noreferrer" className="flex-1">
-                      <PrimaryButton className="w-full justify-center">
-                        <Download className="h-3.5 w-3.5" /> Download
-                      </PrimaryButton>
-                    </a>
+                  <div className="space-y-3 p-4">
+                    <div>
+                      <div className="text-sm font-medium text-foreground">{m.title}</div>
+                      <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                        <Pill tone="muted">{m.material_type}</Pill>
+                        {m.premium && <PremiumBadge />}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <GhostButton className="flex-1 justify-center" onClick={() => setPreview(m)}>
+                        <Eye className="h-3.5 w-3.5" /> Preview
+                      </GhostButton>
+                      <a href={m.upload_url} target="_blank" rel="noreferrer" className="flex-1">
+                        <PrimaryButton className="w-full justify-center">
+                          <Download className="h-3.5 w-3.5" /> Download
+                        </PrimaryButton>
+                      </a>
+                    </div>
                   </div>
-                </div>
-              </Card>
-            ))}
+                </Card>
+              );
+            })}
           </div>
         </>
       )}
 
       {preview && <PreviewModal m={preview} onClose={() => setPreview(null)} />}
+      {gated && <GateModal m={gated} onClose={() => setGated(null)} />}
     </div>
   );
 }
