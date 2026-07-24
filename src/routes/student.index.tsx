@@ -18,10 +18,10 @@ import { useComputedMacros } from "@/components/verbo/PerformanceAnalytics";
 import { GhostButton, Pill, PrimaryButton, SectionTitle, SuccessButton } from "@/components/verbo/ui";
 import {
   ArrowRight,
+  Award,
   BarChart3,
   CalendarClock,
   Download,
-  Flame,
   ShieldAlert,
   Sparkles,
   Star,
@@ -29,6 +29,17 @@ import {
   Video,
   X,
 } from "lucide-react";
+import {
+  loadBadges as loadProfileBadges,
+  subscribeBadges as subscribeProfileBadges,
+  isBadgeEarned,
+  buildProfileBadgeContext,
+  type BadgeDef as ProfileBadgeDef,
+} from "@/lib/profile-badges-store";
+import {
+  loadEquippedBadgeIds,
+  subscribeEquippedBadges,
+} from "@/lib/equipped-profile-badges-store";
 import { RatingModal } from "@/components/verbo/RatingModal";
 import { ReportConductModal } from "@/components/verbo/ReportConductModal";
 import {
