@@ -11,6 +11,7 @@ import { groupsByStudentId } from "./groups-store";
 import { userById } from "./mock-data";
 import type { AccessPlanId } from "./student-model";
 import { hasCreditUsed as freemiumUsed, markCreditUsed as markFreemiumUsed } from "./core-freemium-store";
+import { spotlightRequestsThisMonth } from "./student-requests-store";
 
 
 /** Per-plan monthly seat defaults across the three consumable event types.
