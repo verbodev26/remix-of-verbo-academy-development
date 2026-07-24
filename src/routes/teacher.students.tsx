@@ -493,14 +493,12 @@ function StudentDetailModal({
                 </div>
                 <span className="text-2xl font-bold tabular-nums" style={{ color: "#01304a" }}>{attPct}%</span>
               </div>
-              <div className="mt-3 grid grid-cols-3 gap-3">
-                <Stat label="Attended" value={String(attendance.present)} />
-                <Stat label="Late" value={String(attendance.late)} />
-                <Stat label="Cancelled-Missed" value={String(attendance.absentOrNoShow)} />
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                <Stat label="Completed" value={String(attendance.completed)} />
+                <Stat label="Absences" value={String(attendance.absent)} />
               </div>
               <p className="mt-3 text-[11px] text-muted-foreground">
-                "Cancelled-Missed" groups Absent, No Show and Cancelled with Student cause. Absences with Teacher cause
-                are not counted against the student. Mock data until the real Session Report is connected.
+                Attendance % counts Completed vs Absent sessions. Absences with Teacher cause are not counted against the student.
               </p>
             </section>
 
