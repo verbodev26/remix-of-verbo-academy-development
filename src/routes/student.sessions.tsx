@@ -152,8 +152,10 @@ function Page() {
         </div>
         {hasSpot && (
           <button
-            onClick={() => freemium.tryOpen("spotlight", () => setSpotlightOpen(true))}
-            className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-[#0d9488] px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition-opacity hover:opacity-90"
+            onClick={() => { if (canRequestSpotlight) freemium.tryOpen("spotlight", () => setSpotlightOpen(true)); }}
+            disabled={!canRequestSpotlight}
+            title={!canRequestSpotlight ? "You've used all your Spotlight requests for this month." : undefined}
+            className={`inline-flex items-center gap-2 rounded-lg bg-[#0d9488] px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition-opacity ${canRequestSpotlight ? "cursor-pointer hover:opacity-90" : "cursor-not-allowed opacity-50"}`}
           >
             <Sparkles className="h-4 w-4" /> Request a Spotlight Session
           </button>
