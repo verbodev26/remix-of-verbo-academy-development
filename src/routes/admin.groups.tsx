@@ -557,6 +557,12 @@ function GroupDetailModal({ groupId, onClose }: { groupId: string; onClose: () =
             </div>
           </Card>
 
+          {/* Schedule Sessions — group-level bulk generator. Mirrors the
+              recurrence + holiday-cascade UX of the Bulk Scheduler on
+              Admin > Sessions, but produces ONE group session per date. */}
+          <GroupBulkScheduler groupId={groupId} />
+
+
           {/* Roster */}
           <div>
             <div className="mb-2 flex items-center justify-between">
