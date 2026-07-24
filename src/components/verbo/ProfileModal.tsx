@@ -23,7 +23,7 @@ import {
   subscribeEquippedBadges,
   EQUIPPED_MAX,
 } from "@/lib/equipped-profile-badges-store";
-import { subscribeCourses } from "@/lib/product-courses-store";
+import { subscribeCourses, computeCurrentProgress } from "@/lib/product-courses-store";
 
 interface Props {
   open: boolean;
