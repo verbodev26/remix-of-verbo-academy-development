@@ -524,3 +524,33 @@ export function statusTone(s: ExtSessionStatus): "default" | "success" | "warnin
     default: return "muted"; // scheduled / rescheduled / cancelled — Gris Neutro
   }
 }
+
+// ---------------------------------------------------------------------------
+// Attendance — single shared source of truth for the "% of sessions attended"
+// metric shown in Admin > Students (PerformanceTab), Student Dashboard and
+// Teacher > My Students. Rule:
+//   pct = student.attendance_percentage when it exists (static override from
+//         the seed / admin edit), otherwise round(completed / (completed +
+//         absent) * 100), or 0 when the student has no accounted sessions.
+// Consumers pass the sessions they already have loaded (SESSIONS from the
+// seed for Admin, live sessions-store for Student, etc.); this keeps the
+// helper source-agnostic while unifying the math.
+// ---------------------------------------------------------------------------
+export interface StudentAttendanceSummary {
+  completed: number;
+  absent: number;
+  pct: number;
+}
+
+export function studentAttendance(
+  sessions: Array<{ student_id: string; status: string }>,
+  student: { id: string; attendance_percentage?: number },
+): StudentAttendanceSummary {
+  const rows = sessions.filter((s) => s.student_id === student.id);
+  const completed = rows.filter((s) => s.status === "completed").length;
+  const absent = rows.filter((s) => s.status === "absent").length;
+  const total = completed + absent;
+  const pct = student.attendance_percentage ?? (total > 0 ? Math.round((completed / total) * 100) : 0);
+  return { completed, absent, pct };
+}
+

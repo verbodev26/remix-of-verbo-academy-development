@@ -27,7 +27,8 @@ import {
   addStudentToCohort, cohortsForStudent, loadWorkshops,
   removeParticipantFromCohort, subscribeWorkshops,
 } from "@/lib/workshops-store";
-import { groupsByStudentId, groupOfStudent, removeMember, subscribeGroups, effectiveSessionCounts } from "@/lib/groups-store";
+import { groupsByStudentId, groupOfStudent, removeMember, subscribeGroups, effectiveSessionCounts, sessionProgressFor } from "@/lib/groups-store";
+import { studentAttendance } from "@/lib/sessions-store";
 import { logPayment, expectedAmountForStudent } from "@/lib/payments-log";
 import { setLevelReopened } from "@/lib/students-store";
 import { RotateCcw, Unlock as UnlockIcon, Lock as LockIcon, Trophy } from "lucide-react";
@@ -373,8 +374,7 @@ function StudentCard({ student: s, onOpen }: { student: User; onOpen: () => void
   const counts = effectiveSessionCounts(s.id, { hired: s.hired_sessions, remaining: s.remaining_sessions });
   const hired = counts.hired;
   const remaining = counts.remaining;
-  const done = Math.max(0, hired - remaining);
-  const pct = hired > 0 ? (done / hired) * 100 : 0;
+  const { pct } = sessionProgressFor(hired, remaining);
 
   const nextPay = computeNextPayment(s);
   const payDue = nextPay ? daysUntil(nextPay) <= 3 && daysUntil(nextPay) >= 0 : false;
@@ -1526,18 +1526,15 @@ function UnitAccessPanel({ student, actorRole }: { student: User; actorRole: "ad
 // ---- Performance tab (mock data for now) ----
 function PerformanceTab({ student }: { student: User }) {
   const rows = SESSIONS.filter((s) => s.student_id === student.id);
-  const completed = rows.filter((s) => s.status === "completed").length;
-  const absent = rows.filter((s) => s.status === "absent").length;
+  const { completed, absent, pct: attendance } = studentAttendance(SESSIONS, student);
   const ratings = rows
     .filter((s) => (s.review_status ?? "pending") !== "discarded")
     .map((s) => s.student_rating)
     .filter((r): r is number => typeof r === "number");
   const avgRating = ratings.length ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1) : "—";
-  const attendance = student.attendance_percentage ?? (completed + absent > 0 ? Math.round((completed / (completed + absent)) * 100) : 0);
 
   return (
     <div className="space-y-5">
-      <p className="rounded-lg bg-muted px-3 py-2 text-[11px] text-muted-foreground">Mock metrics — wired to real data when Sessions & KPIs are built.</p>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat label="Attendance" value={`${attendance}%`} />
         <Stat label="Completed" value={String(completed)} />

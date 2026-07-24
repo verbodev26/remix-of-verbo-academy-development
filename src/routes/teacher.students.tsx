@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/lib/auth";
-import { ASSIGNMENTS, USERS, type User } from "@/lib/mock-data";
+import { ASSIGNMENTS, USERS, SESSIONS, type User } from "@/lib/mock-data";
+import { studentAttendance } from "@/lib/sessions-store";
 import {
   MAX_INSIGHT_STRIKES, MAX_BOOKCLUB_STRIKES,
   getProduct,
@@ -16,10 +17,6 @@ import {
 import {
   getCoverageNote, setCoverageNote, subscribeCoverageNotes,
 } from "@/lib/coverage-notes-store";
-import {
-  attendanceFor, attendancePct, attendanceAlert, attendanceTotal,
-  type StudentAttendance,
-} from "@/lib/attendance-store";
 import { addStudentReport } from "@/lib/student-reports-store";
 import {
   PerformanceAnalyticsModal, useComputedMacros,
@@ -197,10 +194,11 @@ function StudentCard({ student: s, onOpen }: { student: User; onOpen: () => void
   const showInsightsBadge = productType === "performance" || productType === "insights";
   const isVip = s.product === "vip";
 
-  // Attendance (mock — schema matches Admin > Sessions so real data plugs in later).
-  const attendance = attendanceFor(s.id);
-  const attPct = attendancePct(attendance);
-  const attAlert = attendanceAlert(attendance);
+  // Attendance — shared helper (studentAttendance) so Admin, Teacher and
+  // Student always show the exact same % for a given student.
+  const attendance = studentAttendance(SESSIONS, s);
+  const attPct = attendance.pct;
+  const attAlert = attendance.absent > attendance.completed;
 
   // Overall 4-skill scores (shared component / same source as student dashboard).
   const macros = useComputedMacros(s.id);
@@ -366,10 +364,10 @@ function StudentDetailModal({
   const isVip = s.product === "vip";
   const productType = s.product_type ?? "performance";
 
-  // Attendance breakdown (mock, matches Admin > Sessions status schema).
-  const attendance = attendanceFor(s.id);
-  const attPct = attendancePct(attendance);
-  const attAlert = attendanceAlert(attendance);
+  // Attendance breakdown — shared helper (same source as Admin & Student).
+  const attendance = studentAttendance(SESSIONS, s);
+  const attPct = attendance.pct;
+  const attAlert = attendance.absent > attendance.completed;
 
   // Shared Advanced Performance Analytics modal.
   const [showAnalytics, setShowAnalytics] = useState(false);
@@ -495,14 +493,12 @@ function StudentDetailModal({
                 </div>
                 <span className="text-2xl font-bold tabular-nums" style={{ color: "#01304a" }}>{attPct}%</span>
               </div>
-              <div className="mt-3 grid grid-cols-3 gap-3">
-                <Stat label="Attended" value={String(attendance.present)} />
-                <Stat label="Late" value={String(attendance.late)} />
-                <Stat label="Cancelled-Missed" value={String(attendance.absentOrNoShow)} />
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                <Stat label="Completed" value={String(attendance.completed)} />
+                <Stat label="Absences" value={String(attendance.absent)} />
               </div>
               <p className="mt-3 text-[11px] text-muted-foreground">
-                "Cancelled-Missed" groups Absent, No Show and Cancelled with Student cause. Absences with Teacher cause
-                are not counted against the student. Mock data until the real Session Report is connected.
+                Attendance % counts Completed vs Absent sessions. Absences with Teacher cause are not counted against the student.
               </p>
             </section>
 
