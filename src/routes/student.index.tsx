@@ -601,7 +601,7 @@ function StudentDashboard() {
       </section>
 
       {/* History */}
-      <section className="verbo-fade-up motion-reduce:animate-none" style={{ animationDelay: "250ms" }}>
+      <section className="verbo-fade-up motion-reduce:animate-none" style={{ animationDelay: "300ms" }}>
         <SectionTitle>Session History</SectionTitle>
         <PremiumCard className="verbo-card-hover !p-0 overflow-hidden">
           <TooltipProvider delayDuration={200}>
