@@ -1080,7 +1080,15 @@ function ExerciseBody({ activity, value, onChange, disabled }: { activity: Activ
       <div className="space-y-4">
         {activity.type === "listen_select" ? (
           <div className="flex items-center gap-3 rounded-xl bg-secondary/50 p-4">
-            <button type="button" onClick={() => alert("Audio playback is mocked in this demo.")} aria-label="Play audio clip" className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-accent text-accent-foreground transition-transform hover:scale-105"><Play className="h-4 w-4" /></button>
+            <button
+              type="button"
+              disabled
+              title="Coming soon"
+              aria-label="Play audio clip"
+              className="flex h-10 w-10 cursor-not-allowed items-center justify-center rounded-full bg-accent text-accent-foreground opacity-70"
+            >
+              <Play className="h-4 w-4" />
+            </button>
             <div className="flex-1">
               <div className="text-xs font-medium text-muted-foreground">Audio clip</div>
               <div className="text-sm text-foreground">{activity.audioName || "Sample audio"}</div>
