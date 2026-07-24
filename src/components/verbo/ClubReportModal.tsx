@@ -60,6 +60,8 @@ export function ClubReportModal({
     // yet have a cross-app store; the club-reports entry alone tracks them.
     if (event.type === "book" || event.type === "insight") {
       updateClub(event.id, { status: "completed" });
+    } else if (event.type === "spotlight") {
+      updateSession(event.id, { status: "completed" });
     }
     // Same delivery stub the Session Report currently uses — real email
     // hookup lands with the Supabase migration for both flows.
