@@ -225,6 +225,7 @@ function requireHelpers() {
         duration_minutes: req.duration_minutes,
         teams_link: link,
         status,
+        origin: req.kind === "spotlight" ? "spotlight" : undefined,
         notes: req.kind === "spotlight" ? `Spotlight Session — ${req.spotlight_context ?? ""}` : `Reschedule — original ${req.origin_session_id}`,
       };
       persistSessions([newSession as never, ...loadSessions()]);
@@ -261,6 +262,7 @@ export function convertSessionToSpotlight(input: {
     duration_minutes: Math.min(60, orig.duration_minutes),
     teams_link: orig.teams_link,
     status: "scheduled" as const,
+    origin: "spotlight" as const,
     notes: `Spotlight (converted) — ${input.spotlightContext}`,
   };
   persistSessions([spotlightSession as never, ...loadSessions()]);

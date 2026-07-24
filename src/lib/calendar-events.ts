@@ -7,7 +7,7 @@
 //   - Workshop live    → sessions-store (origin: "workshop")
 //   - Book Clubs       → clubs-store (type: "book")
 //   - Insights         → clubs-store (type: "insight")
-//   - Spotlights       → not yet cross-app persisted (see TODO below)
+//   - Spotlights       → sessions-store (origin: "spotlight")
 //
 // Consumers pass a `teacherId` (or `studentId`) and get back the events
 // that surface belongs to. When Spotlight Sessions get their own store,
@@ -35,7 +35,7 @@ export interface CalendarEvent {
   title: string;
   subtitle?: string;
   status?: ExtSessionStatus | TimeStatus;
-  origin?: "course" | "workshop";
+  origin?: "course" | "workshop" | "spotlight";
   // ---- Group indicator (Performance Sessions groups) ----
   // When true, the event pill renders a "G" badge instead of the default
   // "1:1" badge, and the title is the Group Name.
@@ -63,7 +63,7 @@ export interface CalendarEvent {
 function sessionEvent(s: ExtSession, title: string, subStatus?: AttendanceSubStatus): CalendarEvent {
   return {
     id: s.id,
-    kind: s.origin === "workshop" ? "workshop" : "class",
+    kind: s.origin === "workshop" ? "workshop" : s.origin === "spotlight" ? "spotlight" : "class",
     date: s.date_time,
     duration_minutes: s.duration_minutes,
     title,
@@ -139,9 +139,6 @@ export function teacherCalendarEvents(teacherId: string, opts?: {
     if (c.teacher_id === teacherId) events.push(clubEvent(c));
   }
 
-  // TODO(spotlight): once Spotlight Sessions get a cross-app store,
-  // filter here by teacher assignment and push events with kind: "spotlight".
-
   return events;
 }
 
@@ -202,6 +199,8 @@ export function adminCalendarEvents(opts?: {
     } else if (s.group_id) {
       const g = gMap.get(s.student_id);
       title = g ? g.name : "Group session";
+    } else if (s.origin === "spotlight") {
+      title = "Spotlight Session";
     } else {
       title = "1:1 Session";
     }
@@ -219,7 +218,7 @@ export function adminCalendarEvents(opts?: {
     events.push(ev);
   }
 
-  // TODO(spotlight): filter by teacher/student assignment once its store exists.
+
 
   return events;
 }

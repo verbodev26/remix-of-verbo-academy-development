@@ -68,6 +68,7 @@ export type NotificationKind =
   | "announcement"
   | "student_challenge_selected"
   | "student_shared_challenge_result"
+  | "spotlight_cancelled"
   // admin-facing
   | "needs_substitute"
   | "release_request"
@@ -171,6 +172,23 @@ function teacherNotifications(teacherId: string): Notification[] {
       read: false,
     });
   }
+
+  // ---- Spotlight Sessions cancelled by the student -----------------------
+  for (const s of loadSessions()) {
+    if (s.teacher_id !== teacherId) continue;
+    if (s.origin !== "spotlight") continue;
+    if (s.status !== "cancelled") continue;
+    out.push({
+      id: "spotlight-cancelled:" + s.id,
+      kind: "spotlight_cancelled",
+      title: "Spotlight Session cancelled by student",
+      body: s.cancellation_note || "The student cancelled this Spotlight Session.",
+      createdAt: s.date_time,
+      to: "/teacher/calendar",
+      read: false,
+    });
+  }
+
 
   // ---- Club "Needs Substitute" that matches this teacher -----------------
   // A Created (no teacher_id) upcoming club is treated as an open substitute

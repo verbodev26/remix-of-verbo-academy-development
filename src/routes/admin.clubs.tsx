@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Card, GhostButton, Pill, PrimaryButton, SectionTitle } from "@/components/verbo/ui";
-import { USERS, type User } from "@/lib/mock-data";
+import { USERS } from "@/lib/mock-data";
+import { appendTeacherAdjustment } from "@/lib/teacher-tiers";
 import {
   type Club, type ClubType, type TimeStatus, type ClubReleaseRequest,
   assignmentOf, clubTeacherName as teacherName,
@@ -650,21 +651,7 @@ function Field({ label, help, children }: { label: string; help?: string; childr
 // ---------------------------------------------------------------------------
 // Release Requests — Admin side of the "Request Release" flow
 // ---------------------------------------------------------------------------
-const PROFILE_KEY = "verbo:teacher-profile-overrides";
 
-function appendTeacherAdjustment(teacherId: string, amount: number, reason: string) {
-  const teacher = USERS.find((u) => u.id === teacherId);
-  if (!teacher) return;
-  const adj = { id: `adj${Date.now()}`, date: new Date().toISOString(), amount, reason };
-  teacher.adjustments = [...(teacher.adjustments ?? []), adj];
-  try {
-    const raw = localStorage.getItem(PROFILE_KEY);
-    const overrides: Record<string, Partial<User>> = raw ? JSON.parse(raw) : {};
-    const { id: _id, role: _role, ...rest } = teacher;
-    overrides[teacher.id] = rest;
-    localStorage.setItem(PROFILE_KEY, JSON.stringify(overrides));
-  } catch { /* noop */ }
-}
 
 function ReleaseRequestsPanel({ requests, clubs }: { requests: ClubReleaseRequest[]; clubs: Club[] }) {
   const [approving, setApproving] = useState<ClubReleaseRequest | null>(null);
