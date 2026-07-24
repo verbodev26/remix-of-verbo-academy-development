@@ -215,8 +215,7 @@ function requireHelpers() {
       const teacherId = req.claimed_by;
       if (!teacherId) return;
       const now = new Date().toISOString();
-      const teacherUser = USERS.find((u) => u.id === teacherId);
-      const link = teacherUser?.video_call_link ?? "";
+      const link = getStudentVideoLink(req.student_id) || `https://teams.microsoft.com/l/meetup/${req.student_id}`;
       const status: ExtSessionStatus = "scheduled";
       const newSession = {
         id: `${req.kind === "spotlight" ? "sp" : "rs"}-${req.id}`,
