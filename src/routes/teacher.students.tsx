@@ -7,7 +7,7 @@ import {
   getProduct,
 } from "@/lib/student-model";
 import { hydrateStudents, subscribeStudents } from "@/lib/students-store";
-import { groupOfStudent, subscribeGroups } from "@/lib/groups-store";
+import { groupOfStudent, subscribeGroups, effectiveSessionCounts, sessionProgressFor } from "@/lib/groups-store";
 import {
   loadChallenges, subscribeChallenges, challengesFor, categoryColor,
   DIFFICULTY_META, DIFFICULTY_ORDER,
