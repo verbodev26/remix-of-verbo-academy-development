@@ -63,7 +63,7 @@ export interface CalendarEvent {
 function sessionEvent(s: ExtSession, title: string, subStatus?: AttendanceSubStatus): CalendarEvent {
   return {
     id: s.id,
-    kind: s.origin === "workshop" ? "workshop" : "class",
+    kind: s.origin === "workshop" ? "workshop" : s.origin === "spotlight" ? "spotlight" : "class",
     date: s.date_time,
     duration_minutes: s.duration_minutes,
     title,
