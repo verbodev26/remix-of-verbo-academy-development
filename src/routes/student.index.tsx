@@ -139,7 +139,11 @@ function StudentDashboard() {
   const currentLevelName = progress?.levelName ?? null;
 
   // Product label — VIP lives outside PRODUCT_META, handle it literally.
-  const productLabel = user.product === "vip" ? "VIP" : (user.product ? PRODUCT_META[user.product as ProductId]?.label : undefined);
+  const productLabel = user.product === "vip"
+    ? "VIP"
+    : (user.product && (user.product === "enterprise" || user.product === "go" || user.product === "international")
+        ? PRODUCT_META[user.product].label
+        : undefined);
 
   // Ordinal position of current level within contracted levels ("2/3").
   const contractedLevels = user.contracted_levels ?? [];
