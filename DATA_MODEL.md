@@ -149,7 +149,7 @@ Mapa `userId → dataUrl` (base64 completa). Sin interfaz formal (`Record<string
 | notes | string | opcional | |
 | attendance_delayed | boolean | opcional | ver ⚠️ en §12 sobre `"delayed"` |
 | report_submitted_at | string | opcional | alimenta KPI `report_punctuality` |
-| origin | `"course" \| "workshop"` | opcional | |
+| origin | `"course" \| "workshop" \| "spotlight"` | opcional | `"spotlight"` marca la sesión como Spotlight Session (creada vía `student-requests-store.addClaimedSession` o `convertSessionToSpotlight`). Sin origin = clase 1:1 regular. |
 | workshop_cohort_id / workshop_template_id / workshop_topic | string | opcional | |
 
 ### `ExtSession` (`src/lib/sessions-store.ts`)
