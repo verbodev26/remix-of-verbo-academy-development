@@ -9,7 +9,7 @@
 // The manual `hourly_rate` override on the User always wins over the tier's
 // default rate — see effectiveHourlyRate().
 // ============================================================================
-import type { User } from "./mock-data";
+import { USERS, type User } from "./mock-data";
 import { trackingStartKey } from "./teacher-kpi-history-store";
 import { teacherStatus } from "./teacher-model";
 
