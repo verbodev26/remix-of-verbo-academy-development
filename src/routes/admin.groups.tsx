@@ -20,8 +20,10 @@ import {
   groupById, sessionProgressFor, type Group, type GroupMember,
 } from "@/lib/groups-store";
 import { Card, GhostButton, PrimaryButton } from "@/components/verbo/ui";
-import { loadSessions, type ExtSession } from "@/lib/sessions-store";
+import { loadSessions, addGroupSession, type ExtSession } from "@/lib/sessions-store";
+import { loadHolidays } from "@/lib/holidays-store";
 import { RescheduleModal } from "@/components/verbo/RescheduleModal";
+import { CalendarPlus, AlertTriangle } from "lucide-react";
 
 export const Route = createFileRoute("/admin/groups")({ component: Page });
 
