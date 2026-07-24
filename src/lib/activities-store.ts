@@ -1,6 +1,7 @@
 // Mock activities engine — persisted to localStorage so admin edits + student
 // progress survive reloads without a backend.
 import { loadLevels } from "./courses-store";
+import type { CourseLevel } from "./product-courses-store";
 
 export type ExerciseType =
   | "fill_gaps"
@@ -338,4 +339,23 @@ export function isUnitUnlocked(studentId: string, unitId: string): boolean {
   }
   return true;
 }
+
+/**
+ * Whether the student has fully completed every unit in the given
+ * commercial level. Milestone units require an explicit "unlocked" override
+ * or a real pass — a "locked" override on any unit forces the level to
+ * count as incomplete. Extracted from student.courses.tsx so multiple
+ * screens (Learning Path, Profile Badges) share the exact same rule.
+ */
+export function levelIsComplete(level: CourseLevel, studentId: string): boolean {
+  if (level.units.length === 0) return false;
+  for (const u of level.units) {
+    const ov = getUnitAccessOverride(studentId, u.id);
+    if (ov === "locked") return false;
+    if (isMilestoneUnit(u.id) && ov !== "unlocked" && !unitPassed(studentId, u.id)) return false;
+    if (!unitPassed(studentId, u.id)) return false;
+  }
+  return true;
+}
+
 

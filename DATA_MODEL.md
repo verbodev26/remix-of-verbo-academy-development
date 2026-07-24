@@ -758,3 +758,31 @@ Escalera fija: `Rising` $120 → `Established` $130 → `Distinguished` $140 →
 | `tier_reset_at` | `string \| null` (ISO) | Timestamp del último reset manual del reloj (reservado para futuros flujos). |
 
 **Notificaciones**: `notifications-store.ts` deriva una notificación `tier_upgraded` (dedupe por `tier:{teacherId}:{tierId}`) cada vez que el docente cruza a un tier ≥ 2, con enlace a `/teacher/financial`.
+
+## Profile Badges (nuevo)
+
+Sistema paralelo al de Challenge Badges (`badges-store.ts`), separado por completo. Alimenta el ícono del header del Student Dashboard y la sección "My Profile → Equipped / Achievements Gallery".
+
+**`src/lib/profile-badges-store.ts`**
+
+- `BadgeMetric` = `"tenureMonths" | "attendancePercentage" | "unitsCompletedCount" | "levelsCompletedCount"`.
+  - `tenureMonths`: meses transcurridos desde `user.member_since`.
+  - `attendancePercentage`: `user.attendance_percentage ?? 0`.
+  - `unitsCompletedCount`: unidades con `unitPassed(studentId, unitId) === true` en el `ProductCourse` del alumno (0 si VIP o si el producto no tiene Learning Path).
+  - `levelsCompletedCount`: niveles de `user.contracted_levels` que cumplen `levelIsComplete()` (helper compartido en `activities-store.ts`).
+- `BadgeDef` = `{ id, name, description, image (data URL), rule: { metric, threshold? } }`.
+- `buildProfileBadgeContext(user)` centraliza el cálculo; Dashboard y ProfileModal comparten esta función.
+- Persistencia: `localStorage["verbo:profile-badges"]`, evento `"verbo:profile-badges-updated"`.
+- Seed inicial: Verbo Member, Verbo Veteran, Perfect Attendance, First Steps, Explorer, Unit Master, Level Conqueror, Level Legend.
+
+**`src/lib/equipped-profile-badges-store.ts`**
+
+Guarda hasta `EQUIPPED_MAX = 3` badge ids por alumno. `localStorage["verbo:equipped-profile-badges"]`, evento `"verbo:equipped-profile-badges-updated"`. API: `loadEquippedBadgeIds(studentId)`, `setEquippedBadgeIds(studentId, ids)`, `subscribeEquippedBadges(cb)`. Sólo pueden equiparse badges realmente ganados (la UI filtra por `isBadgeEarned` antes de mostrarlos en el picker).
+
+**Admin**: `/admin/profile-badges` (grupo "Students" en `admin.tsx`) usa la misma mecánica que la pestaña "Badges" de Admin Challenges: subir imagen (GIF/PNG/JPG/WebP, máx 1 MB) como data URL, editar nombre/descripción/métrica/umbral, sin URLs externas.
+
+**Consumo**:
+- `student.index.tsx` → `<FeaturedProfileBadge />` en el header (equipado primero, sino el earned con mayor threshold, sino nada — se eliminó la flama fija "On Fire").
+- `ProfileModal.tsx` → slots "Equipped Badges" reales con equip/unequip, y "Achievements Gallery" con estado earned/locked y hint de progreso numérico (p.ej. `8/10`).
+
+**Regla compartida `levelIsComplete(level, studentId)`** vive ahora en `activities-store.ts` (antes duplicada en `student.courses.tsx`) e incluye el caso especial de unidades milestone con override `"unlocked"` / `"locked"`.

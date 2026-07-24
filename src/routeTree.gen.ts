@@ -46,6 +46,7 @@ import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminTeachersRouteImport } from './routes/admin.teachers'
 import { Route as AdminStudentsRouteImport } from './routes/admin.students'
 import { Route as AdminSessionsRouteImport } from './routes/admin.sessions'
+import { Route as AdminProfileBadgesRouteImport } from './routes/admin.profile-badges'
 import { Route as AdminMaterialsRouteImport } from './routes/admin.materials'
 import { Route as AdminKpisRouteImport } from './routes/admin.kpis'
 import { Route as AdminHolidaysRouteImport } from './routes/admin.holidays'
@@ -245,6 +246,11 @@ const AdminSessionsRoute = AdminSessionsRouteImport.update({
   path: '/sessions',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminProfileBadgesRoute = AdminProfileBadgesRouteImport.update({
+  id: '/profile-badges',
+  path: '/profile-badges',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminMaterialsRoute = AdminMaterialsRouteImport.update({
   id: '/materials',
   path: '/materials',
@@ -325,6 +331,7 @@ export interface FileRoutesByFullPath {
   '/admin/holidays': typeof AdminHolidaysRoute
   '/admin/kpis': typeof AdminKpisRoute
   '/admin/materials': typeof AdminMaterialsRoute
+  '/admin/profile-badges': typeof AdminProfileBadgesRoute
   '/admin/sessions': typeof AdminSessionsRoute
   '/admin/students': typeof AdminStudentsRoute
   '/admin/teachers': typeof AdminTeachersRoute
@@ -373,6 +380,7 @@ export interface FileRoutesByTo {
   '/admin/holidays': typeof AdminHolidaysRoute
   '/admin/kpis': typeof AdminKpisRoute
   '/admin/materials': typeof AdminMaterialsRoute
+  '/admin/profile-badges': typeof AdminProfileBadgesRoute
   '/admin/sessions': typeof AdminSessionsRoute
   '/admin/students': typeof AdminStudentsRoute
   '/admin/teachers': typeof AdminTeachersRoute
@@ -425,6 +433,7 @@ export interface FileRoutesById {
   '/admin/holidays': typeof AdminHolidaysRoute
   '/admin/kpis': typeof AdminKpisRoute
   '/admin/materials': typeof AdminMaterialsRoute
+  '/admin/profile-badges': typeof AdminProfileBadgesRoute
   '/admin/sessions': typeof AdminSessionsRoute
   '/admin/students': typeof AdminStudentsRoute
   '/admin/teachers': typeof AdminTeachersRoute
@@ -478,6 +487,7 @@ export interface FileRouteTypes {
     | '/admin/holidays'
     | '/admin/kpis'
     | '/admin/materials'
+    | '/admin/profile-badges'
     | '/admin/sessions'
     | '/admin/students'
     | '/admin/teachers'
@@ -526,6 +536,7 @@ export interface FileRouteTypes {
     | '/admin/holidays'
     | '/admin/kpis'
     | '/admin/materials'
+    | '/admin/profile-badges'
     | '/admin/sessions'
     | '/admin/students'
     | '/admin/teachers'
@@ -577,6 +588,7 @@ export interface FileRouteTypes {
     | '/admin/holidays'
     | '/admin/kpis'
     | '/admin/materials'
+    | '/admin/profile-badges'
     | '/admin/sessions'
     | '/admin/students'
     | '/admin/teachers'
@@ -881,6 +893,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSessionsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/profile-badges': {
+      id: '/admin/profile-badges'
+      path: '/profile-badges'
+      fullPath: '/admin/profile-badges'
+      preLoaderRoute: typeof AdminProfileBadgesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/materials': {
       id: '/admin/materials'
       path: '/materials'
@@ -980,6 +999,7 @@ interface AdminRouteChildren {
   AdminHolidaysRoute: typeof AdminHolidaysRoute
   AdminKpisRoute: typeof AdminKpisRoute
   AdminMaterialsRoute: typeof AdminMaterialsRoute
+  AdminProfileBadgesRoute: typeof AdminProfileBadgesRoute
   AdminSessionsRoute: typeof AdminSessionsRoute
   AdminStudentsRoute: typeof AdminStudentsRoute
   AdminTeachersRoute: typeof AdminTeachersRoute
@@ -1001,6 +1021,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminHolidaysRoute: AdminHolidaysRoute,
   AdminKpisRoute: AdminKpisRoute,
   AdminMaterialsRoute: AdminMaterialsRoute,
+  AdminProfileBadgesRoute: AdminProfileBadgesRoute,
   AdminSessionsRoute: AdminSessionsRoute,
   AdminStudentsRoute: AdminStudentsRoute,
   AdminTeachersRoute: AdminTeachersRoute,

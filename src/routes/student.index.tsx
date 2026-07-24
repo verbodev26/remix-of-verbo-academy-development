@@ -18,10 +18,10 @@ import { useComputedMacros } from "@/components/verbo/PerformanceAnalytics";
 import { GhostButton, Pill, PrimaryButton, SectionTitle, SuccessButton } from "@/components/verbo/ui";
 import {
   ArrowRight,
+  Award,
   BarChart3,
   CalendarClock,
   Download,
-  Flame,
   ShieldAlert,
   Sparkles,
   Star,
@@ -29,6 +29,17 @@ import {
   Video,
   X,
 } from "lucide-react";
+import {
+  loadBadges as loadProfileBadges,
+  subscribeBadges as subscribeProfileBadges,
+  isBadgeEarned,
+  buildProfileBadgeContext,
+  type BadgeDef as ProfileBadgeDef,
+} from "@/lib/profile-badges-store";
+import {
+  loadEquippedBadgeIds,
+  subscribeEquippedBadges,
+} from "@/lib/equipped-profile-badges-store";
 import { RatingModal } from "@/components/verbo/RatingModal";
 import { ReportConductModal } from "@/components/verbo/ReportConductModal";
 import {
@@ -346,13 +357,8 @@ function StudentDashboard() {
             <h1 className="text-3xl font-semibold tracking-tight" style={{ color: "#01304a" }}>
               {user.name.split(" ")[0]}
             </h1>
-            <div
-              title="Equipped: On Fire"
-              className="flex h-11 w-11 items-center justify-center rounded-full shadow-md verbo-badge-spin"
-              style={{ background: "linear-gradient(135deg, #f38934, #ff6a3d)" }}
-            >
-              <Flame className="h-5 w-5 text-white" />
-            </div>
+            <FeaturedProfileBadge user={user} />
+
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -755,6 +761,54 @@ function PerfStars({ label, value }: { label: string; value: number }) {
         })}
         <span className="ml-2 text-xs tabular-nums text-muted-foreground">{value}/5</span>
       </div>
+    </div>
+  );
+}
+
+/* --------------------------------------------------------------------------
+ * FeaturedProfileBadge — replaces the old fixed "On Fire" flame in the
+ * dashboard header. Renders the student's currently featured profile badge
+ * (equipped-first, else highest-threshold earned) or nothing at all if the
+ * student has not earned any badge yet.
+ * ------------------------------------------------------------------------ */
+function FeaturedProfileBadge({ user }: { user: NonNullable<ReturnType<typeof useAuth>["user"]> }) {
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    const bump = () => setTick((t) => t + 1);
+    const un1 = subscribeProfileBadges(bump);
+    const un2 = subscribeEquippedBadges(bump);
+    const un3 = subscribeCourses(bump);
+    return () => { un1(); un2(); un3(); };
+  }, []);
+
+  // The subscriptions above bump `tick`, which invalidates the memo below.
+  const featured = useMemo<ProfileBadgeDef | null>(() => {
+    const badges = loadProfileBadges();
+    const ctx = buildProfileBadgeContext(user);
+    const earned = badges.filter((b) => isBadgeEarned(b, ctx));
+    if (earned.length === 0) return null;
+    const equipped = loadEquippedBadgeIds(user.id);
+    for (const id of equipped) {
+      const hit = earned.find((b) => b.id === id);
+      if (hit) return hit;
+    }
+    return earned.slice().sort((a, b) => (b.rule.threshold ?? 1) - (a.rule.threshold ?? 1))[0];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, tick]);
+
+  if (!featured) return null;
+
+  return (
+    <div
+      title={`Equipped: ${featured.name}`}
+      className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full shadow-md"
+      style={{ background: "linear-gradient(135deg, #01304a, #0a4a6e)" }}
+    >
+      {featured.image ? (
+        <img src={featured.image} alt={featured.name} className="h-full w-full object-cover" />
+      ) : (
+        <Award className="h-5 w-5 text-white" />
+      )}
     </div>
   );
 }

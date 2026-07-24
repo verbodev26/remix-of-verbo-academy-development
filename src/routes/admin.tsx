@@ -19,6 +19,7 @@ const NAV_GROUPS: NavGroup[] = [
     { to: "/admin/students", label: "Students" },
     { to: "/admin/groups",   label: "Groups" },
     { to: "/admin/sessions", label: "Sessions" },
+    { to: "/admin/profile-badges", label: "Profile Badges" },
   ]},
   { label: "Teachers", items: [
     { to: "/admin/teachers", label: "Teachers" },

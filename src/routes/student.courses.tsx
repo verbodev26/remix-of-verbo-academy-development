@@ -42,6 +42,7 @@ import {
   getUnitAccessOverride,
   isMandatoryCategory,
   isMilestoneUnit,
+  levelIsComplete,
   loadActivityScores,
   recordActivityScore,
   setUnitCompleted,
@@ -92,17 +93,6 @@ interface LevelState {
   totalUnits: number;
   readOnly: boolean;
   message?: string;
-}
-
-function levelIsComplete(level: CourseLevel, studentId: string): boolean {
-  if (level.units.length === 0) return false;
-  for (const u of level.units) {
-    const ov = getUnitAccessOverride(studentId, u.id);
-    if (ov === "locked") return false;
-    if (isMilestoneUnit(u.id) && ov !== "unlocked" && !unitPassed(studentId, u.id)) return false;
-    if (!unitPassed(studentId, u.id)) return false;
-  }
-  return true;
 }
 
 function passedUnitCount(level: CourseLevel, studentId: string): number {
