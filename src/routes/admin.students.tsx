@@ -92,6 +92,10 @@ function initials(name: string) {
   return name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
 }
 
+function isValidEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+}
+
 function computeNextPayment(u: User): Date | null {
   if (u.next_payment) return new Date(u.next_payment);
   if (!u.payment_day) return null;
