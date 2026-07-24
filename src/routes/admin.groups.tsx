@@ -104,8 +104,7 @@ function GroupCard({ group, onOpen }: { group: Group; onOpen: () => void }) {
   const product = getProduct(group.product);
   const hired = group.hired_sessions ?? 0;
   const remaining = group.remaining_sessions ?? 0;
-  const done = Math.max(0, hired - remaining);
-  const pct = hired > 0 ? (done / hired) * 100 : 0;
+  const { done, pct } = sessionProgressFor(hired, remaining);
   const nextPay = group.next_payment
     ? new Date(group.next_payment)
     : group.payment_day ? nextPaymentDate(group.payment_day, new Date()) : null;
