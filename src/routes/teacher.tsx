@@ -20,6 +20,7 @@ function Layout() {
     { to: "/teacher/calendar", label: "Calendar" },
     { to: "/teacher/performance-sessions", label: "Performance Sessions" },
     { to: "/teacher/challenges", label: "Challenges" },
+    { to: "/teacher/flash", label: "Verbo Flash" },
     { to: "/teacher/materials", label: "Materials" },
     { to: "/teacher/workshops", label: "Focus Workshops" },
     ...(hasVipStudent ? [{ to: "/teacher/vip", label: "Course Builder VIP" }] : []),
