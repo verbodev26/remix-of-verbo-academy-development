@@ -158,7 +158,7 @@ export function resolvedRemainingSeats(studentId: string, kind: AccessKind): num
     const total = totalBookingsForStudent(studentId, type);
     return Math.max(0, cap * monthsElapsedSinceCycle(studentId) - total);
   }
-  if (kind === "spotlight") return cap + freemiumBoost;
+  if (kind === "spotlight") return Math.max(0, cap - spotlightRequestsThisMonth(studentId)) + freemiumBoost;
   const type: ClubType = kind === "insight" ? "insight" : "book";
   return Math.max(0, cap - bookingsThisMonth(studentId, type)) + freemiumBoost;
 }
