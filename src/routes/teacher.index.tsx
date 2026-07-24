@@ -1272,9 +1272,14 @@ function ReportPreview({ studentName, dateLabel, status, notes, entries, onClose
 
       <div className="flex justify-end gap-2">
         <GhostButton onClick={onClose}>Close</GhostButton>
-        <PrimaryButton onClick={() => alert("Mock download: Verbo_Session_Report.pdf")}>
-          <Download className="h-4 w-4" /> Download PDF (Mock Download)
-        </PrimaryButton>
+        <button
+          type="button"
+          disabled
+          title="Coming soon"
+          className="flex cursor-not-allowed items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-secondary/40 px-3 py-2 text-sm font-medium text-muted-foreground opacity-70"
+        >
+          <Download className="h-4 w-4" /> Download PDF
+        </button>
       </div>
     </div>
   );
