@@ -199,7 +199,7 @@ function LoginPage() {
                   borderRadius: 9999,
                   backgroundColor:
                     btnState === "error"
-                      ? "hsl(var(--destructive, 0 72% 45%))"
+                      ? "var(--destructive)"
                       : btnState === "idle"
                         ? "#f38934"
                         : "#01304a",
