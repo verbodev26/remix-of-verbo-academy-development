@@ -754,9 +754,10 @@ function StudentDashboard() {
                   key={s.id}
                   type="button"
                   onClick={() => setClassDetail(s)}
-                  className="flex w-full flex-wrap items-center gap-4 rounded-xl px-4 py-4 text-left transition-all duration-150 ease-out hover:bg-secondary/40 active:scale-[0.97]"
+                  className="grid w-full grid-cols-1 items-center gap-4 rounded-xl px-4 py-4 text-left transition-all duration-150 ease-out hover:bg-secondary/40 active:scale-[0.97] md:grid-cols-[1fr_1fr_auto_auto]"
                 >
-                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                  <div className="truncate text-sm text-foreground">{fmt(s.date_time)}</div>
+                  <div className="flex min-w-0 items-center gap-3">
                     <div
                       className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold"
                       style={{ color: "#01304a" }}
@@ -764,16 +765,16 @@ function StudentDashboard() {
                     >
                       {initial}
                     </div>
-                    <div className="min-w-0">
-                      <div className="truncate text-sm font-semibold" style={{ color: "#01304a" }}>{teacherName}</div>
-                      <div className="truncate text-xs text-muted-foreground">{fmt(s.date_time)}</div>
-                    </div>
+                    <div className="truncate text-sm font-semibold" style={{ color: "#01304a" }}>{teacherName}</div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="md:justify-self-start">
                     <span className={statusBadge(s.status)}>{s.status}</span>
+                  </div>
+                  <div className="md:justify-self-end">
                     {s.student_rating ? <RatingStarsCompact value={s.student_rating} /> : <span className="text-xs text-muted-foreground">—</span>}
                   </div>
                 </button>
+
               );
             })}
           </div>
