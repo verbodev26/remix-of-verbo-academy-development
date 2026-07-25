@@ -98,17 +98,10 @@ export function Preloader() {
         >
           Speak the Language of{" "}
           <span
-            className="verbo-pre-gold"
             style={{
               fontWeight: 800,
               fontSize: "1.08em",
-              backgroundImage:
-                "linear-gradient(110deg, #f38934 0%, #f7b54a 35%, #ffe28a 55%, #f7b54a 75%, #f38934 100%)",
-              backgroundSize: "200% 100%",
-              WebkitBackgroundClip: "text",
-              backgroundClip: "text",
-              color: "transparent",
-              WebkitTextFillColor: "transparent",
+              color: "#f38934",
             }}
           >
             Growth!

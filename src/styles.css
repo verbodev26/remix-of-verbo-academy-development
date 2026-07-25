@@ -387,13 +387,6 @@
     animation: verbo-pre-reveal 1700ms cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
-  @keyframes verbo-pre-gold-flow {
-    0% { background-position: 0% 50%; }
-    100% { background-position: 200% 50%; }
-  }
-  .verbo-pre-gold {
-    animation: verbo-pre-gold-flow 4s ease-in-out infinite;
-  }
 
   /* Dark glassmorphic pillar card */
   .verbo-glass-card {
