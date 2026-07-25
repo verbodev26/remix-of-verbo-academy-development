@@ -545,7 +545,9 @@ function StudentDashboard() {
             return (
               <div>
                 <SectionTitle>Upcoming Sessions</SectionTitle>
+                <PremiumCard>
                 <div className="grid grid-cols-7 gap-2">
+
                   {week.map((d) => {
                     const key = dayKeyOf(d);
                     const ds = sessionForDay(d);
