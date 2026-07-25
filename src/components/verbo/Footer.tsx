@@ -1,6 +1,6 @@
 // Shared site footer (Landing + logged-in panels).
 import { Link } from "@tanstack/react-router";
-import { Logo } from "@/components/verbo/ui";
+import { Logo } from "@/components/verbo/Logo";
 
 export function Footer() {
   return (
