@@ -5,8 +5,6 @@ import { CalendarClock, FileEdit, Video, X } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { userById } from "@/lib/mock-data";
 import { Card, GhostButton, PrimaryButton, SectionTitle } from "@/components/verbo/ui";
-import { loadLevels, subscribeLevels } from "@/lib/courses-store";
-import type { Level } from "@/lib/mock-data";
 import {
   loadLessonPlans, saveLessonPlan, subscribeLessonPlans, type LessonPlan,
 } from "@/lib/lesson-plans-store";
@@ -40,7 +38,7 @@ function Page() {
 
   const [sessions, setSessions] = useState<ExtSession[]>([]);
   const [plans, setPlans] = useState<Record<string, LessonPlan>>({});
-  const [levels, setLevels] = useState<Level[]>([]);
+  
   const [planning, setPlanning] = useState<ExtSession | null>(null);
   const [detailsFor, setDetailsFor] = useState<{ session: ExtSession; mode: "ready" | "completed"; title: string } | null>(null);
   const [cancelling, setCancelling] = useState<ExtSession | null>(null);
@@ -53,15 +51,13 @@ function Page() {
   useEffect(() => {
     setSessions(loadSessions());
     setPlans(loadLessonPlans());
-    setLevels(loadLevels());
     const u1 = subscribeSessions(() => setSessions(loadSessions()));
     const u2 = subscribeLessonPlans(() => setPlans(loadLessonPlans()));
-    const u3 = subscribeLevels(() => setLevels(loadLevels()));
     const u4 = subscribeStrikes(() => tick((n) => n + 1));
     const u5 = subscribeClubReports(() => tick((n) => n + 1));
     const onWorkshops = (e: StorageEvent) => { if (e.key === WORKSHOPS_KEY) tick((n) => n + 1); };
     if (typeof window !== "undefined") window.addEventListener("storage", onWorkshops);
-    return () => { u1(); u2(); u3(); u4(); u5(); if (typeof window !== "undefined") window.removeEventListener("storage", onWorkshops); };
+    return () => { u1(); u2(); u4(); u5(); if (typeof window !== "undefined") window.removeEventListener("storage", onWorkshops); };
   }, []);
 
   // Build calendar events (classes + workshops + clubs) via the shared adapter.
@@ -227,7 +223,6 @@ function Page() {
         <PlanModal
           session={planning}
           existing={plans[planning.id]}
-          levels={levels}
           onClose={() => setPlanning(null)}
           onSave={handleSavePlan}
         />

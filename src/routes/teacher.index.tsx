@@ -1,14 +1,14 @@
 import { createFileRoute, useSearch, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
-import { SESSIONS, ASSIGNMENTS, USERS, studentsOfTeacher, userById, type Session, type SessionStatus, type Level } from "@/lib/mock-data";
+import { SESSIONS, ASSIGNMENTS, USERS, studentsOfTeacher, userById, type Session, type SessionStatus } from "@/lib/mock-data";
 import { Card, GhostButton, Pill, PrimaryButton, SectionTitle } from "@/components/verbo/ui";
 import { CalendarClock, FileEdit, X, Lock, Plus, Trash2, Download, CheckCircle2, Mic, PenLine, Ear, BookOpen, ChevronRight, Video, Star, AlertTriangle, AlertCircle, Trophy, CalendarDays, Wallet, Sparkles as SparklesIcon, GraduationCap, type LucideIcon } from "lucide-react";
 import { savePerformance, type PerformanceRating } from "@/lib/performance-store";
 import { MACRO_SKILLS as SHARED_MACRO_SKILLS, skillKey as sharedSkillKey, type BaseKey as SharedBaseKey } from "@/lib/skills-taxonomy";
 import { submitSessionReport, updateSession, loadSessions, subscribeSessions, SUB_STATUS_META, isJustificationWindowOpen, type ExtSession, type AttendanceSubStatus } from "@/lib/sessions-store";
 import { PlanModal } from "@/components/verbo/PlanModal";
-import { loadLevels, subscribeLevels } from "@/lib/courses-store";
+
 import { subscribeCourses, computeCurrentProgress } from "@/lib/product-courses-store";
 import { loadLessonPlans, saveLessonPlan, subscribeLessonPlans, getLessonPlan, type LessonPlan } from "@/lib/lesson-plans-store";
 import { markVipUnitDone, clearVipUnitDoneForSession } from "@/lib/vip-courses-store";
@@ -54,7 +54,7 @@ function TeacherDashboard() {
   const [evaluating, setEvaluating] = useState<Session | null>(null);
   const [editing, setEditing] = useState<{ session: Session; perf: PerformanceRating; subskills: Record<string, number> } | null>(null);
   const [planning, setPlanning] = useState<Session | null>(null);
-  const [levels, setLevels] = useState<Level[]>([]);
+  
   const [plans, setPlans] = useState<Record<string, LessonPlan>>({});
   // Live-synced canonical sessions (used by summary cards, Needs Your
   // Attention, and Recent Activity). Everything else in the dashboard
@@ -75,11 +75,9 @@ function TeacherDashboard() {
     return () => clearInterval(t);
   }, []);
 
-  // Hydrate levels + lesson plans on the client only (avoids SSR mismatch)
+  // Hydrate lesson plans + live data on the client only (avoids SSR mismatch)
   useEffect(() => {
-    setLevels(loadLevels());
     setPlans(loadLessonPlans());
-    const u1 = subscribeLevels(() => setLevels(loadLevels()));
     const u2 = subscribeLessonPlans(() => setPlans(loadLessonPlans()));
     setLiveSessions(loadSessions());
     setClubs(loadClubs());
@@ -89,7 +87,7 @@ function TeacherDashboard() {
     setClubReports(loadClubReports());
     const u6 = subscribeClubReports(() => setClubReports(loadClubReports()));
     const u7 = subscribeCourses(() => setAvailTick((n) => n + 1));
-    return () => { u1(); u2(); u3(); u4(); u5(); u6(); u7(); };
+    return () => { u2(); u3(); u4(); u5(); u6(); u7(); };
   }, []);
 
   // If we arrived with ?report=<id>, auto-open Step 1 for that session
@@ -893,7 +891,6 @@ function TeacherDashboard() {
         <PlanModal
           session={planning as ExtSession}
           existing={plans[planning.id]}
-          levels={levels}
           onClose={() => setPlanning(null)}
           onSave={handleSavePlan}
         />

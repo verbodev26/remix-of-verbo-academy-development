@@ -11,14 +11,17 @@ import {
   subscribePerformance,
   type PerformanceRating,
 } from "@/lib/performance-store";
-import { loadCourses, subscribeCourses, PRODUCT_META, computeCurrentProgress } from "@/lib/product-courses-store";
+import { loadCourses, subscribeCourses, PRODUCT_META, computeCurrentProgress, resolvePlanTopic } from "@/lib/product-courses-store";
+import { getLessonPlan, subscribeLessonPlans, type LessonPlan } from "@/lib/lesson-plans-store";
+import { unitsForStudent } from "@/lib/vip-courses-store";
+import { tailoredUnitsForStudent } from "@/lib/tailored-content-store";
 import { subscribeVipUnits, subscribeVipUnitCompletion } from "@/lib/vip-courses-store";
 import { useComputedMacros } from "@/components/verbo/PerformanceAnalytics";
 import { GhostButton, Pill, PrimaryButton, SectionTitle, StatRing, SuccessButton } from "@/components/verbo/ui";
 import {
   ArrowRight,
   Award,
-  BarChart3,
+  
   BookOpen,
   CalendarClock,
   Download,
@@ -49,7 +52,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
+
 
 export const Route = createFileRoute("/student/")({
   component: StudentDashboard,
@@ -105,7 +108,9 @@ function StudentDashboard() {
   // Real macro-skill scoring, scoped to this student (single source of
   // truth shared with Student > Performance and Teacher > Mis Alumnos).
   const macros = useComputedMacros(user?.id ?? "");
-  const [perfDetail, setPerfDetail] = useState<{ session: ExtSession; rating: PerformanceRating } | null>(null);
+  const [classDetail, setClassDetail] = useState<ExtSession | null>(null);
+  const [plansRev, setPlansRev] = useState(0);
+  useEffect(() => subscribeLessonPlans(() => setPlansRev((r) => r + 1)), []);
 
   const [cancelCount, setCancelCount] = useState<number>(() => {
     if (typeof window === "undefined") return 0;
@@ -576,79 +581,48 @@ function StudentDashboard() {
       <section className="verbo-fade-up motion-reduce:animate-none" style={{ animationDelay: "300ms" }}>
         <SectionTitle>Session History</SectionTitle>
         <PremiumCard className="verbo-card-hover">
-          <TooltipProvider delayDuration={200}>
-            <div className="hidden md:grid md:grid-cols-[1fr_1fr_auto_auto_auto_auto] gap-4 px-4 pb-3 text-[10px] uppercase tracking-wider text-muted-foreground">
-              <div>Date</div>
-              <div>Teacher</div>
-              <div>Status</div>
-              <div>Rating</div>
-              <div>My Performance</div>
-              <div className="text-right">Report</div>
-            </div>
-            <div className="divide-y divide-border">
-              {history.map((s) => {
-                const teacher = userById(s.teacher_id);
-                const rating = performance[s.id];
-                const teacherName = teacher?.name ?? "Teacher";
-                const initial = teacherName.charAt(0).toUpperCase();
-                return (
-                  <div
-                    key={s.id}
-                    className="flex flex-wrap items-center gap-4 rounded-xl px-4 py-4 transition-colors hover:bg-secondary/40"
-                  >
-                    <div className="flex min-w-0 flex-1 items-center gap-3">
-                      <div
-                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold"
-                        style={{ color: "#01304a" }}
-                        aria-hidden
-                      >
-                        {initial}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="truncate text-sm font-semibold" style={{ color: "#01304a" }}>{teacherName}</div>
-                        <div className="truncate text-xs text-muted-foreground">{fmt(s.date_time)}</div>
-                      </div>
+          <div className="hidden md:grid md:grid-cols-[1fr_1fr_auto_auto] gap-4 px-4 pb-3 text-[10px] uppercase tracking-wider text-muted-foreground">
+            <div>Date</div>
+            <div>Teacher</div>
+            <div>Status</div>
+            <div>Rating</div>
+          </div>
+          <div className="divide-y divide-border">
+            {history.map((s) => {
+              const teacher = userById(s.teacher_id);
+              const teacherName = teacher?.name ?? "Teacher";
+              const initial = teacherName.charAt(0).toUpperCase();
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => setClassDetail(s)}
+                  className="flex w-full flex-wrap items-center gap-4 rounded-xl px-4 py-4 text-left transition-all duration-150 ease-out hover:bg-secondary/40 active:scale-[0.97]"
+                >
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                    <div
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold"
+                      style={{ color: "#01304a" }}
+                      aria-hidden
+                    >
+                      {initial}
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span className={statusBadge(s.status)}>{s.status}</span>
-                      {s.student_rating ? <RatingStarsCompact value={s.student_rating} /> : <span className="text-xs text-muted-foreground">—</span>}
-                    </div>
-                    <div className="ml-auto flex items-center gap-2">
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button
-                            disabled={!rating}
-                            onClick={() => rating && setPerfDetail({ session: s, rating })}
-                            className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-border transition-all duration-150 ease-out hover:bg-secondary active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
-                            style={{ color: rating ? "#f38934" : undefined }}
-                            aria-label="View performance breakdown"
-                          >
-                            <BarChart3 className="h-3.5 w-3.5" />
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent>View performance breakdown</TooltipContent>
-                      </Tooltip>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button
-                            disabled={!s.report_pdf_url}
-                            onClick={() => s.report_pdf_url && window.open(s.report_pdf_url, "_blank")}
-                            className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-border text-muted-foreground transition-all duration-150 ease-out hover:bg-secondary active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
-                            aria-label="Download report"
-                          >
-                            <Download className="h-3.5 w-3.5" />
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent>Download report</TooltipContent>
-                      </Tooltip>
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-semibold" style={{ color: "#01304a" }}>{teacherName}</div>
+                      <div className="truncate text-xs text-muted-foreground">{fmt(s.date_time)}</div>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          </TooltipProvider>
+                  <div className="flex items-center gap-3">
+                    <span className={statusBadge(s.status)}>{s.status}</span>
+                    {s.student_rating ? <RatingStarsCompact value={s.student_rating} /> : <span className="text-xs text-muted-foreground">—</span>}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </PremiumCard>
       </section>
+
 
 
       {ratingSession && (
@@ -694,33 +668,140 @@ function StudentDashboard() {
         </DialogContent>
       </Dialog>
 
-      {/* Performance Breakdown Modal */}
-      <Dialog open={!!perfDetail} onOpenChange={(o) => !o && setPerfDetail(null)}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle style={{ color: "#01304a" }}>Session Performance Breakdown</DialogTitle>
-          </DialogHeader>
-          {perfDetail && (
-            <>
-              <div className="rounded-lg border border-border bg-secondary/40 p-3 text-xs">
-                <div className="font-medium text-foreground">{fmt(perfDetail.session.date_time)}</div>
-                <div className="mt-0.5 text-muted-foreground">
-                  with {userById(perfDetail.session.teacher_id)?.name}
+      {/* Class Details Modal — unified view (replaces the old standalone
+          "Session Performance Breakdown" popup and the row-level icons). */}
+      <Dialog open={!!classDetail} onOpenChange={(o) => !o && setClassDetail(null)}>
+        <DialogContent className="max-w-lg">
+          {classDetail && (() => {
+            const s = classDetail;
+            const teacher = userById(s.teacher_id);
+            const plan: LessonPlan | undefined = getLessonPlan(s.id);
+            void plansRev; // re-render on lesson plan updates
+            const rating = performance[s.id];
+            const isAbsent = s.status === "absent";
+            const cause = s.absent_cause;
+            const absentMsg = cause === "student"
+              ? "You marked yourself unavailable"
+              : cause === "teacher"
+              ? "Your teacher canceled this session"
+              : null;
+            // Resolve real curriculum topic when the plan links a unit.
+            let topic: { levelName: string; unitTitle: string } | null = null;
+            if (plan) {
+              if (plan.vip_unit_id) {
+                const u = unitsForStudent(user.id).find((x) => x.id === plan.vip_unit_id);
+                if (u) topic = { levelName: "VIP Course", unitTitle: u.title };
+              } else if (plan.tailored_unit_id) {
+                const u = tailoredUnitsForStudent(user.id).find((x) => x.id === plan.tailored_unit_id);
+                if (u) topic = { levelName: "Tailored Content", unitTitle: u.title };
+              } else {
+                topic = resolvePlanTopic(user.product, plan.level_id, plan.unit_id);
+              }
+            }
+            const hasRealPdf = !!s.report_pdf_url && s.report_pdf_url !== "/mock-report.pdf";
+            return (
+              <>
+                <DialogHeader>
+                  <DialogTitle style={{ color: "#01304a" }}>Class Details</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  {/* Header block */}
+                  <div className="rounded-lg border border-border bg-secondary/40 p-3 text-xs">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <div className="text-sm font-semibold text-foreground">{fmt(s.date_time)}</div>
+                        <div className="mt-0.5 text-muted-foreground">
+                          {s.duration_minutes} min · with {teacher?.name ?? "Teacher"}
+                        </div>
+                      </div>
+                      <span className={statusBadge(s.status)}>{s.status}</span>
+                    </div>
+                    {isAbsent && absentMsg && (
+                      <div className="mt-2 text-muted-foreground">{absentMsg}.</div>
+                    )}
+                  </div>
+
+                  {/* What we covered */}
+                  <section>
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      What we covered
+                    </h4>
+                    {plan ? (
+                      <div className="mt-2 space-y-1 text-sm text-foreground">
+                        <div><span className="text-muted-foreground">Type:</span> {plan.type}</div>
+                        <div><span className="text-muted-foreground">Title:</span> {plan.title}</div>
+                        {topic && (
+                          <div className="text-muted-foreground">
+                            {topic.levelName} — {topic.unitTitle}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        No lesson plan was recorded for this session.
+                      </p>
+                    )}
+                  </section>
+
+                  {/* Teacher's notes */}
+                  <section>
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Teacher's notes
+                    </h4>
+                    {s.report_comments && s.report_comments.trim().length > 0 ? (
+                      <p className="mt-2 text-sm leading-relaxed text-foreground">{s.report_comments.trim()}</p>
+                    ) : (
+                      <p className="mt-2 text-sm text-muted-foreground">No notes were left for this session.</p>
+                    )}
+                  </section>
+
+                  {/* Your rating */}
+                  <section>
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Your rating
+                    </h4>
+                    {s.student_rating ? (
+                      <div className="mt-2"><RatingStarsCompact value={s.student_rating} /></div>
+                    ) : (
+                      <p className="mt-2 text-sm text-muted-foreground">You haven't rated this session.</p>
+                    )}
+                  </section>
+
+                  {/* Performance breakdown */}
+                  <section>
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Performance breakdown
+                    </h4>
+                    {rating ? (
+                      <div className="mt-2 space-y-3">
+                        <PerfStars label="Fluency" value={rating.fluency} />
+                        <PerfStars label="Vocabulary Range" value={rating.vocabulary} />
+                        <PerfStars label="Confidence" value={rating.confidence} />
+                        <PerfStars label="Grammar Accuracy" value={rating.grammar} />
+                      </div>
+                    ) : (
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        Your teacher hasn't logged a detailed performance rating for this session yet.
+                      </p>
+                    )}
+                  </section>
                 </div>
-              </div>
-              <div className="mt-2 space-y-3">
-                <PerfStars label="Fluency" value={perfDetail.rating.fluency} />
-                <PerfStars label="Vocabulary Range" value={perfDetail.rating.vocabulary} />
-                <PerfStars label="Confidence" value={perfDetail.rating.confidence} />
-                <PerfStars label="Grammar Accuracy" value={perfDetail.rating.grammar} />
-              </div>
-            </>
-          )}
-          <DialogFooter>
-            <PrimaryButton className="verbo-btn-glow" onClick={() => setPerfDetail(null)}>Close</PrimaryButton>
-          </DialogFooter>
+                <DialogFooter className="gap-2 sm:gap-2">
+                  <GhostButton
+                    disabled={!hasRealPdf}
+                    title={!hasRealPdf ? "Coming soon" : undefined}
+                    onClick={() => hasRealPdf && window.open(s.report_pdf_url!, "_blank")}
+                  >
+                    <Download className="h-3.5 w-3.5" /> Download report
+                  </GhostButton>
+                  <PrimaryButton className="verbo-btn-glow" onClick={() => setClassDetail(null)}>Close</PrimaryButton>
+                </DialogFooter>
+              </>
+            );
+          })()}
         </DialogContent>
       </Dialog>
+
     </div>
   );
 }
