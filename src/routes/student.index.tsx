@@ -122,6 +122,7 @@ function StudentDashboard() {
 
   const [toCancel, setToCancel] = useState<ExtSession | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
 
   const [coursesRev, setCoursesRev] = useState(0);
   useEffect(() => subscribeCourses(() => setCoursesRev((r) => r + 1)), []);
@@ -282,7 +283,7 @@ function StudentDashboard() {
         <div>
           <div className="text-sm text-muted-foreground">Welcome back</div>
           <div className="mt-1 flex items-center gap-3">
-            <h1 className="font-[family-name:var(--font-display)] text-3xl font-semibold tracking-tight" style={{ color: "#01304a" }}>
+            <h1 className="text-3xl font-semibold tracking-tight" style={{ color: "#01304a" }}>
               {user.name.split(" ")[0]}
             </h1>
             <FeaturedProfileBadge user={user} />
