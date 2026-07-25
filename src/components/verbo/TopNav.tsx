@@ -46,7 +46,7 @@ const activeTabCls =
   "data-[status=active]:bg-secondary data-[status=active]:text-foreground";
 
 const darkTabCls =
-  "inline-flex items-center gap-1 px-3 py-1.5 text-sm transition-colors duration-200 ease-out text-[#94a3b8] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f38934]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent data-[status=active]:text-white";
+  "relative z-10 inline-flex items-center gap-1 px-3 py-1.5 text-sm transition-colors duration-200 ease-out text-[#94a3b8] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f38934]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent data-[status=active]:text-white";
 
 function SingleNav({ item, pathname, isDark }: { item: NavItem; pathname: string; isDark?: boolean }) {
   const active = isActive(pathname, item);
