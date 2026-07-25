@@ -163,6 +163,11 @@ function LoginPage() {
           className="pointer-events-none absolute inset-0"
           style={{ background: "radial-gradient(circle at 70% 60%, rgba(243,137,52,0.18), transparent 50%)" }}
         />
+        {/* Decorative orange block */}
+        <div
+          className="pointer-events-none absolute -bottom-12 -right-12 h-80 w-64 rounded-[2rem] bg-accent/20"
+          aria-hidden
+        />
 
 
         <div className="relative z-10">
@@ -178,8 +183,9 @@ function LoginPage() {
           >
             "{phrase}"
           </p>
-          <div className="verbo-fade-up mt-6 text-sm text-white/70" style={{ animationDelay: "520ms" }}>
-            — The Verbo team
+          <div className="verbo-fade-up mt-6 flex items-center gap-3" style={{ animationDelay: "520ms" }}>
+            <PhotoPlaceholder tone="dark" shape="circle" className="h-12 w-12" />
+            <span className="text-sm text-white/70">— The Verbo team</span>
           </div>
         </div>
       </div>
