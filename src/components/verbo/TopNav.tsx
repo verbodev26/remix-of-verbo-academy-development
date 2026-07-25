@@ -190,11 +190,41 @@ export function TopNav({ items, variant = "light" }: { items: NavEntry[]; varian
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   const navRef = useRef<HTMLElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
   const [indicator, setIndicator] = useState<{ left: number; width: number; visible: boolean }>({
     left: 0,
     width: 0,
     visible: false,
   });
+
+  // Progressive transparency: fully opaque near the top, fully transparent
+  // past FADE_END. Applied straight to the DOM node (no React state) so it
+  // stays smooth during fast scrolls.
+  useEffect(() => {
+    const FADE_START = 24;
+    const FADE_END = 220;
+    let raf = 0;
+    const apply = () => {
+      raf = 0;
+      const el = headerRef.current;
+      if (!el) return;
+      const y = window.scrollY;
+      const t = Math.min(1, Math.max(0, (y - FADE_START) / (FADE_END - FADE_START)));
+      const opacity = 1 - t;
+      el.style.opacity = String(opacity);
+      el.style.pointerEvents = opacity < 0.05 ? "none" : "auto";
+    };
+    const onScroll = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(apply);
+    };
+    apply();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
 
   useLayoutEffect(() => {
     if (!isDark) return;
@@ -216,7 +246,12 @@ export function TopNav({ items, variant = "light" }: { items: NavEntry[]; varian
   }, [pathname, isDark, items]);
 
   return (
-    <header className="fixed top-4 inset-x-4 lg:inset-x-6 z-40">
+    <header
+      ref={headerRef}
+      className="fixed top-4 inset-x-4 lg:inset-x-6 z-40"
+      style={{ transition: "opacity 180ms ease-out" }}
+    >
+
       <div
         className={`mx-auto flex h-16 max-w-7xl items-center justify-between rounded-full px-6 shadow-elevated ${
           isDark ? "" : "border border-border bg-background/85 backdrop-blur-xl"
