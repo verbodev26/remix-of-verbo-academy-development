@@ -223,7 +223,6 @@ function Page() {
         <PlanModal
           session={planning}
           existing={plans[planning.id]}
-          levels={levels}
           onClose={() => setPlanning(null)}
           onSave={handleSavePlan}
         />
