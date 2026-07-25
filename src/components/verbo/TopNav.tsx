@@ -132,7 +132,7 @@ function NavGroupDropdown({ group, pathname, isDark }: { group: NavGroup; pathna
   return (
     <div
       ref={ref}
-      className="relative"
+      className="relative z-10"
       onMouseEnter={() => { cancelClose(); setOpen(true); }}
       onMouseLeave={scheduleClose}
     >
