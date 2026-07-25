@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useAuth } from "@/lib/auth";
 import { userById } from "@/lib/mock-data";
 import { effectiveSessionCounts, groupOfStudent } from "@/lib/groups-store";
-import { persistSessions, subscribeSessions, getSessionsSnapshot, getServerSessionsSnapshot, submitStudentRating, studentAttendance, type ExtSession } from "@/lib/sessions-store";
+import { subscribeSessions, getSessionsSnapshot, getServerSessionsSnapshot, submitStudentRating, studentAttendance, type ExtSession } from "@/lib/sessions-store";
 import {
   getPerformanceSnapshot,
   getServerPerformanceSnapshot,
@@ -29,6 +29,7 @@ import {
   BookOpen,
   CalendarClock,
   Download,
+  NotebookPen,
   ShieldAlert,
   Sparkles,
   Star,
@@ -49,6 +50,7 @@ import {
 } from "@/lib/equipped-profile-badges-store";
 import { RatingModal } from "@/components/verbo/RatingModal";
 import { ReportConductModal } from "@/components/verbo/ReportConductModal";
+import { CantAttendRouter, RescheduleRequestModal } from "@/components/verbo/CancelSessionFlow";
 import {
   Dialog,
   DialogContent,
@@ -61,6 +63,16 @@ import {
 export const Route = createFileRoute("/student/")({
   component: StudentDashboard,
 });
+
+/** Section heading with a colored icon circle (Class Details modal). */
+function SectionHeadIcon({ icon, circleClass, label }: { icon: React.ReactNode; circleClass: string; label: string }) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className={`flex h-7 w-7 items-center justify-center rounded-full ${circleClass}`}>{icon}</span>
+      <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</h4>
+    </div>
+  );
+}
 
 function fmt(iso: string) {
   return new Date(iso).toLocaleString(undefined, {
@@ -140,12 +152,10 @@ function StudentDashboard() {
   const [plansRev, setPlansRev] = useState(0);
   useEffect(() => subscribeLessonPlans(() => setPlansRev((r) => r + 1)), []);
 
-  const [cancelCount, setCancelCount] = useState<number>(() => {
-    if (typeof window === "undefined") return 0;
-    try { return Number(localStorage.getItem("verbo:cancel-count") ?? "1"); } catch { return 1; }
-  });
+  // Shared "Can't Attend" flow (same real logic as Live Sessions).
+  const [cantAttendFor, setCantAttendFor] = useState<ExtSession | null>(null);
+  const [rescheduleFor, setRescheduleFor] = useState<ExtSession | null>(null);
 
-  const [toCancel, setToCancel] = useState<ExtSession | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
 
@@ -294,22 +304,6 @@ function StudentDashboard() {
     setRatingSession(null);
   };
 
-  const confirmCancel = () => {
-    if (!toCancel) return;
-    const next = sessions.filter((s) => s.id !== toCancel.id);
-    persistSessions(next);
-    const nc = cancelCount + 1;
-    setCancelCount(nc);
-    try { localStorage.setItem("verbo:cancel-count", String(nc)); } catch { /* noop */ }
-    setToCancel(null);
-  };
-
-  const ordinal = (n: number) => {
-    const v = n % 100;
-    if (v >= 11 && v <= 13) return `${n}th`;
-    const s = ["th", "st", "nd", "rd"][n % 10] || "th";
-    return `${n}${s}`;
-  };
 
   // Status badge tone classes (polished).
   const statusBadge = (status: string) => {
@@ -728,7 +722,7 @@ function StudentDashboard() {
                               type="button"
                               title="Can't attend"
                               aria-label="Can't attend"
-                              onClick={() => setToCancel(s)}
+                              onClick={() => setCantAttendFor(s)}
                               className="flex h-10 w-10 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow-soft transition-opacity hover:opacity-90 active:scale-[0.97]"
                             >
                               <X className="h-4 w-4" />
@@ -896,34 +890,27 @@ function StudentDashboard() {
         onClose={() => setReportOpen(false)}
       />
 
-      {/* Cancellation Modal */}
-      <Dialog open={!!toCancel} onOpenChange={(o) => !o && setToCancel(null)}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle style={{ color: "#01304a" }}>Session Cancellation</DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-foreground">
-            We're sorry you can't be there 😢 Remember that consistency is key to mastering your
-            professional and corporate English.
-          </p>
-          <div
-            className="rounded-lg border p-3 text-xs leading-relaxed"
-            style={{
-              backgroundColor: "rgba(243, 137, 52, 0.08)",
-              borderColor: "rgba(243, 137, 52, 0.35)",
-              color: "#01304a",
-            }}
-          >
-            <strong>WARNING!:</strong> Your membership allows you to cancel or reschedule up to
-            15% of your booked sessions without penalty. This action will affect your attendance
-            metrics and will be recorded as your {ordinal(cancelCount + 1)} canceled session.
-          </div>
-          <DialogFooter className="gap-2 sm:gap-2">
-            <GhostButton onClick={confirmCancel}>Confirm Cancellation</GhostButton>
-            <PrimaryButton className="verbo-btn-glow" onClick={() => setToCancel(null)}>Return</PrimaryButton>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Cancellation flow — shared with Live Sessions (real policy, quota
+          and group handling live in CancelSessionFlow). */}
+      {cantAttendFor && user && (
+        <CantAttendRouter
+          session={cantAttendFor}
+          user={user}
+          onClose={() => setCantAttendFor(null)}
+          onReschedule={() => {
+            const s = cantAttendFor;
+            setCantAttendFor(null);
+            setRescheduleFor(s);
+          }}
+        />
+      )}
+      {rescheduleFor && (
+        <RescheduleRequestModal
+          session={rescheduleFor}
+          onClose={() => setRescheduleFor(null)}
+        />
+      )}
+
 
       {/* Class Details Modal — unified view (replaces the old standalone
           "Session Performance Breakdown" popup and the row-level icons). */}
@@ -1004,7 +991,7 @@ function StudentDashboard() {
                   </div>
                   <DialogFooter className="gap-2 sm:gap-2">
                     <GhostButton
-                      onClick={() => { setClassDetail(null); setToCancel(s); }}
+                      onClick={() => { setClassDetail(null); setCantAttendFor(s); }}
                     >
                       <X className="h-3.5 w-3.5" /> Can't attend
                     </GhostButton>
@@ -1025,13 +1012,28 @@ function StudentDashboard() {
                 </DialogHeader>
                 <div className="space-y-4">
                   {/* Header block */}
-                  {headerBlock}
+                  <div className="rounded-lg border border-[var(--navy-100)] bg-[var(--navy-50)] p-3 text-xs">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <div className="text-sm font-semibold text-foreground">{fmt(s.date_time)}</div>
+                        <div className="mt-0.5 text-muted-foreground">
+                          {s.duration_minutes} min · with {teacher?.name ?? "Teacher"}
+                        </div>
+                      </div>
+                      <span className={statusBadge(s.status)}>{s.status}</span>
+                    </div>
+                    {isAbsent && absentMsg && (
+                      <div className="mt-2 text-muted-foreground">{absentMsg}.</div>
+                    )}
+                  </div>
 
                   {/* What we covered */}
                   <section>
-                    <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      What we covered
-                    </h4>
+                    <SectionHeadIcon
+                      icon={<BookOpen className="h-4 w-4" />}
+                      circleClass="bg-[var(--navy-100)] text-[#01304a]"
+                      label="What we covered"
+                    />
                     {plan ? (
                       <div className="mt-2 space-y-1 text-sm text-foreground">
                         <div><span className="text-muted-foreground">Type:</span> {plan.type}</div>
@@ -1051,9 +1053,11 @@ function StudentDashboard() {
 
                   {/* Teacher's notes */}
                   <section>
-                    <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      Teacher's notes
-                    </h4>
+                    <SectionHeadIcon
+                      icon={<NotebookPen className="h-4 w-4" />}
+                      circleClass="bg-[var(--orange-100)] text-[var(--orange-600)]"
+                      label="Teacher's notes"
+                    />
                     {s.report_comments && s.report_comments.trim().length > 0 ? (
                       <p className="mt-2 text-sm leading-relaxed text-foreground">{s.report_comments.trim()}</p>
                     ) : (
@@ -1063,9 +1067,11 @@ function StudentDashboard() {
 
                   {/* Your rating */}
                   <section>
-                    <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      Your rating
-                    </h4>
+                    <SectionHeadIcon
+                      icon={<Star className="h-4 w-4" />}
+                      circleClass="bg-[var(--orange-100)] text-[var(--orange-600)]"
+                      label="Your rating"
+                    />
                     {s.student_rating ? (
                       <div className="mt-2"><RatingStarsCompact value={s.student_rating} /></div>
                     ) : (
@@ -1075,9 +1081,11 @@ function StudentDashboard() {
 
                   {/* Performance breakdown */}
                   <section>
-                    <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      Performance breakdown
-                    </h4>
+                    <SectionHeadIcon
+                      icon={<Award className="h-4 w-4" />}
+                      circleClass="bg-[var(--violet-100)] text-[var(--violet-700)]"
+                      label="Performance breakdown"
+                    />
                     {rating ? (
                       <div className="mt-2 space-y-3">
                         <PerfStars label="Fluency" value={rating.fluency} />
@@ -1092,6 +1100,7 @@ function StudentDashboard() {
                     )}
                   </section>
                 </div>
+
                 <DialogFooter className="gap-2 sm:gap-2">
                   <GhostButton
                     disabled={!hasRealPdf}

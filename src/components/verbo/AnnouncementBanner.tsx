@@ -20,7 +20,7 @@ export function AnnouncementBanner() {
   if (items.length === 0) return null;
 
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-2 px-6 pt-8">
+    <div className="flex flex-col gap-2 mb-6">
       {items.map((a) => (
         <div
           key={a.id}
