@@ -50,7 +50,7 @@ import {
   rescheduleQuota,
   spotlightRequestsThisMonth,
 } from "@/lib/student-requests-store";
-import { isTeacherAvailableAt } from "@/lib/availability-store";
+
 import {
   CantAttendRouter, RescheduleRequestModal, SlotPickerGrid,
   todayYMD, hoursUntil,
