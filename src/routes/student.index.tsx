@@ -17,17 +17,20 @@ import { unitsForStudent } from "@/lib/vip-courses-store";
 import { tailoredUnitsForStudent } from "@/lib/tailored-content-store";
 import { subscribeVipUnits, subscribeVipUnitCompletion } from "@/lib/vip-courses-store";
 import { useComputedMacros } from "@/components/verbo/PerformanceAnalytics";
-import { GhostButton, Pill, PrimaryButton, SectionTitle, StatRing, SuccessButton } from "@/components/verbo/ui";
+import { GhostButton, Pill, PhotoPlaceholder, PrimaryButton, SectionTitle, StatRing, SuccessButton } from "@/components/verbo/ui";
 import {
   ArrowRight,
+  ArrowUpRight,
   Award,
-  
   BookOpen,
+  CalendarCheck,
   CalendarClock,
   Download,
+  GraduationCap,
   ShieldAlert,
   Sparkles,
   Star,
+  TrendingUp,
   Users,
   Video,
   X,
