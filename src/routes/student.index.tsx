@@ -667,13 +667,13 @@ function StudentDashboard() {
           <PremiumCard hover className="group relative overflow-hidden">
             <div
               className="absolute inset-0 opacity-[0.09] pointer-events-none"
-              style={{ background: "radial-gradient(circle at top right, var(--green-500), transparent 65%)" }}
+              style={{ background: "radial-gradient(circle at top right, var(--violet-300), transparent 65%)" }}
             />
             <div className="relative">
               <div className="flex items-center gap-2">
                 <div
                   className="verbo-float flex h-9 w-9 items-center justify-center rounded-lg transition-transform duration-300 group-hover:scale-110"
-                  style={{ background: "color-mix(in oklab, var(--green-500) 12%, transparent)", color: "var(--green-500)" }}
+                  style={{ background: "color-mix(in oklab, var(--violet-500) 12%, transparent)", color: "var(--violet-500)" }}
                 >
                   <Users className="h-4 w-4" />
                 </div>
@@ -684,14 +684,17 @@ function StudentDashboard() {
               <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
                 Join today's live conversation clubs and immerse yourself with peers across the network.
               </p>
-              <PrimaryButton
-                className="verbo-btn-glow mt-4 w-full"
+              <button
+                type="button"
+                className="mt-4 inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-full border border-border bg-white px-4 py-2.5 text-sm font-semibold transition-transform duration-200 active:scale-[0.97]"
+                style={{ color: "var(--violet-500)" }}
                 onClick={() => navigate({ to: "/student/insights" })}
               >
                 <Sparkles className="h-3.5 w-3.5" /> View Active Clubs
-              </PrimaryButton>
+              </button>
             </div>
           </PremiumCard>
+
 
           {/* Quick Review Dock */}
           <PremiumCard hover>
