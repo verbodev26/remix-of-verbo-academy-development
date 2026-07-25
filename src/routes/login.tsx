@@ -302,7 +302,7 @@ function LoginPage() {
         />
 
 
-        <div className="relative z-10">
+        <div className="relative z-10 mt-auto">
           <div className="verbo-fade-up text-xs font-medium uppercase tracking-[0.25em] text-white/60" style={{ animationDelay: "120ms" }}>
             A note from our team
           </div>
