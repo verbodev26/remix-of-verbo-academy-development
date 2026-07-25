@@ -5,8 +5,6 @@ import { CalendarClock, FileEdit, Video, X } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { userById } from "@/lib/mock-data";
 import { Card, GhostButton, PrimaryButton, SectionTitle } from "@/components/verbo/ui";
-import { loadLevels, subscribeLevels } from "@/lib/courses-store";
-import type { Level } from "@/lib/mock-data";
 import {
   loadLessonPlans, saveLessonPlan, subscribeLessonPlans, type LessonPlan,
 } from "@/lib/lesson-plans-store";
