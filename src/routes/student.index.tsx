@@ -873,7 +873,7 @@ function StudentDashboard() {
                   <div className="md:justify-self-start">
                     <span className={statusBadge(s.status)}>{s.status}</span>
                   </div>
-                  <div className="md:justify-self-end">
+                  <div className="md:justify-self-start">
                     {s.student_rating ? <RatingStarsCompact value={s.student_rating} /> : <span className="text-xs text-muted-foreground">—</span>}
                   </div>
                 </button>
