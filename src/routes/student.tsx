@@ -29,7 +29,7 @@ function StudentLayout() {
     // performance
     items = [
       { to: "/student", label: "Dashboard" },
-      { to: "/student/sessions", label: "Live Sessions" },
+      { to: "/student/sessions", label: "Sessions & Events" },
       isVIP
         ? { to: "/student/my-course", label: "My Course" }
         : { to: "/student/courses", label: "Learning Path" },
