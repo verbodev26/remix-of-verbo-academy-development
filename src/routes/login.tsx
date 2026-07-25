@@ -113,7 +113,14 @@ function LoginPage() {
 
 
   return (
-    <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-navy-50 p-6 lg:p-10">
+      <div className="w-full max-w-5xl">
+        <Link to="/" className="mb-4 inline-flex w-fit items-center gap-2 text-sm text-[#01304a]/60 transition-colors hover:text-[#01304a]">
+          <ArrowLeft className="h-3.5 w-3.5" /> Back to home
+        </Link>
+      </div>
+
+      <div className="grid w-full max-w-5xl grid-cols-1 items-stretch overflow-hidden rounded-[2rem] shadow-floating lg:grid-cols-2">
       {/* Form side */}
       <div className="relative flex flex-col overflow-hidden">
         <div className="relative z-10 flex h-full flex-col bg-white px-6 py-8">
@@ -122,11 +129,9 @@ function LoginPage() {
             className="pointer-events-none absolute -bottom-20 -left-20 h-80 w-80 rounded-full bg-accent/10"
             aria-hidden
           />
-        <Link to="/" className="relative z-10 inline-flex w-fit items-center gap-2 text-sm text-[#01304a]/60 transition-colors hover:text-[#01304a]">
-          <ArrowLeft className="h-3.5 w-3.5" /> Back to home
-        </Link>
 
         <div className="relative z-10 m-auto w-full max-w-sm">
+
           <Logo className="mb-10 [&_span]:text-[#01304a] [&_span.text-muted-foreground]:text-[#01304a]/70" />
           <h1 className="text-3xl font-semibold tracking-tight text-[#01304a]">Sign in</h1>
           <p className="mt-1.5 text-sm text-[#01304a]/70">Enter the credentials provided by your administrator.</p>
@@ -278,14 +283,21 @@ function LoginPage() {
 
       {/* Visual side */}
       <div className="relative hidden overflow-hidden bg-[#01304a] lg:flex lg:flex-col lg:justify-between lg:p-12">
+        {/* Diagonal depth layer */}
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{ background: "linear-gradient(135deg, var(--navy-900), #01304a 60%)" }}
+          aria-hidden
+        />
         {/* Static orange glow */}
         <div
           className="pointer-events-none absolute inset-0"
           style={{ background: "radial-gradient(circle at 70% 60%, rgba(243,137,52,0.18), transparent 50%)" }}
         />
-        {/* Decorative orange block */}
+        {/* Orange glow orb */}
         <div
-          className="pointer-events-none absolute -bottom-12 -right-12 h-80 w-64 rounded-[2rem] bg-accent/30"
+          className="pointer-events-none absolute -bottom-16 -right-16 h-72 w-72 rounded-full blur-3xl"
+          style={{ backgroundColor: "var(--orange-500)", opacity: 0.4 }}
           aria-hidden
         />
 
@@ -309,6 +321,7 @@ function LoginPage() {
           </div>
         </div>
       </div>
+      </div>
 
       {overlay && (
         <div
@@ -322,6 +335,7 @@ function LoginPage() {
         />
       )}
     </div>
+
 
   );
 }
