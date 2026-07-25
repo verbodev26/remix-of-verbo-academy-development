@@ -31,7 +31,7 @@ import { useAuth } from "@/lib/auth";
 import { USERS, userById } from "@/lib/mock-data";
 import { adjustRemainingSessions } from "@/lib/students-store";
 import {
-  loadSessions, subscribeSessions, updateSession, applyGroupMemberCancellation,
+  loadSessions, subscribeSessions, updateSession,
   SUB_STATUS_META, lastCoveredSummaryFor,
   type ExtSession, type ExtSessionStatus,
 } from "@/lib/sessions-store";
@@ -50,11 +50,12 @@ import {
   rescheduleQuota,
   spotlightRequestsThisMonth,
 } from "@/lib/student-requests-store";
-import { isTeacherAvailableAt, findAvailableStartSlots } from "@/lib/availability-store";
+import { isTeacherAvailableAt } from "@/lib/availability-store";
 import {
   CantAttendRouter, RescheduleRequestModal, SlotPickerGrid,
-  todayYMD, fmtSlotTime, hoursUntil,
+  todayYMD, hoursUntil,
 } from "@/components/verbo/CancelSessionFlow";
+
 import { ClubReservationModal } from "@/components/verbo/ClubReservationModal";
 import type { Club } from "@/lib/clubs-store";
 import { resolvedRemainingSeats, resolvedMonthlyCap } from "@/lib/club-bookings-store";
