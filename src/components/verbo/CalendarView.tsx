@@ -140,24 +140,31 @@ export function CalendarView({
         </div>
 
         {/* Event-kind filter chips */}
-        <div className="flex flex-wrap items-center gap-1.5">
-          {kindsToShow.map((k) => {
-            const meta = EVENT_KIND_META[k];
-            const on = enabledKinds.has(k);
-            return (
-              <button
-                key={k}
-                onClick={() => toggleKind(k)}
-                className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-all ${
-                  on ? "border-transparent text-white" : "border-border bg-card text-muted-foreground hover:text-foreground"
-                }`}
-                style={on ? { background: meta.color } : undefined}
-              >
-                <span className={`h-1.5 w-1.5 rounded-full ${on ? "bg-white" : ""}`} style={on ? undefined : { background: meta.color }} />
-                {meta.label}
-              </button>
-            );
-          })}
+        <div className="flex flex-col gap-1.5">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Filter by type
+          </span>
+          <div className="flex flex-wrap items-center gap-1.5">
+            {kindsToShow.map((k) => {
+              const meta = EVENT_KIND_META[k];
+              const on = enabledKinds.has(k);
+              return (
+                <button
+                  key={k}
+                  onClick={() => toggleKind(k)}
+                  title={on ? `Click to hide ${meta.label} events` : `Click to show ${meta.label} events`}
+                  aria-pressed={on}
+                  className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-all ${
+                    on ? "border-transparent text-white" : "border-border bg-card text-muted-foreground hover:text-foreground"
+                  }`}
+                  style={on ? { background: meta.color } : undefined}
+                >
+                  <span className={`h-1.5 w-1.5 rounded-full ${on ? "bg-white" : ""}`} style={on ? undefined : { background: meta.color }} />
+                  {meta.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -170,14 +177,20 @@ export function CalendarView({
       )}
 
       {/* Canonical 7-status legend */}
-      <div className="flex flex-wrap gap-4 text-[11px] text-muted-foreground">
-        {CANONICAL_STATUS_ORDER.map((s) => (
-          <div key={s} className="flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: CALENDAR_STATUS_META[s].color }} />
-            <span>{CALENDAR_STATUS_META[s].label}</span>
-          </div>
-        ))}
+      <div className="rounded-2xl border border-border bg-secondary/40 px-4 py-3">
+        <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Status legend
+        </div>
+        <div className="flex flex-wrap gap-x-5 gap-y-2 text-[11px] text-muted-foreground">
+          {CANONICAL_STATUS_ORDER.map((s) => (
+            <div key={s} className="flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: CALENDAR_STATUS_META[s].color }} />
+              <span>{CALENDAR_STATUS_META[s].label}</span>
+            </div>
+          ))}
+        </div>
       </div>
+
     </div>
   );
 }
