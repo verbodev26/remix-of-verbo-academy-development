@@ -49,6 +49,7 @@ import {
 } from "@/lib/equipped-profile-badges-store";
 import { RatingModal } from "@/components/verbo/RatingModal";
 import { ReportConductModal } from "@/components/verbo/ReportConductModal";
+import { CantAttendRouter, RescheduleRequestModal } from "@/components/verbo/CancelSessionFlow";
 import {
   Dialog,
   DialogContent,
@@ -140,12 +141,10 @@ function StudentDashboard() {
   const [plansRev, setPlansRev] = useState(0);
   useEffect(() => subscribeLessonPlans(() => setPlansRev((r) => r + 1)), []);
 
-  const [cancelCount, setCancelCount] = useState<number>(() => {
-    if (typeof window === "undefined") return 0;
-    try { return Number(localStorage.getItem("verbo:cancel-count") ?? "1"); } catch { return 1; }
-  });
+  // Shared "Can't Attend" flow (same real logic as Live Sessions).
+  const [cantAttendFor, setCantAttendFor] = useState<ExtSession | null>(null);
+  const [rescheduleFor, setRescheduleFor] = useState<ExtSession | null>(null);
 
-  const [toCancel, setToCancel] = useState<ExtSession | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
 
@@ -294,22 +293,6 @@ function StudentDashboard() {
     setRatingSession(null);
   };
 
-  const confirmCancel = () => {
-    if (!toCancel) return;
-    const next = sessions.filter((s) => s.id !== toCancel.id);
-    persistSessions(next);
-    const nc = cancelCount + 1;
-    setCancelCount(nc);
-    try { localStorage.setItem("verbo:cancel-count", String(nc)); } catch { /* noop */ }
-    setToCancel(null);
-  };
-
-  const ordinal = (n: number) => {
-    const v = n % 100;
-    if (v >= 11 && v <= 13) return `${n}th`;
-    const s = ["th", "st", "nd", "rd"][n % 10] || "th";
-    return `${n}${s}`;
-  };
 
   // Status badge tone classes (polished).
   const statusBadge = (status: string) => {
@@ -728,7 +711,7 @@ function StudentDashboard() {
                               type="button"
                               title="Can't attend"
                               aria-label="Can't attend"
-                              onClick={() => setToCancel(s)}
+                              onClick={() => setCantAttendFor(s)}
                               className="flex h-10 w-10 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow-soft transition-opacity hover:opacity-90 active:scale-[0.97]"
                             >
                               <X className="h-4 w-4" />
@@ -896,34 +879,27 @@ function StudentDashboard() {
         onClose={() => setReportOpen(false)}
       />
 
-      {/* Cancellation Modal */}
-      <Dialog open={!!toCancel} onOpenChange={(o) => !o && setToCancel(null)}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle style={{ color: "#01304a" }}>Session Cancellation</DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-foreground">
-            We're sorry you can't be there 😢 Remember that consistency is key to mastering your
-            professional and corporate English.
-          </p>
-          <div
-            className="rounded-lg border p-3 text-xs leading-relaxed"
-            style={{
-              backgroundColor: "rgba(243, 137, 52, 0.08)",
-              borderColor: "rgba(243, 137, 52, 0.35)",
-              color: "#01304a",
-            }}
-          >
-            <strong>WARNING!:</strong> Your membership allows you to cancel or reschedule up to
-            15% of your booked sessions without penalty. This action will affect your attendance
-            metrics and will be recorded as your {ordinal(cancelCount + 1)} canceled session.
-          </div>
-          <DialogFooter className="gap-2 sm:gap-2">
-            <GhostButton onClick={confirmCancel}>Confirm Cancellation</GhostButton>
-            <PrimaryButton className="verbo-btn-glow" onClick={() => setToCancel(null)}>Return</PrimaryButton>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Cancellation flow — shared with Live Sessions (real policy, quota
+          and group handling live in CancelSessionFlow). */}
+      {cantAttendFor && user && (
+        <CantAttendRouter
+          session={cantAttendFor}
+          user={user}
+          onClose={() => setCantAttendFor(null)}
+          onReschedule={() => {
+            const s = cantAttendFor;
+            setCantAttendFor(null);
+            setRescheduleFor(s);
+          }}
+        />
+      )}
+      {rescheduleFor && (
+        <RescheduleRequestModal
+          session={rescheduleFor}
+          onClose={() => setRescheduleFor(null)}
+        />
+      )}
+
 
       {/* Class Details Modal — unified view (replaces the old standalone
           "Session Performance Breakdown" popup and the row-level icons). */}
@@ -1004,7 +980,7 @@ function StudentDashboard() {
                   </div>
                   <DialogFooter className="gap-2 sm:gap-2">
                     <GhostButton
-                      onClick={() => { setClassDetail(null); setToCancel(s); }}
+                      onClick={() => { setClassDetail(null); setCantAttendFor(s); }}
                     >
                       <X className="h-3.5 w-3.5" /> Can't attend
                     </GhostButton>
