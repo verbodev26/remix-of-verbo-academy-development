@@ -672,76 +672,78 @@ function StudentDashboard() {
                   })}
                 </div>
 
-                <div className="mt-4">
+                <div className="mt-6">
                   {!s ? (
-                    <div className="text-sm text-muted-foreground">No upcoming sessions scheduled.</div>
+                    <div className="max-w-xl mx-auto w-full rounded-2xl border border-border bg-secondary/40 p-6 text-sm text-muted-foreground">
+                      No upcoming sessions scheduled.
+                    </div>
                   ) : (
-                    <div className="max-w-xl mx-auto w-full rounded-2xl overflow-hidden relative shadow-elevated verbo-card-hover">
-                      <div className="absolute inset-x-0 top-0 h-1 bg-[var(--accent)]" />
-                      <div className="bg-white p-6">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                          <div className="relative">
-                            <PhotoPlaceholder tone="dark" shape="circle" className="h-12 w-12 bg-[#01304a]" />
-                            {imminent && (
-                              <span
-                                className="verbo-status-dot verbo-live-pulse absolute -right-0.5 -top-0.5"
-                                style={{ background: "var(--green-500)" }}
-                                aria-label="Starts within the next hour"
-                              />
-                            )}
+                    <div className="max-w-xl mx-auto w-full rounded-2xl border border-border bg-secondary/40 shadow-elevated verbo-card-hover relative overflow-hidden">
+                      <div className="absolute inset-x-0 top-0 z-10 h-1 bg-[var(--accent)]" />
+                      <div className="p-6">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex items-center gap-3">
+                            <div className="relative">
+                              <PhotoPlaceholder tone="dark" shape="circle" className="h-12 w-12 bg-[#01304a]" />
+                              {imminent && (
+                                <span
+                                  className="verbo-status-dot verbo-live-pulse absolute -right-0.5 -top-0.5"
+                                  style={{ background: "var(--green-500)" }}
+                                  aria-label="Starts within the next hour"
+                                />
+                              )}
+                            </div>
+                            <div>
+                              <div className="text-xs uppercase tracking-wider text-muted-foreground">Teacher</div>
+                              <div className="text-sm font-semibold" style={{ color: "#01304a" }}>{teacher?.name ?? "—"}</div>
+                            </div>
                           </div>
-                          <div>
-                            <div className="text-xs uppercase tracking-wider text-muted-foreground">Teacher</div>
-                            <div className="text-sm font-semibold" style={{ color: "#01304a" }}>{teacher?.name ?? "—"}</div>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          title="Class Details"
-                          aria-label="Class Details"
-                          onClick={() => setClassDetail(s)}
-                          className="group flex h-10 w-10 items-center justify-center rounded-full bg-secondary transition-colors hover:bg-primary/10 active:scale-[0.97]"
-                        >
-                          <ArrowUpRight className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" style={{ color: "#01304a" }} />
-                        </button>
-                      </div>
-
-                      <div className="mt-5">
-                        <div className="text-xl font-bold tracking-tight" style={{ color: "#01304a" }}>
-                          {plan?.title || "Live English Session"}
-                        </div>
-                        <div className="mt-1 text-sm text-muted-foreground">
-                          {currentUnitTitle ?? "—"}
-                        </div>
-                      </div>
-
-                      <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <Video className="h-4 w-4" style={{ color: "#01304a" }} />
-                          <span>Microsoft Teams Meeting · {fmt(s.date_time)}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
                           <button
                             type="button"
-                            title="Can't attend"
-                            aria-label="Can't attend"
-                            onClick={() => setToCancel(s)}
-                            className="flex h-10 w-10 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow-soft transition-opacity hover:opacity-90 active:scale-[0.97]"
+                            title="Class Details"
+                            aria-label="Class Details"
+                            onClick={() => setClassDetail(s)}
+                            className="group flex h-10 w-10 items-center justify-center rounded-full bg-secondary transition-colors hover:bg-primary/10 active:scale-[0.97]"
                           >
-                            <X className="h-4 w-4" />
-                          </button>
-                          <button
-                            type="button"
-                            title="Connect"
-                            aria-label="Connect"
-                            onClick={() => window.open(s.teams_link, "_blank")}
-                            className="flex h-10 w-10 items-center justify-center rounded-full bg-success text-success-foreground shadow-soft transition-opacity hover:opacity-90 active:scale-[0.97]"
-                          >
-                            <Video className="h-4 w-4" />
+                            <ArrowUpRight className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" style={{ color: "#01304a" }} />
                           </button>
                         </div>
-                      </div>
+
+                        <div className="mt-5">
+                          <div className="text-xl font-bold tracking-tight" style={{ color: "#01304a" }}>
+                            {plan?.title || "Live English Session"}
+                          </div>
+                          <div className="mt-1 text-sm text-muted-foreground">
+                            {currentUnitTitle ?? "—"}
+                          </div>
+                        </div>
+
+                        <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Video className="h-4 w-4" style={{ color: "#01304a" }} />
+                            <span>Microsoft Teams Meeting · {fmt(s.date_time)}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              title="Can't attend"
+                              aria-label="Can't attend"
+                              onClick={() => setToCancel(s)}
+                              className="flex h-10 w-10 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow-soft transition-opacity hover:opacity-90 active:scale-[0.97]"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                            <button
+                              type="button"
+                              title="Connect"
+                              aria-label="Connect"
+                              onClick={() => window.open(s.teams_link, "_blank")}
+                              className="flex h-10 w-10 items-center justify-center rounded-full bg-success text-success-foreground shadow-soft transition-opacity hover:opacity-90 active:scale-[0.97]"
+                            >
+                              <Video className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   )}
