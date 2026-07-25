@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/lib/auth";
 import { USERS } from "@/lib/mock-data";
 import { Logo } from "@/components/verbo/Logo";
+import { PhotoPlaceholder } from "@/components/verbo/ui";
 import { ArrowLeft, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/login")({
@@ -73,12 +74,18 @@ function LoginPage() {
   return (
     <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2">
       {/* Form side */}
-      <div className="flex flex-col bg-white px-6 py-8">
-        <Link to="/" className="inline-flex w-fit items-center gap-2 text-sm text-[#01304a]/60 transition-colors hover:text-[#01304a]">
+      <div className="relative flex flex-col overflow-hidden">
+        <div className="relative z-10 flex h-full flex-col bg-white px-6 py-8">
+          {/* Decorative orange blob */}
+          <div
+            className="pointer-events-none absolute -bottom-20 -left-20 h-80 w-80 rounded-full bg-accent/10"
+            aria-hidden
+          />
+        <Link to="/" className="relative z-10 inline-flex w-fit items-center gap-2 text-sm text-[#01304a]/60 transition-colors hover:text-[#01304a]">
           <ArrowLeft className="h-3.5 w-3.5" /> Back to home
         </Link>
 
-        <div className="m-auto w-full max-w-sm">
+        <div className="relative z-10 m-auto w-full max-w-sm">
           <Logo className="mb-10 [&_span]:text-[#01304a] [&_span.text-muted-foreground]:text-[#01304a]/70" />
           <h1 className="text-3xl font-semibold tracking-tight text-[#01304a]">Sign in</h1>
           <p className="mt-1.5 text-sm text-[#01304a]/70">Enter the credentials provided by your administrator.</p>
@@ -143,8 +150,9 @@ function LoginPage() {
           )}
         </div>
 
-        <div className="text-center text-xs text-[#01304a]/50">
+        <div className="relative z-10 text-center text-xs text-[#01304a]/50">
           Verbo Language Solutions · Private platform · No self-registration
+        </div>
         </div>
       </div>
 
@@ -154,6 +162,11 @@ function LoginPage() {
         <div
           className="pointer-events-none absolute inset-0"
           style={{ background: "radial-gradient(circle at 70% 60%, rgba(243,137,52,0.18), transparent 50%)" }}
+        />
+        {/* Decorative orange block */}
+        <div
+          className="pointer-events-none absolute -bottom-12 -right-12 h-80 w-64 rounded-[2rem] bg-accent/30"
+          aria-hidden
         />
 
 
@@ -170,8 +183,9 @@ function LoginPage() {
           >
             "{phrase}"
           </p>
-          <div className="verbo-fade-up mt-6 text-sm text-white/70" style={{ animationDelay: "520ms" }}>
-            — The Verbo team
+          <div className="verbo-fade-up mt-6 flex items-center gap-3" style={{ animationDelay: "520ms" }}>
+            <PhotoPlaceholder tone="dark" shape="circle" className="h-12 w-12" />
+            <span className="text-sm text-white/70">— The Verbo team</span>
           </div>
         </div>
       </div>
