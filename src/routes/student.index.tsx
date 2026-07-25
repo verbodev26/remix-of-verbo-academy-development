@@ -328,7 +328,15 @@ function StudentDashboard() {
         style={{ animationDelay: "60ms" }}
       >
         {/* Current Level */}
-        <div className="relative">
+        <div
+          className="relative cursor-pointer transition-transform duration-200 hover:scale-[1.01]"
+          role="button"
+          tabIndex={0}
+          onClick={openCurrentLevel}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openCurrentLevel(); }
+          }}
+        >
           <div className="card-gradient-navy shadow-card verbo-card-hover relative flex h-full min-h-[168px] items-center overflow-hidden rounded-[2rem] px-6 py-6">
             <div
               className="pointer-events-none absolute -right-8 -top-10 h-[140px] w-[140px] rounded-3xl"
@@ -355,7 +363,15 @@ function StudentDashboard() {
         </div>
 
         {/* Level Progress — hero */}
-        <div className="relative">
+        <div
+          className="relative cursor-pointer transition-transform duration-200 hover:scale-[1.01]"
+          role="button"
+          tabIndex={0}
+          onClick={openCurrentLevel}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openCurrentLevel(); }
+          }}
+        >
           <div className="card-gradient-orange shadow-card verbo-card-hover relative flex h-full min-h-[168px] items-center overflow-hidden rounded-[2rem] px-6 py-6">
             <div
               className="pointer-events-none absolute -right-8 -top-10 h-[140px] w-[140px] rounded-3xl"
@@ -395,19 +411,31 @@ function StudentDashboard() {
               <div className="pr-2">
                 <div className="text-xs font-semibold uppercase tracking-wider" style={{ color: "rgba(1,48,74,0.8)" }}>Overall Attendance</div>
                 <div className="mt-3 flex items-baseline gap-2">
-                  <span className="text-3xl font-bold tracking-tight" style={{ color: "#01304a" }}>{attendancePct}%</span>
+                  <span className="text-3xl font-bold tracking-tight" style={{ color: attendanceColorFor(attendancePct) }}>{attendancePct}%</span>
                 </div>
                 <div className="mt-1 text-xs font-semibold" style={{ color: "rgba(1,48,74,0.8)" }}>last 90 days</div>
               </div>
-              <StatRing
-                value={attendancePct}
-                trackColor="rgba(1,48,74,0.18)"
-                progressColor="#01304a"
-                textColor="#01304a"
-              />
+              <div className="flex items-end gap-2">
+                <div className="flex h-14 items-end gap-1.5">
+                  {attendanceBars.map((b, i) => (
+                    <div
+                      key={i}
+                      className="w-1.5 rounded-full"
+                      style={{
+                        height: `${Math.max(8, (b / 100) * 56)}px`,
+                        backgroundColor: attendanceColorFor(b),
+                      }}
+                      aria-hidden
+                    />
+                  ))}
+                </div>
+                {attendanceTrend === "up" && <ArrowUp className="h-5 w-5" style={{ color: "var(--green-500)" }} aria-label="Attendance trending up" />}
+                {attendanceTrend === "down" && <ArrowDown className="h-5 w-5" style={{ color: "#F10202" }} aria-label="Attendance trending down" />}
+              </div>
             </div>
           </div>
         </div>
+
       </section>
 
       {/* Linguistic Asset Performance — replaces Performance Metrics + Quote of the Week */}
