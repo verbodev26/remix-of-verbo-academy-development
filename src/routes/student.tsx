@@ -42,9 +42,11 @@ function StudentLayout() {
     <RoleGuard allow="student">
       <div className="flex min-h-screen flex-col" style={{ backgroundColor: "#f4f6f8" }}>
         <TopNav variant="dark" items={items} />
-        <AnnouncementBanner />
-        <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-10">
-          <Outlet />
+        <main className="mx-auto w-full max-w-7xl flex-1 pt-20 pb-10">
+          <AnnouncementBanner />
+          <div className="px-6">
+            <Outlet />
+          </div>
         </main>
         <Footer />
       </div>

@@ -204,13 +204,15 @@ function Layout() {
     <RoleGuard allow="admin">
       <div className="flex min-h-screen flex-col bg-background">
         <TopNav items={[{ to: "/admin", label: "Admin Panel" }]} />
-        <div className="border-b border-border bg-background">
-          <nav aria-label="Admin sections" className="mx-auto flex max-w-7xl flex-wrap gap-1 px-6">
-            {visibleGroups.map((g) => <NavTab key={g.label} group={g} />)}
-          </nav>
-        </div>
-        <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-10">
-          <Outlet />
+        <main className="mx-auto w-full max-w-7xl flex-1 pt-20 pb-10">
+          <div className="border-b border-border bg-background">
+            <nav aria-label="Admin sections" className="mx-auto flex max-w-7xl flex-wrap gap-1 px-6">
+              {visibleGroups.map((g) => <NavTab key={g.label} group={g} />)}
+            </nav>
+          </div>
+          <div className="px-6">
+            <Outlet />
+          </div>
         </main>
         <Footer />
       </div>
