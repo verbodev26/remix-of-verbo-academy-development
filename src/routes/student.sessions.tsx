@@ -742,20 +742,31 @@ function CancelSpotlightModal({ session, onClose }: { session: ExtSession; onClo
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
       <div onClick={(e) => e.stopPropagation()} className="relative w-full max-w-md rounded-2xl bg-card p-6 shadow-floating">
-        <h3 className="text-lg font-semibold tracking-tight text-foreground">Cancel Spotlight Session?</h3>
-        <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-          This Spotlight with <strong>{teacherName}</strong> will be cancelled. It cannot be rescheduled or made up.
-        </p>
-        <div className="mt-6 flex justify-end gap-2">
-          <GhostButton onClick={onClose}>Go Back</GhostButton>
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--navy-100)] text-[#01304a]">
+            <CalendarClock className="h-5 w-5" />
+          </div>
+          <h3 className="text-lg font-semibold tracking-tight" style={{ color: "#01304a" }}>Cancel Spotlight Session?</h3>
+        </div>
+        <div className="mt-4 rounded-lg border border-[var(--navy-100)] bg-[var(--navy-50)] p-3.5">
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            This Spotlight with <strong>{teacherName}</strong> will be cancelled. It cannot be rescheduled or made up.
+          </p>
+        </div>
+        <div className="mt-6 flex flex-col gap-2">
           <button
+            type="button"
             onClick={confirm}
-            className="cursor-pointer rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-soft transition-opacity hover:opacity-90"
+            className="w-full inline-flex items-center justify-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors duration-150 ease-out hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive active:scale-[0.97]"
           >
             Confirm Cancellation
           </button>
+          <GhostButton className="w-full justify-center" onClick={onClose}>
+            <ArrowLeft className="h-3.5 w-3.5" /> Return
+          </GhostButton>
         </div>
       </div>
     </div>
   );
 }
+
