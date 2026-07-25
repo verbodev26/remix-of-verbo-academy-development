@@ -309,6 +309,19 @@ function LoginPage() {
           </div>
         </div>
       </div>
+
+      {overlay && (
+        <div
+          aria-hidden
+          className="fixed inset-0 z-50"
+          style={{
+            backgroundColor: "#01304a",
+            clipPath: `circle(${overlayOpen ? Math.hypot(typeof window !== "undefined" ? window.innerWidth : 1600, typeof window !== "undefined" ? window.innerHeight : 900) : 24}px at ${overlay.x}px ${overlay.y}px)`,
+            transition: "clip-path 500ms ease-in-out",
+          }}
+        />
+      )}
     </div>
+
   );
 }
