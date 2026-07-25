@@ -346,7 +346,7 @@ function EventPill({ ev, onClick, pulse = false }: { ev: CalendarEvent; onClick:
     <div className="group relative">
       <button
         onClick={onClick}
-        className={`flex w-full items-center gap-1 truncate rounded-md px-1.5 py-1 text-left text-[10.5px] font-medium text-white shadow-sm transition-opacity hover:opacity-90 cursor-pointer ${
+        className={`flex w-full items-center gap-1 truncate rounded-lg px-1.5 py-1 text-left text-[10.5px] font-medium text-white shadow-sm transition-opacity hover:opacity-90 cursor-pointer ${
           ev.booked ? "ring-2 ring-emerald-400 ring-offset-1 ring-offset-card" : ""
         } ${pulse ? "verbo-focus-pulse" : ""}`}
         style={{
