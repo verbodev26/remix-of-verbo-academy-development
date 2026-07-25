@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Logo } from "@/components/verbo/Logo";
 import { Preloader } from "@/components/verbo/Preloader";
 import { PhotoPlaceholder } from "@/components/verbo/ui";
-import { ArrowRight, CalendarClock, Trophy, Network } from "lucide-react";
+import { ArrowRight, ArrowUpRight } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -124,74 +124,98 @@ function Landing() {
 
 
 
-          {/* Pillars — editorial list on solid navy */}
-          <section
-            id="how"
-            className="relative overflow-hidden"
-            style={{ backgroundColor: "var(--navy-900)" }}
-          >
-            <div className="relative mx-auto max-w-4xl px-6 py-24">
+          {/* Pillars — vibrant bento grid */}
+          <section id="how" className="relative overflow-hidden bg-secondary">
+            <div className="mx-auto max-w-7xl px-6 py-24 lg:py-32">
               <div className="mb-16 text-center">
-                <div className="verbo-fade-up inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.2em] text-white/80">
-                  The Student Experience
+                <div
+                  className="verbo-fade-up inline-flex items-center gap-2 rounded-full bg-orange-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-orange-700"
+                  style={{ animationDelay: "0ms" }}
+                >
+                  <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />
+                  Verbo Academy
                 </div>
                 <h2
-                  className="verbo-fade-up mt-5 text-3xl font-semibold tracking-tight text-white md:text-4xl"
+                  className="verbo-fade-up mt-5 text-3xl font-bold tracking-tight text-navy-700 md:text-4xl"
                   style={{ animationDelay: "80ms" }}
                 >
                   Engineered for Your Autonomy and Growth
                 </h2>
               </div>
 
-              <div className="flex flex-col gap-14 md:gap-16">
+              <div className="grid gap-6 md:grid-cols-3">
                 <div
-                  className="verbo-fade-up flex items-start gap-5"
+                  className="verbo-fade-up flex h-full flex-col justify-between rounded-[2rem] bg-navy-700 p-8 text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
                   style={{ animationDelay: "160ms" }}
                 >
-                  <CalendarClock className="mt-0.5 h-6 w-6 shrink-0 text-cyan-300" />
                   <div>
-                    <h3 className="text-base font-semibold tracking-tight text-white">
+                    <PhotoPlaceholder tone="dark" className="aspect-[4/3] w-full" />
+                    <div className="mt-6 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/70">
+                      24/7 Access
+                    </div>
+                    <h3 className="mt-2 text-xl font-bold tracking-tight text-white">
                       Total Control, 24/7/365
                     </h3>
-                    <p className="mt-2 text-sm leading-relaxed text-slate-300">
+                    <p className="mt-3 text-sm leading-relaxed text-white/80">
                       You decide when and how fast you advance. Schedule your sessions, review your
                       personal materials, and manage your learning calendar anytime, anywhere, 365
                       days a year.
                     </p>
                   </div>
+                  <div className="mt-6 flex justify-end">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-navy-700">
+                      <ArrowUpRight className="h-4 w-4" />
+                    </div>
+                  </div>
                 </div>
 
                 <div
-                  className="verbo-fade-up flex items-start gap-5"
+                  className="verbo-fade-up flex h-full flex-col justify-between rounded-[2rem] bg-orange-500 p-8 text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
                   style={{ animationDelay: "240ms" }}
                 >
-                  <Trophy className="mt-0.5 h-6 w-6 shrink-0" style={{ color: "#f38934" }} />
                   <div>
-                    <h3 className="text-base font-semibold tracking-tight text-white">
+                    <PhotoPlaceholder tone="dark" className="aspect-[4/3] w-full" />
+                    <div className="mt-6 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/70">
+                      Gamification
+                    </div>
+                    <h3 className="mt-2 text-xl font-bold tracking-tight text-white">
                       Gamified Growth & Prizes
                     </h3>
-                    <p className="mt-2 text-sm leading-relaxed text-slate-300">
+                    <p className="mt-3 text-sm leading-relaxed text-white/80">
                       Earn custom badges, unlock achievements, and win premium rewards as you level
                       up your communication skills. Monitor your live performance metrics after
                       every single session.
                     </p>
                   </div>
+                  <div className="mt-6 flex justify-end">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-navy-700">
+                      <ArrowUpRight className="h-4 w-4" />
+                    </div>
+                  </div>
                 </div>
 
                 <div
-                  className="verbo-fade-up flex items-start gap-5"
+                  className="verbo-fade-up flex h-full flex-col justify-between rounded-[2rem] bg-violet-500 p-8 text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
                   style={{ animationDelay: "320ms" }}
                 >
-                  <Network className="mt-0.5 h-6 w-6 shrink-0 text-cyan-300" />
                   <div>
-                    <h3 className="text-base font-semibold tracking-tight text-white">
+                    <PhotoPlaceholder tone="dark" className="aspect-[4/3] w-full" />
+                    <div className="mt-6 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/70">
+                      Community
+                    </div>
+                    <h3 className="mt-2 text-xl font-bold tracking-tight text-white">
                       Connect & Engage
                     </h3>
-                    <p className="mt-2 text-sm leading-relaxed text-slate-300">
+                    <p className="mt-3 text-sm leading-relaxed text-white/80">
                       Access exclusive conversation clubs and connect with other ambitious
                       professionals in the network. Share insights, practice real-world scenarios,
                       and grow together.
                     </p>
+                  </div>
+                  <div className="mt-6 flex justify-end">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-navy-700">
+                      <ArrowUpRight className="h-4 w-4" />
+                    </div>
                   </div>
                 </div>
               </div>
