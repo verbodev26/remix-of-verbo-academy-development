@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
 import { Logo } from "@/components/verbo/Logo";
 import { Preloader } from "@/components/verbo/Preloader";
 import { ArrowRight, CalendarClock, Trophy, Network } from "lucide-react";
@@ -16,39 +15,6 @@ export const Route = createFileRoute("/")({
   component: Landing,
 });
 
-const TYPE_TARGETS = [
-  "engineered for global teams.",
-  "built for executive leadership.",
-  "designed for market expansion.",
-];
-
-function useTypewriter(targets: string[]) {
-  const [idx, setIdx] = useState(0);
-  const [text, setText] = useState("");
-  const [deleting, setDeleting] = useState(false);
-
-  useEffect(() => {
-    const current = targets[idx];
-    const speed = deleting ? 35 : 65;
-    if (!deleting && text === current) {
-      const hold = setTimeout(() => setDeleting(true), 1800);
-      return () => clearTimeout(hold);
-    }
-    if (deleting && text === "") {
-      setDeleting(false);
-      setIdx((i) => (i + 1) % targets.length);
-      return;
-    }
-    const t = setTimeout(() => {
-      setText((prev) =>
-        deleting ? current.slice(0, prev.length - 1) : current.slice(0, prev.length + 1),
-      );
-    }, speed);
-    return () => clearTimeout(t);
-  }, [text, deleting, idx, targets]);
-
-  return text;
-}
 
 function Landing() {
   const typed = useTypewriter(TYPE_TARGETS);
