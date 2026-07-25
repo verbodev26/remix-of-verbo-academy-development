@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet, Link, useRouterState, Navigate } from "@tanstack/react-router";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { Footer } from "@/components/verbo/Footer";
 import { ChevronDown } from "lucide-react";
 import { RoleGuard } from "@/components/verbo/RoleGuard";
 import { TopNav } from "@/components/verbo/TopNav";
@@ -201,17 +202,19 @@ function Layout() {
 
   return (
     <RoleGuard allow="admin">
-      <div className="min-h-screen bg-background">
+      <div className="flex min-h-screen flex-col bg-background">
         <TopNav items={[{ to: "/admin", label: "Admin Panel" }]} />
         <div className="border-b border-border bg-background">
           <nav aria-label="Admin sections" className="mx-auto flex max-w-7xl flex-wrap gap-1 px-6">
             {visibleGroups.map((g) => <NavTab key={g.label} group={g} />)}
           </nav>
         </div>
-        <main className="mx-auto max-w-7xl px-6 py-10">
+        <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-10">
           <Outlet />
         </main>
+        <Footer />
       </div>
+
     </RoleGuard>
   );
 }

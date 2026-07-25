@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { RoleGuard } from "@/components/verbo/RoleGuard";
+import { Footer } from "@/components/verbo/Footer";
 import { TopNav, NavItem, NavGroup } from "@/components/verbo/TopNav";
 import { AnnouncementBanner } from "@/components/verbo/AnnouncementBanner";
 import { useAuth } from "@/lib/auth";
@@ -37,13 +38,15 @@ function Layout() {
 
   return (
     <RoleGuard allow="teacher">
-      <div className="min-h-screen bg-background">
+      <div className="flex min-h-screen flex-col bg-background">
         <TopNav items={items} />
         <AnnouncementBanner />
-        <main className="mx-auto max-w-7xl px-6 py-10">
+        <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-10">
           <Outlet />
         </main>
+        <Footer />
       </div>
+
     </RoleGuard>
   );
 }

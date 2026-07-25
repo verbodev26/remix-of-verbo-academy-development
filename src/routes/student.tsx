@@ -2,6 +2,7 @@ import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { RoleGuard } from "@/components/verbo/RoleGuard";
 import { TopNav, type NavEntry } from "@/components/verbo/TopNav";
 import { AnnouncementBanner } from "@/components/verbo/AnnouncementBanner";
+import { Footer } from "@/components/verbo/Footer";
 import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/student")({
@@ -39,13 +40,15 @@ function StudentLayout() {
 
   return (
     <RoleGuard allow="student">
-      <div className="min-h-screen" style={{ backgroundColor: "#f4f6f8" }}>
+      <div className="flex min-h-screen flex-col" style={{ backgroundColor: "#f4f6f8" }}>
         <TopNav variant="dark" items={items} />
         <AnnouncementBanner />
-        <main className="mx-auto max-w-7xl px-6 py-10">
+        <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-10">
           <Outlet />
         </main>
+        <Footer />
       </div>
+
     </RoleGuard>
   );
 }
