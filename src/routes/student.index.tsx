@@ -657,7 +657,9 @@ function StudentDashboard() {
                     </div>
                   )}
                 </div>
+                </PremiumCard>
               </div>
+
             );
           })()}
 
