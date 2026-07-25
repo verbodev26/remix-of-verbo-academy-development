@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import experiencesClubs from "@/assets/experiences-clubs.png.asset.json";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useAuth } from "@/lib/auth";
@@ -757,12 +758,18 @@ function StudentDashboard() {
         {/* RIGHT SIDEBAR ~35% */}
         <aside className="verbo-fade-up motion-reduce:animate-none space-y-6" style={{ animationDelay: "240ms" }}>
           {/* Verbo Experiences */}
-          <PremiumCard hover className="group relative overflow-hidden">
+          <PremiumCard hover className="group relative !pt-16">
             <div
-              className="absolute inset-0 opacity-[0.09] pointer-events-none"
+              className="absolute inset-0 overflow-hidden rounded-3xl opacity-[0.09] pointer-events-none"
               style={{ background: "radial-gradient(circle at top right, var(--violet-300), transparent 65%)" }}
             />
+            <img
+              src={experiencesClubs.url}
+              alt="Two students laughing together during a live conversation club"
+              className="shadow-elevated pointer-events-none absolute -top-10 right-3 w-28 -rotate-6 rounded-2xl object-cover sm:w-32"
+            />
             <div className="relative">
+
               <div className="flex items-center gap-2">
                 <div
                   className="verbo-float flex h-9 w-9 items-center justify-center rounded-lg transition-transform duration-300 group-hover:scale-110"
