@@ -5,15 +5,18 @@ import { UserRound } from "lucide-react";
 export function PhotoPlaceholder({
   className = "",
   tone = "light",
+  shape = "rounded",
 }: {
   className?: string;
   tone?: "light" | "dark";
+  shape?: "rounded" | "circle";
 }) {
   const bg = tone === "light" ? "bg-[var(--navy-100)]" : "bg-white/15";
   const iconColor = tone === "light" ? "text-[var(--navy-300)]" : "text-white/50";
+  const radius = shape === "circle" ? "rounded-full" : "rounded-[1.75rem]";
   return (
     <div
-      className={`flex items-center justify-center rounded-[1.75rem] ${bg} ${className}`}
+      className={`flex items-center justify-center ${radius} ${bg} ${className}`}
       aria-hidden
     >
       <UserRound className={`h-10 w-10 ${iconColor}`} strokeWidth={1.5} />
