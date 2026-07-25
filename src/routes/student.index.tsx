@@ -312,9 +312,10 @@ function StudentDashboard() {
               </div>
             );
           })()}
-          <GhostButton onClick={() => setReportOpen(true)}>
-            <ShieldAlert className="h-4 w-4" /> Report
-          </GhostButton>
+          <button className="verbo-report-btn" onClick={() => setReportOpen(true)} aria-label="Report" title="Report">
+            <span className="sign"><ShieldAlert className="h-4 w-4" /></span>
+            <span className="text">Report</span>
+          </button>
         </div>
       </header>
 
