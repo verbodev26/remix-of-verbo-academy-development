@@ -21,7 +21,7 @@ import { GhostButton, Pill, PrimaryButton, SectionTitle, StatRing, SuccessButton
 import {
   ArrowRight,
   Award,
-  BarChart3,
+  
   BookOpen,
   CalendarClock,
   Download,
