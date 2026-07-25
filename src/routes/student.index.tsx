@@ -19,8 +19,11 @@ import { subscribeVipUnits, subscribeVipUnitCompletion } from "@/lib/vip-courses
 import { useComputedMacros } from "@/components/verbo/PerformanceAnalytics";
 import { GhostButton, Pill, PhotoPlaceholder, PrimaryButton, SectionTitle, StatRing, SuccessButton } from "@/components/verbo/ui";
 import {
+  ArrowDown,
   ArrowRight,
+  ArrowUp,
   ArrowUpRight,
+
   Award,
   BookOpen,
   CalendarClock,
@@ -96,6 +99,24 @@ const SKILL_COLORS: Record<string, string> = {
   Listening: "#01304a",
   Reading: "oklch(0.6 0.104 185)",
 };
+
+// Attendance color scale (shared by the % value and the mini bar chart).
+function attendanceColorFor(pct: number): string {
+  if (pct >= 90) return "var(--green-500)";
+  if (pct >= 80) return "#ABFF32";
+  if (pct >= 70) return "#FEED0C";
+  if (pct >= 65) return "#FFC515";
+  if (pct >= 60) return "#FF9100";
+  return "#F10202";
+}
+
+const ATTENDANCE_SCORES: Record<string, number> = {
+  completed: 100,
+  delayed: 65,
+  absent: 0,
+  no_show: 0,
+};
+
 
 function StudentDashboard() {
   const { user } = useAuth();
@@ -175,6 +196,43 @@ function StudentDashboard() {
   // Overall Attendance — shared helper (studentAttendance) so Admin, Teacher
   // and Student always show the exact same % for a given student.
   const { pct: attendancePct } = studentAttendance(mySessions, user);
+
+  // Mini attendance sparkline — last 6 gradeable sessions (oldest → newest).
+  const gradeable = history.filter((s) => s.status in ATTENDANCE_SCORES);
+  const attendanceBars: number[] = gradeable
+    .slice(0, 6)
+    .map((s) => ATTENDANCE_SCORES[s.status])
+    .reverse();
+
+  // Trend: last 30 days vs the 31–60 day window. No data → no arrow.
+  const attendanceTrend: "up" | "down" | null = (() => {
+    const now = Date.now();
+    const day = 24 * 60 * 60 * 1000;
+    const avg = (from: number, to: number) => {
+      const scores = gradeable
+        .filter((s) => {
+          const age = now - +new Date(s.date_time);
+          return age >= from && age < to;
+        })
+        .map((s) => ATTENDANCE_SCORES[s.status]);
+      if (scores.length === 0) return null;
+      return scores.reduce((a, b) => a + b, 0) / scores.length;
+    };
+    const recent = avg(0, 30 * day);
+    const previous = avg(30 * day, 60 * day);
+    if (recent === null || previous === null) return null;
+    return recent >= previous ? "up" : "down";
+  })();
+
+  const openCurrentLevel = () => {
+    if (!progress) return;
+    if (progress.isVip) {
+      navigate({ to: "/student/my-course" });
+    } else {
+      navigate({ to: "/student/courses", search: { levelId: progress.levelId } });
+    }
+  };
+
 
   // Quick Review Dock — real teacher notes (report_comments) from completed
   // sessions. No synthetic tips. Empty state kept when no session has one.
@@ -328,7 +386,15 @@ function StudentDashboard() {
         style={{ animationDelay: "60ms" }}
       >
         {/* Current Level */}
-        <div className="relative">
+        <div
+          className="relative cursor-pointer transition-transform duration-200 hover:scale-[1.01]"
+          role="button"
+          tabIndex={0}
+          onClick={openCurrentLevel}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openCurrentLevel(); }
+          }}
+        >
           <div className="card-gradient-navy shadow-card verbo-card-hover relative flex h-full min-h-[168px] items-center overflow-hidden rounded-[2rem] px-6 py-6">
             <div
               className="pointer-events-none absolute -right-8 -top-10 h-[140px] w-[140px] rounded-3xl"
@@ -355,7 +421,15 @@ function StudentDashboard() {
         </div>
 
         {/* Level Progress — hero */}
-        <div className="relative">
+        <div
+          className="relative cursor-pointer transition-transform duration-200 hover:scale-[1.01]"
+          role="button"
+          tabIndex={0}
+          onClick={openCurrentLevel}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openCurrentLevel(); }
+          }}
+        >
           <div className="card-gradient-orange shadow-card verbo-card-hover relative flex h-full min-h-[168px] items-center overflow-hidden rounded-[2rem] px-6 py-6">
             <div
               className="pointer-events-none absolute -right-8 -top-10 h-[140px] w-[140px] rounded-3xl"
@@ -395,19 +469,31 @@ function StudentDashboard() {
               <div className="pr-2">
                 <div className="text-xs font-semibold uppercase tracking-wider" style={{ color: "rgba(1,48,74,0.8)" }}>Overall Attendance</div>
                 <div className="mt-3 flex items-baseline gap-2">
-                  <span className="text-3xl font-bold tracking-tight" style={{ color: "#01304a" }}>{attendancePct}%</span>
+                  <span className="text-3xl font-bold tracking-tight" style={{ color: attendanceColorFor(attendancePct) }}>{attendancePct}%</span>
                 </div>
                 <div className="mt-1 text-xs font-semibold" style={{ color: "rgba(1,48,74,0.8)" }}>last 90 days</div>
               </div>
-              <StatRing
-                value={attendancePct}
-                trackColor="rgba(1,48,74,0.18)"
-                progressColor="#01304a"
-                textColor="#01304a"
-              />
+              <div className="flex items-end gap-2">
+                <div className="flex h-14 items-end gap-1.5">
+                  {attendanceBars.map((b, i) => (
+                    <div
+                      key={i}
+                      className="w-1.5 rounded-full"
+                      style={{
+                        height: `${Math.max(8, (b / 100) * 56)}px`,
+                        backgroundColor: attendanceColorFor(b),
+                      }}
+                      aria-hidden
+                    />
+                  ))}
+                </div>
+                {attendanceTrend === "up" && <ArrowUp className="h-5 w-5" style={{ color: "var(--green-500)" }} aria-label="Attendance trending up" />}
+                {attendanceTrend === "down" && <ArrowDown className="h-5 w-5" style={{ color: "#F10202" }} aria-label="Attendance trending down" />}
+              </div>
             </div>
           </div>
         </div>
+
       </section>
 
       {/* Linguistic Asset Performance — replaces Performance Metrics + Quote of the Week */}
@@ -437,11 +523,12 @@ function StudentDashboard() {
                 >
                   <div className="flex items-center gap-3">
                     <div
-                      className="flex h-9 w-9 items-center justify-center rounded-lg"
-                      style={{ background: `color-mix(in oklab, ${color} 12%, transparent)`, color }}
+                      className="flex h-11 w-11 items-center justify-center rounded-xl text-white"
+                      style={{ background: color, boxShadow: `0 6px 16px -4px color-mix(in oklab, ${color} 25%, transparent)` }}
                     >
-                      <Icon className="h-4.5 w-4.5" strokeWidth={1.6} />
+                      <Icon className="h-5 w-5" strokeWidth={2} />
                     </div>
+
                     <div className="min-w-0">
                       <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{m.key}</div>
                       <div className="text-base font-semibold tabular-nums" style={{ color: "#01304a" }}>
@@ -545,7 +632,9 @@ function StudentDashboard() {
             return (
               <div>
                 <SectionTitle>Upcoming Sessions</SectionTitle>
+                <PremiumCard>
                 <div className="grid grid-cols-7 gap-2">
+
                   {week.map((d) => {
                     const key = dayKeyOf(d);
                     const ds = sessionForDay(d);
@@ -557,9 +646,11 @@ function StudentDashboard() {
                         onClick={() => setSelectedDay(key)}
                         className={`flex flex-col items-center gap-1 rounded-2xl px-2 py-3 transition-transform duration-200 active:scale-[0.97] ${
                           isActive
-                            ? "card-gradient-navy shadow-card text-white"
+                            ? "shadow-card text-white"
                             : "border border-border bg-white text-foreground hover:-translate-y-0.5"
                         }`}
+                        style={isActive ? { backgroundColor: "var(--calendar-accent)" } : undefined}
+
                       >
                         <span className={`text-[10px] font-semibold uppercase tracking-wider ${isActive ? "text-white/70" : "text-muted-foreground"}`}>
                           {d.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase()}
@@ -583,7 +674,7 @@ function StudentDashboard() {
 
                 <div className="mt-4">
                   {!s ? (
-                    <PremiumCard className="verbo-card-hover"><div className="text-sm text-muted-foreground">No upcoming sessions scheduled.</div></PremiumCard>
+                    <div className="text-sm text-muted-foreground">No upcoming sessions scheduled.</div>
                   ) : (
                     <div className="max-w-xl mx-auto w-full rounded-2xl overflow-hidden relative shadow-elevated verbo-card-hover">
                       <div className="absolute inset-x-0 top-0 h-1 bg-[var(--accent)]" />
@@ -655,7 +746,9 @@ function StudentDashboard() {
                     </div>
                   )}
                 </div>
+                </PremiumCard>
               </div>
+
             );
           })()}
 
@@ -667,13 +760,13 @@ function StudentDashboard() {
           <PremiumCard hover className="group relative overflow-hidden">
             <div
               className="absolute inset-0 opacity-[0.09] pointer-events-none"
-              style={{ background: "radial-gradient(circle at top right, var(--green-500), transparent 65%)" }}
+              style={{ background: "radial-gradient(circle at top right, var(--violet-300), transparent 65%)" }}
             />
             <div className="relative">
               <div className="flex items-center gap-2">
                 <div
                   className="verbo-float flex h-9 w-9 items-center justify-center rounded-lg transition-transform duration-300 group-hover:scale-110"
-                  style={{ background: "color-mix(in oklab, var(--green-500) 12%, transparent)", color: "var(--green-500)" }}
+                  style={{ background: "color-mix(in oklab, var(--violet-500) 12%, transparent)", color: "var(--violet-500)" }}
                 >
                   <Users className="h-4 w-4" />
                 </div>
@@ -684,14 +777,17 @@ function StudentDashboard() {
               <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
                 Join today's live conversation clubs and immerse yourself with peers across the network.
               </p>
-              <PrimaryButton
-                className="verbo-btn-glow mt-4 w-full"
+              <button
+                type="button"
+                className="mt-4 inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-full border border-border bg-white px-4 py-2.5 text-sm font-semibold transition-transform duration-200 active:scale-[0.97]"
+                style={{ color: "var(--violet-500)" }}
                 onClick={() => navigate({ to: "/student/insights" })}
               >
                 <Sparkles className="h-3.5 w-3.5" /> View Active Clubs
-              </PrimaryButton>
+              </button>
             </div>
           </PremiumCard>
+
 
           {/* Quick Review Dock */}
           <PremiumCard hover>
@@ -754,9 +850,10 @@ function StudentDashboard() {
                   key={s.id}
                   type="button"
                   onClick={() => setClassDetail(s)}
-                  className="flex w-full flex-wrap items-center gap-4 rounded-xl px-4 py-4 text-left transition-all duration-150 ease-out hover:bg-secondary/40 active:scale-[0.97]"
+                  className="grid w-full grid-cols-1 items-center gap-4 rounded-xl px-4 py-4 text-left transition-all duration-150 ease-out hover:bg-secondary/40 active:scale-[0.97] md:grid-cols-[1fr_1fr_auto_auto]"
                 >
-                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                  <div className="truncate text-sm text-foreground">{fmt(s.date_time)}</div>
+                  <div className="flex min-w-0 items-center gap-3">
                     <div
                       className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold"
                       style={{ color: "#01304a" }}
@@ -764,16 +861,16 @@ function StudentDashboard() {
                     >
                       {initial}
                     </div>
-                    <div className="min-w-0">
-                      <div className="truncate text-sm font-semibold" style={{ color: "#01304a" }}>{teacherName}</div>
-                      <div className="truncate text-xs text-muted-foreground">{fmt(s.date_time)}</div>
-                    </div>
+                    <div className="truncate text-sm font-semibold" style={{ color: "#01304a" }}>{teacherName}</div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="md:justify-self-start">
                     <span className={statusBadge(s.status)}>{s.status}</span>
+                  </div>
+                  <div className="md:justify-self-end">
                     {s.student_rating ? <RatingStarsCompact value={s.student_rating} /> : <span className="text-xs text-muted-foreground">—</span>}
                   </div>
                 </button>
+
               );
             })}
           </div>

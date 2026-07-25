@@ -164,6 +164,8 @@
   --tier-elite: var(--violet-500);
   --tier-elite-soft: var(--violet-100);
   --brand-flash: var(--violet-500);
+  --calendar-accent: #0D6594;
+
 }
 
 .dark {
