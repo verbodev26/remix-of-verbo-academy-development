@@ -690,23 +690,27 @@ function SessionsRemainingCard({ studentId }: { studentId: string }) {
   const { done, pct } = sessionProgressFor(hired, remaining);
   const g = groupOfStudent(studentId);
   return (
-    <Card className="!p-4">
-      <div className="flex items-center justify-between gap-4">
+    <Card className="!p-6">
+      <div className="flex items-start justify-between gap-4">
         <div>
           <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sessions remaining</div>
-          <div className="mt-1 text-lg font-semibold text-foreground">{remaining} <span className="text-sm font-normal text-muted-foreground">of {hired} sessions</span></div>
+          <div className="mt-1 flex items-baseline gap-2">
+            <span className="font-display text-4xl leading-none tracking-tight" style={{ color: "#01304a" }}>{remaining}</span>
+            <span className="text-sm text-muted-foreground">of {hired} sessions</span>
+          </div>
           {g && (
-            <div className="mt-0.5 text-[11px] text-muted-foreground">Shared with your group</div>
+            <div className="mt-1 text-[11px] text-muted-foreground">Shared with your group</div>
           )}
         </div>
         <div className="text-right text-xs text-muted-foreground">{done} used</div>
       </div>
-      <div className="mt-3 h-2 w-full rounded-full bg-secondary">
+      <div className="mt-4 h-2 w-full rounded-full bg-secondary">
         <div className="h-2 rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
       </div>
     </Card>
   );
 }
+
 
 // ---------------------------------------------------------------------------
 // Cancel Spotlight — student-side cancellation with 24h-notice pay rule.
