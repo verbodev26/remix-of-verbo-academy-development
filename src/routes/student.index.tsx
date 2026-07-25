@@ -11,7 +11,10 @@ import {
   subscribePerformance,
   type PerformanceRating,
 } from "@/lib/performance-store";
-import { loadCourses, subscribeCourses, PRODUCT_META, computeCurrentProgress } from "@/lib/product-courses-store";
+import { loadCourses, subscribeCourses, PRODUCT_META, computeCurrentProgress, resolvePlanTopic } from "@/lib/product-courses-store";
+import { getLessonPlan, subscribeLessonPlans, type LessonPlan } from "@/lib/lesson-plans-store";
+import { unitsForStudent } from "@/lib/vip-courses-store";
+import { tailoredUnitsForStudent } from "@/lib/tailored-content-store";
 import { subscribeVipUnits, subscribeVipUnitCompletion } from "@/lib/vip-courses-store";
 import { useComputedMacros } from "@/components/verbo/PerformanceAnalytics";
 import { GhostButton, Pill, PrimaryButton, SectionTitle, StatRing, SuccessButton } from "@/components/verbo/ui";
