@@ -51,15 +51,13 @@ function Page() {
   useEffect(() => {
     setSessions(loadSessions());
     setPlans(loadLessonPlans());
-    setLevels(loadLevels());
     const u1 = subscribeSessions(() => setSessions(loadSessions()));
     const u2 = subscribeLessonPlans(() => setPlans(loadLessonPlans()));
-    const u3 = subscribeLevels(() => setLevels(loadLevels()));
     const u4 = subscribeStrikes(() => tick((n) => n + 1));
     const u5 = subscribeClubReports(() => tick((n) => n + 1));
     const onWorkshops = (e: StorageEvent) => { if (e.key === WORKSHOPS_KEY) tick((n) => n + 1); };
     if (typeof window !== "undefined") window.addEventListener("storage", onWorkshops);
-    return () => { u1(); u2(); u3(); u4(); u5(); if (typeof window !== "undefined") window.removeEventListener("storage", onWorkshops); };
+    return () => { u1(); u2(); u4(); u5(); if (typeof window !== "undefined") window.removeEventListener("storage", onWorkshops); };
   }, []);
 
   // Build calendar events (classes + workshops + clubs) via the shared adapter.
