@@ -129,16 +129,18 @@ function LoginPage() {
             </button>
           </form>
 
-          <div className="verbo-glass-light mt-8 rounded-2xl p-4">
-            <div className="inline-flex items-center rounded-md bg-[#01304a]/5 px-2 py-0.5 font-mono text-[10px] font-semibold tracking-[0.15em] text-[#01304a]/70">
-              DEVELOPER SANDBOX
+          {showDevSandbox && (
+            <div className="verbo-glass-light mt-8 rounded-2xl p-4">
+              <div className="inline-flex items-center rounded-md bg-[#01304a]/5 px-2 py-0.5 font-mono text-[10px] font-semibold tracking-[0.15em] text-[#01304a]/70">
+                DEVELOPER SANDBOX
+              </div>
+              <ul className="mt-3 space-y-1.5 text-xs text-[#01304a]/75">
+                <li><span className="font-semibold text-[#01304a]">Student:</span> elena@student.com / student123</li>
+                <li><span className="font-semibold text-[#01304a]">Teacher:</span> sarah@verbo.com / teacher123</li>
+                <li><span className="font-semibold text-[#01304a]">Admin:</span> admin@verbo.com / admin123</li>
+              </ul>
             </div>
-            <ul className="mt-3 space-y-1.5 text-xs text-[#01304a]/75">
-              <li><span className="font-semibold text-[#01304a]">Student:</span> elena@student.com / student123</li>
-              <li><span className="font-semibold text-[#01304a]">Teacher:</span> sarah@verbo.com / teacher123</li>
-              <li><span className="font-semibold text-[#01304a]">Admin:</span> admin@verbo.com / admin123</li>
-            </ul>
-          </div>
+          )}
         </div>
 
         <div className="text-center text-xs text-[#01304a]/50">
@@ -148,10 +150,12 @@ function LoginPage() {
 
       {/* Visual side */}
       <div className="relative hidden overflow-hidden bg-[#01304a] lg:flex lg:flex-col lg:justify-between lg:p-12">
-        {/* Tech grid overlay */}
-        <div className="verbo-tech-grid pointer-events-none absolute inset-0" style={{ opacity: 0.2 }} />
-        {/* Ambient pulse aura */}
-        <div className="verbo-ambient-aura pointer-events-none absolute inset-0" />
+        {/* Static orange glow */}
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{ background: "radial-gradient(circle at 70% 60%, rgba(243,137,52,0.18), transparent 50%)" }}
+        />
+
 
         <div className="relative z-10">
           <Logo className="[&_span]:text-white [&_span.text-muted-foreground]:text-white/60" />
