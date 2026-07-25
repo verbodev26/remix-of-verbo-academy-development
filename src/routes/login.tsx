@@ -165,7 +165,7 @@ function LoginPage() {
         />
         {/* Decorative orange block */}
         <div
-          className="pointer-events-none absolute -bottom-12 -right-12 h-80 w-64 rounded-[2rem] bg-accent/20"
+          className="pointer-events-none absolute -bottom-12 -right-12 h-80 w-64 rounded-[2rem] bg-accent/30"
           aria-hidden
         />
 
