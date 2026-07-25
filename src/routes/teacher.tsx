@@ -37,13 +37,15 @@ function Layout() {
 
   return (
     <RoleGuard allow="teacher">
-      <div className="min-h-screen bg-background">
+      <div className="flex min-h-screen flex-col bg-background">
         <TopNav items={items} />
         <AnnouncementBanner />
-        <main className="mx-auto max-w-7xl px-6 py-10">
+        <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-10">
           <Outlet />
         </main>
+        <Footer />
       </div>
+
     </RoleGuard>
   );
 }
