@@ -6,7 +6,7 @@ export function Logo({ className = "", showWordmark = true, dark = false }: { cl
       <img
         src={logoSrc}
         alt="Verbo Language Solutions"
-        className="h-9 w-9 rounded-lg object-cover"
+        className="verbo-logo-pulse h-9 w-9 rounded-lg object-cover"
       />
       {showWordmark && (
         <div className="flex flex-col leading-none">

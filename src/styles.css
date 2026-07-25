@@ -436,20 +436,29 @@
     animation: verbo-pre-reveal 1700ms cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
-  /* Rotating conic ring for the header Sign in button */
+  /* Rotating conic ring for the header Sign in button (strictly contained) */
   @keyframes verbo-ring-spin {
     to { transform: rotate(360deg); }
+  }
+  .verbo-spin-ring {
+    position: relative;
+    display: inline-flex;
+    padding: 2px;
+    border-radius: 9999px;
+    overflow: hidden;
+    isolation: isolate;
+    background: rgba(243, 137, 52, 0.15);
   }
   .verbo-spin-ring::before {
     content: "";
     position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 220%;
-    height: 220%;
-    transform: translate(-50%, -50%);
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
     background: conic-gradient(from 0deg, transparent 0deg, transparent 250deg, #f38934 315deg, transparent 360deg);
     animation: verbo-ring-spin 3.5s linear infinite;
+    transform-origin: center;
     z-index: 0;
     pointer-events: none;
   }
@@ -463,6 +472,19 @@
       background: conic-gradient(from 90deg, transparent 0deg, #f38934 60deg, transparent 180deg, transparent 360deg);
     }
   }
+
+  /* Gentle pulse for the brand logo mark */
+  @keyframes verbo-logo-pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.06); opacity: 0.9; }
+  }
+  .verbo-logo-pulse {
+    animation: verbo-logo-pulse 2.8s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .verbo-logo-pulse { animation: none; }
+  }
+
 
   /* Reveal on scroll (used for benefit cards) */
   .verbo-reveal { opacity: 0; transform: translateY(20px); }
