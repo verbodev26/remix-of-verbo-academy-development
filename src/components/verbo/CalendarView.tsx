@@ -33,7 +33,12 @@ export interface CalendarViewProps {
   initialMode?: CalendarViewMode;
   /** Restrict the filter chips to a subset (e.g. Student panel hides "workshop"). */
   availableKinds?: CalendarEventKind[];
+  /** Which kinds start enabled. Defaults to every chip in `availableKinds`. */
+  initialEnabledKinds?: CalendarEventKind[];
+  /** Kinds whose event pills get a subtle attention pulse. */
+  pulseKinds?: CalendarEventKind[];
 }
+
 
 function dayKey(d: Date) { return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`; }
 function addMonths(d: Date, n: number) { const x = new Date(d); x.setMonth(x.getMonth() + n); return x; }
