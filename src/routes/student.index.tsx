@@ -857,7 +857,7 @@ function StudentDashboard() {
                   key={s.id}
                   type="button"
                   onClick={() => setClassDetail(s)}
-                  className="grid w-full grid-cols-1 items-center gap-4 rounded-xl px-4 py-4 text-left transition-all duration-150 ease-out hover:bg-secondary/40 active:scale-[0.97] md:grid-cols-[1fr_1fr_auto_auto]"
+                  className="grid w-full grid-cols-1 items-center gap-4 rounded-xl px-4 py-4 text-left transition-all duration-150 ease-out hover:bg-secondary/40 active:scale-[0.97] md:grid-cols-[1fr_1fr_110px_140px]"
                 >
                   <div className="truncate text-sm text-foreground">{fmt(s.date_time)}</div>
                   <div className="flex min-w-0 items-center gap-3">
