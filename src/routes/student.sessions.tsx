@@ -61,9 +61,16 @@ import { effectiveHourlyRate, appendTeacherAdjustment } from "@/lib/teacher-tier
 
 
 
-export const Route = createFileRoute("/student/sessions")({ component: Page });
+export const Route = createFileRoute("/student/sessions")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    focus: search.focus === "clubs" ? ("clubs" as const) : undefined,
+  }),
+  component: Page,
+});
 
 const ALL_STUDENT_KINDS: CalendarEventKind[] = ["class", "insight", "book_club", "spotlight"];
+const CLUB_KINDS: CalendarEventKind[] = ["insight", "book_club"];
+
 
 
 function fmtDT(iso: string) {
