@@ -40,12 +40,13 @@ function Layout() {
     <RoleGuard allow="teacher">
       <TopNav items={items} />
       <div className="flex min-h-screen flex-col bg-background">
-        <main className="mx-auto w-full max-w-7xl flex-1 pt-28 pb-10">
-          <AnnouncementBanner />
+        <main className="mx-auto w-full max-w-7xl flex-1 pt-24 pb-10">
           <div className="px-6">
+            <AnnouncementBanner />
             <Outlet />
           </div>
         </main>
+
         <Footer />
       </div>
 
