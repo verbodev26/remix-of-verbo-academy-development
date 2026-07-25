@@ -140,24 +140,31 @@ export function CalendarView({
         </div>
 
         {/* Event-kind filter chips */}
-        <div className="flex flex-wrap items-center gap-1.5">
-          {kindsToShow.map((k) => {
-            const meta = EVENT_KIND_META[k];
-            const on = enabledKinds.has(k);
-            return (
-              <button
-                key={k}
-                onClick={() => toggleKind(k)}
-                className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-all ${
-                  on ? "border-transparent text-white" : "border-border bg-card text-muted-foreground hover:text-foreground"
-                }`}
-                style={on ? { background: meta.color } : undefined}
-              >
-                <span className={`h-1.5 w-1.5 rounded-full ${on ? "bg-white" : ""}`} style={on ? undefined : { background: meta.color }} />
-                {meta.label}
-              </button>
-            );
-          })}
+        <div className="flex flex-col gap-1.5">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Filter by type
+          </span>
+          <div className="flex flex-wrap items-center gap-1.5">
+            {kindsToShow.map((k) => {
+              const meta = EVENT_KIND_META[k];
+              const on = enabledKinds.has(k);
+              return (
+                <button
+                  key={k}
+                  onClick={() => toggleKind(k)}
+                  title={on ? `Click to hide ${meta.label} events` : `Click to show ${meta.label} events`}
+                  aria-pressed={on}
+                  className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-all ${
+                    on ? "border-transparent text-white" : "border-border bg-card text-muted-foreground hover:text-foreground"
+                  }`}
+                  style={on ? { background: meta.color } : undefined}
+                >
+                  <span className={`h-1.5 w-1.5 rounded-full ${on ? "bg-white" : ""}`} style={on ? undefined : { background: meta.color }} />
+                  {meta.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -170,14 +177,20 @@ export function CalendarView({
       )}
 
       {/* Canonical 7-status legend */}
-      <div className="flex flex-wrap gap-4 text-[11px] text-muted-foreground">
-        {CANONICAL_STATUS_ORDER.map((s) => (
-          <div key={s} className="flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: CALENDAR_STATUS_META[s].color }} />
-            <span>{CALENDAR_STATUS_META[s].label}</span>
-          </div>
-        ))}
+      <div className="rounded-2xl border border-border bg-secondary/40 px-4 py-3">
+        <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Status legend
+        </div>
+        <div className="flex flex-wrap gap-x-5 gap-y-2 text-[11px] text-muted-foreground">
+          {CANONICAL_STATUS_ORDER.map((s) => (
+            <div key={s} className="flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: CALENDAR_STATUS_META[s].color }} />
+              <span>{CALENDAR_STATUS_META[s].label}</span>
+            </div>
+          ))}
+        </div>
       </div>
+
     </div>
   );
 }
@@ -200,9 +213,25 @@ function MonthGrid({
       {grid.map((day, i) => {
         const inMonth = day.getMonth() === cursor.getMonth();
         const dayEvents = eventsByDay.get(dayKey(day)) ?? [];
+        const isToday = dayKey(day) === dayKey(new Date());
         return (
-          <div key={i} className={`min-h-[110px] bg-card p-1.5 ${inMonth ? "" : "opacity-40"}`}>
-            <div className="mb-1 text-[11px] font-medium text-foreground">{day.getDate()}</div>
+          <div
+            key={i}
+            className={`relative min-h-[110px] p-1.5 transition-shadow duration-150 ${
+              isToday ? "bg-[var(--navy-50)]" : "bg-card"
+            } ${inMonth ? "" : "opacity-40"} ${
+              dayEvents.length > 0 ? "hover:relative hover:z-10 hover:shadow-elevated" : ""
+            }`}
+          >
+            <div className="mb-1 flex items-center">
+              <span
+                className={`inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[11px] font-semibold ${
+                  isToday ? "bg-[#f38934] text-white" : "text-foreground"
+                }`}
+              >
+                {day.getDate()}
+              </span>
+            </div>
             <div className="space-y-1">
               {dayEvents.slice(0, 3).map((e) => (
                 <EventPill key={e.id} ev={e} onClick={() => onEventClick?.(e)} pulse={!!pulseKinds?.includes(e.kind)} />
@@ -214,6 +243,7 @@ function MonthGrid({
           </div>
         );
       })}
+
     </div>
   );
 }
@@ -316,7 +346,7 @@ function EventPill({ ev, onClick, pulse = false }: { ev: CalendarEvent; onClick:
     <div className="group relative">
       <button
         onClick={onClick}
-        className={`flex w-full items-center gap-1 truncate rounded-md px-1.5 py-1 text-left text-[10.5px] font-medium text-white shadow-sm transition-opacity hover:opacity-90 cursor-pointer ${
+        className={`flex w-full items-center gap-1 truncate rounded-lg px-1.5 py-1 text-left text-[10.5px] font-medium text-white shadow-sm transition-opacity hover:opacity-90 cursor-pointer ${
           ev.booked ? "ring-2 ring-emerald-400 ring-offset-1 ring-offset-card" : ""
         } ${pulse ? "verbo-focus-pulse" : ""}`}
         style={{

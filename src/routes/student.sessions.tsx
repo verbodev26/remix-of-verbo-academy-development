@@ -41,7 +41,7 @@ import {
   type CalendarEvent, type CalendarEventKind,
 } from "@/lib/calendar-events";
 import { Card, PrimaryButton, GhostButton } from "@/components/verbo/ui";
-import { X, Video, AlertTriangle, Sparkles, CalendarClock, Users as UsersIcon } from "lucide-react";
+import { X, Video, AlertTriangle, Sparkles, CalendarClock, RefreshCcw, ArrowLeft, Users as UsersIcon } from "lucide-react";
 import {
   addStudentRequest,
   convertSessionToSpotlight,
@@ -154,27 +154,45 @@ function Page() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-wrap items-start justify-between gap-4">
+      <div className="flex flex-col items-start justify-between gap-4 lg:flex-row lg:items-center">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Live Sessions</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Sessions &amp; Events</h1>
           <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-            Your calendar of 1:1 Classes, Verbo Insights, Book Clubs and Spotlight Sessions.
+            Your next class, your next conversation club, your next win — all in one place.
           </p>
         </div>
-        {hasSpot && (
-          <button
-            onClick={() => { if (canRequestSpotlight) freemium.tryOpen("spotlight", () => setSpotlightOpen(true)); }}
-            disabled={!canRequestSpotlight}
-            title={!canRequestSpotlight ? "You've used all your Spotlight requests for this month." : undefined}
-            className={`inline-flex items-center gap-2 rounded-lg bg-[#0d9488] px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition-opacity ${canRequestSpotlight ? "cursor-pointer hover:opacity-90" : "cursor-not-allowed opacity-50"}`}
-          >
-            <Sparkles className="h-4 w-4" /> Request a Spotlight Session
-          </button>
-        )}
+        <NextEventChip events={events} />
       </div>
 
 
-      <SessionsRemainingCard studentId={user.id} />
+      <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
+        <SessionsRemainingCard studentId={user.id} />
+        {hasSpot && (
+          <div className="card-gradient-teal relative overflow-visible rounded-3xl border border-border p-6 shadow-elevated">
+            <div className="flex items-center gap-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/35" style={{ color: "#01304a" }}>
+                <Sparkles className="h-4 w-4" />
+              </div>
+              <h3 className="text-base font-semibold tracking-tight" style={{ color: "#01304a" }}>
+                Spotlight Session
+              </h3>
+            </div>
+            <p className="mt-3 text-xs leading-relaxed" style={{ color: "rgba(1, 48, 74, 0.75)" }}>
+              An extra 60-minute 1:1 with any available qualified teacher, focused on one specific challenge.
+            </p>
+            <button
+              type="button"
+              onClick={() => { if (canRequestSpotlight) freemium.tryOpen("spotlight", () => setSpotlightOpen(true)); }}
+              disabled={!canRequestSpotlight}
+              title={!canRequestSpotlight ? "You've used all your Spotlight requests for this month." : undefined}
+              className={`mt-4 inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-full bg-white px-4 py-2.5 text-sm font-semibold transition-transform duration-200 ${canRequestSpotlight ? "cursor-pointer active:scale-[0.97]" : "cursor-not-allowed opacity-60"}`}
+              style={{ color: "#01304a" }}
+            >
+              <Sparkles className="h-3.5 w-3.5" /> Request a Spotlight Session
+            </button>
+          </div>
+        )}
+      </div>
 
       <Card>
         <CalendarView
@@ -187,25 +205,28 @@ function Page() {
 
       </Card>
 
-      <Card className="!p-4">
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs">
-          <div className="text-muted-foreground">
-            <span className="font-semibold text-foreground">Reschedule Policy:</span> {policy.noticeHours}h notice, up to {policy.maxPct}% of monthly sessions
-          </div>
-          <div className="text-muted-foreground">
-            Used this cycle: <span className="font-semibold text-foreground">{used}/{quota}</span>
-          </div>
-          {spotlightVisible && (
-            <div className="text-muted-foreground">
-              {isSignature ? (
-                <>Spotlight: <span className="font-semibold text-foreground">{spotlightUsedNum} used this month</span></>
-              ) : (
-                <>Spotlight: <span className="font-semibold text-foreground">{spotlightUsedNum} of {spotlightCapDisplay} used this month</span></>
-              )}
-            </div>
-          )}
-        </div>
-      </Card>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <StatPill
+          icon={<CalendarClock className="h-4 w-4" />}
+          label="Reschedule Policy"
+          value={`${policy.noticeHours}h notice · up to ${policy.maxPct}% of monthly sessions`}
+        />
+        <StatPill
+          icon={<RefreshCcw className="h-4 w-4" />}
+          label="Used this cycle"
+          value={`${used} of ${quota} reschedules`}
+        />
+        {spotlightVisible && (
+          <StatPill
+            icon={<Sparkles className="h-4 w-4" />}
+            label="Spotlight"
+            value={isSignature
+              ? `${spotlightUsedNum} used this month`
+              : `${spotlightUsedNum} of ${spotlightCapDisplay} used this month`}
+          />
+        )}
+      </div>
+
 
 
       {selected && (
@@ -263,6 +284,63 @@ function Page() {
 }
 
 // ---------------------------------------------------------------------------
+// Next upcoming event — derived from the already-loaded `events` list.
+// Purely presentational: no store reads, no mutations.
+// ---------------------------------------------------------------------------
+function NextEventChip({ events }: { events: CalendarEvent[] }) {
+  const next = useMemo(() => {
+    const now = Date.now();
+    const skip = new Set(["cancelled", "absent", "completed"]);
+    return [...events]
+      .filter((e) => +new Date(e.date) > now && !(e.status && skip.has(e.status)))
+      .sort((a, b) => +new Date(a.date) - +new Date(b.date))[0] ?? null;
+  }, [events]);
+
+  if (!next) return null;
+
+  const kindMeta = EVENT_KIND_META[next.kind];
+  const teacherName = next.session ? userById(next.session.teacher_id)?.name : undefined;
+  const withWho = next.kind === "book_club"
+    ? "Book Club"
+    : next.kind === "insight"
+      ? "Verbo Insight"
+      : (teacherName ?? kindMeta.label);
+
+  return (
+    <div className="card-gradient-lime flex w-full items-center gap-4 rounded-3xl border border-border px-5 py-3 shadow-elevated lg:w-auto">
+      <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "rgba(1, 48, 74, 0.7)" }}>
+        Next up
+      </div>
+      <div className="h-8 w-px" style={{ background: "rgba(1, 48, 74, 0.2)" }} />
+      <div className="min-w-0">
+        <div className="truncate text-sm font-semibold" style={{ color: "#01304a" }}>
+          {kindMeta.label} · {withWho}
+        </div>
+        <div className="truncate text-xs" style={{ color: "rgba(1, 48, 74, 0.75)" }}>
+          {fmtDT(next.date)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StatPill({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+  return (
+    <div className="flex items-start gap-3 rounded-2xl border border-[var(--navy-100)] bg-[var(--navy-50)] px-4 py-3">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-[#01304a]">
+        {icon}
+      </div>
+      <div className="min-w-0">
+        <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</div>
+        <div className="mt-0.5 text-xs font-semibold text-foreground">{value}</div>
+      </div>
+    </div>
+  );
+}
+
+
+
+// ---------------------------------------------------------------------------
 // Session details modal — student view.
 // Logistics only (no Lesson Plan surface here).
 // ---------------------------------------------------------------------------
@@ -296,17 +374,29 @@ function EventDetailsModal({
         <button onClick={onClose} aria-label="Close" className="absolute right-4 top-4 rounded-md p-1 text-muted-foreground hover:bg-secondary hover:text-foreground">
           <X className="h-4 w-4" />
         </button>
-        <div className="flex items-center gap-2">
-          <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white" style={{ background: kindMeta.color }}>
-            {kindMeta.label}
-          </span>
+        <div className="flex items-start gap-3">
+          <div
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white"
+            style={{ background: kindMeta.color }}
+          >
+            <CalendarClock className="h-5 w-5" />
+          </div>
+          <div className="min-w-0">
+            <span
+              className="inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white"
+              style={{ background: kindMeta.color }}
+            >
+              {kindMeta.label}
+            </span>
+            <h3 className="mt-1.5 text-lg font-semibold tracking-tight" style={{ color: "#01304a" }}>
+              {isSpotlight && teacherName ? `Spotlight with ${teacherName}` : isClass && teacherName ? `Session with ${teacherName}` : event.title}
+            </h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {fmtDT(event.date)} · {event.duration_minutes} min
+            </p>
+          </div>
         </div>
-        <h3 className="mt-2 text-lg font-semibold tracking-tight text-foreground">
-          {isSpotlight && teacherName ? `Spotlight with ${teacherName}` : isClass && teacherName ? `Session with ${teacherName}` : event.title}
-        </h3>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {fmtDT(event.date)} · {event.duration_minutes} min
-        </p>
+
 
         {(isClass || isSpotlight) && session && (
           <div className="mt-4 space-y-2 text-sm">
@@ -388,9 +478,11 @@ function SpotlightRequestFlow({ studentId, onClose }: { studentId: string; onClo
     return (
       <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
         <div onClick={(e) => e.stopPropagation()} className="relative w-full max-w-md rounded-2xl bg-card p-6 shadow-floating">
-          <div className="flex items-center gap-2 text-[#0d9488]">
-            <Sparkles className="h-5 w-5" />
-            <h3 className="text-base font-semibold text-foreground">What is a Spotlight Session?</h3>
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#ccf1eb] text-[#0d9488]">
+              <Sparkles className="h-5 w-5" />
+            </div>
+            <h3 className="text-lg font-semibold tracking-tight" style={{ color: "#01304a" }}>What is a Spotlight Session?</h3>
           </div>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
             A Spotlight Session is an additional 1:1 session of up to 60 minutes with any available qualified teacher on the platform. Use it to work on a specific challenge — a presentation coming up, a mock interview, a difficult negotiation, a document review — outside your regular schedule.
@@ -525,9 +617,11 @@ function SpotlightFormModal({ studentId, onClose }: { studentId: string; onClose
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
       <div onClick={(e) => e.stopPropagation()} className="relative w-full max-w-md rounded-2xl bg-card p-6 shadow-floating">
         <button onClick={onClose} aria-label="Close" className="absolute right-4 top-4 rounded-md p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"><X className="h-4 w-4" /></button>
-        <div className="flex items-center gap-2 text-[#0d9488]">
-          <Sparkles className="h-5 w-5" />
-          <h3 className="text-base font-semibold text-foreground">Request a Spotlight Session</h3>
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#ccf1eb] text-[#0d9488]">
+            <Sparkles className="h-5 w-5" />
+          </div>
+          <h3 className="text-lg font-semibold tracking-tight" style={{ color: "#01304a" }}>Request a Spotlight Session</h3>
         </div>
         <p className="mt-2 text-xs text-muted-foreground">
           Pick one of the available start times. Spotlight sessions are always <strong>60 min</strong>, and require at least 24h notice.
@@ -569,7 +663,7 @@ function SpotlightFormModal({ studentId, onClose }: { studentId: string; onClose
           </div>
         )}
         <div className="mt-5 flex justify-end gap-2">
-          <GhostButton onClick={onClose}>Return</GhostButton>
+          <GhostButton onClick={onClose}><ArrowLeft className="h-3.5 w-3.5" /> Return</GhostButton>
           <PrimaryButton onClick={submit}>Publish Request</PrimaryButton>
         </div>
       </div>
@@ -596,23 +690,27 @@ function SessionsRemainingCard({ studentId }: { studentId: string }) {
   const { done, pct } = sessionProgressFor(hired, remaining);
   const g = groupOfStudent(studentId);
   return (
-    <Card className="!p-4">
-      <div className="flex items-center justify-between gap-4">
+    <Card className="!p-6">
+      <div className="flex items-start justify-between gap-4">
         <div>
           <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sessions remaining</div>
-          <div className="mt-1 text-lg font-semibold text-foreground">{remaining} <span className="text-sm font-normal text-muted-foreground">of {hired} sessions</span></div>
+          <div className="mt-1 flex items-baseline gap-2">
+            <span className="font-display text-4xl leading-none tracking-tight" style={{ color: "#01304a" }}>{remaining}</span>
+            <span className="text-sm text-muted-foreground">of {hired} sessions</span>
+          </div>
           {g && (
-            <div className="mt-0.5 text-[11px] text-muted-foreground">Shared with your group</div>
+            <div className="mt-1 text-[11px] text-muted-foreground">Shared with your group</div>
           )}
         </div>
         <div className="text-right text-xs text-muted-foreground">{done} used</div>
       </div>
-      <div className="mt-3 h-2 w-full rounded-full bg-secondary">
+      <div className="mt-4 h-2 w-full rounded-full bg-secondary">
         <div className="h-2 rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
       </div>
     </Card>
   );
 }
+
 
 // ---------------------------------------------------------------------------
 // Cancel Spotlight — student-side cancellation with 24h-notice pay rule.
@@ -644,20 +742,31 @@ function CancelSpotlightModal({ session, onClose }: { session: ExtSession; onClo
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
       <div onClick={(e) => e.stopPropagation()} className="relative w-full max-w-md rounded-2xl bg-card p-6 shadow-floating">
-        <h3 className="text-lg font-semibold tracking-tight text-foreground">Cancel Spotlight Session?</h3>
-        <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-          This Spotlight with <strong>{teacherName}</strong> will be cancelled. It cannot be rescheduled or made up.
-        </p>
-        <div className="mt-6 flex justify-end gap-2">
-          <GhostButton onClick={onClose}>Go Back</GhostButton>
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--navy-100)] text-[#01304a]">
+            <CalendarClock className="h-5 w-5" />
+          </div>
+          <h3 className="text-lg font-semibold tracking-tight" style={{ color: "#01304a" }}>Cancel Spotlight Session?</h3>
+        </div>
+        <div className="mt-4 rounded-lg border border-[var(--navy-100)] bg-[var(--navy-50)] p-3.5">
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            This Spotlight with <strong>{teacherName}</strong> will be cancelled. It cannot be rescheduled or made up.
+          </p>
+        </div>
+        <div className="mt-6 flex flex-col gap-2">
           <button
+            type="button"
             onClick={confirm}
-            className="cursor-pointer rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-soft transition-opacity hover:opacity-90"
+            className="w-full inline-flex items-center justify-center gap-2 rounded-full border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors duration-150 ease-out hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive active:scale-[0.97]"
           >
             Confirm Cancellation
           </button>
+          <GhostButton className="w-full justify-center" onClick={onClose}>
+            <ArrowLeft className="h-3.5 w-3.5" /> Return
+          </GhostButton>
         </div>
       </div>
     </div>
   );
 }
+
