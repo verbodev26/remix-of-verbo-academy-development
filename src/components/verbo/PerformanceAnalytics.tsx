@@ -26,29 +26,6 @@ import {
 } from "@/lib/sessions-store";
 import { MACRO_SKILLS, skillKey, type BaseKey } from "@/lib/skills-taxonomy";
 
-function hashOffset(seed: string): number {
-  let h = 0;
-  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) | 0;
-  return (Math.abs(h) % 13) - 6;
-}
-
-function baseAverage(map: PerformanceMap, key: BaseKey) {
-  const vals: number[] = [];
-  for (const r of Object.values(map)) {
-    const v = r?.[key];
-    if (typeof v === "number" && v > 0) vals.push(v);
-  }
-  if (vals.length === 0) return { avg: 0, count: 0 };
-  return { avg: vals.reduce((a, b) => a + b, 0) / vals.length, count: vals.length };
-}
-
-export interface ComputedMacro {
-  key: string;
-  icon: LucideIcon;
-  overall: number | null;
-  subs: { name: string; value: number | null }[];
-}
-
 function subAverage(map: PerformanceMap, key: string) {
   const vals: number[] = [];
   for (const r of Object.values(map)) {
@@ -58,22 +35,23 @@ function subAverage(map: PerformanceMap, key: string) {
   return { avg: vals.length === 0 ? 0 : vals.reduce((a, b) => a + b, 0) / vals.length, count: vals.length };
 }
 
+export interface ComputedMacro {
+  key: string;
+  icon: LucideIcon;
+  overall: number | null;
+  subs: { name: string; value: number | null }[];
+}
+
 function computeMacros(performance: PerformanceMap): ComputedMacro[] {
-  const baseAvgs: Record<BaseKey, { avg: number; count: number }> = {
-    fluency: baseAverage(performance, "fluency"),
-    vocabulary: baseAverage(performance, "vocabulary"),
-    confidence: baseAverage(performance, "confidence"),
-    grammar: baseAverage(performance, "grammar"),
-  };
+  // Subskill values are ONLY real ratings. If a specific subskill has no
+  // data, its value stays `null` and the UI shows "--". We intentionally
+  // do not synthesize numbers from the base categories — a "--" is more
+  // honest than a fabricated score that looks like a real measurement.
   return MACRO_SKILLS.map((m) => {
     const subs = m.subs.map((s) => {
       const real = subAverage(performance, skillKey(m.key, s.name));
       if (real.count > 0) return { name: s.name, value: Math.round(real.avg) };
-      const { avg, count } = baseAvgs[s.base];
-      if (count === 0) return { name: s.name, value: null as number | null };
-      const base = Math.round((avg / 5) * 100);
-      const adjusted = Math.max(0, Math.min(100, base + hashOffset(`${m.key}:${s.name}`)));
-      return { name: s.name, value: adjusted };
+      return { name: s.name, value: null as number | null };
     });
     const rated = subs.map((s) => s.value).filter((v): v is number => typeof v === "number");
     const overall = rated.length === 0 ? null : Math.round(rated.reduce((a, b) => a + b, 0) / rated.length);
