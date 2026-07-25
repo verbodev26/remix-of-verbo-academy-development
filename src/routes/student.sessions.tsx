@@ -478,9 +478,11 @@ function SpotlightRequestFlow({ studentId, onClose }: { studentId: string; onClo
     return (
       <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
         <div onClick={(e) => e.stopPropagation()} className="relative w-full max-w-md rounded-2xl bg-card p-6 shadow-floating">
-          <div className="flex items-center gap-2 text-[#0d9488]">
-            <Sparkles className="h-5 w-5" />
-            <h3 className="text-base font-semibold text-foreground">What is a Spotlight Session?</h3>
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#ccf1eb] text-[#0d9488]">
+              <Sparkles className="h-5 w-5" />
+            </div>
+            <h3 className="text-lg font-semibold tracking-tight" style={{ color: "#01304a" }}>What is a Spotlight Session?</h3>
           </div>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
             A Spotlight Session is an additional 1:1 session of up to 60 minutes with any available qualified teacher on the platform. Use it to work on a specific challenge — a presentation coming up, a mock interview, a difficult negotiation, a document review — outside your regular schedule.
