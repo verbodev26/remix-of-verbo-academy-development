@@ -1,4 +1,25 @@
 import type { ReactNode } from "react";
+import { UserRound } from "lucide-react";
+
+// TODO: reemplazar con foto real
+export function PhotoPlaceholder({
+  className = "",
+  tone = "light",
+}: {
+  className?: string;
+  tone?: "light" | "dark";
+}) {
+  const bg = tone === "light" ? "bg-[var(--navy-100)]" : "bg-white/15";
+  const iconColor = tone === "light" ? "text-[var(--navy-300)]" : "text-white/50";
+  return (
+    <div
+      className={`flex items-center justify-center rounded-[1.75rem] ${bg} ${className}`}
+      aria-hidden
+    >
+      <UserRound className={`h-10 w-10 ${iconColor}`} strokeWidth={1.5} />
+    </div>
+  );
+}
 
 export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
