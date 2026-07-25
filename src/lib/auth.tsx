@@ -5,7 +5,7 @@ import { hydrateAdminRoles, isUserDeactivated } from "./admin-roles";
 
 interface AuthCtx {
   user: User | null;
-  login: (email: string, password: string) => { ok: true; role: Role } | { ok: false; error: string };
+  login: (email: string, password: string, remember: boolean) => { ok: true; role: Role } | { ok: false; error: string };
   logout: () => void;
   updateProfile: (
     updates: { name?: string; currentPassword?: string; newPassword?: string; forceChange?: boolean },
