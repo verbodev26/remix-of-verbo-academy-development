@@ -786,3 +786,24 @@ Guarda hasta `EQUIPPED_MAX = 3` badge ids por alumno. `localStorage["verbo:equip
 - `ProfileModal.tsx` → slots "Equipped Badges" reales con equip/unequip, y "Achievements Gallery" con estado earned/locked y hint de progreso numérico (p.ej. `8/10`).
 
 **Regla compartida `levelIsComplete(level, studentId)`** vive ahora en `activities-store.ts` (antes duplicada en `student.courses.tsx`) e incluye el caso especial de unidades milestone con override `"unlocked"` / `"locked"`.
+
+## Sesión de auth — persistencia con "Remember me" (`src/lib/auth.tsx`)
+
+La sesión ya no se guarda como el `User` plano. Forma persistida bajo la key
+`verbo.auth.user.v2`:
+
+- `StoredSession = { user: User; expiresAt: number | null }`
+
+Reglas:
+- `login(email, password, remember)` — `remember: true` escribe en `localStorage`
+  con `expiresAt = Date.now() + 30 días` y borra la key de `sessionStorage`;
+  `remember: false` escribe en `sessionStorage` con `expiresAt = null` y borra la
+  key de `localStorage`. La validación de credenciales (USERS, `isMemberBlocked`,
+  `isUserDeactivated`) no cambió.
+- Hidratación al montar: primero `localStorage` (si `expiresAt` está vencido se
+  borra y no se restaura), luego `sessionStorage`. En ambos casos se re-hidrata
+  contra `USERS` (canonical) preservando `password`.
+- `logout()` limpia la key en ambos storages.
+- `updateProfile()` escribe en el storage donde vive la sesión activa y preserva
+  el `expiresAt` original (no lo recalcula).
+- Se tolera la forma legacy (user plano) tratándola como `expiresAt: null`.
