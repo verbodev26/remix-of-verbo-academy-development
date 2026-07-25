@@ -82,6 +82,8 @@ function hoursUntil(iso: string): number {
 
 function Page() {
   const { user } = useAuth();
+  const { focus: focusParam } = Route.useSearch();
+
   const [, tick] = useState(0);
   const [selected, setSelected] = useState<CalendarEvent | null>(null);
   const [cantAttendFor, setCantAttendFor] = useState<ExtSession | null>(null);
