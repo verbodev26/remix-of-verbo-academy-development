@@ -216,31 +216,33 @@ export function TopNav({ items, variant = "light" }: { items: NavEntry[]; varian
   }, [pathname, isDark, items]);
 
   return (
-    <header
-      className={`sticky top-0 z-40 ${isDark ? "" : "border-b border-border bg-background/85 backdrop-blur-xl"}`}
-      style={isDark ? { backgroundColor: "#01304a", borderBottom: "1px solid rgba(255,255,255,0.08)" } : undefined}
-    >
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+    <header className="sticky top-4 z-40 mx-4 lg:mx-6">
+      <div
+        className={`mx-auto flex h-16 max-w-7xl items-center justify-between rounded-full px-6 shadow-elevated ${
+          isDark ? "" : "border border-border bg-background/85 backdrop-blur-xl"
+        }`}
+        style={isDark ? { backgroundColor: "#01304a", border: "1px solid rgba(255,255,255,0.08)" } : undefined}
+      >
         <div className="flex items-center gap-10">
           <Logo dark={isDark} />
           <nav ref={navRef} className="relative hidden items-center gap-1 md:flex h-16">
+            {isDark && (
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute left-0 top-1/2 z-0 h-9 rounded-full bg-white/12 transition-all duration-300 ease-out"
+                style={{
+                  transform: `translateY(-50%) translateX(${indicator.left}px)`,
+                  width: `${indicator.width}px`,
+                  opacity: indicator.visible ? 1 : 0,
+                }}
+              />
+            )}
             {items.map((item) => {
               if (isGroup(item)) {
                 return <NavGroupDropdown key={item.label} group={item} pathname={pathname} isDark={isDark} />;
               }
               return <SingleNav key={item.to} item={item} pathname={pathname} isDark={isDark} />;
             })}
-            {isDark && (
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute bottom-0 h-[2px] rounded-full bg-[#f38934] transition-all duration-300 ease-out"
-                style={{
-                  transform: `translateX(${indicator.left}px)`,
-                  width: `${indicator.width}px`,
-                  opacity: indicator.visible ? 1 : 0,
-                }}
-              />
-            )}
           </nav>
         </div>
         <div className={`flex items-center ${isDark ? "gap-6" : "gap-3"}`}>
