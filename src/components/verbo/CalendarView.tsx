@@ -213,9 +213,25 @@ function MonthGrid({
       {grid.map((day, i) => {
         const inMonth = day.getMonth() === cursor.getMonth();
         const dayEvents = eventsByDay.get(dayKey(day)) ?? [];
+        const isToday = dayKey(day) === dayKey(new Date());
         return (
-          <div key={i} className={`min-h-[110px] bg-card p-1.5 ${inMonth ? "" : "opacity-40"}`}>
-            <div className="mb-1 text-[11px] font-medium text-foreground">{day.getDate()}</div>
+          <div
+            key={i}
+            className={`relative min-h-[110px] p-1.5 transition-shadow duration-150 ${
+              isToday ? "bg-[var(--navy-50)]" : "bg-card"
+            } ${inMonth ? "" : "opacity-40"} ${
+              dayEvents.length > 0 ? "hover:relative hover:z-10 hover:shadow-elevated" : ""
+            }`}
+          >
+            <div className="mb-1 flex items-center">
+              <span
+                className={`inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[11px] font-semibold ${
+                  isToday ? "bg-[#f38934] text-white" : "text-foreground"
+                }`}
+              >
+                {day.getDate()}
+              </span>
+            </div>
             <div className="space-y-1">
               {dayEvents.slice(0, 3).map((e) => (
                 <EventPill key={e.id} ev={e} onClick={() => onEventClick?.(e)} pulse={!!pulseKinds?.includes(e.kind)} />
@@ -227,6 +243,7 @@ function MonthGrid({
           </div>
         );
       })}
+
     </div>
   );
 }
