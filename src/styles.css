@@ -315,6 +315,23 @@
     animation: verbo-status-pulse 1.8s ease-in-out infinite;
   }
 
+  /* Continuous subtle float */
+  @keyframes verbo-float {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-6px); }
+  }
+  .verbo-float {
+    animation: verbo-float 5.5s ease-in-out infinite alternate;
+  }
+  .verbo-float-delayed {
+    animation: verbo-float 5.5s ease-in-out 1.5s infinite alternate;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .verbo-float,
+    .verbo-float-delayed { animation: none; transform: none; }
+    .verbo-status-dot { animation: none; }
+  }
+
   /* Typewriter cursor blink */
   @keyframes verbo-cursor-blink {
     0%, 49% { opacity: 1; }
