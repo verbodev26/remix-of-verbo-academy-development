@@ -81,11 +81,11 @@ function LoginPage() {
             className="pointer-events-none absolute -bottom-20 -left-20 h-80 w-80 rounded-full bg-accent/10"
             aria-hidden
           />
-        <Link to="/" className="inline-flex w-fit items-center gap-2 text-sm text-[#01304a]/60 transition-colors hover:text-[#01304a]">
+        <Link to="/" className="relative z-10 inline-flex w-fit items-center gap-2 text-sm text-[#01304a]/60 transition-colors hover:text-[#01304a]">
           <ArrowLeft className="h-3.5 w-3.5" /> Back to home
         </Link>
 
-        <div className="m-auto w-full max-w-sm">
+        <div className="relative z-10 m-auto w-full max-w-sm">
           <Logo className="mb-10 [&_span]:text-[#01304a] [&_span.text-muted-foreground]:text-[#01304a]/70" />
           <h1 className="text-3xl font-semibold tracking-tight text-[#01304a]">Sign in</h1>
           <p className="mt-1.5 text-sm text-[#01304a]/70">Enter the credentials provided by your administrator.</p>
@@ -150,7 +150,7 @@ function LoginPage() {
           )}
         </div>
 
-        <div className="text-center text-xs text-[#01304a]/50">
+        <div className="relative z-10 text-center text-xs text-[#01304a]/50">
           Verbo Language Solutions · Private platform · No self-registration
         </div>
         </div>
