@@ -23,14 +23,11 @@ import {
   ArrowUpRight,
   Award,
   BookOpen,
-  CalendarCheck,
   CalendarClock,
   Download,
-  GraduationCap,
   ShieldAlert,
   Sparkles,
   Star,
-  TrendingUp,
   Users,
   Video,
   X,
@@ -312,9 +309,10 @@ function StudentDashboard() {
               </div>
             );
           })()}
-          <GhostButton onClick={() => setReportOpen(true)}>
-            <ShieldAlert className="h-4 w-4" /> Report
-          </GhostButton>
+          <button className="verbo-report-btn" onClick={() => setReportOpen(true)} aria-label="Report" title="Report">
+            <span className="sign"><ShieldAlert className="h-4 w-4" /></span>
+            <span className="text">Report</span>
+          </button>
         </div>
       </header>
 
@@ -324,15 +322,15 @@ function StudentDashboard() {
         style={{ animationDelay: "60ms" }}
       >
         {/* Current Level */}
-        <div className="relative group">
-          <div className="card-gradient-navy shadow-card verbo-card-hover relative overflow-hidden rounded-[2rem] p-6">
+        <div className="relative">
+          <div className="card-gradient-navy shadow-card verbo-card-hover relative flex h-full min-h-[168px] items-center overflow-hidden rounded-[2rem] px-6 py-6">
             <div
               className="pointer-events-none absolute -right-8 -top-10 h-[140px] w-[140px] rounded-3xl"
               style={{ background: "rgba(255,255,255,0.08)", transform: "rotate(14deg)" }}
               aria-hidden
             />
-            <div className="relative flex items-center justify-between gap-4">
-              <div className="pr-6">
+            <div className="relative flex w-full items-center justify-between gap-4">
+              <div className="pr-2">
                 <div className="text-xs font-medium uppercase tracking-wider text-white/60">Current Level</div>
                 <div className="mt-3 text-3xl font-semibold tracking-tight text-white">
                   {currentLevelName ?? "—"}
@@ -348,27 +346,24 @@ function StudentDashboard() {
               />
             </div>
           </div>
-          <div className="pointer-events-none absolute -bottom-5 left-6 flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-elevated transition-transform duration-300 group-hover:scale-110">
-            <GraduationCap className="h-7 w-7" strokeWidth={1.5} style={{ color: "#01304a" }} />
-          </div>
         </div>
 
         {/* Level Progress — hero */}
-        <div className="relative group">
-          <div className="card-gradient-orange shadow-card verbo-card-hover relative overflow-hidden rounded-[2rem] p-6">
+        <div className="relative">
+          <div className="card-gradient-orange shadow-card verbo-card-hover relative flex h-full min-h-[168px] items-center overflow-hidden rounded-[2rem] px-6 py-6">
             <div
               className="pointer-events-none absolute -right-8 -top-10 h-[140px] w-[140px] rounded-3xl"
               style={{ background: "rgba(1,48,74,0.06)", transform: "rotate(14deg)" }}
               aria-hidden
             />
-            <div className="relative flex items-center justify-between gap-5">
-              <div className="pr-6">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: "rgba(1,48,74,0.75)" }}>Level Progress</div>
+            <div className="relative flex w-full items-center justify-between gap-5">
+              <div className="pr-2">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: "rgba(1,48,74,0.8)" }}>Level Progress</div>
                 <div className="mt-3 flex items-baseline gap-2">
                   <span className="text-6xl font-bold leading-none tracking-tight" style={{ color: "#01304a" }}>{levelProgress}</span>
                   <span className="text-2xl font-bold" style={{ color: "#01304a" }}>%</span>
                 </div>
-                <div className="mt-1.5 text-xs" style={{ color: "rgba(1,48,74,0.7)" }}>of {currentLevelName ?? "—"}</div>
+                <div className="mt-1.5 text-xs font-semibold" style={{ color: "rgba(1,48,74,0.8)" }}>of {currentLevelName ?? "—"}</div>
               </div>
               <StatRing
                 value={levelProgress}
@@ -380,26 +375,23 @@ function StudentDashboard() {
               />
             </div>
           </div>
-          <div className="pointer-events-none absolute -bottom-5 left-6 flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-elevated transition-transform duration-300 group-hover:scale-110">
-            <TrendingUp className="h-7 w-7" strokeWidth={1.5} style={{ color: "#f38934" }} />
-          </div>
         </div>
 
         {/* Overall Attendance */}
-        <div className="relative group">
-          <div className="card-gradient-green shadow-card verbo-card-hover relative overflow-hidden rounded-[2rem] p-6">
+        <div className="relative">
+          <div className="card-gradient-lime shadow-card verbo-card-hover relative flex h-full min-h-[168px] items-center overflow-hidden rounded-[2rem] px-6 py-6">
             <div
               className="pointer-events-none absolute -right-8 -top-10 h-[140px] w-[140px] rounded-3xl"
               style={{ background: "rgba(1,48,74,0.06)", transform: "rotate(14deg)" }}
               aria-hidden
             />
-            <div className="relative flex items-center justify-between gap-4">
-              <div className="pr-6">
-                <div className="text-xs font-medium uppercase tracking-wider" style={{ color: "rgba(1,48,74,0.75)" }}>Overall Attendance</div>
+            <div className="relative flex w-full items-center justify-between gap-4">
+              <div className="pr-2">
+                <div className="text-xs font-semibold uppercase tracking-wider" style={{ color: "rgba(1,48,74,0.8)" }}>Overall Attendance</div>
                 <div className="mt-3 flex items-baseline gap-2">
                   <span className="text-3xl font-bold tracking-tight" style={{ color: "#01304a" }}>{attendancePct}%</span>
                 </div>
-                <div className="mt-1 text-xs" style={{ color: "rgba(1,48,74,0.7)" }}>last 90 days</div>
+                <div className="mt-1 text-xs font-semibold" style={{ color: "rgba(1,48,74,0.8)" }}>last 90 days</div>
               </div>
               <StatRing
                 value={attendancePct}
@@ -408,9 +400,6 @@ function StudentDashboard() {
                 textColor="#01304a"
               />
             </div>
-          </div>
-          <div className="pointer-events-none absolute -bottom-5 left-6 flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-elevated transition-transform duration-300 group-hover:scale-110">
-            <CalendarCheck className="h-7 w-7" strokeWidth={1.5} style={{ color: "#01304a" }} />
           </div>
         </div>
       </section>
@@ -477,10 +466,15 @@ function StudentDashboard() {
           {/* Current Course */}
           <div>
             <SectionTitle>Current Course</SectionTitle>
-            <PremiumCard hover className="verbo-card-hover flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
-              <div className="flex items-start gap-4">
+            <PremiumCard hover className="group verbo-card-hover relative flex flex-col items-start justify-between gap-6 overflow-hidden md:flex-row md:items-center">
+              <div
+                className="pointer-events-none absolute inset-0 opacity-[0.07]"
+                style={{ background: "radial-gradient(circle at top right, var(--orange-500), transparent 65%)" }}
+                aria-hidden
+              />
+              <div className="relative flex items-start gap-4">
                 <div
-                  className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10"
+                  className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10 transition-transform duration-300 group-hover:scale-105"
                   style={{ color: "#01304a" }}
                   aria-hidden
                 >
@@ -661,7 +655,7 @@ function StudentDashboard() {
         {/* RIGHT SIDEBAR ~35% */}
         <aside className="verbo-fade-up motion-reduce:animate-none space-y-6" style={{ animationDelay: "240ms" }}>
           {/* Verbo Experiences */}
-          <PremiumCard hover className="relative overflow-hidden">
+          <PremiumCard hover className="group relative overflow-hidden">
             <div
               className="absolute inset-0 opacity-[0.09] pointer-events-none"
               style={{ background: "radial-gradient(circle at top right, var(--green-500), transparent 65%)" }}
@@ -669,7 +663,7 @@ function StudentDashboard() {
             <div className="relative">
               <div className="flex items-center gap-2">
                 <div
-                  className="flex h-9 w-9 items-center justify-center rounded-lg"
+                  className="verbo-float flex h-9 w-9 items-center justify-center rounded-lg transition-transform duration-300 group-hover:scale-110"
                   style={{ background: "color-mix(in oklab, var(--green-500) 12%, transparent)", color: "var(--green-500)" }}
                 >
                   <Users className="h-4 w-4" />
@@ -691,7 +685,7 @@ function StudentDashboard() {
           </PremiumCard>
 
           {/* Quick Review Dock */}
-          <PremiumCard>
+          <PremiumCard hover>
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-sm font-semibold tracking-tight" style={{ color: "#01304a" }}>
                 Quick Review Dock
@@ -705,12 +699,24 @@ function StudentDashboard() {
             ) : (
               <ul className="space-y-3">
                 {recentFeedback.map((f) => (
-                  <li key={f.id} className="rounded-lg border border-border/70 bg-white/70 p-3">
-                    <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-muted-foreground">
-                      <span>{f.teacher}</span>
-                      <span>{f.date}</span>
+                  <li
+                    key={f.id}
+                    className="flex gap-3 rounded-lg border border-border/70 bg-white/70 p-3 transition-colors duration-200 hover:bg-secondary/60"
+                  >
+                    <div
+                      className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-white"
+                      style={{ backgroundColor: "#01304a" }}
+                      aria-hidden
+                    >
+                      {(f.teacher ?? "?").trim().charAt(0).toUpperCase()}
                     </div>
-                    <p className="mt-1.5 text-xs leading-relaxed text-foreground">{f.tip}</p>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-muted-foreground">
+                        <span className="truncate">{f.teacher}</span>
+                        <span className="shrink-0 pl-2">{f.date}</span>
+                      </div>
+                      <p className="mt-1.5 text-xs leading-relaxed text-foreground">{f.tip}</p>
+                    </div>
                   </li>
                 ))}
               </ul>

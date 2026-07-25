@@ -268,7 +268,7 @@
   background-image: linear-gradient(150deg, #dea3ee 0%, #c86fe1 55%, #a34ac0 100%);
 }
 @utility card-gradient-orange {
-  background-image: linear-gradient(150deg, var(--orange-300) 0%, var(--orange-500) 55%, var(--orange-700) 100%);
+  background-image: linear-gradient(150deg, var(--orange-400) 0%, var(--orange-500) 55%, var(--orange-600) 100%);
 }
 @utility card-gradient-green {
   background-image: linear-gradient(150deg, var(--green-300) 0%, var(--green-500) 55%, var(--green-700) 100%);
@@ -715,4 +715,59 @@
 @media (prefers-reduced-motion: reduce) {
   .verbo-iso-pulse,
   .verbo-btn-shake { animation: none; }
+}
+
+/* Circular danger "Report" button (expands to a pill on hover) */
+.verbo-report-btn {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: width 0.3s, border-radius 0.3s, background-color 0.25s ease-out, box-shadow 0.25s ease-out;
+  background-color: rgba(220, 38, 38, 0.1);
+  color: var(--destructive);
+}
+.verbo-report-btn .sign {
+  width: 100%;
+  transition-duration: 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--destructive);
+}
+.verbo-report-btn .text {
+  position: absolute;
+  right: 0%;
+  width: 0%;
+  opacity: 0;
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition-duration: 0.3s;
+}
+.verbo-report-btn:hover {
+  width: 116px;
+  border-radius: 999px;
+  background-color: var(--destructive);
+  box-shadow: 0 6px 16px -4px rgba(220, 38, 38, 0.4);
+}
+.verbo-report-btn:hover .sign {
+  width: 20%;
+  padding-left: 12px;
+  color: white;
+}
+.verbo-report-btn:hover .text {
+  opacity: 1;
+  width: 75%;
+  padding-right: 10px;
+}
+.verbo-report-btn:active {
+  transform: scale(0.97);
 }
