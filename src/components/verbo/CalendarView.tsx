@@ -163,9 +163,10 @@ export function CalendarView({
 
       {/* Grid */}
       {mode === "month" ? (
-        <MonthGrid cursor={cursor} eventsByDay={eventsByDay} onEventClick={onEventClick} />
+        <MonthGrid cursor={cursor} eventsByDay={eventsByDay} onEventClick={onEventClick} pulseKinds={pulseKinds} />
       ) : (
-        <DayList day={dayCursor} events={eventsByDay.get(dayKey(dayCursor)) ?? []} onEventClick={onEventClick} />
+        <DayList day={dayCursor} events={eventsByDay.get(dayKey(dayCursor)) ?? []} onEventClick={onEventClick} pulseKinds={pulseKinds} />
+
       )}
 
       {/* Canonical 7-status legend */}
