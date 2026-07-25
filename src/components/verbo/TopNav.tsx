@@ -216,7 +216,7 @@ export function TopNav({ items, variant = "light" }: { items: NavEntry[]; varian
   }, [pathname, isDark, items]);
 
   return (
-    <header className="sticky top-4 z-40 mx-4 lg:mx-6">
+    <header className="sticky top-0 z-40 mx-4 lg:mx-6">
       <div
         className={`mx-auto flex h-16 max-w-7xl items-center justify-between rounded-full px-6 shadow-elevated ${
           isDark ? "" : "border border-border bg-background/85 backdrop-blur-xl"
