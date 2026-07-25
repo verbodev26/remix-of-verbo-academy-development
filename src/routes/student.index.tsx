@@ -470,7 +470,7 @@ function StudentDashboard() {
               <div className="pr-2">
                 <div className="text-xs font-semibold uppercase tracking-wider" style={{ color: "rgba(1,48,74,0.8)" }}>Overall Attendance</div>
                 <div className="mt-3 flex items-baseline gap-2">
-                  <span className="text-3xl font-bold tracking-tight" style={{ color: attendanceColorFor(attendancePct) }}>{attendancePct}%</span>
+                  <span className="text-3xl font-bold tracking-tight" style={{ color: "#ffffff" }}>{attendancePct}%</span>
                 </div>
                 <div className="mt-1 text-xs font-semibold" style={{ color: "rgba(1,48,74,0.8)" }}>last 90 days</div>
               </div>
