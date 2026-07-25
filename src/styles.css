@@ -81,6 +81,10 @@
   --shadow-floating: 0 12px 40px -8px oklch(0 0 0 / 0.10), 0 4px 12px -2px oklch(0 0 0 / 0.05);
 }
 
+.font-marketing {
+  font-family: var(--font-marketing);
+}
+
 :root {
   --radius: 0.75rem;
 
