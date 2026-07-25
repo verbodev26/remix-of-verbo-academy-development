@@ -183,12 +183,14 @@ export function CalendarView({
 }
 
 function MonthGrid({
-  cursor, eventsByDay, onEventClick,
+  cursor, eventsByDay, onEventClick, pulseKinds,
 }: {
   cursor: Date;
   eventsByDay: Map<string, CalendarEvent[]>;
   onEventClick?: (ev: CalendarEvent) => void;
+  pulseKinds?: CalendarEventKind[];
 }) {
+
   const grid = buildMonthGrid(cursor);
   return (
     <div className="grid grid-cols-7 gap-px overflow-hidden rounded-xl border border-border bg-border text-xs">
