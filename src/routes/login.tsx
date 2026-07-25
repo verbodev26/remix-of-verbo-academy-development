@@ -75,12 +75,12 @@ function LoginPage() {
     <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2">
       {/* Form side */}
       <div className="relative flex flex-col overflow-hidden">
-        {/* Decorative orange blob */}
-        <div
-          className="pointer-events-none absolute -bottom-20 -left-20 h-80 w-80 rounded-full bg-accent/10"
-          aria-hidden
-        />
         <div className="relative z-10 flex h-full flex-col bg-white px-6 py-8">
+          {/* Decorative orange blob */}
+          <div
+            className="pointer-events-none absolute -bottom-20 -left-20 h-80 w-80 rounded-full bg-accent/10"
+            aria-hidden
+          />
         <Link to="/" className="inline-flex w-fit items-center gap-2 text-sm text-[#01304a]/60 transition-colors hover:text-[#01304a]">
           <ArrowLeft className="h-3.5 w-3.5" /> Back to home
         </Link>
