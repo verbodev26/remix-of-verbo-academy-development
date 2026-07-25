@@ -891,7 +891,6 @@ function TeacherDashboard() {
         <PlanModal
           session={planning as ExtSession}
           existing={plans[planning.id]}
-          levels={levels}
           onClose={() => setPlanning(null)}
           onSave={handleSavePlan}
         />
