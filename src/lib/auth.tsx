@@ -25,6 +25,33 @@ const Ctx = createContext<AuthCtx | null>(null);
 const KEY = "verbo.auth.user.v2";
 const LEGACY_KEYS = ["verbo.auth.user"];
 
+/** Persisted session envelope. `expiresAt` is null for session-only storage. */
+type StoredSession = { user: User; expiresAt: number | null };
+
+const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+
+function safeRead(store: Storage | undefined): StoredSession | null {
+  if (!store) return null;
+  try {
+    const raw = store.getItem(KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as StoredSession | User;
+    // Tolerate the legacy shape (bare user object) written by older builds.
+    if (parsed && typeof parsed === "object" && "user" in parsed) return parsed as StoredSession;
+    return { user: parsed as User, expiresAt: null };
+  } catch {
+    return null;
+  }
+}
+
+function safeRemove(store: Storage | undefined) {
+  try { store?.removeItem(KEY); } catch {}
+}
+
+function safeWrite(store: Storage | undefined, session: StoredSession) {
+  try { store?.setItem(KEY, JSON.stringify(session)); } catch {}
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
 
@@ -34,26 +61,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     for (const k of LEGACY_KEYS) {
       try { localStorage.removeItem(k); } catch {}
     }
-    try {
-      const raw = localStorage.getItem(KEY);
-      if (!raw) return;
-      const stored = JSON.parse(raw) as User;
+
+    const restore = (store: Storage): User | null => {
+      const stored = safeRead(store);
+      if (!stored) return null;
+      if (stored.expiresAt !== null && Date.now() > stored.expiresAt) {
+        safeRemove(store);
+        return null;
+      }
       // Re-hydrate from the canonical USERS list so shape changes (new roles,
       // admin_type, etc.) always take effect without forcing a re-login.
-      const canonical = USERS.find((u) => u.id === stored.id);
+      const canonical = USERS.find((u) => u.id === stored.user.id);
       if (!canonical) {
-        localStorage.removeItem(KEY);
-        return;
+        safeRemove(store);
+        return null;
       }
-      const merged: User = { ...canonical, ...(stored.password ? { password: stored.password } : {}) };
-      setUser(merged);
-      localStorage.setItem(KEY, JSON.stringify(merged));
-    } catch {
-      try { localStorage.removeItem(KEY); } catch {}
-    }
+      const merged: User = { ...canonical, ...(stored.user.password ? { password: stored.user.password } : {}) };
+      safeWrite(store, { user: merged, expiresAt: stored.expiresAt });
+      return merged;
+    };
+
+    const restored = restore(localStorage) ?? restore(sessionStorage);
+    if (restored) setUser(restored);
   }, []);
 
-  const login: AuthCtx["login"] = (email, password) => {
+  const login: AuthCtx["login"] = (email, password, remember) => {
     hydrateAdminRoles();
     const match = USERS.find(
       (u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password,
@@ -67,13 +99,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { ok: false, error: "Account deactivated. Contact your administrator." };
     }
     setUser(match);
-    localStorage.setItem(KEY, JSON.stringify(match));
+    if (remember) {
+      safeRemove(sessionStorage);
+      safeWrite(localStorage, { user: match, expiresAt: Date.now() + THIRTY_DAYS_MS });
+    } else {
+      safeRemove(localStorage);
+      safeWrite(sessionStorage, { user: match, expiresAt: null });
+    }
     return { ok: true, role: match.role };
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem(KEY);
+    safeRemove(localStorage);
+    safeRemove(sessionStorage);
   };
 
   const updateProfile: AuthCtx["updateProfile"] = (updates) => {
@@ -100,9 +139,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (idx !== -1) USERS[idx] = next;
 
     setUser(next);
-    localStorage.setItem(KEY, JSON.stringify(next));
+    // Write back into whichever storage currently holds the active session,
+    // preserving the original expiry.
+    const local = safeRead(localStorage);
+    const target = local ? localStorage : sessionStorage;
+    const existing = local ?? safeRead(sessionStorage);
+    safeWrite(target, { user: next, expiresAt: existing?.expiresAt ?? null });
     return { ok: true };
   };
+
 
   return <Ctx.Provider value={{ user, login, logout, updateProfile }}>{children}</Ctx.Provider>;
 }
