@@ -437,11 +437,12 @@ function StudentDashboard() {
                 >
                   <div className="flex items-center gap-3">
                     <div
-                      className="flex h-9 w-9 items-center justify-center rounded-lg"
-                      style={{ background: `color-mix(in oklab, ${color} 12%, transparent)`, color }}
+                      className="flex h-11 w-11 items-center justify-center rounded-xl text-white"
+                      style={{ background: color, boxShadow: `0 6px 16px -4px color-mix(in oklab, ${color} 25%, transparent)` }}
                     >
-                      <Icon className="h-4.5 w-4.5" strokeWidth={1.6} />
+                      <Icon className="h-5 w-5" strokeWidth={2} />
                     </div>
+
                     <div className="min-w-0">
                       <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{m.key}</div>
                       <div className="text-base font-semibold tabular-nums" style={{ color: "#01304a" }}>
