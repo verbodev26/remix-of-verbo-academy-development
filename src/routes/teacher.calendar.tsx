@@ -38,7 +38,7 @@ function Page() {
 
   const [sessions, setSessions] = useState<ExtSession[]>([]);
   const [plans, setPlans] = useState<Record<string, LessonPlan>>({});
-  const [levels, setLevels] = useState<Level[]>([]);
+  
   const [planning, setPlanning] = useState<ExtSession | null>(null);
   const [detailsFor, setDetailsFor] = useState<{ session: ExtSession; mode: "ready" | "completed"; title: string } | null>(null);
   const [cancelling, setCancelling] = useState<ExtSession | null>(null);
