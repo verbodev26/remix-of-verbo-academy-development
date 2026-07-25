@@ -1,10 +1,11 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useAuth } from "@/lib/auth";
 import { USERS } from "@/lib/mock-data";
 import { Logo } from "@/components/verbo/Logo";
 import { PhotoPlaceholder } from "@/components/verbo/ui";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import logoSrc from "@/assets/verbo-logo.png";
+import { ArrowLeft, Eye, EyeOff, X } from "lucide-react";
 
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Sign in — Verbo Language Solutions" }] }),
@@ -17,14 +18,32 @@ const EXECUTIVE_PHRASES = [
   "The best negotiators aren't the ones with the biggest vocabulary. They're the ones who sound like themselves in any language.",
 ];
 
+type BtnState = "idle" | "loading" | "success" | "error";
+
+function prefersReducedMotion() {
+  return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
 function LoginPage() {
   const { user, login } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [remember, setRemember] = useState(true);
   const [error, setError] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const [btnState, setBtnState] = useState<BtnState>("idle");
+  const [pop, setPop] = useState(false);
+  const [overlay, setOverlay] = useState<{ x: number; y: number } | null>(null);
+  const [overlayOpen, setOverlayOpen] = useState(false);
   const [showDevSandbox, setShowDevSandbox] = useState(false);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  const submitting = btnState !== "idle";
+
+  useEffect(() => () => { timers.current.forEach(clearTimeout); }, []);
+  const later = (fn: () => void, ms: number) => { timers.current.push(setTimeout(fn, ms)); };
 
   useEffect(() => {
     const devFlag =
@@ -39,7 +58,7 @@ function LoginPage() {
   );
 
   useEffect(() => {
-    if (user) {
+    if (user && btnState === "idle") {
       if (user.must_change_password) {
         navigate({ to: "/change-password" });
         return;
@@ -47,29 +66,51 @@ function LoginPage() {
       const dest = user.role === "admin" ? "/admin" : user.role === "teacher" ? "/teacher" : "/student";
       navigate({ to: dest });
     }
-  }, [user, navigate]);
-
+  }, [user, navigate, btnState]);
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return;
     setError("");
-    setSubmitting(true);
-    setTimeout(() => {
-      const res = login(email.trim(), password);
+    setBtnState("loading");
+    later(() => {
+      const res = login(email.trim(), password, remember);
       if (!res.ok) {
         setError(res.error);
-        setSubmitting(false);
+        setBtnState("error");
+        later(() => setBtnState("idle"), 900);
         return;
       }
       const match = USERS.find((u) => u.email.toLowerCase() === email.trim().toLowerCase());
-      if (match?.must_change_password) {
-        navigate({ to: "/change-password" });
+      const dest = match?.must_change_password
+        ? "/change-password"
+        : res.role === "admin"
+          ? "/admin"
+          : res.role === "teacher"
+            ? "/teacher"
+            : "/student";
+
+      setBtnState("success");
+
+      if (prefersReducedMotion()) {
+        navigate({ to: dest });
         return;
       }
-      const dest = res.role === "admin" ? "/admin" : res.role === "teacher" ? "/teacher" : "/student";
-      navigate({ to: dest });
+
+      setPop(true);
+      later(() => setPop(false), 200);
+      later(() => {
+        const rect = btnRef.current?.getBoundingClientRect();
+        setOverlay({
+          x: rect ? rect.left + rect.width / 2 : window.innerWidth / 2,
+          y: rect ? rect.top + rect.height / 2 : window.innerHeight / 2,
+        });
+        requestAnimationFrame(() => requestAnimationFrame(() => setOverlayOpen(true)));
+        later(() => navigate({ to: dest }), 520);
+      }, 200);
     }, 900);
   };
+
 
   return (
     <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2">
