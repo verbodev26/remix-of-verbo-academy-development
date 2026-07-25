@@ -19,8 +19,11 @@ import { subscribeVipUnits, subscribeVipUnitCompletion } from "@/lib/vip-courses
 import { useComputedMacros } from "@/components/verbo/PerformanceAnalytics";
 import { GhostButton, Pill, PhotoPlaceholder, PrimaryButton, SectionTitle, StatRing, SuccessButton } from "@/components/verbo/ui";
 import {
+  ArrowDown,
   ArrowRight,
+  ArrowUp,
   ArrowUpRight,
+
   Award,
   BookOpen,
   CalendarClock,
