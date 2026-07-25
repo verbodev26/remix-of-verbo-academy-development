@@ -559,9 +559,11 @@ function StudentDashboard() {
                         onClick={() => setSelectedDay(key)}
                         className={`flex flex-col items-center gap-1 rounded-2xl px-2 py-3 transition-transform duration-200 active:scale-[0.97] ${
                           isActive
-                            ? "card-gradient-navy shadow-card text-white"
+                            ? "shadow-card text-white"
                             : "border border-border bg-white text-foreground hover:-translate-y-0.5"
                         }`}
+                        style={isActive ? { backgroundColor: "var(--calendar-accent)" } : undefined}
+
                       >
                         <span className={`text-[10px] font-semibold uppercase tracking-wider ${isActive ? "text-white/70" : "text-muted-foreground"}`}>
                           {d.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase()}
