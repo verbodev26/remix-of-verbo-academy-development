@@ -107,26 +107,36 @@ export function ClubReservationModal({
         )}
 
         <div className="p-6">
-        <div className="flex items-center gap-2">
-          <span
-            className="rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white"
+        <div className="flex items-start gap-3">
+          <div
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white"
             style={{ background: accent }}
           >
-            {label}
-          </span>
-          {booked && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">
-              <CheckCircle2 className="h-3 w-3" /> You're in
-            </span>
-          )}
+            {isBook ? <FileText className="h-5 w-5" /> : <Users className="h-5 w-5" />}
+          </div>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <span
+                className="rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white"
+                style={{ background: accent }}
+              >
+                {label}
+              </span>
+              {booked && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">
+                  <CheckCircle2 className="h-3 w-3" /> You're in
+                </span>
+              )}
+            </div>
+            <h3 className="mt-1.5 text-lg font-semibold tracking-tight" style={{ color: "#01304a" }}>
+              {club.title}
+            </h3>
+            {club.description && (
+              <p className="mt-1 text-sm text-muted-foreground">{club.description}</p>
+            )}
+          </div>
         </div>
 
-        <h3 className="mt-2 text-lg font-semibold tracking-tight text-foreground">
-          {club.title}
-        </h3>
-        {club.description && (
-          <p className="mt-1 text-sm text-muted-foreground">{club.description}</p>
-        )}
 
         <div className="mt-4 space-y-2 text-sm">
           <Row icon={<CalendarClock className="h-4 w-4" />} label="When" value={`${fmtLong(club.date)} · ${club.duration_minutes} min`} />
