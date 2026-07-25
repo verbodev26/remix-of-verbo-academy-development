@@ -587,7 +587,7 @@ function StudentDashboard() {
 
                 <div className="mt-4">
                   {!s ? (
-                    <PremiumCard className="verbo-card-hover"><div className="text-sm text-muted-foreground">No upcoming sessions scheduled.</div></PremiumCard>
+                    <div className="text-sm text-muted-foreground">No upcoming sessions scheduled.</div>
                   ) : (
                     <div className="max-w-xl mx-auto w-full rounded-2xl overflow-hidden relative shadow-elevated verbo-card-hover">
                       <div className="absolute inset-x-0 top-0 h-1 bg-[var(--accent)]" />
