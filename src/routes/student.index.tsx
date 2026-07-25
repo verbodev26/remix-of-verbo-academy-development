@@ -17,17 +17,20 @@ import { unitsForStudent } from "@/lib/vip-courses-store";
 import { tailoredUnitsForStudent } from "@/lib/tailored-content-store";
 import { subscribeVipUnits, subscribeVipUnitCompletion } from "@/lib/vip-courses-store";
 import { useComputedMacros } from "@/components/verbo/PerformanceAnalytics";
-import { GhostButton, Pill, PrimaryButton, SectionTitle, StatRing, SuccessButton } from "@/components/verbo/ui";
+import { GhostButton, Pill, PhotoPlaceholder, PrimaryButton, SectionTitle, StatRing, SuccessButton } from "@/components/verbo/ui";
 import {
   ArrowRight,
+  ArrowUpRight,
   Award,
-  
   BookOpen,
+  CalendarCheck,
   CalendarClock,
   Download,
+  GraduationCap,
   ShieldAlert,
   Sparkles,
   Star,
+  TrendingUp,
   Users,
   Video,
   X,
@@ -72,6 +75,12 @@ function fmtDay(iso: string) {
 }
 function fmtTime(iso: string) {
   return new Date(iso).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+}
+function dayKeyOf(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+function dayKey(iso: string) {
+  return dayKeyOf(new Date(iso));
 }
 
 function PremiumCard({ children, className = "", hover = false, style }: { children: React.ReactNode; className?: string; hover?: boolean; style?: React.CSSProperties }) {
@@ -119,6 +128,7 @@ function StudentDashboard() {
 
   const [toCancel, setToCancel] = useState<ExtSession | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
 
   const [coursesRev, setCoursesRev] = useState(0);
   useEffect(() => subscribeCourses(() => setCoursesRev((r) => r + 1)), []);
@@ -279,7 +289,7 @@ function StudentDashboard() {
         <div>
           <div className="text-sm text-muted-foreground">Welcome back</div>
           <div className="mt-1 flex items-center gap-3">
-            <h1 className="font-[family-name:var(--font-display)] text-3xl font-semibold tracking-tight" style={{ color: "#01304a" }}>
+            <h1 className="text-3xl font-semibold tracking-tight" style={{ color: "#01304a" }}>
               {user.name.split(" ")[0]}
             </h1>
             <FeaturedProfileBadge user={user} />
@@ -313,47 +323,96 @@ function StudentDashboard() {
         className="verbo-fade-up motion-reduce:animate-none grid gap-4 md:grid-cols-[1fr_1.6fr_1fr]"
         style={{ animationDelay: "60ms" }}
       >
-        <PremiumCard hover className="verbo-card-hover">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Current Level</div>
-              <div className="mt-3 font-[family-name:var(--font-display)] text-3xl font-semibold tracking-tight" style={{ color: "#01304a" }}>
-                {currentLevelName ?? "—"}
+        {/* Current Level */}
+        <div className="relative group">
+          <div className="card-gradient-navy shadow-card verbo-card-hover relative overflow-hidden rounded-[2rem] p-6">
+            <div
+              className="pointer-events-none absolute -right-8 -top-10 h-[140px] w-[140px] rounded-3xl"
+              style={{ background: "rgba(255,255,255,0.08)", transform: "rotate(14deg)" }}
+              aria-hidden
+            />
+            <div className="relative flex items-center justify-between gap-4">
+              <div className="pr-6">
+                <div className="text-xs font-medium uppercase tracking-wider text-white/60">Current Level</div>
+                <div className="mt-3 text-3xl font-semibold tracking-tight text-white">
+                  {currentLevelName ?? "—"}
+                </div>
+                <div className="mt-1 text-xs text-white/60">{productLabel}</div>
               </div>
-              <div className="mt-1 text-xs text-muted-foreground">{productLabel}</div>
+              <StatRing
+                value={levelProgress}
+                label={currentLevelRingLabel}
+                trackColor="rgba(255,255,255,0.25)"
+                progressColor="#ffffff"
+                textColor="#ffffff"
+              />
             </div>
-            <StatRing value={levelProgress} label={currentLevelRingLabel} />
           </div>
-        </PremiumCard>
-        <PremiumCard
-          hover
-          className="verbo-card-hover ring-1 ring-primary/10"
-          style={{ background: "rgba(1, 48, 74, 0.045)" }}
-        >
-          <div className="flex items-center justify-between gap-5">
-            <div>
-              <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary/80">Level Progress</div>
-              <div className="mt-3 flex items-baseline gap-2">
-                <span className="font-[family-name:var(--font-display)] text-6xl font-semibold leading-none tracking-tight" style={{ color: "#01304a" }}>{levelProgress}</span>
-                <span className="font-[family-name:var(--font-display)] text-2xl font-medium" style={{ color: "#01304a" }}>%</span>
+          <div className="pointer-events-none absolute -bottom-5 left-6 flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-elevated transition-transform duration-300 group-hover:scale-110">
+            <GraduationCap className="h-7 w-7" strokeWidth={1.5} style={{ color: "#01304a" }} />
+          </div>
+        </div>
+
+        {/* Level Progress — hero */}
+        <div className="relative group">
+          <div className="card-gradient-orange shadow-card verbo-card-hover relative overflow-hidden rounded-[2rem] p-6">
+            <div
+              className="pointer-events-none absolute -right-8 -top-10 h-[140px] w-[140px] rounded-3xl"
+              style={{ background: "rgba(1,48,74,0.06)", transform: "rotate(14deg)" }}
+              aria-hidden
+            />
+            <div className="relative flex items-center justify-between gap-5">
+              <div className="pr-6">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: "rgba(1,48,74,0.75)" }}>Level Progress</div>
+                <div className="mt-3 flex items-baseline gap-2">
+                  <span className="text-6xl font-bold leading-none tracking-tight" style={{ color: "#01304a" }}>{levelProgress}</span>
+                  <span className="text-2xl font-bold" style={{ color: "#01304a" }}>%</span>
+                </div>
+                <div className="mt-1.5 text-xs" style={{ color: "rgba(1,48,74,0.7)" }}>of {currentLevelName ?? "—"}</div>
               </div>
-              <div className="mt-1.5 text-xs text-muted-foreground">of {currentLevelName ?? "—"}</div>
+              <StatRing
+                value={levelProgress}
+                size={104}
+                stroke={9}
+                trackColor="rgba(1,48,74,0.18)"
+                progressColor="#01304a"
+                textColor="#01304a"
+              />
             </div>
-            <StatRing value={levelProgress} size={104} stroke={9} />
           </div>
-        </PremiumCard>
-        <PremiumCard hover className="verbo-card-hover">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Overall Attendance</div>
-              <div className="mt-3 flex items-baseline gap-2">
-                <span className="font-[family-name:var(--font-display)] text-3xl font-semibold tracking-tight" style={{ color: "#01304a" }}>{attendancePct}%</span>
+          <div className="pointer-events-none absolute -bottom-5 left-6 flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-elevated transition-transform duration-300 group-hover:scale-110">
+            <TrendingUp className="h-7 w-7" strokeWidth={1.5} style={{ color: "#f38934" }} />
+          </div>
+        </div>
+
+        {/* Overall Attendance */}
+        <div className="relative group">
+          <div className="card-gradient-green shadow-card verbo-card-hover relative overflow-hidden rounded-[2rem] p-6">
+            <div
+              className="pointer-events-none absolute -right-8 -top-10 h-[140px] w-[140px] rounded-3xl"
+              style={{ background: "rgba(1,48,74,0.06)", transform: "rotate(14deg)" }}
+              aria-hidden
+            />
+            <div className="relative flex items-center justify-between gap-4">
+              <div className="pr-6">
+                <div className="text-xs font-medium uppercase tracking-wider" style={{ color: "rgba(1,48,74,0.75)" }}>Overall Attendance</div>
+                <div className="mt-3 flex items-baseline gap-2">
+                  <span className="text-3xl font-bold tracking-tight" style={{ color: "#01304a" }}>{attendancePct}%</span>
+                </div>
+                <div className="mt-1 text-xs" style={{ color: "rgba(1,48,74,0.7)" }}>last 90 days</div>
               </div>
-              <div className="mt-1 text-xs text-muted-foreground">last 90 days</div>
+              <StatRing
+                value={attendancePct}
+                trackColor="rgba(1,48,74,0.18)"
+                progressColor="#01304a"
+                textColor="#01304a"
+              />
             </div>
-            <StatRing value={attendancePct} />
           </div>
-        </PremiumCard>
+          <div className="pointer-events-none absolute -bottom-5 left-6 flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-elevated transition-transform duration-300 group-hover:scale-110">
+            <CalendarCheck className="h-7 w-7" strokeWidth={1.5} style={{ color: "#01304a" }} />
+          </div>
+        </div>
       </section>
 
       {/* Linguistic Asset Performance — replaces Performance Metrics + Quote of the Week */}
@@ -459,60 +518,143 @@ function StudentDashboard() {
 
 
 
-          {/* Upcoming Sessions */}
-          <div>
-            <SectionTitle>Upcoming Sessions</SectionTitle>
-            {upcoming.length === 0 ? (
-              <PremiumCard className="verbo-card-hover"><div className="text-sm text-muted-foreground">No upcoming sessions scheduled.</div></PremiumCard>
-            ) : (
-              <div className="grid gap-4 sm:grid-cols-2">
-                {upcoming.map((s) => {
-                  const teacher = userById(s.teacher_id);
-                  const startsInMs = +new Date(s.date_time) - Date.now();
-                  const isImminent = startsInMs > 0 && startsInMs <= 60 * 60 * 1000;
-                  return (
-                    <PremiumCard key={s.id} hover className="verbo-card-hover flex flex-col gap-4">
-                      <div
-                        className="-m-6 mb-0 rounded-t-2xl p-4"
-                        style={{ background: "linear-gradient(135deg, #01304a, #014a6e)" }}
+          {/* Upcoming Sessions — week strip + selected day session */}
+          {(() => {
+            const today = new Date();
+            const weekStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+            weekStart.setDate(weekStart.getDate() - ((weekStart.getDay() + 6) % 7));
+            const week = Array.from({ length: 7 }, (_, i) => {
+              const d = new Date(weekStart);
+              d.setDate(weekStart.getDate() + i);
+              return d;
+            });
+            const sessionForDay = (d: Date) =>
+              upcoming.find((s) => dayKey(s.date_time) === dayKeyOf(d));
+            const isImminentSession = (s: ExtSession) => {
+              const ms = +new Date(s.date_time) - Date.now();
+              return ms > 0 && ms <= 60 * 60 * 1000;
+            };
+            const defaultDay = week.find((d) => sessionForDay(d)) ?? today;
+            const activeDay = selectedDay ?? dayKeyOf(defaultDay);
+            const active = week.find((d) => dayKeyOf(d) === activeDay);
+            const s = active ? sessionForDay(active) : undefined;
+            const teacher = s ? userById(s.teacher_id) : undefined;
+            const plan = s ? getLessonPlan(s.id) : undefined;
+            const imminent = s ? isImminentSession(s) : false;
+
+            return (
+              <div>
+                <SectionTitle>Upcoming Sessions</SectionTitle>
+                <div className="grid grid-cols-7 gap-2">
+                  {week.map((d) => {
+                    const key = dayKeyOf(d);
+                    const ds = sessionForDay(d);
+                    const isActive = key === activeDay;
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => setSelectedDay(key)}
+                        className={`flex flex-col items-center gap-1 rounded-2xl px-2 py-3 transition-transform duration-200 active:scale-[0.97] ${
+                          isActive
+                            ? "card-gradient-navy shadow-card text-white"
+                            : "border border-border bg-white text-foreground hover:-translate-y-0.5"
+                        }`}
                       >
-                        <div className="flex items-center gap-3 text-white">
-                          <CalendarClock className="h-5 w-5" />
-                          <div className="flex-1">
-                            <div className="text-sm font-semibold capitalize">{fmtDay(s.date_time)}</div>
-                            <div className="text-xs opacity-80">{fmt(s.date_time)}</div>
+                        <span className={`text-[10px] font-semibold uppercase tracking-wider ${isActive ? "text-white/70" : "text-muted-foreground"}`}>
+                          {d.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase()}
+                        </span>
+                        <span className="text-lg font-bold leading-none">{d.getDate()}</span>
+                        <span
+                          className={`verbo-status-dot ${ds && isImminentSession(ds) ? "verbo-live-pulse" : ""}`}
+                          style={{
+                            background: ds
+                              ? isImminentSession(ds)
+                                ? "var(--green-500)"
+                                : "var(--orange-500)"
+                              : "transparent",
+                          }}
+                          aria-hidden
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-4">
+                  {!s ? (
+                    <PremiumCard className="verbo-card-hover"><div className="text-sm text-muted-foreground">No upcoming sessions scheduled.</div></PremiumCard>
+                  ) : (
+                    <div className="shadow-card verbo-card-hover rounded-2xl bg-white p-6">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                          <div className="relative">
+                            <PhotoPlaceholder tone="dark" shape="circle" className="h-12 w-12 bg-[#01304a]" />
+                            {imminent && (
+                              <span
+                                className="verbo-status-dot verbo-live-pulse absolute -right-0.5 -top-0.5"
+                                style={{ background: "var(--green-500)" }}
+                                aria-label="Starts within the next hour"
+                              />
+                            )}
                           </div>
-                          {isImminent && (
-                            <span
-                              className="verbo-status-dot verbo-live-pulse"
-                              style={{ background: "var(--green-500)" }}
-                              aria-label="Starts within the next hour"
-                            />
-                          )}
+                          <div>
+                            <div className="text-xs uppercase tracking-wider text-muted-foreground">Teacher</div>
+                            <div className="text-sm font-semibold" style={{ color: "#01304a" }}>{teacher?.name ?? "—"}</div>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          title="Class Details"
+                          aria-label="Class Details"
+                          onClick={() => setClassDetail(s)}
+                          className="group flex h-10 w-10 items-center justify-center rounded-full bg-secondary transition-colors hover:bg-primary/10 active:scale-[0.97]"
+                        >
+                          <ArrowUpRight className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" style={{ color: "#01304a" }} />
+                        </button>
+                      </div>
+
+                      <div className="mt-5">
+                        <div className="text-xl font-bold tracking-tight" style={{ color: "#01304a" }}>
+                          {plan?.title || "Live English Session"}
+                        </div>
+                        <div className="mt-1 text-sm text-muted-foreground">
+                          {currentUnitTitle ?? "—"}
                         </div>
                       </div>
-                      <div className="space-y-1 pt-2">
-                        <div className="text-xs uppercase tracking-wider text-muted-foreground">Teacher</div>
-                        <div className="text-sm font-semibold" style={{ color: "#01304a" }}>{teacher?.name}</div>
+
+                      <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Video className="h-4 w-4" style={{ color: "#01304a" }} />
+                          <span>Microsoft Teams Meeting · {fmt(s.date_time)}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            title="Can't attend"
+                            aria-label="Can't attend"
+                            onClick={() => setToCancel(s)}
+                            className="flex h-10 w-10 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow-soft transition-opacity hover:opacity-90 active:scale-[0.97]"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            title="Connect"
+                            aria-label="Connect"
+                            onClick={() => window.open(s.teams_link, "_blank")}
+                            className="flex h-10 w-10 items-center justify-center rounded-full bg-success text-success-foreground shadow-soft transition-opacity hover:opacity-90 active:scale-[0.97]"
+                          >
+                            <Video className="h-4 w-4" />
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>{fmtTime(s.date_time)} · {s.duration_minutes} min</span>
-                        <Pill tone={s.status === "rescheduled" ? "warning" : "muted"}>{s.status}</Pill>
-                      </div>
-                      <div className="mt-auto flex items-center gap-2 pt-2">
-                        <GhostButton className="flex-1" onClick={() => setToCancel(s)}>
-                          <X className="h-3.5 w-3.5" /> Can't attend
-                        </GhostButton>
-                        <SuccessButton className="flex-1 verbo-btn-glow bg-lime-500" onClick={() => window.open(s.teams_link, "_blank")}>
-                          <Video className="h-4 w-4" /> Connect
-                        </SuccessButton>
-                      </div>
-                    </PremiumCard>
-                  );
-                })}
+                    </div>
+                  )}
+                </div>
               </div>
-            )}
-          </div>
+            );
+          })()}
 
         </div>
 
