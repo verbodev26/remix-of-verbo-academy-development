@@ -61,9 +61,16 @@ import { effectiveHourlyRate, appendTeacherAdjustment } from "@/lib/teacher-tier
 
 
 
-export const Route = createFileRoute("/student/sessions")({ component: Page });
+export const Route = createFileRoute("/student/sessions")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    focus: search.focus === "clubs" ? ("clubs" as const) : undefined,
+  }),
+  component: Page,
+});
 
 const ALL_STUDENT_KINDS: CalendarEventKind[] = ["class", "insight", "book_club", "spotlight"];
+const CLUB_KINDS: CalendarEventKind[] = ["insight", "book_club"];
+
 
 
 function fmtDT(iso: string) {
@@ -75,6 +82,8 @@ function hoursUntil(iso: string): number {
 
 function Page() {
   const { user } = useAuth();
+  const { focus: focusParam } = Route.useSearch();
+
   const [, tick] = useState(0);
   const [selected, setSelected] = useState<CalendarEvent | null>(null);
   const [cantAttendFor, setCantAttendFor] = useState<ExtSession | null>(null);
@@ -170,7 +179,10 @@ function Page() {
           events={events}
           onEventClick={handleEventClick}
           availableKinds={studentKinds}
+          initialEnabledKinds={focusParam === "clubs" ? CLUB_KINDS : undefined}
+          pulseKinds={focusParam === "clubs" ? CLUB_KINDS : undefined}
         />
+
       </Card>
 
       <Card className="!p-4">

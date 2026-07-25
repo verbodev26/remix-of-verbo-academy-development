@@ -33,7 +33,12 @@ export interface CalendarViewProps {
   initialMode?: CalendarViewMode;
   /** Restrict the filter chips to a subset (e.g. Student panel hides "workshop"). */
   availableKinds?: CalendarEventKind[];
+  /** Which kinds start enabled. Defaults to every chip in `availableKinds`. */
+  initialEnabledKinds?: CalendarEventKind[];
+  /** Kinds whose event pills get a subtle attention pulse. */
+  pulseKinds?: CalendarEventKind[];
 }
+
 
 function dayKey(d: Date) { return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`; }
 function addMonths(d: Date, n: number) { const x = new Date(d); x.setMonth(x.getMonth() + n); return x; }
@@ -57,15 +62,18 @@ export function CalendarView({
   onEventClick,
   initialMode = "month",
   availableKinds,
+  initialEnabledKinds,
+  pulseKinds,
 }: CalendarViewProps) {
   const [mode, setMode] = useState<CalendarViewMode>(initialMode);
   const [cursor, setCursor] = useState(() => { const d = new Date(); d.setDate(1); return d; });
   const [dayCursor, setDayCursor] = useState(() => new Date());
   const [enabledKinds, setEnabledKinds] = useState<Set<CalendarEventKind>>(
-    () => new Set(availableKinds ?? (Object.keys(EVENT_KIND_META) as CalendarEventKind[])),
+    () => new Set(initialEnabledKinds ?? availableKinds ?? (Object.keys(EVENT_KIND_META) as CalendarEventKind[])),
   );
 
   const kindsToShow = availableKinds ?? (Object.keys(EVENT_KIND_META) as CalendarEventKind[]);
+
 
   const filtered = useMemo(
     () => events.filter((e) => enabledKinds.has(e.kind)),
@@ -155,9 +163,10 @@ export function CalendarView({
 
       {/* Grid */}
       {mode === "month" ? (
-        <MonthGrid cursor={cursor} eventsByDay={eventsByDay} onEventClick={onEventClick} />
+        <MonthGrid cursor={cursor} eventsByDay={eventsByDay} onEventClick={onEventClick} pulseKinds={pulseKinds} />
       ) : (
-        <DayList day={dayCursor} events={eventsByDay.get(dayKey(dayCursor)) ?? []} onEventClick={onEventClick} />
+        <DayList day={dayCursor} events={eventsByDay.get(dayKey(dayCursor)) ?? []} onEventClick={onEventClick} pulseKinds={pulseKinds} />
+
       )}
 
       {/* Canonical 7-status legend */}
@@ -174,12 +183,14 @@ export function CalendarView({
 }
 
 function MonthGrid({
-  cursor, eventsByDay, onEventClick,
+  cursor, eventsByDay, onEventClick, pulseKinds,
 }: {
   cursor: Date;
   eventsByDay: Map<string, CalendarEvent[]>;
   onEventClick?: (ev: CalendarEvent) => void;
+  pulseKinds?: CalendarEventKind[];
 }) {
+
   const grid = buildMonthGrid(cursor);
   return (
     <div className="grid grid-cols-7 gap-px overflow-hidden rounded-xl border border-border bg-border text-xs">
@@ -194,7 +205,7 @@ function MonthGrid({
             <div className="mb-1 text-[11px] font-medium text-foreground">{day.getDate()}</div>
             <div className="space-y-1">
               {dayEvents.slice(0, 3).map((e) => (
-                <EventPill key={e.id} ev={e} onClick={() => onEventClick?.(e)} />
+                <EventPill key={e.id} ev={e} onClick={() => onEventClick?.(e)} pulse={!!pulseKinds?.includes(e.kind)} />
               ))}
               {dayEvents.length > 3 && (
                 <div className="px-1.5 text-[10px] text-muted-foreground">+{dayEvents.length - 3} more</div>
@@ -208,11 +219,12 @@ function MonthGrid({
 }
 
 function DayList({
-  day, events, onEventClick,
+  day, events, onEventClick, pulseKinds,
 }: {
   day: Date;
   events: CalendarEvent[];
   onEventClick?: (ev: CalendarEvent) => void;
+  pulseKinds?: CalendarEventKind[];
 }) {
   if (events.length === 0) {
     return (
@@ -227,8 +239,12 @@ function DayList({
         <button
           key={e.id}
           onClick={() => onEventClick?.(e)}
-          className="flex w-full items-center gap-4 border-b border-border p-3 text-left transition-colors last:border-0 hover:bg-secondary/60"
+          style={pulseKinds?.includes(e.kind) ? { ["--verbo-focus-pulse-color" as string]: EVENT_KIND_META[e.kind].color } : undefined}
+          className={`flex w-full items-center gap-4 border-b border-border p-3 text-left transition-colors last:border-0 hover:bg-secondary/60 ${
+            pulseKinds?.includes(e.kind) ? "verbo-focus-pulse" : ""
+          }`}
         >
+
           <div className="w-16 shrink-0 text-sm font-semibold tabular-nums" style={{ color: "#01304a" }}>
             {fmtTime(e.date)}
           </div>
@@ -286,7 +302,7 @@ function DayList({
   );
 }
 
-function EventPill({ ev, onClick }: { ev: CalendarEvent; onClick: () => void }) {
+function EventPill({ ev, onClick, pulse = false }: { ev: CalendarEvent; onClick: () => void; pulse?: boolean }) {
   const display = eventPillDisplay(ev);
   const kindMeta = EVENT_KIND_META[ev.kind];
   const isClub = ev.kind === "insight" || ev.kind === "book_club";
@@ -302,8 +318,12 @@ function EventPill({ ev, onClick }: { ev: CalendarEvent; onClick: () => void }) 
         onClick={onClick}
         className={`flex w-full items-center gap-1 truncate rounded-md px-1.5 py-1 text-left text-[10.5px] font-medium text-white shadow-sm transition-opacity hover:opacity-90 cursor-pointer ${
           ev.booked ? "ring-2 ring-emerald-400 ring-offset-1 ring-offset-card" : ""
-        }`}
-        style={{ backgroundColor: display.color }}
+        } ${pulse ? "verbo-focus-pulse" : ""}`}
+        style={{
+          backgroundColor: display.color,
+          ...(pulse ? { ["--verbo-focus-pulse-color" as string]: display.color } : {}),
+        }}
+
         title={
           ev.sub_status
             ? `${SUB_STATUS_META[ev.sub_status].label} — ${ev.title}`

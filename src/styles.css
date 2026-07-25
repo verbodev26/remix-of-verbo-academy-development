@@ -312,6 +312,17 @@
     animation: verbo-live-pulse 1.8s ease-in-out infinite;
   }
 
+  /* Subtle attention pulse for focused calendar events (color set inline). */
+  @keyframes verbo-focus-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--verbo-focus-pulse-color, var(--violet-500)) 55%, transparent); }
+    50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--verbo-focus-pulse-color, var(--violet-500)) 0%, transparent); }
+  }
+  .verbo-focus-pulse {
+    animation: verbo-focus-pulse 1.9s ease-in-out infinite;
+  }
+
+
+
   @keyframes verbo-live-breath {
     0%, 100% { opacity: 0.55; }
     50% { opacity: 1; }
