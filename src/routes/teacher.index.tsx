@@ -54,7 +54,7 @@ function TeacherDashboard() {
   const [evaluating, setEvaluating] = useState<Session | null>(null);
   const [editing, setEditing] = useState<{ session: Session; perf: PerformanceRating; subskills: Record<string, number> } | null>(null);
   const [planning, setPlanning] = useState<Session | null>(null);
-  const [levels, setLevels] = useState<Level[]>([]);
+  
   const [plans, setPlans] = useState<Record<string, LessonPlan>>({});
   // Live-synced canonical sessions (used by summary cards, Needs Your
   // Attention, and Recent Activity). Everything else in the dashboard
