@@ -512,60 +512,143 @@ function StudentDashboard() {
 
 
 
-          {/* Upcoming Sessions */}
-          <div>
-            <SectionTitle>Upcoming Sessions</SectionTitle>
-            {upcoming.length === 0 ? (
-              <PremiumCard className="verbo-card-hover"><div className="text-sm text-muted-foreground">No upcoming sessions scheduled.</div></PremiumCard>
-            ) : (
-              <div className="grid gap-4 sm:grid-cols-2">
-                {upcoming.map((s) => {
-                  const teacher = userById(s.teacher_id);
-                  const startsInMs = +new Date(s.date_time) - Date.now();
-                  const isImminent = startsInMs > 0 && startsInMs <= 60 * 60 * 1000;
-                  return (
-                    <PremiumCard key={s.id} hover className="verbo-card-hover flex flex-col gap-4">
-                      <div
-                        className="-m-6 mb-0 rounded-t-2xl p-4"
-                        style={{ background: "linear-gradient(135deg, #01304a, #014a6e)" }}
+          {/* Upcoming Sessions — week strip + selected day session */}
+          {(() => {
+            const today = new Date();
+            const weekStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+            weekStart.setDate(weekStart.getDate() - ((weekStart.getDay() + 6) % 7));
+            const week = Array.from({ length: 7 }, (_, i) => {
+              const d = new Date(weekStart);
+              d.setDate(weekStart.getDate() + i);
+              return d;
+            });
+            const sessionForDay = (d: Date) =>
+              upcoming.find((s) => dayKey(s.date_time) === dayKeyOf(d));
+            const isImminentSession = (s: ExtSession) => {
+              const ms = +new Date(s.date_time) - Date.now();
+              return ms > 0 && ms <= 60 * 60 * 1000;
+            };
+            const defaultDay = week.find((d) => sessionForDay(d)) ?? today;
+            const activeDay = selectedDay ?? dayKeyOf(defaultDay);
+            const active = week.find((d) => dayKeyOf(d) === activeDay);
+            const s = active ? sessionForDay(active) : undefined;
+            const teacher = s ? userById(s.teacher_id) : undefined;
+            const plan = s ? getLessonPlan(s.id) : undefined;
+            const imminent = s ? isImminentSession(s) : false;
+
+            return (
+              <div>
+                <SectionTitle>Upcoming Sessions</SectionTitle>
+                <div className="grid grid-cols-7 gap-2">
+                  {week.map((d) => {
+                    const key = dayKeyOf(d);
+                    const ds = sessionForDay(d);
+                    const isActive = key === activeDay;
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => setSelectedDay(key)}
+                        className={`flex flex-col items-center gap-1 rounded-2xl px-2 py-3 transition-transform duration-200 active:scale-[0.97] ${
+                          isActive
+                            ? "card-gradient-navy shadow-card text-white"
+                            : "border border-border bg-white text-foreground hover:-translate-y-0.5"
+                        }`}
                       >
-                        <div className="flex items-center gap-3 text-white">
-                          <CalendarClock className="h-5 w-5" />
-                          <div className="flex-1">
-                            <div className="text-sm font-semibold capitalize">{fmtDay(s.date_time)}</div>
-                            <div className="text-xs opacity-80">{fmt(s.date_time)}</div>
+                        <span className={`text-[10px] font-semibold uppercase tracking-wider ${isActive ? "text-white/70" : "text-muted-foreground"}`}>
+                          {d.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase()}
+                        </span>
+                        <span className="text-lg font-bold leading-none">{d.getDate()}</span>
+                        <span
+                          className={`verbo-status-dot ${ds && isImminentSession(ds) ? "verbo-live-pulse" : ""}`}
+                          style={{
+                            background: ds
+                              ? isImminentSession(ds)
+                                ? "var(--green-500)"
+                                : "var(--orange-500)"
+                              : "transparent",
+                          }}
+                          aria-hidden
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-4">
+                  {!s ? (
+                    <PremiumCard className="verbo-card-hover"><div className="text-sm text-muted-foreground">No upcoming sessions scheduled.</div></PremiumCard>
+                  ) : (
+                    <div className="shadow-card verbo-card-hover rounded-2xl bg-white p-6">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                          <div className="relative">
+                            <PhotoPlaceholder tone="dark" shape="circle" className="h-12 w-12 bg-[#01304a]" />
+                            {imminent && (
+                              <span
+                                className="verbo-status-dot verbo-live-pulse absolute -right-0.5 -top-0.5"
+                                style={{ background: "var(--green-500)" }}
+                                aria-label="Starts within the next hour"
+                              />
+                            )}
                           </div>
-                          {isImminent && (
-                            <span
-                              className="verbo-status-dot verbo-live-pulse"
-                              style={{ background: "var(--green-500)" }}
-                              aria-label="Starts within the next hour"
-                            />
-                          )}
+                          <div>
+                            <div className="text-xs uppercase tracking-wider text-muted-foreground">Teacher</div>
+                            <div className="text-sm font-semibold" style={{ color: "#01304a" }}>{teacher?.name ?? "—"}</div>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          title="Class Details"
+                          aria-label="Class Details"
+                          onClick={() => setClassDetail(s)}
+                          className="group flex h-10 w-10 items-center justify-center rounded-full bg-secondary transition-colors hover:bg-primary/10 active:scale-[0.97]"
+                        >
+                          <ArrowUpRight className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" style={{ color: "#01304a" }} />
+                        </button>
+                      </div>
+
+                      <div className="mt-5">
+                        <div className="text-xl font-bold tracking-tight" style={{ color: "#01304a" }}>
+                          {plan?.title || "Live English Session"}
+                        </div>
+                        <div className="mt-1 text-sm text-muted-foreground">
+                          {plan?.unit_id ? resolvePlanTopic(plan) : (currentUnitTitle ?? "—")}
                         </div>
                       </div>
-                      <div className="space-y-1 pt-2">
-                        <div className="text-xs uppercase tracking-wider text-muted-foreground">Teacher</div>
-                        <div className="text-sm font-semibold" style={{ color: "#01304a" }}>{teacher?.name}</div>
+
+                      <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Video className="h-4 w-4" style={{ color: "#01304a" }} />
+                          <span>Microsoft Teams Meeting · {fmt(s.date_time)}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            title="Can't attend"
+                            aria-label="Can't attend"
+                            onClick={() => setToCancel(s)}
+                            className="flex h-10 w-10 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow-soft transition-opacity hover:opacity-90 active:scale-[0.97]"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            title="Connect"
+                            aria-label="Connect"
+                            onClick={() => window.open(s.teams_link, "_blank")}
+                            className="flex h-10 w-10 items-center justify-center rounded-full bg-success text-success-foreground shadow-soft transition-opacity hover:opacity-90 active:scale-[0.97]"
+                          >
+                            <Video className="h-4 w-4" />
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>{fmtTime(s.date_time)} · {s.duration_minutes} min</span>
-                        <Pill tone={s.status === "rescheduled" ? "warning" : "muted"}>{s.status}</Pill>
-                      </div>
-                      <div className="mt-auto flex items-center gap-2 pt-2">
-                        <GhostButton className="flex-1" onClick={() => setToCancel(s)}>
-                          <X className="h-3.5 w-3.5" /> Can't attend
-                        </GhostButton>
-                        <SuccessButton className="flex-1 verbo-btn-glow bg-lime-500" onClick={() => window.open(s.teams_link, "_blank")}>
-                          <Video className="h-4 w-4" /> Connect
-                        </SuccessButton>
-                      </div>
-                    </PremiumCard>
-                  );
-                })}
+                    </div>
+                  )}
+                </div>
               </div>
-            )}
-          </div>
+            );
+          })()}
 
         </div>
 
