@@ -197,6 +197,43 @@ function StudentDashboard() {
   // and Student always show the exact same % for a given student.
   const { pct: attendancePct } = studentAttendance(mySessions, user);
 
+  // Mini attendance sparkline — last 6 gradeable sessions (oldest → newest).
+  const gradeable = history.filter((s) => s.status in ATTENDANCE_SCORES);
+  const attendanceBars: number[] = gradeable
+    .slice(0, 6)
+    .map((s) => ATTENDANCE_SCORES[s.status])
+    .reverse();
+
+  // Trend: last 30 days vs the 31–60 day window. No data → no arrow.
+  const attendanceTrend: "up" | "down" | null = (() => {
+    const now = Date.now();
+    const day = 24 * 60 * 60 * 1000;
+    const avg = (from: number, to: number) => {
+      const scores = gradeable
+        .filter((s) => {
+          const age = now - +new Date(s.date_time);
+          return age >= from && age < to;
+        })
+        .map((s) => ATTENDANCE_SCORES[s.status]);
+      if (scores.length === 0) return null;
+      return scores.reduce((a, b) => a + b, 0) / scores.length;
+    };
+    const recent = avg(0, 30 * day);
+    const previous = avg(30 * day, 60 * day);
+    if (recent === null || previous === null) return null;
+    return recent >= previous ? "up" : "down";
+  })();
+
+  const openCurrentLevel = () => {
+    if (!progress) return;
+    if (progress.isVip) {
+      navigate({ to: "/student/my-course" });
+    } else {
+      navigate({ to: "/student/courses", search: { levelId: progress.levelId } });
+    }
+  };
+
+
   // Quick Review Dock — real teacher notes (report_comments) from completed
   // sessions. No synthetic tips. Empty state kept when no session has one.
   const recentFeedback = useMemo(() => {
