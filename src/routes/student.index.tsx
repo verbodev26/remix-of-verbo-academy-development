@@ -466,10 +466,15 @@ function StudentDashboard() {
           {/* Current Course */}
           <div>
             <SectionTitle>Current Course</SectionTitle>
-            <PremiumCard hover className="verbo-card-hover flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
-              <div className="flex items-start gap-4">
+            <PremiumCard hover className="group verbo-card-hover relative flex flex-col items-start justify-between gap-6 overflow-hidden md:flex-row md:items-center">
+              <div
+                className="pointer-events-none absolute inset-0 opacity-[0.07]"
+                style={{ background: "radial-gradient(circle at top right, var(--orange-500), transparent 65%)" }}
+                aria-hidden
+              />
+              <div className="relative flex items-start gap-4">
                 <div
-                  className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10"
+                  className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10 transition-transform duration-300 group-hover:scale-105"
                   style={{ color: "#01304a" }}
                   aria-hidden
                 >
