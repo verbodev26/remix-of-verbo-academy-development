@@ -75,11 +75,9 @@ function TeacherDashboard() {
     return () => clearInterval(t);
   }, []);
 
-  // Hydrate levels + lesson plans on the client only (avoids SSR mismatch)
+  // Hydrate lesson plans + live data on the client only (avoids SSR mismatch)
   useEffect(() => {
-    setLevels(loadLevels());
     setPlans(loadLessonPlans());
-    const u1 = subscribeLevels(() => setLevels(loadLevels()));
     const u2 = subscribeLessonPlans(() => setPlans(loadLessonPlans()));
     setLiveSessions(loadSessions());
     setClubs(loadClubs());
@@ -89,7 +87,7 @@ function TeacherDashboard() {
     setClubReports(loadClubReports());
     const u6 = subscribeClubReports(() => setClubReports(loadClubReports()));
     const u7 = subscribeCourses(() => setAvailTick((n) => n + 1));
-    return () => { u1(); u2(); u3(); u4(); u5(); u6(); u7(); };
+    return () => { u2(); u3(); u4(); u5(); u6(); u7(); };
   }, []);
 
   // If we arrived with ?report=<id>, auto-open Step 1 for that session
