@@ -619,7 +619,7 @@ function StudentDashboard() {
                           {plan?.title || "Live English Session"}
                         </div>
                         <div className="mt-1 text-sm text-muted-foreground">
-                          {plan?.unit_id ? resolvePlanTopic(plan) : (currentUnitTitle ?? "—")}
+                          {currentUnitTitle ?? "—"}
                         </div>
                       </div>
 
