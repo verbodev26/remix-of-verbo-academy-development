@@ -53,14 +53,16 @@ function Landing() {
                   />
                   {/* Orange shape */}
                   <div
-                    className="absolute bottom-0 right-4 h-[380px] w-[300px] rounded-[2rem] bg-[var(--orange-500)] shadow-elevated"
+                    className="verbo-float absolute bottom-0 right-4 h-[380px] w-[300px] rounded-[2rem] bg-[var(--orange-500)] shadow-elevated"
                     aria-hidden
                   />
                   {/* Photo placeholder */}
-                  <PhotoPlaceholder
-                    tone="light"
-                    className="absolute left-8 top-6 aspect-[3/4] w-[300px] rotate-[-3deg] shadow-elevated"
-                  />
+                  <div className="verbo-float-delayed absolute left-8 top-6">
+                    <PhotoPlaceholder
+                      tone="light"
+                      className="aspect-[3/4] w-[300px] rotate-[-3deg] shadow-elevated"
+                    />
+                  </div>
                 </div>
 
                 {/* Right: text */}
@@ -69,7 +71,7 @@ function Landing() {
                     className="verbo-fade-up inline-flex items-center gap-2 rounded-full bg-[var(--orange-100)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--orange-700)]"
                     style={{ animationDelay: "80ms" }}
                   >
-                    <span className="h-1.5 w-1.5 rounded-full bg-[var(--orange-500)]" />
+                    <span className="verbo-status-dot h-1.5 w-1.5 rounded-full bg-[var(--orange-500)]" />
                     VERBO ACADEMY
                   </div>
 
@@ -99,7 +101,7 @@ function Landing() {
                       className="group inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-accent px-6 py-3 text-sm font-medium text-accent-foreground shadow-sm transition-opacity transition-transform duration-150 ease-out hover:opacity-90 active:scale-[0.97]"
                     >
                       Access your account
-                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                      <ArrowRight className="h-4 w-4 transition-transform duration-150 ease-out group-hover:translate-x-0.5" />
                     </Link>
                     <Link
                       to="/"
