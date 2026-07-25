@@ -841,7 +841,7 @@ function StudentDashboard() {
       <section className="verbo-fade-up motion-reduce:animate-none" style={{ animationDelay: "300ms" }}>
         <SectionTitle>Session History</SectionTitle>
         <PremiumCard className="verbo-card-hover">
-          <div className="hidden md:grid md:grid-cols-[1fr_1fr_auto_auto] gap-4 px-4 pb-3 text-[10px] uppercase tracking-wider text-muted-foreground">
+          <div className="hidden md:grid md:grid-cols-[1fr_1fr_110px_140px] gap-4 px-4 pb-3 text-[10px] uppercase tracking-wider text-muted-foreground">
             <div>Date</div>
             <div>Teacher</div>
             <div>Status</div>
