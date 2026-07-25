@@ -154,27 +154,45 @@ function Page() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-wrap items-start justify-between gap-4">
+      <div className="flex flex-col items-start justify-between gap-4 lg:flex-row lg:items-center">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Live Sessions</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Sessions &amp; Events</h1>
           <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-            Your calendar of 1:1 Classes, Verbo Insights, Book Clubs and Spotlight Sessions.
+            Your next class, your next conversation club, your next win — all in one place.
           </p>
         </div>
-        {hasSpot && (
-          <button
-            onClick={() => { if (canRequestSpotlight) freemium.tryOpen("spotlight", () => setSpotlightOpen(true)); }}
-            disabled={!canRequestSpotlight}
-            title={!canRequestSpotlight ? "You've used all your Spotlight requests for this month." : undefined}
-            className={`inline-flex items-center gap-2 rounded-lg bg-[#0d9488] px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition-opacity ${canRequestSpotlight ? "cursor-pointer hover:opacity-90" : "cursor-not-allowed opacity-50"}`}
-          >
-            <Sparkles className="h-4 w-4" /> Request a Spotlight Session
-          </button>
-        )}
+        <NextEventChip events={events} />
       </div>
 
 
-      <SessionsRemainingCard studentId={user.id} />
+      <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
+        <SessionsRemainingCard studentId={user.id} />
+        {hasSpot && (
+          <div className="card-gradient-teal relative overflow-visible rounded-3xl border border-border p-6 shadow-elevated">
+            <div className="flex items-center gap-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/35" style={{ color: "#01304a" }}>
+                <Sparkles className="h-4 w-4" />
+              </div>
+              <h3 className="text-base font-semibold tracking-tight" style={{ color: "#01304a" }}>
+                Spotlight Session
+              </h3>
+            </div>
+            <p className="mt-3 text-xs leading-relaxed" style={{ color: "rgba(1, 48, 74, 0.75)" }}>
+              An extra 60-minute 1:1 with any available qualified teacher, focused on one specific challenge.
+            </p>
+            <button
+              type="button"
+              onClick={() => { if (canRequestSpotlight) freemium.tryOpen("spotlight", () => setSpotlightOpen(true)); }}
+              disabled={!canRequestSpotlight}
+              title={!canRequestSpotlight ? "You've used all your Spotlight requests for this month." : undefined}
+              className={`mt-4 inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-full bg-white px-4 py-2.5 text-sm font-semibold transition-transform duration-200 ${canRequestSpotlight ? "cursor-pointer active:scale-[0.97]" : "cursor-not-allowed opacity-60"}`}
+              style={{ color: "#01304a" }}
+            >
+              <Sparkles className="h-3.5 w-3.5" /> Request a Spotlight Session
+            </button>
+          </div>
+        )}
+      </div>
 
       <Card>
         <CalendarView
@@ -187,25 +205,28 @@ function Page() {
 
       </Card>
 
-      <Card className="!p-4">
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs">
-          <div className="text-muted-foreground">
-            <span className="font-semibold text-foreground">Reschedule Policy:</span> {policy.noticeHours}h notice, up to {policy.maxPct}% of monthly sessions
-          </div>
-          <div className="text-muted-foreground">
-            Used this cycle: <span className="font-semibold text-foreground">{used}/{quota}</span>
-          </div>
-          {spotlightVisible && (
-            <div className="text-muted-foreground">
-              {isSignature ? (
-                <>Spotlight: <span className="font-semibold text-foreground">{spotlightUsedNum} used this month</span></>
-              ) : (
-                <>Spotlight: <span className="font-semibold text-foreground">{spotlightUsedNum} of {spotlightCapDisplay} used this month</span></>
-              )}
-            </div>
-          )}
-        </div>
-      </Card>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <StatPill
+          icon={<CalendarClock className="h-4 w-4" />}
+          label="Reschedule Policy"
+          value={`${policy.noticeHours}h notice · up to ${policy.maxPct}% of monthly sessions`}
+        />
+        <StatPill
+          icon={<RefreshCcw className="h-4 w-4" />}
+          label="Used this cycle"
+          value={`${used} of ${quota} reschedules`}
+        />
+        {spotlightVisible && (
+          <StatPill
+            icon={<Sparkles className="h-4 w-4" />}
+            label="Spotlight"
+            value={isSignature
+              ? `${spotlightUsedNum} used this month`
+              : `${spotlightUsedNum} of ${spotlightCapDisplay} used this month`}
+          />
+        )}
+      </div>
+
 
 
       {selected && (
