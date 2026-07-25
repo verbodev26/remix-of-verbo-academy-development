@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import experiencesClubs from "@/assets/experiences-clubs.png.asset.json";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useAuth } from "@/lib/auth";
