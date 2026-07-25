@@ -269,6 +269,9 @@
 @utility card-gradient-orchid {
   background-image: linear-gradient(150deg, #dea3ee 0%, #c86fe1 55%, #a34ac0 100%);
 }
+@utility card-gradient-violet {
+  background-image: linear-gradient(150deg, var(--violet-300) 0%, var(--violet-500) 55%, var(--violet-900) 100%);
+}
 @utility card-gradient-orange {
   background-image: linear-gradient(150deg, var(--orange-400) 0%, var(--orange-500) 55%, var(--orange-600) 100%);
 }

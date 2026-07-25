@@ -507,7 +507,7 @@ function StudentDashboard() {
             <Link
               to="/student/performance"
               className="inline-flex items-center gap-1 text-xs font-semibold transition-colors hover:opacity-80"
-              style={{ color: "#f38934" }}
+              style={{ color: "#01304a" }}
             >
               View Detailed Analytics <ArrowRight className="h-3.5 w-3.5" />
             </Link>
@@ -758,36 +758,31 @@ function StudentDashboard() {
         {/* RIGHT SIDEBAR ~35% */}
         <aside className="verbo-fade-up motion-reduce:animate-none space-y-6" style={{ animationDelay: "240ms" }}>
           {/* Verbo Experiences */}
-          <PremiumCard hover className="group relative !pt-16">
-            <div
-              className="absolute inset-0 overflow-hidden rounded-3xl opacity-[0.09] pointer-events-none"
-              style={{ background: "radial-gradient(circle at top right, var(--violet-300), transparent 65%)" }}
-            />
+          <PremiumCard hover className="group card-gradient-violet relative overflow-visible">
             <img
               src={experiencesClubs.url}
               alt="Two students laughing together during a live conversation club"
-              className="shadow-elevated pointer-events-none absolute -top-10 right-3 w-28 -rotate-6 rounded-2xl object-cover sm:w-32"
+              className="shadow-elevated pointer-events-none absolute right-2 top-[-28%] w-[48%] -rotate-6 rounded-2xl object-cover"
             />
             <div className="relative">
 
               <div className="flex items-center gap-2">
                 <div
-                  className="verbo-float flex h-9 w-9 items-center justify-center rounded-lg transition-transform duration-300 group-hover:scale-110"
-                  style={{ background: "color-mix(in oklab, var(--violet-500) 12%, transparent)", color: "var(--violet-500)" }}
+                  className="verbo-float flex h-9 w-9 items-center justify-center rounded-lg bg-white/15 text-white transition-transform duration-300 group-hover:scale-110"
                 >
                   <Users className="h-4 w-4" />
                 </div>
-                <h3 className="text-base font-semibold tracking-tight" style={{ color: "#01304a" }}>
+                <h3 className="text-base font-semibold tracking-tight text-white">
                   Verbo Experiences
                 </h3>
               </div>
-              <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+              <p className="mt-3 max-w-[52%] text-xs leading-relaxed text-white/80">
                 Join today's live conversation clubs and immerse yourself with peers across the network.
               </p>
               <button
                 type="button"
-                className="mt-4 inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-full border border-border bg-white px-4 py-2.5 text-sm font-semibold transition-transform duration-200 active:scale-[0.97]"
-                style={{ color: "var(--violet-500)" }}
+                className="mt-4 inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-full bg-white px-4 py-2.5 text-sm font-semibold transition-transform duration-200 active:scale-[0.97]"
+                style={{ color: "var(--violet-900)" }}
                 onClick={() => navigate({ to: "/student/sessions", search: { focus: "clubs" } })}
               >
                 <Sparkles className="h-3.5 w-3.5" /> View Active Clubs
@@ -841,7 +836,7 @@ function StudentDashboard() {
       <section className="verbo-fade-up motion-reduce:animate-none" style={{ animationDelay: "300ms" }}>
         <SectionTitle>Session History</SectionTitle>
         <PremiumCard className="verbo-card-hover">
-          <div className="hidden md:grid md:grid-cols-[1fr_1fr_auto_auto] gap-4 px-4 pb-3 text-[10px] uppercase tracking-wider text-muted-foreground">
+          <div className="hidden md:grid md:grid-cols-[1fr_1fr_110px_140px] gap-4 px-4 pb-3 text-[10px] uppercase tracking-wider text-muted-foreground">
             <div>Date</div>
             <div>Teacher</div>
             <div>Status</div>
@@ -857,7 +852,7 @@ function StudentDashboard() {
                   key={s.id}
                   type="button"
                   onClick={() => setClassDetail(s)}
-                  className="grid w-full grid-cols-1 items-center gap-4 rounded-xl px-4 py-4 text-left transition-all duration-150 ease-out hover:bg-secondary/40 active:scale-[0.97] md:grid-cols-[1fr_1fr_auto_auto]"
+                  className="grid w-full grid-cols-1 items-center gap-4 rounded-xl px-4 py-4 text-left transition-all duration-150 ease-out hover:bg-secondary/40 active:scale-[0.97] md:grid-cols-[1fr_1fr_110px_140px]"
                 >
                   <div className="truncate text-sm text-foreground">{fmt(s.date_time)}</div>
                   <div className="flex min-w-0 items-center gap-3">
@@ -873,7 +868,7 @@ function StudentDashboard() {
                   <div className="md:justify-self-start">
                     <span className={statusBadge(s.status)}>{s.status}</span>
                   </div>
-                  <div className="md:justify-self-end">
+                  <div className="md:justify-self-start">
                     {s.student_rating ? <RatingStarsCompact value={s.student_rating} /> : <span className="text-xs text-muted-foreground">—</span>}
                   </div>
                 </button>
