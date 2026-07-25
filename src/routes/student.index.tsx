@@ -109,6 +109,9 @@ function StudentDashboard() {
   // truth shared with Student > Performance and Teacher > Mis Alumnos).
   const macros = useComputedMacros(user?.id ?? "");
   const [perfDetail, setPerfDetail] = useState<{ session: ExtSession; rating: PerformanceRating } | null>(null);
+  const [classDetail, setClassDetail] = useState<ExtSession | null>(null);
+  const [plansRev, setPlansRev] = useState(0);
+  useEffect(() => subscribeLessonPlans(() => setPlansRev((r) => r + 1)), []);
 
   const [cancelCount, setCancelCount] = useState<number>(() => {
     if (typeof window === "undefined") return 0;
