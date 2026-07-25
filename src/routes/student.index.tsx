@@ -610,7 +610,6 @@ function StudentDashboard() {
           {(() => {
             const today = new Date();
             const weekStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-            weekStart.setDate(weekStart.getDate() - ((weekStart.getDay() + 6) % 7));
             const week = Array.from({ length: 7 }, (_, i) => {
               const d = new Date(weekStart);
               d.setDate(weekStart.getDate() + i);
