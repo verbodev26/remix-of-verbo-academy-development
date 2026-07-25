@@ -669,33 +669,140 @@ function StudentDashboard() {
         </DialogContent>
       </Dialog>
 
-      {/* Performance Breakdown Modal */}
-      <Dialog open={!!perfDetail} onOpenChange={(o) => !o && setPerfDetail(null)}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle style={{ color: "#01304a" }}>Session Performance Breakdown</DialogTitle>
-          </DialogHeader>
-          {perfDetail && (
-            <>
-              <div className="rounded-lg border border-border bg-secondary/40 p-3 text-xs">
-                <div className="font-medium text-foreground">{fmt(perfDetail.session.date_time)}</div>
-                <div className="mt-0.5 text-muted-foreground">
-                  with {userById(perfDetail.session.teacher_id)?.name}
+      {/* Class Details Modal — unified view (replaces the old standalone
+          "Session Performance Breakdown" popup and the row-level icons). */}
+      <Dialog open={!!classDetail} onOpenChange={(o) => !o && setClassDetail(null)}>
+        <DialogContent className="max-w-lg">
+          {classDetail && (() => {
+            const s = classDetail;
+            const teacher = userById(s.teacher_id);
+            const plan: LessonPlan | undefined = getLessonPlan(s.id);
+            void plansRev; // re-render on lesson plan updates
+            const rating = performance[s.id];
+            const isAbsent = s.status === "absent";
+            const cause = s.absent_cause;
+            const absentMsg = cause === "student"
+              ? "You marked yourself unavailable"
+              : cause === "teacher"
+              ? "Your teacher canceled this session"
+              : null;
+            // Resolve real curriculum topic when the plan links a unit.
+            let topic: { levelName: string; unitTitle: string } | null = null;
+            if (plan) {
+              if (plan.vip_unit_id) {
+                const u = unitsForStudent(user.id).find((x) => x.id === plan.vip_unit_id);
+                if (u) topic = { levelName: "VIP Course", unitTitle: u.title };
+              } else if (plan.tailored_unit_id) {
+                const u = tailoredUnitsForStudent(user.id).find((x) => x.id === plan.tailored_unit_id);
+                if (u) topic = { levelName: "Tailored Content", unitTitle: u.title };
+              } else {
+                topic = resolvePlanTopic(user.product, plan.level_id, plan.unit_id);
+              }
+            }
+            const hasRealPdf = !!s.report_pdf_url && s.report_pdf_url !== "/mock-report.pdf";
+            return (
+              <>
+                <DialogHeader>
+                  <DialogTitle style={{ color: "#01304a" }}>Class Details</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  {/* Header block */}
+                  <div className="rounded-lg border border-border bg-secondary/40 p-3 text-xs">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <div className="text-sm font-semibold text-foreground">{fmt(s.date_time)}</div>
+                        <div className="mt-0.5 text-muted-foreground">
+                          {s.duration_minutes} min · with {teacher?.name ?? "Teacher"}
+                        </div>
+                      </div>
+                      <span className={statusBadge(s.status)}>{s.status}</span>
+                    </div>
+                    {isAbsent && absentMsg && (
+                      <div className="mt-2 text-muted-foreground">{absentMsg}.</div>
+                    )}
+                  </div>
+
+                  {/* What we covered */}
+                  <section>
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      What we covered
+                    </h4>
+                    {plan ? (
+                      <div className="mt-2 space-y-1 text-sm text-foreground">
+                        <div><span className="text-muted-foreground">Type:</span> {plan.type}</div>
+                        <div><span className="text-muted-foreground">Title:</span> {plan.title}</div>
+                        {topic && (
+                          <div className="text-muted-foreground">
+                            {topic.levelName} — {topic.unitTitle}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        No lesson plan was recorded for this session.
+                      </p>
+                    )}
+                  </section>
+
+                  {/* Teacher's notes */}
+                  <section>
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Teacher's notes
+                    </h4>
+                    {s.report_comments && s.report_comments.trim().length > 0 ? (
+                      <p className="mt-2 text-sm leading-relaxed text-foreground">{s.report_comments.trim()}</p>
+                    ) : (
+                      <p className="mt-2 text-sm text-muted-foreground">No notes were left for this session.</p>
+                    )}
+                  </section>
+
+                  {/* Your rating */}
+                  <section>
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Your rating
+                    </h4>
+                    {s.student_rating ? (
+                      <div className="mt-2"><RatingStarsCompact value={s.student_rating} /></div>
+                    ) : (
+                      <p className="mt-2 text-sm text-muted-foreground">You haven't rated this session.</p>
+                    )}
+                  </section>
+
+                  {/* Performance breakdown */}
+                  <section>
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Performance breakdown
+                    </h4>
+                    {rating ? (
+                      <div className="mt-2 space-y-3">
+                        <PerfStars label="Fluency" value={rating.fluency} />
+                        <PerfStars label="Vocabulary Range" value={rating.vocabulary} />
+                        <PerfStars label="Confidence" value={rating.confidence} />
+                        <PerfStars label="Grammar Accuracy" value={rating.grammar} />
+                      </div>
+                    ) : (
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        Your teacher hasn't logged a detailed performance rating for this session yet.
+                      </p>
+                    )}
+                  </section>
                 </div>
-              </div>
-              <div className="mt-2 space-y-3">
-                <PerfStars label="Fluency" value={perfDetail.rating.fluency} />
-                <PerfStars label="Vocabulary Range" value={perfDetail.rating.vocabulary} />
-                <PerfStars label="Confidence" value={perfDetail.rating.confidence} />
-                <PerfStars label="Grammar Accuracy" value={perfDetail.rating.grammar} />
-              </div>
-            </>
-          )}
-          <DialogFooter>
-            <PrimaryButton className="verbo-btn-glow" onClick={() => setPerfDetail(null)}>Close</PrimaryButton>
-          </DialogFooter>
+                <DialogFooter className="gap-2 sm:gap-2">
+                  <GhostButton
+                    disabled={!hasRealPdf}
+                    title={!hasRealPdf ? "Coming soon" : undefined}
+                    onClick={() => hasRealPdf && window.open(s.report_pdf_url!, "_blank")}
+                  >
+                    <Download className="h-3.5 w-3.5" /> Download report
+                  </GhostButton>
+                  <PrimaryButton className="verbo-btn-glow" onClick={() => setClassDetail(null)}>Close</PrimaryButton>
+                </DialogFooter>
+              </>
+            );
+          })()}
         </DialogContent>
       </Dialog>
+
     </div>
   );
 }
