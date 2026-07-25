@@ -11,11 +11,9 @@ export const Route = createFileRoute("/login")({
 });
 
 const EXECUTIVE_PHRASES = [
-  "Language is not a benefit. It's the operating system of a global organization.",
-  "Global market expansion requires decisive, fluent, and functional professional minds.",
-  "Forget passive grammar memorization. Communication is a practical corporate asset.",
-  "Bridging executive leadership with native execution across international frontiers.",
-  "Engineering high-fidelity linguistic synchronization for elite enterprise teams.",
+  "Fluency isn't about grammar rules. It's about walking into any room, in any language, and being fully yourself.",
+  "We built Verbo because your career shouldn't wait for 'someday I'll be fluent.'",
+  "The best negotiators aren't the ones with the biggest vocabulary. They're the ones who sound like themselves in any language.",
 ];
 
 function LoginPage() {
@@ -25,6 +23,14 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showDevSandbox, setShowDevSandbox] = useState(false);
+
+  useEffect(() => {
+    const devFlag =
+      new URLSearchParams(window.location.search).get("dev") === "1" ||
+      window.localStorage.getItem("verbo_dev") === "1";
+    setShowDevSandbox(devFlag);
+  }, []);
 
   const phrase = useMemo(
     () => EXECUTIVE_PHRASES[Math.floor(Math.random() * EXECUTIVE_PHRASES.length)],
@@ -41,6 +47,7 @@ function LoginPage() {
       navigate({ to: dest });
     }
   }, [user, navigate]);
+
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
