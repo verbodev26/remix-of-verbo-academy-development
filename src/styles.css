@@ -245,6 +245,13 @@
   }
 }
 
+@utility shadow-card {
+  box-shadow: 0 6px 24px -4px rgba(1, 48, 74, 0.10), 0 2px 6px -1px rgba(1, 48, 74, 0.05);
+}
+@utility shadow-card-hover {
+  box-shadow: 0 12px 40px -8px rgba(1, 48, 74, 0.15), 0 4px 10px -2px rgba(1, 48, 74, 0.06);
+}
+
 @layer utilities {
   .verbo-card {
     background-color: #ffffff;

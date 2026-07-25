@@ -147,7 +147,7 @@ function Landing() {
 
               <div className="grid gap-6 md:grid-cols-3">
                 <div
-                  className="verbo-fade-up group flex h-full flex-col justify-between rounded-[2rem] bg-navy-700 p-8 text-white shadow-elevated transition-transform transition-shadow duration-200 ease-out hover:-translate-y-[6px] hover:shadow-floating"
+                  className="verbo-fade-up group flex h-full flex-col justify-between rounded-[2rem] bg-navy-700 p-8 text-white shadow-card transition-transform transition-shadow duration-200 ease-out hover:-translate-y-[6px] hover:shadow-card-hover"
                   style={{ animationDelay: "160ms" }}
                 >
                   <div>
@@ -172,7 +172,7 @@ function Landing() {
                 </div>
 
                 <div
-                  className="verbo-fade-up group flex h-full flex-col justify-between rounded-[2rem] bg-lime-500 p-8 text-navy-900 shadow-elevated transition-transform transition-shadow duration-200 ease-out hover:-translate-y-[6px] hover:shadow-floating"
+                  className="verbo-fade-up group flex h-full flex-col justify-between rounded-[2rem] bg-lime-500 p-8 text-navy-900 shadow-card transition-transform transition-shadow duration-200 ease-out hover:-translate-y-[6px] hover:shadow-card-hover"
                   style={{ animationDelay: "240ms" }}
                 >
                   <div>
@@ -197,7 +197,7 @@ function Landing() {
                 </div>
 
                 <div
-                  className="verbo-fade-up group flex h-full flex-col justify-between rounded-[2rem] bg-orchid-500 p-8 text-navy-900 shadow-elevated transition-transform transition-shadow duration-200 ease-out hover:-translate-y-[6px] hover:shadow-floating"
+                  className="verbo-fade-up group flex h-full flex-col justify-between rounded-[2rem] bg-orchid-500 p-8 text-navy-900 shadow-card transition-transform transition-shadow duration-200 ease-out hover:-translate-y-[6px] hover:shadow-card-hover"
                   style={{ animationDelay: "320ms" }}
                 >
                   <div>
