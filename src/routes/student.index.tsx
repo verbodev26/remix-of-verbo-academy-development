@@ -136,8 +136,14 @@ function StudentDashboard() {
 
   const mySessions = sessions.filter((s) => s.student_id === user.id);
   const upcoming = mySessions
-    .filter((s) => s.status === "scheduled" || s.status === "rescheduled" || s.status === "ready")
+    .filter((s) => {
+      const isUpcomingStatus = s.status === "scheduled" || s.status === "rescheduled" || s.status === "ready";
+      if (!isUpcomingStatus) return false;
+      const endsAt = +new Date(s.date_time) + s.duration_minutes * 60_000;
+      return endsAt >= Date.now();
+    })
     .sort((a, b) => +new Date(a.date_time) - +new Date(b.date_time));
+
   const history = mySessions
     .filter((s) => !["scheduled", "rescheduled", "ready"].includes(s.status))
     .sort((a, b) => +new Date(b.date_time) - +new Date(a.date_time));
@@ -579,7 +585,9 @@ function StudentDashboard() {
                   {!s ? (
                     <PremiumCard className="verbo-card-hover"><div className="text-sm text-muted-foreground">No upcoming sessions scheduled.</div></PremiumCard>
                   ) : (
-                    <div className="shadow-card verbo-card-hover rounded-2xl bg-white p-6">
+                    <div className="max-w-xl mx-auto w-full rounded-2xl overflow-hidden relative shadow-elevated verbo-card-hover">
+                      <div className="absolute inset-x-0 top-0 h-1 bg-[var(--accent)]" />
+                      <div className="bg-white p-6">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex items-center gap-3">
                           <div className="relative">
@@ -642,6 +650,7 @@ function StudentDashboard() {
                             <Video className="h-4 w-4" />
                           </button>
                         </div>
+                      </div>
                       </div>
                     </div>
                   )}
