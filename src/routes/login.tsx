@@ -146,36 +146,115 @@ function LoginPage() {
             </div>
             <div>
               <label className="text-xs font-semibold uppercase tracking-wider text-[#01304a]">Password</label>
-              <input
-                type="password"
-                required
-                disabled={submitting}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="verbo-login-input mt-1.5 w-full rounded-lg border border-[#01304a]/15 bg-white px-3 py-2.5 text-sm text-[#01304a] placeholder:text-[#01304a]/40 focus:outline-none"
-                placeholder="••••••••"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  disabled={submitting}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="verbo-login-input mt-1.5 w-full rounded-lg border border-[#01304a]/15 bg-white px-3 py-2.5 pr-10 text-sm text-[#01304a] placeholder:text-[#01304a]/40 focus:outline-none"
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-[#01304a]/45 transition-colors hover:text-[#01304a]"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between gap-3">
+              <label className="flex items-center gap-2 text-xs text-[#01304a]/70">
+                <input
+                  type="checkbox"
+                  checked={remember}
+                  onChange={(e) => setRemember(e.target.checked)}
+                  disabled={submitting}
+                  className="h-3.5 w-3.5 rounded border-[#01304a]/25 accent-[#f38934]"
+                />
+                Remember me for 30 days
+              </label>
+              <a href="#" className="text-xs text-[#01304a]/70 transition-colors hover:text-[#01304a] hover:underline">
+                Forgot your password?
+              </a>
             </div>
 
             {error && (
               <div className="rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-2 text-xs text-destructive">{error}</div>
             )}
 
-            <button
-              type="submit"
-              disabled={submitting}
-              className="verbo-cta-shimmer verbo-btn-glow flex w-full items-center justify-center gap-2 rounded-lg bg-[#f38934] px-4 py-3 text-sm font-semibold text-white shadow-soft disabled:opacity-80"
-            >
-              {submitting ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin text-white" />
-                  Authenticating...
-                </>
-              ) : (
-                "Sign in"
-              )}
-            </button>
+            <div className="flex justify-center">
+              <button
+                ref={btnRef}
+                type="submit"
+                disabled={submitting}
+                aria-busy={btnState === "loading"}
+                className={`${btnState === "idle" ? "verbo-cta-shimmer verbo-btn-glow" : ""} ${btnState === "error" ? "verbo-btn-shake" : ""} relative flex h-12 items-center justify-center overflow-hidden text-sm font-semibold text-white shadow-soft outline-none active:scale-[0.97]`}
+                style={{
+                  width: btnState === "idle" ? "100%" : "48px",
+                  borderRadius: 9999,
+                  backgroundColor:
+                    btnState === "error"
+                      ? "hsl(var(--destructive, 0 72% 45%))"
+                      : btnState === "idle"
+                        ? "#f38934"
+                        : "#01304a",
+                  transition:
+                    "width 260ms ease-out, background-color 260ms ease-out, transform 150ms ease-out",
+                }}
+              >
+                <span
+                  className="pointer-events-none absolute inset-0 flex items-center justify-center whitespace-nowrap"
+                  style={{
+                    opacity: btnState === "idle" ? 1 : 0,
+                    filter: btnState === "idle" ? "blur(0px)" : "blur(2px)",
+                    transition: "opacity 200ms ease-out, filter 200ms ease-out",
+                  }}
+                >
+                  Sign in
+                </span>
+                <span
+                  className="pointer-events-none absolute inset-0 flex items-center justify-center"
+                  style={{
+                    opacity: btnState === "idle" ? 0 : 1,
+                    filter: btnState === "idle" ? "blur(2px)" : "blur(0px)",
+                    transition: "opacity 200ms ease-out, filter 200ms ease-out",
+                  }}
+                  aria-hidden
+                >
+                  {btnState === "error" ? (
+                    <X className="h-5 w-5 text-white" />
+                  ) : (
+                    <img
+                      src={logoSrc}
+                      alt=""
+                      className={`h-6 w-6 rounded object-cover ${btnState === "loading" ? "verbo-iso-pulse" : ""}`}
+                      style={{
+                        transform: pop ? "scale(1.15)" : "scale(1)",
+                        transition: "transform 200ms ease-out",
+                      }}
+                    />
+                  )}
+                </span>
+              </button>
+            </div>
+
+            <div className="text-center">
+              <a
+                href="https://wa.link/9my846"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-[#01304a]/55 underline-offset-2 transition-colors hover:text-[#01304a] hover:underline"
+              >
+                Report an issue
+              </a>
+            </div>
           </form>
+
 
           {showDevSandbox && (
             <div className="verbo-glass-light mt-8 rounded-2xl p-4">
