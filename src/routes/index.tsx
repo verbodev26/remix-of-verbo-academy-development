@@ -53,13 +53,13 @@ function Landing() {
                   />
                   {/* Orange shape */}
                   <div
-                    className="absolute bottom-0 right-4 h-[380px] w-[300px] rounded-[2rem] bg-[var(--orange-500)]"
+                    className="absolute bottom-0 right-4 h-[380px] w-[300px] rounded-[2rem] bg-[var(--orange-500)] shadow-elevated"
                     aria-hidden
                   />
                   {/* Photo placeholder */}
                   <PhotoPlaceholder
                     tone="light"
-                    className="absolute left-8 top-6 aspect-[3/4] w-[300px] rotate-[-3deg] shadow-xl"
+                    className="absolute left-8 top-6 aspect-[3/4] w-[300px] rotate-[-3deg] shadow-elevated"
                   />
                 </div>
 
@@ -145,7 +145,7 @@ function Landing() {
 
               <div className="grid gap-6 md:grid-cols-3">
                 <div
-                  className="verbo-fade-up flex h-full flex-col justify-between rounded-[2rem] bg-navy-700 p-8 text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                  className="verbo-fade-up group flex h-full flex-col justify-between rounded-[2rem] bg-navy-700 p-8 text-white shadow-elevated transition-transform transition-shadow duration-200 ease-out hover:-translate-y-[6px] hover:shadow-floating"
                   style={{ animationDelay: "160ms" }}
                 >
                   <div>
@@ -163,57 +163,57 @@ function Landing() {
                     </p>
                   </div>
                   <div className="mt-6 flex justify-end">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-navy-700">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-navy-700 transition-transform duration-150 ease-out group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
                       <ArrowUpRight className="h-4 w-4" />
                     </div>
                   </div>
                 </div>
 
                 <div
-                  className="verbo-fade-up flex h-full flex-col justify-between rounded-[2rem] bg-orange-500 p-8 text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                  className="verbo-fade-up group flex h-full flex-col justify-between rounded-[2rem] bg-lime-500 p-8 text-navy-900 shadow-elevated transition-transform transition-shadow duration-200 ease-out hover:-translate-y-[6px] hover:shadow-floating"
                   style={{ animationDelay: "240ms" }}
                 >
                   <div>
                     <PhotoPlaceholder tone="dark" className="aspect-[4/3] w-full" />
-                    <div className="mt-6 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/70">
+                    <div className="mt-6 text-[11px] font-semibold uppercase tracking-[0.18em] text-navy-900/70">
                       Gamification
                     </div>
-                    <h3 className="mt-2 text-xl font-bold tracking-tight text-white">
+                    <h3 className="mt-2 text-xl font-bold tracking-tight text-navy-900">
                       Gamified Growth & Prizes
                     </h3>
-                    <p className="mt-3 text-sm leading-relaxed text-white/80">
+                    <p className="mt-3 text-sm leading-relaxed text-navy-900/80">
                       Earn custom badges, unlock achievements, and win premium rewards as you level
                       up your communication skills. Monitor your live performance metrics after
                       every single session.
                     </p>
                   </div>
                   <div className="mt-6 flex justify-end">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-navy-700">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-navy-900 transition-transform duration-150 ease-out group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
                       <ArrowUpRight className="h-4 w-4" />
                     </div>
                   </div>
                 </div>
 
                 <div
-                  className="verbo-fade-up flex h-full flex-col justify-between rounded-[2rem] bg-violet-500 p-8 text-white transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                  className="verbo-fade-up group flex h-full flex-col justify-between rounded-[2rem] bg-orchid-500 p-8 text-navy-900 shadow-elevated transition-transform transition-shadow duration-200 ease-out hover:-translate-y-[6px] hover:shadow-floating"
                   style={{ animationDelay: "320ms" }}
                 >
                   <div>
                     <PhotoPlaceholder tone="dark" className="aspect-[4/3] w-full" />
-                    <div className="mt-6 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/70">
+                    <div className="mt-6 text-[11px] font-semibold uppercase tracking-[0.18em] text-navy-900/70">
                       Community
                     </div>
-                    <h3 className="mt-2 text-xl font-bold tracking-tight text-white">
+                    <h3 className="mt-2 text-xl font-bold tracking-tight text-navy-900">
                       Connect & Engage
                     </h3>
-                    <p className="mt-3 text-sm leading-relaxed text-white/80">
+                    <p className="mt-3 text-sm leading-relaxed text-navy-900/80">
                       Access exclusive conversation clubs and connect with other ambitious
                       professionals in the network. Share insights, practice real-world scenarios,
                       and grow together.
                     </p>
                   </div>
                   <div className="mt-6 flex justify-end">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-navy-700">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-navy-900 transition-transform duration-150 ease-out group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
                       <ArrowUpRight className="h-4 w-4" />
                     </div>
                   </div>

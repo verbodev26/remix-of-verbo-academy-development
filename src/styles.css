@@ -63,6 +63,8 @@
   --color-violet-500: var(--violet-500);
   --color-violet-700: var(--violet-700);
   --color-violet-900: var(--violet-900);
+  --color-lime-500: var(--lime-500);
+  --color-orchid-500: var(--orchid-500);
   --color-green-50: var(--green-50);
   --color-green-100: var(--green-100);
   --color-green-200: var(--green-200);
@@ -148,6 +150,8 @@
   --violet-500: #7e22ce;
   --violet-700: oklch(0.38 0.17 312);
   --violet-900: #4a044e;
+  --lime-500: #5fca16;
+  --orchid-500: #c86fe1;
   --green-50: oklch(0.96 0.03 155);
   --green-100: oklch(0.91 0.06 155);
   --green-200: oklch(0.84 0.09 155);
