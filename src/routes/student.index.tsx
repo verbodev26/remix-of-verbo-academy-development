@@ -100,6 +100,24 @@ const SKILL_COLORS: Record<string, string> = {
   Reading: "oklch(0.6 0.104 185)",
 };
 
+// Attendance color scale (shared by the % value and the mini bar chart).
+function attendanceColorFor(pct: number): string {
+  if (pct >= 90) return "var(--green-500)";
+  if (pct >= 80) return "#ABFF32";
+  if (pct >= 70) return "#FEED0C";
+  if (pct >= 65) return "#FFC515";
+  if (pct >= 60) return "#FF9100";
+  return "#F10202";
+}
+
+const ATTENDANCE_SCORES: Record<string, number> = {
+  completed: 100,
+  delayed: 65,
+  absent: 0,
+  no_show: 0,
+};
+
+
 function StudentDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
