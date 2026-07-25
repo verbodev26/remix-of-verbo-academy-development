@@ -184,6 +184,24 @@ export function buildSkeletonUnits(levelId: string, startAt = 1): CourseUnit[] {
   return units;
 }
 
+/** Resolve the real curriculum topic of a lesson plan's (level_id, unit_id).
+ *  Returns null when the ids don't resolve — e.g. a plan saved against the
+ *  legacy CEFR catalog before the switch to the product-scoped curriculum.
+ *  Callers should treat null as "no plan recorded", never as an error. */
+export function resolvePlanTopic(
+  product: string | undefined,
+  levelId: string | undefined,
+  unitId: string | undefined,
+): { levelName: string; unitTitle: string } | null {
+  const productId = product ? PRODUCT_TO_COURSE[product] : undefined;
+  if (!productId || !levelId || !unitId) return null;
+  const course = loadCourses().find((c) => c.product === productId);
+  const level = course?.levels.find((l) => l.id === levelId);
+  const unit = level?.units.find((u) => u.id === unitId);
+  if (!level || !unit) return null;
+  return { levelName: level.name, unitTitle: unit.title };
+}
+
 // ---------------------------------------------------------------------------
 // "Current level" of the student's real curriculum — canonical helper.
 //
