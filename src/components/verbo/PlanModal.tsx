@@ -1,12 +1,17 @@
 import { useEffect, useState } from "react";
 import { X, Lock } from "lucide-react";
 import { userById } from "@/lib/mock-data";
-import type { Level } from "@/lib/mock-data";
 import { GhostButton } from "@/components/verbo/ui";
 import type { LessonPlan, LessonSessionType } from "@/lib/lesson-plans-store";
 import type { ExtSession } from "@/lib/sessions-store";
 import { unitsForStudent, vipUnitDoneMap } from "@/lib/vip-courses-store";
 import { tailoredUnitsForStudent, tailoredUnitDoneMap } from "@/lib/tailored-content-store";
+import {
+  loadCourses,
+  PRODUCT_TO_COURSE,
+  computeCurrentProgress,
+  type CourseLevel,
+} from "@/lib/product-courses-store";
 
 const ALL_SESSION_TYPES: LessonSessionType[] = [
   "Syllabus content",
@@ -17,20 +22,38 @@ const ALL_SESSION_TYPES: LessonSessionType[] = [
 ];
 
 export function PlanModal({
-  session, existing, levels, onClose, onSave,
+  session, existing, onClose, onSave,
 }: {
   session: ExtSession;
   existing?: LessonPlan;
-  levels: Level[];
   onClose: () => void;
   onSave: (plan: LessonPlan) => void;
 }) {
   const student = userById(session.student_id);
+
+  // Real curriculum for this student: filter the product's levels down to
+  // the ones the student actually has contracted. This is the SAME logic
+  // used by computeCurrentProgress — the modal must never expose CEFR
+  // legacy placeholders that don't correspond to what the student paid for.
+  const productId = student?.product ? PRODUCT_TO_COURSE[student.product] : undefined;
+  const course = productId ? loadCourses().find((c) => c.product === productId) : undefined;
+  const contracted = new Set(student?.contracted_levels ?? []);
+  const levels: CourseLevel[] = (course?.levels ?? []).filter((l) => contracted.has(l.name));
+
+  // Fallback for the default level selection when the plan is new: point at
+  // the level the student is actively progressing through, not the initial
+  // diagnostic CEFR band.
+  const currentReal = student
+    ? computeCurrentProgress(student.id, student.product, student.contracted_levels ?? [], 0)
+    : null;
+
   const [title, setTitle] = useState(existing?.title ?? "");
   // Session Type is intentionally manual, with no default. Teacher autonomy
   // to depart from the fixed syllabus applies even on basic access plans.
   const [type, setType] = useState<LessonSessionType | "">(existing?.type ?? "");
-  const [levelId, setLevelId] = useState(existing?.level_id ?? (student?.current_level ?? levels[0]?.id ?? ""));
+  const [levelId, setLevelId] = useState(
+    existing?.level_id ?? (currentReal?.levelId ?? levels[0]?.id ?? ""),
+  );
   const [unitId, setUnitId] = useState(existing?.unit_id ?? "");
   const [comments, setComments] = useState(existing?.comments ?? "");
   const [vipUnitId, setVipUnitId] = useState(existing?.vip_unit_id ?? "");
@@ -61,6 +84,7 @@ export function PlanModal({
 
   const showLevelUnit = type === "Syllabus content" || type === "Evaluation";
   const currentLevel = levels.find((l) => l.id === levelId);
+  const hasCurriculum = levels.length > 0;
 
   useEffect(() => {
     // Reset unit when level changes if missing
@@ -68,6 +92,7 @@ export function PlanModal({
       setUnitId(currentLevel.units[0]?.id ?? "");
     }
   }, [levelId, showLevelUnit]); // eslint-disable-line react-hooks/exhaustive-deps
+
 
   const submit = () => {
     if (!title.trim()) { alert("Please enter a session title."); return; }
