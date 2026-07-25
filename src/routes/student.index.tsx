@@ -316,47 +316,96 @@ function StudentDashboard() {
         className="verbo-fade-up motion-reduce:animate-none grid gap-4 md:grid-cols-[1fr_1.6fr_1fr]"
         style={{ animationDelay: "60ms" }}
       >
-        <PremiumCard hover className="verbo-card-hover">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Current Level</div>
-              <div className="mt-3 font-[family-name:var(--font-display)] text-3xl font-semibold tracking-tight" style={{ color: "#01304a" }}>
-                {currentLevelName ?? "—"}
+        {/* Current Level */}
+        <div className="relative group">
+          <div className="card-gradient-navy shadow-card verbo-card-hover relative overflow-hidden rounded-[2rem] p-6">
+            <div
+              className="pointer-events-none absolute -right-8 -top-10 h-[140px] w-[140px] rounded-3xl"
+              style={{ background: "rgba(255,255,255,0.08)", transform: "rotate(14deg)" }}
+              aria-hidden
+            />
+            <div className="relative flex items-center justify-between gap-4">
+              <div className="pr-6">
+                <div className="text-xs font-medium uppercase tracking-wider text-white/60">Current Level</div>
+                <div className="mt-3 text-3xl font-semibold tracking-tight text-white">
+                  {currentLevelName ?? "—"}
+                </div>
+                <div className="mt-1 text-xs text-white/60">{productLabel}</div>
               </div>
-              <div className="mt-1 text-xs text-muted-foreground">{productLabel}</div>
+              <StatRing
+                value={levelProgress}
+                label={currentLevelRingLabel}
+                trackColor="rgba(255,255,255,0.25)"
+                progressColor="#ffffff"
+                textColor="#ffffff"
+              />
             </div>
-            <StatRing value={levelProgress} label={currentLevelRingLabel} />
           </div>
-        </PremiumCard>
-        <PremiumCard
-          hover
-          className="verbo-card-hover ring-1 ring-primary/10"
-          style={{ background: "rgba(1, 48, 74, 0.045)" }}
-        >
-          <div className="flex items-center justify-between gap-5">
-            <div>
-              <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary/80">Level Progress</div>
-              <div className="mt-3 flex items-baseline gap-2">
-                <span className="font-[family-name:var(--font-display)] text-6xl font-semibold leading-none tracking-tight" style={{ color: "#01304a" }}>{levelProgress}</span>
-                <span className="font-[family-name:var(--font-display)] text-2xl font-medium" style={{ color: "#01304a" }}>%</span>
+          <div className="pointer-events-none absolute -bottom-5 left-6 flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-elevated transition-transform duration-300 group-hover:scale-110">
+            <GraduationCap className="h-7 w-7" strokeWidth={1.5} style={{ color: "#01304a" }} />
+          </div>
+        </div>
+
+        {/* Level Progress — hero */}
+        <div className="relative group">
+          <div className="card-gradient-orange shadow-card verbo-card-hover relative overflow-hidden rounded-[2rem] p-6">
+            <div
+              className="pointer-events-none absolute -right-8 -top-10 h-[140px] w-[140px] rounded-3xl"
+              style={{ background: "rgba(1,48,74,0.06)", transform: "rotate(14deg)" }}
+              aria-hidden
+            />
+            <div className="relative flex items-center justify-between gap-5">
+              <div className="pr-6">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: "rgba(1,48,74,0.75)" }}>Level Progress</div>
+                <div className="mt-3 flex items-baseline gap-2">
+                  <span className="text-6xl font-bold leading-none tracking-tight" style={{ color: "#01304a" }}>{levelProgress}</span>
+                  <span className="text-2xl font-bold" style={{ color: "#01304a" }}>%</span>
+                </div>
+                <div className="mt-1.5 text-xs" style={{ color: "rgba(1,48,74,0.7)" }}>of {currentLevelName ?? "—"}</div>
               </div>
-              <div className="mt-1.5 text-xs text-muted-foreground">of {currentLevelName ?? "—"}</div>
+              <StatRing
+                value={levelProgress}
+                size={104}
+                stroke={9}
+                trackColor="rgba(1,48,74,0.18)"
+                progressColor="#01304a"
+                textColor="#01304a"
+              />
             </div>
-            <StatRing value={levelProgress} size={104} stroke={9} />
           </div>
-        </PremiumCard>
-        <PremiumCard hover className="verbo-card-hover">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Overall Attendance</div>
-              <div className="mt-3 flex items-baseline gap-2">
-                <span className="font-[family-name:var(--font-display)] text-3xl font-semibold tracking-tight" style={{ color: "#01304a" }}>{attendancePct}%</span>
+          <div className="pointer-events-none absolute -bottom-5 left-6 flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-elevated transition-transform duration-300 group-hover:scale-110">
+            <TrendingUp className="h-7 w-7" strokeWidth={1.5} style={{ color: "#f38934" }} />
+          </div>
+        </div>
+
+        {/* Overall Attendance */}
+        <div className="relative group">
+          <div className="card-gradient-green shadow-card verbo-card-hover relative overflow-hidden rounded-[2rem] p-6">
+            <div
+              className="pointer-events-none absolute -right-8 -top-10 h-[140px] w-[140px] rounded-3xl"
+              style={{ background: "rgba(1,48,74,0.06)", transform: "rotate(14deg)" }}
+              aria-hidden
+            />
+            <div className="relative flex items-center justify-between gap-4">
+              <div className="pr-6">
+                <div className="text-xs font-medium uppercase tracking-wider" style={{ color: "rgba(1,48,74,0.75)" }}>Overall Attendance</div>
+                <div className="mt-3 flex items-baseline gap-2">
+                  <span className="text-3xl font-bold tracking-tight" style={{ color: "#01304a" }}>{attendancePct}%</span>
+                </div>
+                <div className="mt-1 text-xs" style={{ color: "rgba(1,48,74,0.7)" }}>last 90 days</div>
               </div>
-              <div className="mt-1 text-xs text-muted-foreground">last 90 days</div>
+              <StatRing
+                value={attendancePct}
+                trackColor="rgba(1,48,74,0.18)"
+                progressColor="#01304a"
+                textColor="#01304a"
+              />
             </div>
-            <StatRing value={attendancePct} />
           </div>
-        </PremiumCard>
+          <div className="pointer-events-none absolute -bottom-5 left-6 flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-elevated transition-transform duration-300 group-hover:scale-110">
+            <CalendarCheck className="h-7 w-7" strokeWidth={1.5} style={{ color: "#01304a" }} />
+          </div>
+        </div>
       </section>
 
       {/* Linguistic Asset Performance — replaces Performance Metrics + Quote of the Week */}
