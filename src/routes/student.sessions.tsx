@@ -284,6 +284,63 @@ function Page() {
 }
 
 // ---------------------------------------------------------------------------
+// Next upcoming event — derived from the already-loaded `events` list.
+// Purely presentational: no store reads, no mutations.
+// ---------------------------------------------------------------------------
+function NextEventChip({ events }: { events: CalendarEvent[] }) {
+  const next = useMemo(() => {
+    const now = Date.now();
+    const skip = new Set(["cancelled", "absent", "completed"]);
+    return [...events]
+      .filter((e) => +new Date(e.date) > now && !(e.status && skip.has(e.status)))
+      .sort((a, b) => +new Date(a.date) - +new Date(b.date))[0] ?? null;
+  }, [events]);
+
+  if (!next) return null;
+
+  const kindMeta = EVENT_KIND_META[next.kind];
+  const teacherName = next.session ? userById(next.session.teacher_id)?.name : undefined;
+  const withWho = next.kind === "book_club"
+    ? "Book Club"
+    : next.kind === "insight"
+      ? "Verbo Insight"
+      : (teacherName ?? kindMeta.label);
+
+  return (
+    <div className="card-gradient-lime flex w-full items-center gap-4 rounded-3xl border border-border px-5 py-3 shadow-elevated lg:w-auto">
+      <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "rgba(1, 48, 74, 0.7)" }}>
+        Next up
+      </div>
+      <div className="h-8 w-px" style={{ background: "rgba(1, 48, 74, 0.2)" }} />
+      <div className="min-w-0">
+        <div className="truncate text-sm font-semibold" style={{ color: "#01304a" }}>
+          {kindMeta.label} · {withWho}
+        </div>
+        <div className="truncate text-xs" style={{ color: "rgba(1, 48, 74, 0.75)" }}>
+          {fmtDT(next.date)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StatPill({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+  return (
+    <div className="flex items-start gap-3 rounded-2xl border border-[var(--navy-100)] bg-[var(--navy-50)] px-4 py-3">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-[#01304a]">
+        {icon}
+      </div>
+      <div className="min-w-0">
+        <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</div>
+        <div className="mt-0.5 text-xs font-semibold text-foreground">{value}</div>
+      </div>
+    </div>
+  );
+}
+
+
+
+// ---------------------------------------------------------------------------
 // Session details modal — student view.
 // Logistics only (no Lesson Plan surface here).
 // ---------------------------------------------------------------------------
