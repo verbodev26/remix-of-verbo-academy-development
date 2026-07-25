@@ -374,17 +374,29 @@ function EventDetailsModal({
         <button onClick={onClose} aria-label="Close" className="absolute right-4 top-4 rounded-md p-1 text-muted-foreground hover:bg-secondary hover:text-foreground">
           <X className="h-4 w-4" />
         </button>
-        <div className="flex items-center gap-2">
-          <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white" style={{ background: kindMeta.color }}>
-            {kindMeta.label}
-          </span>
+        <div className="flex items-start gap-3">
+          <div
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white"
+            style={{ background: kindMeta.color }}
+          >
+            <CalendarClock className="h-5 w-5" />
+          </div>
+          <div className="min-w-0">
+            <span
+              className="inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white"
+              style={{ background: kindMeta.color }}
+            >
+              {kindMeta.label}
+            </span>
+            <h3 className="mt-1.5 text-lg font-semibold tracking-tight" style={{ color: "#01304a" }}>
+              {isSpotlight && teacherName ? `Spotlight with ${teacherName}` : isClass && teacherName ? `Session with ${teacherName}` : event.title}
+            </h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {fmtDT(event.date)} · {event.duration_minutes} min
+            </p>
+          </div>
         </div>
-        <h3 className="mt-2 text-lg font-semibold tracking-tight text-foreground">
-          {isSpotlight && teacherName ? `Spotlight with ${teacherName}` : isClass && teacherName ? `Session with ${teacherName}` : event.title}
-        </h3>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {fmtDT(event.date)} · {event.duration_minutes} min
-        </p>
+
 
         {(isClass || isSpotlight) && session && (
           <div className="mt-4 space-y-2 text-sm">
