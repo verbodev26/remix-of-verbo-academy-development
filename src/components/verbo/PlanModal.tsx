@@ -170,20 +170,26 @@ export function PlanModal({
           </div>
 
           {showLevelUnit ? (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div>
-                <label className="text-xs font-medium text-foreground">Select Level</label>
-                <select value={levelId} onChange={(e) => setLevelId(e.target.value)} className={`${inputCls} cursor-pointer`}>
-                  {levels.map((l) => <option key={l.id} value={l.id}>{l.title}</option>)}
-                </select>
+            hasCurriculum ? (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="text-xs font-medium text-foreground">Select Level</label>
+                  <select value={levelId} onChange={(e) => setLevelId(e.target.value)} className={`${inputCls} cursor-pointer`}>
+                    {levels.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-foreground">Select Unit</label>
+                  <select value={unitId} onChange={(e) => setUnitId(e.target.value)} className={`${inputCls} cursor-pointer`}>
+                    {currentLevel?.units.map((u) => <option key={u.id} value={u.id}>{u.title}</option>)}
+                  </select>
+                </div>
               </div>
-              <div>
-                <label className="text-xs font-medium text-foreground">Select Unit</label>
-                <select value={unitId} onChange={(e) => setUnitId(e.target.value)} className={`${inputCls} cursor-pointer`}>
-                  {currentLevel?.units.map((u) => <option key={u.id} value={u.id}>{u.title}</option>)}
-                </select>
-              </div>
-            </div>
+            ) : (
+              <select disabled className={readOnlyCls}>
+                <option>No curriculum found for this student</option>
+              </select>
+            )
           ) : type ? (
             <p className="rounded-lg border border-dashed border-border bg-background px-3 py-2 text-xs text-muted-foreground">
               Level and Unit only apply to <strong>Syllabus content</strong> or <strong>Evaluation</strong>.
