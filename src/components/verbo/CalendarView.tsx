@@ -62,15 +62,18 @@ export function CalendarView({
   onEventClick,
   initialMode = "month",
   availableKinds,
+  initialEnabledKinds,
+  pulseKinds,
 }: CalendarViewProps) {
   const [mode, setMode] = useState<CalendarViewMode>(initialMode);
   const [cursor, setCursor] = useState(() => { const d = new Date(); d.setDate(1); return d; });
   const [dayCursor, setDayCursor] = useState(() => new Date());
   const [enabledKinds, setEnabledKinds] = useState<Set<CalendarEventKind>>(
-    () => new Set(availableKinds ?? (Object.keys(EVENT_KIND_META) as CalendarEventKind[])),
+    () => new Set(initialEnabledKinds ?? availableKinds ?? (Object.keys(EVENT_KIND_META) as CalendarEventKind[])),
   );
 
   const kindsToShow = availableKinds ?? (Object.keys(EVENT_KIND_META) as CalendarEventKind[]);
+
 
   const filtered = useMemo(
     () => events.filter((e) => enabledKinds.has(e.kind)),
