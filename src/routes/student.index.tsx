@@ -674,11 +674,11 @@ function StudentDashboard() {
 
                 <div className="mt-6">
                   {!s ? (
-                    <div className="max-w-xl mx-auto w-full rounded-2xl border border-border bg-secondary/40 p-6 text-sm text-muted-foreground">
+                    <div className="max-w-xl mx-auto w-full rounded-2xl border border-[var(--navy-100)] bg-[var(--navy-50)] p-6 text-sm text-muted-foreground">
                       No upcoming sessions scheduled.
                     </div>
                   ) : (
-                    <div className="max-w-xl mx-auto w-full rounded-2xl border border-border bg-secondary/40 shadow-elevated verbo-card-hover relative overflow-hidden">
+                    <div className="max-w-xl mx-auto w-full rounded-2xl border border-[var(--navy-100)] bg-[var(--navy-50)] shadow-elevated verbo-card-hover relative overflow-hidden">
                       <div className="absolute inset-x-0 top-0 z-10 h-1 bg-[var(--accent)]" />
                       <div className="p-6">
                         <div className="flex items-start justify-between gap-4">
