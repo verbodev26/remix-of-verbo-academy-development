@@ -690,3 +690,23 @@
 .Btn:active {
   transform: translate(2px, 2px);
 }
+
+/* ── Sign-in button morph states ───────────────────────────────── */
+@keyframes verbo-iso-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+.verbo-iso-pulse { animation: verbo-iso-pulse 900ms ease-in-out infinite; }
+
+@keyframes verbo-btn-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  50% { transform: translateX(4px); }
+  75% { transform: translateX(-4px); }
+}
+.verbo-btn-shake { animation: verbo-btn-shake 250ms ease-out 2; }
+
+@media (prefers-reduced-motion: reduce) {
+  .verbo-iso-pulse,
+  .verbo-btn-shake { animation: none; }
+}
