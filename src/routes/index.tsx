@@ -97,68 +97,75 @@ function Landing() {
           </section>
 
 
-          {/* Pillars — dark glassmorphic */}
+          {/* Pillars — editorial list on solid navy */}
           <section
             id="how"
             className="relative overflow-hidden"
-            style={{
-              background:
-                "radial-gradient(circle at 50% 0%, rgba(243,137,52,0.06), transparent 55%), radial-gradient(circle at 50% 100%, rgba(1,48,74,0.5), transparent 60%), linear-gradient(180deg, #01304a 0%, #0a0f14 30%, #0a0f14 100%)",
-            }}
+            style={{ backgroundColor: "var(--navy-900)" }}
           >
-            <div className="verbo-tech-grid absolute inset-0 opacity-50" />
-            <div className="relative mx-auto max-w-7xl px-6 py-24">
-              <div className="mx-auto mb-16 max-w-2xl text-center">
-                <div className="verbo-fade-up inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.2em] text-white/80 backdrop-blur-sm shadow-[0_0_24px_rgba(243,137,52,0.15)]">
+            <div className="relative mx-auto max-w-4xl px-6 py-24">
+              <div className="mb-16 text-center">
+                <div className="verbo-fade-up inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.2em] text-white/80">
                   The Student Experience
                 </div>
                 <h2
                   className="verbo-fade-up mt-5 text-3xl font-semibold tracking-tight text-white md:text-4xl"
-                  style={{ animationDelay: "120ms" }}
+                  style={{ animationDelay: "80ms" }}
                 >
                   Engineered for Your Autonomy and Growth
                 </h2>
               </div>
 
-              <div className="relative">
+              <div className="flex flex-col gap-14 md:gap-16">
                 <div
-                  aria-hidden
-                  className="pointer-events-none absolute left-[12%] right-[12%] top-1/2 hidden -translate-y-1/2 md:block"
-                  style={{
-                    height: 1,
-                    backgroundImage:
-                      "linear-gradient(90deg, rgba(255,255,255,0.18) 50%, transparent 50%)",
-                    backgroundSize: "10px 1px",
-                  }}
-                />
-                <div className="relative grid gap-6 md:grid-cols-3">
-                  <Pillar
-                    icon={<CalendarClock className="h-5 w-5 text-cyan-300" />}
-                    title="01. Total Control, 24/7/365"
-                    delay="120ms"
-                  >
-                    You decide when and how fast you advance. Schedule your sessions, review your
-                    personal materials, and manage your learning calendar anytime, anywhere, 365
-                    days a year.
-                  </Pillar>
-                  <Pillar
-                    icon={<Trophy className="h-5 w-5" style={{ color: "#f38934" }} />}
-                    title="02. Gamified Growth & Prizes"
-                    delay="240ms"
-                  >
-                    Earn custom badges, unlock achievements, and win premium rewards as you level
-                    up your communication skills. Monitor your live performance metrics after
-                    every single session.
-                  </Pillar>
-                  <Pillar
-                    icon={<Network className="h-5 w-5 text-cyan-300" />}
-                    title="03. Connect & Engage"
-                    delay="360ms"
-                  >
-                    Access exclusive conversation clubs and connect with other ambitious
-                    professionals in the network. Share insights, practice real-world scenarios,
-                    and grow together.
-                  </Pillar>
+                  className="verbo-fade-up flex items-start gap-5"
+                  style={{ animationDelay: "160ms" }}
+                >
+                  <CalendarClock className="mt-0.5 h-6 w-6 shrink-0 text-cyan-300" />
+                  <div>
+                    <h3 className="text-base font-semibold tracking-tight text-white">
+                      Total Control, 24/7/365
+                    </h3>
+                    <p className="mt-2 text-sm leading-relaxed text-slate-300">
+                      You decide when and how fast you advance. Schedule your sessions, review your
+                      personal materials, and manage your learning calendar anytime, anywhere, 365
+                      days a year.
+                    </p>
+                  </div>
+                </div>
+
+                <div
+                  className="verbo-fade-up flex items-start gap-5"
+                  style={{ animationDelay: "240ms" }}
+                >
+                  <Trophy className="mt-0.5 h-6 w-6 shrink-0" style={{ color: "#f38934" }} />
+                  <div>
+                    <h3 className="text-base font-semibold tracking-tight text-white">
+                      Gamified Growth & Prizes
+                    </h3>
+                    <p className="mt-2 text-sm leading-relaxed text-slate-300">
+                      Earn custom badges, unlock achievements, and win premium rewards as you level
+                      up your communication skills. Monitor your live performance metrics after
+                      every single session.
+                    </p>
+                  </div>
+                </div>
+
+                <div
+                  className="verbo-fade-up flex items-start gap-5"
+                  style={{ animationDelay: "320ms" }}
+                >
+                  <Network className="mt-0.5 h-6 w-6 shrink-0 text-cyan-300" />
+                  <div>
+                    <h3 className="text-base font-semibold tracking-tight text-white">
+                      Connect & Engage
+                    </h3>
+                    <p className="mt-2 text-sm leading-relaxed text-slate-300">
+                      Access exclusive conversation clubs and connect with other ambitious
+                      professionals in the network. Share insights, practice real-world scenarios,
+                      and grow together.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -187,29 +194,3 @@ function Landing() {
   );
 }
 
-function Pillar({
-  icon,
-  title,
-  children,
-  delay,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  children: React.ReactNode;
-  delay?: string;
-}) {
-  return (
-    <div
-      className="verbo-glass-card verbo-fade-up group relative rounded-2xl p-8"
-      style={{ animationDelay: delay }}
-    >
-      <div className="relative flex h-11 w-11 items-center justify-center rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm">
-        {icon}
-      </div>
-      <h3 className="relative mt-5 text-base font-semibold tracking-tight text-white">{title}</h3>
-      <p className="relative mt-2 text-sm leading-relaxed" style={{ color: "#cbd5e1" }}>
-        {children}
-      </p>
-    </div>
-  );
-}
