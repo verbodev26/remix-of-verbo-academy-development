@@ -507,7 +507,7 @@ function StudentDashboard() {
             <Link
               to="/student/performance"
               className="inline-flex items-center gap-1 text-xs font-semibold transition-colors hover:opacity-80"
-              style={{ color: "#f38934" }}
+              style={{ color: "#01304a" }}
             >
               View Detailed Analytics <ArrowRight className="h-3.5 w-3.5" />
             </Link>
