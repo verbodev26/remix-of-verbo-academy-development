@@ -205,7 +205,7 @@ function MonthGrid({
             <div className="mb-1 text-[11px] font-medium text-foreground">{day.getDate()}</div>
             <div className="space-y-1">
               {dayEvents.slice(0, 3).map((e) => (
-                <EventPill key={e.id} ev={e} onClick={() => onEventClick?.(e)} />
+                <EventPill key={e.id} ev={e} onClick={() => onEventClick?.(e)} pulse={!!pulseKinds?.includes(e.kind)} />
               ))}
               {dayEvents.length > 3 && (
                 <div className="px-1.5 text-[10px] text-muted-foreground">+{dayEvents.length - 3} more</div>
