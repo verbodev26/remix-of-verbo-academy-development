@@ -170,7 +170,10 @@ function Page() {
           events={events}
           onEventClick={handleEventClick}
           availableKinds={studentKinds}
+          initialEnabledKinds={focus === "clubs" ? CLUB_KINDS : undefined}
+          pulseKinds={focus === "clubs" ? CLUB_KINDS : undefined}
         />
+
       </Card>
 
       <Card className="!p-4">
