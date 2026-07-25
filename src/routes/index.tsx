@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Logo } from "@/components/verbo/Logo";
 import { Preloader } from "@/components/verbo/Preloader";
+import { PhotoPlaceholder } from "@/components/verbo/ui";
 import { ArrowRight, CalendarClock, Trophy, Network } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -22,12 +23,12 @@ function Landing() {
       <Preloader />
       <div className="min-h-screen bg-background">
         {/* Nav */}
-        <header className="relative z-20 border-b border-border bg-background">
+        <header className="relative z-20 bg-secondary">
           <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
             <Logo />
             <Link
               to="/login"
-              className="inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-[#01304a] px-4 py-2 text-sm font-medium text-white shadow-sm transition-transform duration-150 ease-out hover:opacity-90 active:scale-[0.97]"
+              className="inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-accent px-4 py-2 text-sm font-medium text-accent-foreground shadow-sm transition-transform duration-150 ease-out hover:opacity-90 active:scale-[0.97]"
             >
               Sign in
               <ArrowRight className="h-3.5 w-3.5" />
@@ -36,65 +37,91 @@ function Landing() {
         </header>
 
         <main>
-          {/* HERO — warm, premium editorial */}
-          <section className="relative overflow-hidden bg-background">
-            {/* Asymmetric navy panel */}
-            <div
-              className="pointer-events-none absolute right-0 top-0 h-full w-[45%] rounded-l-3xl"
-              style={{
-                background:
-                  "linear-gradient(180deg, var(--navy-800) 0%, var(--navy-700) 100%)",
-              }}
-              aria-hidden
-            />
-
-            <div className="relative mx-auto max-w-7xl px-6 py-20 lg:py-32">
-              <div className="max-w-2xl">
-                <h1
-                  className="verbo-fade-up font-display text-5xl font-semibold tracking-tight text-[#01304a] md:text-6xl"
+          {/* HERO — vibrant, brand-aligned */}
+          <section className="relative overflow-hidden bg-secondary">
+            <div className="relative mx-auto max-w-7xl px-6 py-20 lg:py-28">
+              <div className="grid items-center gap-12 lg:grid-cols-2">
+                {/* Left: photo composition */}
+                <div
+                  className="verbo-fade-up relative mx-auto h-[520px] w-full max-w-[480px]"
                   style={{ animationDelay: "0ms" }}
                 >
-                  English fluency that sounds like you.
-                </h1>
-
-                <p
-                  className="verbo-fade-up mt-6 text-lg leading-relaxed text-[#01304a]/70"
-                  style={{ animationDelay: "120ms" }}
-                >
-                  No more grammar drills that never leave the page. Verbo turns English into
-                  something you actually use — in real meetings, real negotiations, and real
-                  conversations that move your career forward.
-                </p>
-
-                <div
-                  className="verbo-fade-up mt-10 flex flex-wrap items-center gap-3"
-                  style={{ animationDelay: "240ms" }}
-                >
-                  <Link
-                    to="/login"
-                    className="group inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-accent px-6 py-3 text-sm font-medium text-accent-foreground shadow-sm shadow-soft transition-opacity transition-transform duration-150 ease-out hover:opacity-90 active:scale-[0.97]"
-                  >
-                    Access your account
-                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                  </Link>
-                  <Link
-                    to="/"
-                    hash="how"
-                    className="inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-border bg-background px-6 py-3 text-sm font-medium text-foreground transition-colors transition-transform duration-150 ease-out hover:bg-secondary active:scale-[0.97]"
-                  >
-                    How it works
-                  </Link>
+                  {/* Decorative navy circle */}
+                  <div
+                    className="absolute -left-6 top-8 h-32 w-32 rounded-full bg-[var(--navy-100)]"
+                    aria-hidden
+                  />
+                  {/* Orange shape */}
+                  <div
+                    className="absolute bottom-0 right-4 h-[380px] w-[300px] rounded-[2rem] bg-[var(--orange-500)]"
+                    aria-hidden
+                  />
+                  {/* Photo placeholder */}
+                  <PhotoPlaceholder
+                    tone="light"
+                    className="absolute left-8 top-6 aspect-[3/4] w-[300px] rotate-[-3deg] shadow-xl"
+                  />
                 </div>
 
-                <p
-                  className="verbo-fade-up mt-6 text-xs text-[#01304a]/60"
-                  style={{ animationDelay: "360ms" }}
-                >
-                  Access is invitation-only. Credentials are issued by your organization's administrator.
-                </p>
+                {/* Right: text */}
+                <div>
+                  <div
+                    className="verbo-fade-up inline-flex items-center gap-2 rounded-full bg-[var(--orange-100)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--orange-700)]"
+                    style={{ animationDelay: "80ms" }}
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full bg-[var(--orange-500)]" />
+                    Verbo Academy
+                  </div>
+
+                  <h1
+                    className="verbo-fade-up mt-5 text-5xl font-black tracking-tight text-[var(--navy-700)] md:text-6xl"
+                    style={{ animationDelay: "160ms", textWrap: "balance" }}
+                  >
+                    English fluency{" "}
+                    <span className="text-[var(--orange-500)]">that sounds like you.</span>
+                  </h1>
+
+                  <p
+                    className="verbo-fade-up mt-6 text-lg leading-relaxed text-[var(--navy-700)]/70"
+                    style={{ animationDelay: "240ms" }}
+                  >
+                    No more grammar drills that never leave the page. Verbo turns English into
+                    something you actually use — in real meetings, real negotiations, and real
+                    conversations that move your career forward.
+                  </p>
+
+                  <div
+                    className="verbo-fade-up mt-10 flex flex-wrap items-center gap-3"
+                    style={{ animationDelay: "320ms" }}
+                  >
+                    <Link
+                      to="/login"
+                      className="group inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-accent px-6 py-3 text-sm font-medium text-accent-foreground shadow-sm transition-opacity transition-transform duration-150 ease-out hover:opacity-90 active:scale-[0.97]"
+                    >
+                      Access your account
+                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                    </Link>
+                    <Link
+                      to="/"
+                      hash="how"
+                      className="inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-[var(--navy-700)]/15 bg-white px-6 py-3 text-sm font-medium text-[var(--navy-700)] transition-colors transition-transform duration-150 ease-out hover:bg-white/70 active:scale-[0.97]"
+                    >
+                      How it works
+                    </Link>
+                  </div>
+
+                  <p
+                    className="verbo-fade-up mt-6 text-xs text-[var(--navy-700)]/60"
+                    style={{ animationDelay: "400ms" }}
+                  >
+                    Access is invitation-only. Credentials are issued by your organization's administrator.
+                  </p>
+                </div>
               </div>
             </div>
           </section>
+
+
 
 
           {/* Pillars — editorial list on solid navy */}
