@@ -21,7 +21,7 @@ function Landing() {
   return (
     <>
       <Preloader />
-      <div className="min-h-screen bg-background">
+      <div className="font-marketing min-h-screen bg-background">
         {/* Nav */}
         <header className="relative z-20 bg-secondary">
           <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
@@ -74,7 +74,7 @@ function Landing() {
                   </div>
 
                   <h1
-                    className="verbo-fade-up mt-5 text-5xl font-black tracking-tight text-[var(--navy-700)] md:text-6xl"
+                    className="verbo-fade-up mt-5 text-5xl font-semibold tracking-tight text-[var(--navy-700)] md:text-6xl"
                     style={{ animationDelay: "160ms", textWrap: "balance" }}
                   >
                     English fluency{" "}
