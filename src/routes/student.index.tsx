@@ -674,11 +674,11 @@ function StudentDashboard() {
 
                 <div className="mt-6">
                   {!s ? (
-                    <div className="max-w-xl mx-auto w-full rounded-2xl border border-border bg-secondary/40 p-6 text-sm text-muted-foreground">
+                    <div className="max-w-xl mx-auto w-full rounded-2xl border border-[var(--navy-100)] bg-[var(--navy-50)] p-6 text-sm text-muted-foreground">
                       No upcoming sessions scheduled.
                     </div>
                   ) : (
-                    <div className="max-w-xl mx-auto w-full rounded-2xl border border-border bg-secondary/40 shadow-elevated verbo-card-hover relative overflow-hidden">
+                    <div className="max-w-xl mx-auto w-full rounded-2xl border border-[var(--navy-100)] bg-[var(--navy-50)] shadow-elevated verbo-card-hover relative overflow-hidden">
                       <div className="absolute inset-x-0 top-0 z-10 h-1 bg-[var(--accent)]" />
                       <div className="p-6">
                         <div className="flex items-start justify-between gap-4">
@@ -956,6 +956,68 @@ function StudentDashboard() {
               }
             }
             const hasRealPdf = !!s.report_pdf_url && s.report_pdf_url !== "/mock-report.pdf";
+            const isUpcoming = s.status === "scheduled" || s.status === "rescheduled" || s.status === "ready";
+            const headerBlock = (
+              <div className="rounded-lg border border-border bg-secondary/40 p-3 text-xs">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <div className="text-sm font-semibold text-foreground">{fmt(s.date_time)}</div>
+                    <div className="mt-0.5 text-muted-foreground">
+                      {s.duration_minutes} min · with {teacher?.name ?? "Teacher"}
+                    </div>
+                  </div>
+                  <span className={statusBadge(s.status)}>{s.status}</span>
+                </div>
+                {isAbsent && absentMsg && (
+                  <div className="mt-2 text-muted-foreground">{absentMsg}.</div>
+                )}
+              </div>
+            );
+            if (isUpcoming) {
+              return (
+                <>
+                  <DialogHeader>
+                    <DialogTitle style={{ color: "#01304a" }}>Class Details</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    {headerBlock}
+                    <section>
+                      <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        What we'll cover
+                      </h4>
+                      {plan ? (
+                        <div className="mt-2 space-y-1 text-sm text-foreground">
+                          <div><span className="text-muted-foreground">Type:</span> {plan.type}</div>
+                          <div><span className="text-muted-foreground">Title:</span> {plan.title}</div>
+                          {topic && (
+                            <div className="text-muted-foreground">
+                              {topic.levelName} — {topic.unitTitle}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="mt-2 text-sm text-muted-foreground">
+                          Your teacher hasn't set today's topic yet.
+                        </p>
+                      )}
+                    </section>
+                  </div>
+                  <DialogFooter className="gap-2 sm:gap-2">
+                    <GhostButton
+                      onClick={() => { setClassDetail(null); setToCancel(s); }}
+                    >
+                      <X className="h-3.5 w-3.5" /> Can't attend
+                    </GhostButton>
+                    <PrimaryButton
+                      className="verbo-btn-glow"
+                      onClick={() => s.teams_link && window.open(s.teams_link, "_blank")}
+                    >
+                      <Video className="h-3.5 w-3.5" /> Connect
+                    </PrimaryButton>
+                  </DialogFooter>
+                </>
+              );
+            }
             return (
               <>
                 <DialogHeader>
@@ -963,20 +1025,7 @@ function StudentDashboard() {
                 </DialogHeader>
                 <div className="space-y-4">
                   {/* Header block */}
-                  <div className="rounded-lg border border-border bg-secondary/40 p-3 text-xs">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div>
-                        <div className="text-sm font-semibold text-foreground">{fmt(s.date_time)}</div>
-                        <div className="mt-0.5 text-muted-foreground">
-                          {s.duration_minutes} min · with {teacher?.name ?? "Teacher"}
-                        </div>
-                      </div>
-                      <span className={statusBadge(s.status)}>{s.status}</span>
-                    </div>
-                    {isAbsent && absentMsg && (
-                      <div className="mt-2 text-muted-foreground">{absentMsg}.</div>
-                    )}
-                  </div>
+                  {headerBlock}
 
                   {/* What we covered */}
                   <section>
