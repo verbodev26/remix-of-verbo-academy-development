@@ -302,7 +302,7 @@ function DayList({
   );
 }
 
-function EventPill({ ev, onClick }: { ev: CalendarEvent; onClick: () => void }) {
+function EventPill({ ev, onClick, pulse = false }: { ev: CalendarEvent; onClick: () => void; pulse?: boolean }) {
   const display = eventPillDisplay(ev);
   const kindMeta = EVENT_KIND_META[ev.kind];
   const isClub = ev.kind === "insight" || ev.kind === "book_club";
@@ -318,8 +318,12 @@ function EventPill({ ev, onClick }: { ev: CalendarEvent; onClick: () => void }) 
         onClick={onClick}
         className={`flex w-full items-center gap-1 truncate rounded-md px-1.5 py-1 text-left text-[10.5px] font-medium text-white shadow-sm transition-opacity hover:opacity-90 cursor-pointer ${
           ev.booked ? "ring-2 ring-emerald-400 ring-offset-1 ring-offset-card" : ""
-        }`}
-        style={{ backgroundColor: display.color }}
+        } ${pulse ? "verbo-focus-pulse" : ""}`}
+        style={{
+          backgroundColor: display.color,
+          ...(pulse ? { ["--verbo-focus-pulse-color" as string]: display.color } : {}),
+        }}
+
         title={
           ev.sub_status
             ? `${SUB_STATUS_META[ev.sub_status].label} — ${ev.title}`
