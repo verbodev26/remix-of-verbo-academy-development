@@ -655,7 +655,7 @@ function StudentDashboard() {
         {/* RIGHT SIDEBAR ~35% */}
         <aside className="verbo-fade-up motion-reduce:animate-none space-y-6" style={{ animationDelay: "240ms" }}>
           {/* Verbo Experiences */}
-          <PremiumCard hover className="relative overflow-hidden">
+          <PremiumCard hover className="group relative overflow-hidden">
             <div
               className="absolute inset-0 opacity-[0.09] pointer-events-none"
               style={{ background: "radial-gradient(circle at top right, var(--green-500), transparent 65%)" }}
@@ -663,7 +663,7 @@ function StudentDashboard() {
             <div className="relative">
               <div className="flex items-center gap-2">
                 <div
-                  className="flex h-9 w-9 items-center justify-center rounded-lg"
+                  className="verbo-float flex h-9 w-9 items-center justify-center rounded-lg transition-transform duration-300 group-hover:scale-110"
                   style={{ background: "color-mix(in oklab, var(--green-500) 12%, transparent)", color: "var(--green-500)" }}
                 >
                   <Users className="h-4 w-4" />
@@ -685,7 +685,7 @@ function StudentDashboard() {
           </PremiumCard>
 
           {/* Quick Review Dock */}
-          <PremiumCard>
+          <PremiumCard hover>
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-sm font-semibold tracking-tight" style={{ color: "#01304a" }}>
                 Quick Review Dock
@@ -699,12 +699,24 @@ function StudentDashboard() {
             ) : (
               <ul className="space-y-3">
                 {recentFeedback.map((f) => (
-                  <li key={f.id} className="rounded-lg border border-border/70 bg-white/70 p-3">
-                    <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-muted-foreground">
-                      <span>{f.teacher}</span>
-                      <span>{f.date}</span>
+                  <li
+                    key={f.id}
+                    className="flex gap-3 rounded-lg border border-border/70 bg-white/70 p-3 transition-colors duration-200 hover:bg-secondary/60"
+                  >
+                    <div
+                      className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-white"
+                      style={{ backgroundColor: "#01304a" }}
+                      aria-hidden
+                    >
+                      {(f.teacher ?? "?").trim().charAt(0).toUpperCase()}
                     </div>
-                    <p className="mt-1.5 text-xs leading-relaxed text-foreground">{f.tip}</p>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-muted-foreground">
+                        <span className="truncate">{f.teacher}</span>
+                        <span className="shrink-0 pl-2">{f.date}</span>
+                      </div>
+                      <p className="mt-1.5 text-xs leading-relaxed text-foreground">{f.tip}</p>
+                    </div>
                   </li>
                 ))}
               </ul>
