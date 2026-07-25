@@ -283,14 +283,21 @@ function LoginPage() {
 
       {/* Visual side */}
       <div className="relative hidden overflow-hidden bg-[#01304a] lg:flex lg:flex-col lg:justify-between lg:p-12">
+        {/* Diagonal depth layer */}
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{ background: "linear-gradient(135deg, var(--navy-900), #01304a 60%)" }}
+          aria-hidden
+        />
         {/* Static orange glow */}
         <div
           className="pointer-events-none absolute inset-0"
           style={{ background: "radial-gradient(circle at 70% 60%, rgba(243,137,52,0.18), transparent 50%)" }}
         />
-        {/* Decorative orange block */}
+        {/* Orange glow orb */}
         <div
-          className="pointer-events-none absolute -bottom-12 -right-12 h-80 w-64 rounded-[2rem] bg-accent/30"
+          className="pointer-events-none absolute -bottom-16 -right-16 h-72 w-72 rounded-full blur-3xl"
+          style={{ backgroundColor: "var(--orange-500)", opacity: 0.4 }}
           aria-hidden
         />
 
@@ -314,6 +321,7 @@ function LoginPage() {
           </div>
         </div>
       </div>
+      </div>
 
       {overlay && (
         <div
@@ -327,6 +335,7 @@ function LoginPage() {
         />
       )}
     </div>
+
 
   );
 }
