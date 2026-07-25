@@ -96,7 +96,10 @@ export function StatRing({
   size = 64,
   stroke = 6,
   label,
-}: { value: number; size?: number; stroke?: number; label?: string }) {
+  trackColor = "rgba(1, 48, 74, 0.08)",
+  progressColor = "#f38934",
+  textColor = "#01304a",
+}: { value: number; size?: number; stroke?: number; label?: string; trackColor?: string; progressColor?: string; textColor?: string }) {
   const pct = Math.max(0, Math.min(100, value));
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
@@ -109,7 +112,7 @@ export function StatRing({
           cy={size / 2}
           r={r}
           fill="none"
-          stroke="rgba(1, 48, 74, 0.08)"
+          stroke={trackColor}
           strokeWidth={stroke}
         />
         <circle
@@ -117,7 +120,7 @@ export function StatRing({
           cy={size / 2}
           r={r}
           fill="none"
-          stroke="#f38934"
+          stroke={progressColor}
           strokeWidth={stroke}
           strokeLinecap="round"
           strokeDasharray={c}
@@ -125,7 +128,7 @@ export function StatRing({
           style={{ transition: "stroke-dashoffset 700ms ease" }}
         />
       </svg>
-      <div className="absolute inset-0 flex items-center justify-center text-[11px] font-semibold tabular-nums" style={{ color: "#01304a" }}>
+      <div className="absolute inset-0 flex items-center justify-center text-[11px] font-semibold tabular-nums" style={{ color: textColor }}>
         {label ?? `${Math.round(pct)}%`}
       </div>
     </div>
