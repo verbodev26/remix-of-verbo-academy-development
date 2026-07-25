@@ -303,9 +303,6 @@ function LoginPage() {
 
 
         <div className="relative z-10">
-          <Logo className="[&_span]:text-white [&_span.text-muted-foreground]:text-white/60" />
-        </div>
-        <div className="relative z-10">
           <div className="verbo-fade-up text-xs font-medium uppercase tracking-[0.25em] text-white/60" style={{ animationDelay: "120ms" }}>
             A note from our team
           </div>
