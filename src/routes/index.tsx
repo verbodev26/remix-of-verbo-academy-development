@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
 import { Logo } from "@/components/verbo/Logo";
+import { Footer } from "@/components/verbo/Footer";
 import { Preloader } from "@/components/verbo/Preloader";
 import { PhotoPlaceholder } from "@/components/verbo/ui";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
