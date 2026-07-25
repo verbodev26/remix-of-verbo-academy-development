@@ -263,7 +263,8 @@ function Landing() {
           {/* Footer */}
           <footer className="bg-[var(--navy-700)] border-t border-white/5">
             <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-6 py-8 text-xs md:flex-row">
-              <Logo />
+              <Logo dark />
+
               <div className="flex flex-col items-center gap-1 text-white/60 md:flex-row md:gap-3">
                 <span>© 2026 Verbo Language Solutions. All rights reserved.</span>
                 <Link
