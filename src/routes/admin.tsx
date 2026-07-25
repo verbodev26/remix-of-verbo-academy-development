@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet, Link, useRouterState, Navigate } from "@tanstack/react-router";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { Footer } from "@/components/verbo/Footer";
 import { ChevronDown } from "lucide-react";
 import { RoleGuard } from "@/components/verbo/RoleGuard";
 import { TopNav } from "@/components/verbo/TopNav";

@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { RoleGuard } from "@/components/verbo/RoleGuard";
+import { Footer } from "@/components/verbo/Footer";
 import { TopNav, NavItem, NavGroup } from "@/components/verbo/TopNav";
 import { AnnouncementBanner } from "@/components/verbo/AnnouncementBanner";
 import { useAuth } from "@/lib/auth";
