@@ -2,6 +2,7 @@ import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { RoleGuard } from "@/components/verbo/RoleGuard";
 import { TopNav, type NavEntry } from "@/components/verbo/TopNav";
 import { AnnouncementBanner } from "@/components/verbo/AnnouncementBanner";
+import { Footer } from "@/components/verbo/Footer";
 import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/student")({
