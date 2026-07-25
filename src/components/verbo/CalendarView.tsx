@@ -219,11 +219,12 @@ function MonthGrid({
 }
 
 function DayList({
-  day, events, onEventClick,
+  day, events, onEventClick, pulseKinds,
 }: {
   day: Date;
   events: CalendarEvent[];
   onEventClick?: (ev: CalendarEvent) => void;
+  pulseKinds?: CalendarEventKind[];
 }) {
   if (events.length === 0) {
     return (
@@ -238,8 +239,12 @@ function DayList({
         <button
           key={e.id}
           onClick={() => onEventClick?.(e)}
-          className="flex w-full items-center gap-4 border-b border-border p-3 text-left transition-colors last:border-0 hover:bg-secondary/60"
+          style={pulseKinds?.includes(e.kind) ? { ["--verbo-focus-pulse-color" as string]: EVENT_KIND_META[e.kind].color } : undefined}
+          className={`flex w-full items-center gap-4 border-b border-border p-3 text-left transition-colors last:border-0 hover:bg-secondary/60 ${
+            pulseKinds?.includes(e.kind) ? "verbo-focus-pulse" : ""
+          }`}
         >
+
           <div className="w-16 shrink-0 text-sm font-semibold tabular-nums" style={{ color: "#01304a" }}>
             {fmtTime(e.date)}
           </div>
