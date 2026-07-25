@@ -70,24 +70,24 @@ function Landing() {
                     style={{ animationDelay: "80ms" }}
                   >
                     <span className="h-1.5 w-1.5 rounded-full bg-[var(--orange-500)]" />
-                    Verbo Academy
+                    VERBO ACADEMY
                   </div>
 
                   <h1
                     className="verbo-fade-up mt-5 text-5xl font-semibold tracking-tight text-[var(--navy-700)] md:text-6xl"
                     style={{ animationDelay: "160ms", textWrap: "balance" }}
                   >
-                    English fluency{" "}
-                    <span className="text-[var(--orange-500)]">that sounds like you.</span>
+                    Growth has a language.
+                    <span className="text-[var(--orange-500)]"> Speak it.</span>
                   </h1>
 
                   <p
                     className="verbo-fade-up mt-6 text-lg leading-relaxed text-[var(--navy-700)]/70"
                     style={{ animationDelay: "240ms" }}
                   >
-                    No more grammar drills that never leave the page. Verbo turns English into
-                    something you actually use — in real meetings, real negotiations, and real
-                    conversations that move your career forward.
+                    Forget grammar drills that live and die on a worksheet. Here you rehearse the real
+                    thing — the negotiation, the pitch, the toast you finally give in English without
+                    translating it in your head first.
                   </p>
 
                   <div
@@ -114,7 +114,7 @@ function Landing() {
                     className="verbo-fade-up mt-6 text-xs text-[var(--navy-700)]/60"
                     style={{ animationDelay: "400ms" }}
                   >
-                    Access is invitation-only. Credentials are issued by your organization's administrator.
+                    Private access only — your admin sends the invite.
                   </p>
                 </div>
               </div>
@@ -133,13 +133,13 @@ function Landing() {
                   style={{ animationDelay: "0ms" }}
                 >
                   <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />
-                  Verbo Academy
+                  HOW IT WORKS
                 </div>
                 <h2
                   className="verbo-fade-up mt-5 text-3xl font-bold tracking-tight text-navy-700 md:text-4xl"
                   style={{ animationDelay: "80ms" }}
                 >
-                  Engineered for Your Autonomy and Growth
+                  Built around you, not the other way around.
                 </h2>
               </div>
 
@@ -151,15 +151,15 @@ function Landing() {
                   <div>
                     <PhotoPlaceholder tone="dark" className="aspect-[4/3] w-full" />
                     <div className="mt-6 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/70">
-                      24/7 Access
+                      YOUR SCHEDULE
                     </div>
                     <h3 className="mt-2 text-xl font-bold tracking-tight text-white">
-                      Total Control, 24/7/365
+                      Your Schedule, Not Ours
                     </h3>
                     <p className="mt-3 text-sm leading-relaxed text-white/80">
-                      You decide when and how fast you advance. Schedule your sessions, review your
-                      personal materials, and manage your learning calendar anytime, anywhere, 365
-                      days a year.
+                      Class at 6 a.m. before the gym? Sunday night before a Monday presentation? You
+                      call it. Book sessions, revisit your materials, and run your own calendar —
+                      every day of the year.
                     </p>
                   </div>
                   <div className="mt-6 flex justify-end">
@@ -176,15 +176,15 @@ function Landing() {
                   <div>
                     <PhotoPlaceholder tone="dark" className="aspect-[4/3] w-full" />
                     <div className="mt-6 text-[11px] font-semibold uppercase tracking-[0.18em] text-navy-900/70">
-                      Gamification
+                      YOUR PROGRESS
                     </div>
                     <h3 className="mt-2 text-xl font-bold tracking-tight text-navy-900">
-                      Gamified Growth & Prizes
+                      Progress You Can Feel
                     </h3>
                     <p className="mt-3 text-sm leading-relaxed text-navy-900/80">
-                      Earn custom badges, unlock achievements, and win premium rewards as you level
-                      up your communication skills. Monitor your live performance metrics after
-                      every single session.
+                      Badges you actually want to show off. Real prizes, not participation trophies.
+                      Watch your numbers move after every single class — because progress you can't
+                      see doesn't feel like progress.
                     </p>
                   </div>
                   <div className="mt-6 flex justify-end">
@@ -201,15 +201,15 @@ function Landing() {
                   <div>
                     <PhotoPlaceholder tone="dark" className="aspect-[4/3] w-full" />
                     <div className="mt-6 text-[11px] font-semibold uppercase tracking-[0.18em] text-navy-900/70">
-                      Community
+                      YOUR PEOPLE
                     </div>
                     <h3 className="mt-2 text-xl font-bold tracking-tight text-navy-900">
-                      Connect & Engage
+                      A Room Full of People Like You
                     </h3>
                     <p className="mt-3 text-sm leading-relaxed text-navy-900/80">
-                      Access exclusive conversation clubs and connect with other ambitious
-                      professionals in the network. Share insights, practice real-world scenarios,
-                      and grow together.
+                      Join conversation clubs with people chasing the same fluency you are. Trade
+                      stories, practice the scenarios that actually scare you, and stop practicing
+                      English alone.
                     </p>
                   </div>
                   <div className="mt-6 flex justify-end">
