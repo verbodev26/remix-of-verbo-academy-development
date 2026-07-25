@@ -1001,13 +1001,28 @@ function StudentDashboard() {
                 </DialogHeader>
                 <div className="space-y-4">
                   {/* Header block */}
-                  {headerBlock}
+                  <div className="rounded-lg border border-[var(--navy-100)] bg-[var(--navy-50)] p-3 text-xs">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <div className="text-sm font-semibold text-foreground">{fmt(s.date_time)}</div>
+                        <div className="mt-0.5 text-muted-foreground">
+                          {s.duration_minutes} min · with {teacher?.name ?? "Teacher"}
+                        </div>
+                      </div>
+                      <span className={statusBadge(s.status)}>{s.status}</span>
+                    </div>
+                    {isAbsent && absentMsg && (
+                      <div className="mt-2 text-muted-foreground">{absentMsg}.</div>
+                    )}
+                  </div>
 
                   {/* What we covered */}
                   <section>
-                    <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      What we covered
-                    </h4>
+                    <SectionHeadIcon
+                      icon={<BookOpen className="h-4 w-4" />}
+                      circleClass="bg-[var(--navy-100)] text-[#01304a]"
+                      label="What we covered"
+                    />
                     {plan ? (
                       <div className="mt-2 space-y-1 text-sm text-foreground">
                         <div><span className="text-muted-foreground">Type:</span> {plan.type}</div>
@@ -1027,9 +1042,11 @@ function StudentDashboard() {
 
                   {/* Teacher's notes */}
                   <section>
-                    <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      Teacher's notes
-                    </h4>
+                    <SectionHeadIcon
+                      icon={<NotebookPen className="h-4 w-4" />}
+                      circleClass="bg-[var(--orange-100)] text-[var(--orange-600)]"
+                      label="Teacher's notes"
+                    />
                     {s.report_comments && s.report_comments.trim().length > 0 ? (
                       <p className="mt-2 text-sm leading-relaxed text-foreground">{s.report_comments.trim()}</p>
                     ) : (
@@ -1039,9 +1056,11 @@ function StudentDashboard() {
 
                   {/* Your rating */}
                   <section>
-                    <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      Your rating
-                    </h4>
+                    <SectionHeadIcon
+                      icon={<Star className="h-4 w-4" />}
+                      circleClass="bg-[var(--orange-100)] text-[var(--orange-600)]"
+                      label="Your rating"
+                    />
                     {s.student_rating ? (
                       <div className="mt-2"><RatingStarsCompact value={s.student_rating} /></div>
                     ) : (
@@ -1051,9 +1070,11 @@ function StudentDashboard() {
 
                   {/* Performance breakdown */}
                   <section>
-                    <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      Performance breakdown
-                    </h4>
+                    <SectionHeadIcon
+                      icon={<Award className="h-4 w-4" />}
+                      circleClass="bg-[var(--violet-100)] text-[var(--violet-700)]"
+                      label="Performance breakdown"
+                    />
                     {rating ? (
                       <div className="mt-2 space-y-3">
                         <PerfStars label="Fluency" value={rating.fluency} />
@@ -1068,6 +1089,7 @@ function StudentDashboard() {
                     )}
                   </section>
                 </div>
+
                 <DialogFooter className="gap-2 sm:gap-2">
                   <GhostButton
                     disabled={!hasRealPdf}
