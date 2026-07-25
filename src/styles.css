@@ -278,6 +278,9 @@
 @utility card-gradient-green {
   background-image: linear-gradient(150deg, var(--green-300) 0%, var(--green-500) 55%, var(--green-700) 100%);
 }
+@utility card-gradient-teal {
+  background-image: linear-gradient(150deg, #b2ece3 0%, #7cd7cb 55%, #3ebbad 100%);
+}
 
 @layer utilities {
   .verbo-card {
