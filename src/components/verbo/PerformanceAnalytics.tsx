@@ -24,7 +24,7 @@ import {
   getServerSessionsSnapshot,
   subscribeSessions,
 } from "@/lib/sessions-store";
-import { MACRO_SKILLS, skillKey, type BaseKey } from "@/lib/skills-taxonomy";
+import { MACRO_SKILLS, skillKey } from "@/lib/skills-taxonomy";
 
 function subAverage(map: PerformanceMap, key: string) {
   const vals: number[] = [];
