@@ -885,7 +885,10 @@ function UnitsView({
                       const idx = level.units.indexOf(u);
                       const st = states[idx];
                       const milestone = isMilestoneUnit(u.id);
-                      const preview = k >= 5 && (st === "locked" || st === "milestone_locked");
+                      const previewLevel: 0 | 1 | 2 | 3 =
+                        (st === "locked" || st === "milestone_locked")
+                          ? (k === 5 ? 1 : k === 6 ? 2 : k >= 7 ? 3 : 0)
+                          : 0;
                       return (
                         <div key={u.id} className={open ? "verbo-stagger-in" : ""} style={{ animationDelay: `${Math.min(k, 9) * 25}ms` }}>
                           <UnitStone
@@ -893,7 +896,7 @@ function UnitsView({
                             number={n}
                             state={st}
                             milestone={milestone}
-                            preview={preview}
+                            previewLevel={previewLevel}
                             unlockFlip={flipUnitId === u.id}
                             onOpen={() => onOpenUnit(u)}
                           />
