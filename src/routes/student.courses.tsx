@@ -33,6 +33,7 @@ import { VerboAudioPlayer } from "@/components/verbo/VerboAudioPlayer";
 import { useAuth } from "@/lib/auth";
 import type { User } from "@/lib/mock-data";
 import { currentLoginStreak } from "@/lib/login-streak-store";
+import { markUnlockSeen } from "@/lib/unit-unlock-seen-store";
 import { buildProfileBadgeContext } from "@/lib/profile-badges-store";
 import {
   type ProductId,
