@@ -268,6 +268,27 @@ export function unitPassed(studentId: string, unitId: string): boolean {
   return true;
 }
 
+/** Same rule as `unitPassed`, but a unit with NO mandatory activity configured
+ *  is never considered passed (no legacy completion-flag fallback). Use this
+ *  for medal/mission math so overrides and seeds can't award medals. */
+export function unitPassedByActivities(studentId: string, unitId: string): boolean {
+  const list = activitiesForUnit(unitId);
+  const scores = safeRead<Record<string, ActivityScore>>(SCORES_KEY, {});
+  const byCat = new Map<string, Activity[]>();
+  for (const a of list) {
+    if (!isMandatoryCategory(a.category)) continue;
+    const arr = byCat.get(a.category!) ?? [];
+    arr.push(a);
+    byCat.set(a.category!, arr);
+  }
+  if (byCat.size === 0) return false;
+  for (const [, arr] of byCat) {
+    const ok = arr.some((a) => (scores[scopedKey(studentId, a.id)]?.best ?? 0) >= 60);
+    if (!ok) return false;
+  }
+  return true;
+}
+
 export function unitCategoryProgress(studentId: string, unitId: string): {
   category: string; passed: boolean; best: number; mandatory: boolean;
 }[] {
