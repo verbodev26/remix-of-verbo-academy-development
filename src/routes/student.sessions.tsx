@@ -99,9 +99,17 @@ function Page() {
   const [rescheduleFor, setRescheduleFor] = useState<ExtSession | null>(null);
   const [spotlightOpen, setSpotlightOpen] = useState(false);
   const [clubModal, setClubModal] = useState<Club | null>(null);
+  // The clubs focus pulse is a 10s attention cue, not a permanent state.
+  const [pulseActive, setPulseActive] = useState(focusParam === "clubs");
 
   useEffect(() => subscribeSessions(() => tick((n) => n + 1)), []);
 
+  useEffect(() => {
+    if (focusParam !== "clubs") return;
+    setPulseActive(true);
+    const t = setTimeout(() => setPulseActive(false), 10000);
+    return () => clearTimeout(t);
+  }, [focusParam]);
 
   const events = useMemo<CalendarEvent[]>(() => {
     if (!user) return [];
@@ -109,6 +117,18 @@ function Page() {
       teacherNameOf: (id) => userById(id)?.name,
     });
   }, [user]);
+
+  // Arriving from "View Active Clubs": open the calendar straight on the month
+  // of the nearest upcoming club instead of the current month.
+  const nearestClubDate = useMemo(() => {
+    if (focusParam !== "clubs") return undefined;
+    const now = Date.now();
+    const upcoming = events
+      .filter((e) => CLUB_KINDS.includes(e.kind) && +new Date(e.date) >= now)
+      .sort((a, b) => +new Date(a.date) - +new Date(b.date));
+    return upcoming[0] ? new Date(upcoming[0].date) : undefined;
+  }, [events, focusParam]);
+
 
   if (!user) return null;
 
