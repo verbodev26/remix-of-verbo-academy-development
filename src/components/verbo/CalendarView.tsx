@@ -188,6 +188,10 @@ export function CalendarView({
               <span>{CALENDAR_STATUS_META[s].label}</span>
             </div>
           ))}
+          <div className="flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: SUB_STATUS_META.cancelled_holiday.color }} />
+            <span>{SUB_STATUS_META.cancelled_holiday.label}</span>
+          </div>
         </div>
       </div>
 
