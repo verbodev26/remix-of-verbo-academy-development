@@ -41,7 +41,8 @@ import {
   type CalendarEvent, type CalendarEventKind,
 } from "@/lib/calendar-events";
 import { Card, PrimaryButton, GhostButton } from "@/components/verbo/ui";
-import { X, Video, AlertTriangle, Sparkles, CalendarClock, RefreshCcw, ArrowLeft, Users as UsersIcon, BookOpen, Star } from "lucide-react";
+import { X, Video, AlertTriangle, Sparkles, CalendarClock, RefreshCcw, ArrowLeft, ChevronRight, Users as UsersIcon, BookOpen, Star } from "lucide-react";
+import spotlightArt from "@/assets/spotlight1.png.asset.json";
 import { getLessonPlan } from "@/lib/lesson-plans-store";
 import { resolvePlanTopic } from "@/lib/product-courses-store";
 import { unitsForStudent } from "@/lib/vip-courses-store";
