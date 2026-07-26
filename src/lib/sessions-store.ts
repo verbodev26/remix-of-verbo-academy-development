@@ -473,7 +473,7 @@ export const SUB_STATUS_META: Record<
   absent_illness:    { label: "Absent Illness",    initials: "AI", parent: "absent",    color: "#ea580c" },
   absent_vacation:   { label: "Absent Vacation",   initials: "AV", parent: "absent",    color: "#ea580c" },
   cancelled_illness: { label: "Cancelled Illness", initials: "CI", parent: "cancelled", color: "#cbd5e1" },
-  cancelled_holiday: { label: "Cancelled Holiday", initials: "CH", parent: "cancelled", color: "#cbd5e1" },
+  cancelled_holiday: { label: "Cancelled Holiday", initials: "CH", parent: "cancelled", color: "#0891b2" },
   cancelled_work:    { label: "Cancelled Work",    initials: "CW", parent: "cancelled", color: "#cbd5e1" },
 };
 

@@ -249,12 +249,12 @@ export const CALENDAR_STATUS_META: Record<ExtSessionStatus, { label: string; col
   no_show:            { label: "No Show",            color: "#334155" },
   rescheduled:        { label: "Rescheduled",        color: "#94a3b8" },
   rearranged:         { label: "Rearranged",         color: "#eab308" },
-  delayed:            { label: "Delayed",            color: "#eab308" },
+  delayed:            { label: "Delayed",            color: "#db2777" },
   converted_to_spotlight: { label: "Converted to Spotlight", color: "#4f46e5" },
 };
 
 export const CANONICAL_STATUS_ORDER: ExtSessionStatus[] = [
-  "scheduled", "ready", "completed", "absent", "cancelled", "pending_reschedule", "no_show",
+  "scheduled", "ready", "completed", "absent", "cancelled", "pending_reschedule", "no_show", "delayed",
 ];
 
 /** Renderer helper: given an event, return the pill color + short label to

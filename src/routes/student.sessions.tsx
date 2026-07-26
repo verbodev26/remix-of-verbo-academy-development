@@ -318,19 +318,19 @@ function NextEventCard({ events, onEventClick }: { events: CalendarEvent[]; onEv
 
   const kindMeta = EVENT_KIND_META[next.kind];
   const teacherName = next.session ? userById(next.session.teacher_id)?.name : undefined;
-  const withWho = next.kind === "book_club"
-    ? "Book Club"
-    : next.kind === "insight"
-      ? "Verbo Insight"
-      : (teacherName ?? kindMeta.label);
+  const plan = next.session ? getLessonPlan(next.session.id) : undefined;
+  const headline = plan?.title?.trim() ? plan.title : next.title;
+  const secondary = teacherName ? `${kindMeta.label} · with ${teacherName}` : kindMeta.label;
+  const endTime = new Date(+new Date(next.date) + next.duration_minutes * 60000)
+    .toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
   return (
     <button
       type="button"
       onClick={() => onEventClick(next)}
-      className="card-gradient-lime group flex h-full min-h-[200px] w-full cursor-pointer flex-col justify-between rounded-3xl border border-border p-6 text-left shadow-elevated transition-transform duration-200 hover:shadow-lg active:scale-[0.99]"
+      className="card-gradient-lime group relative flex h-full min-h-[200px] w-full cursor-pointer flex-col justify-between overflow-hidden rounded-3xl border border-border p-6 text-left shadow-elevated transition-transform duration-200 hover:shadow-lg active:scale-[0.99]"
     >
-      <div className="flex items-center justify-between gap-2">
+      <div className="relative z-10 flex items-center justify-between gap-2">
         <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "rgba(1, 48, 74, 0.7)" }}>
           Next up
         </div>
@@ -339,15 +339,15 @@ function NextEventCard({ events, onEventClick }: { events: CalendarEvent[]; onEv
           style={{ color: "rgba(1, 48, 74, 0.6)" }}
         />
       </div>
-      <div className="min-w-0">
+      <div className="relative z-10 min-w-0">
         <div className="truncate font-display text-2xl leading-tight tracking-tight" style={{ color: "#01304a" }}>
-          {withWho}
+          {headline}
         </div>
         <div className="mt-1 truncate text-xs font-semibold" style={{ color: "rgba(1, 48, 74, 0.75)" }}>
-          {kindMeta.label}
+          {secondary}
         </div>
         <div className="mt-3 truncate text-sm" style={{ color: "rgba(1, 48, 74, 0.75)" }}>
-          {fmtDT(next.date)}
+          {fmtDT(next.date)} – {endTime}
         </div>
       </div>
     </button>
@@ -360,28 +360,28 @@ const STAT_PILL_TONES: Record<StatPillTone, {
   wrap: string; iconWrap: string; label: string; value: string; track: string; bar: string;
 }> = {
   violet: {
-    wrap: "border-[var(--violet-100)] bg-[var(--violet-50)]",
-    iconWrap: "bg-white text-[#6d28d9]",
-    label: "text-muted-foreground", value: "text-foreground",
-    track: "bg-white/70", bar: "bg-[#6d28d9]",
+    wrap: "border-[#6d28d9] bg-[#6d28d9]",
+    iconWrap: "bg-white/15 text-white",
+    label: "text-white/60", value: "text-white",
+    track: "bg-white/20", bar: "bg-white",
   },
   red: {
-    wrap: "border-red-200 bg-red-50",
-    iconWrap: "bg-white text-red-700",
-    label: "text-red-700/70", value: "text-red-800",
-    track: "bg-white/70", bar: "bg-red-600",
+    wrap: "border-[#dc2626] bg-[#dc2626]",
+    iconWrap: "bg-white/15 text-white",
+    label: "text-white/60", value: "text-white",
+    track: "bg-white/20", bar: "bg-white",
   },
   amber: {
-    wrap: "border-amber-200 bg-amber-50",
-    iconWrap: "bg-white text-amber-700",
-    label: "text-amber-700/70", value: "text-amber-800",
-    track: "bg-white/70", bar: "bg-amber-500",
+    wrap: "border-[#d97706] bg-[#d97706]",
+    iconWrap: "bg-white/15 text-white",
+    label: "text-white/60", value: "text-white",
+    track: "bg-white/20", bar: "bg-white",
   },
   green: {
-    wrap: "border-emerald-200 bg-emerald-50",
-    iconWrap: "bg-white text-emerald-700",
-    label: "text-emerald-700/70", value: "text-emerald-800",
-    track: "bg-white/70", bar: "bg-emerald-600",
+    wrap: "border-[#16a34a] bg-[#16a34a]",
+    iconWrap: "bg-white/15 text-white",
+    label: "text-white/60", value: "text-white",
+    track: "bg-white/20", bar: "bg-white",
   },
   dark: {
     wrap: "border-[#01304a] bg-[#01304a]",
@@ -909,32 +909,33 @@ void UsersIcon;
 function SessionsRemainingCard({ studentId }: { studentId: string }) {
   const u = USERS.find((x) => x.id === studentId);
   if (!u) return null;
-  if (u.product_type !== "performance") return null;
+  if ((u.product_type ?? "performance") !== "performance") return null;
   const { hired, remaining } = effectiveSessionCounts(studentId, {
     hired: u.hired_sessions,
     remaining: u.remaining_sessions,
   });
   const { done, pct } = sessionProgressFor(hired, remaining);
   const g = groupOfStudent(studentId);
+  const dim = "rgba(1, 48, 74, 0.75)";
   return (
-    <Card className="!p-6 h-full min-h-[200px] flex flex-col justify-between">
+    <div className="card-gradient-gold flex h-full min-h-[200px] flex-col justify-between rounded-3xl border border-border p-6 shadow-elevated">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sessions remaining</div>
+          <div className="text-xs font-semibold uppercase tracking-wider" style={{ color: dim }}>Sessions remaining</div>
           <div className="mt-1 flex items-baseline gap-2">
             <span className="font-display text-4xl leading-none tracking-tight" style={{ color: "#01304a" }}>{remaining}</span>
-            <span className="text-sm text-muted-foreground">of {hired} sessions</span>
+            <span className="text-sm" style={{ color: dim }}>of {hired} sessions</span>
           </div>
           {g && (
-            <div className="mt-1 text-[11px] text-muted-foreground">Shared with your group</div>
+            <div className="mt-1 text-[11px]" style={{ color: dim }}>Shared with your group</div>
           )}
         </div>
-        <div className="text-right text-xs text-muted-foreground">{done} used</div>
+        <div className="text-right text-xs" style={{ color: dim }}>{done} used</div>
       </div>
-      <div className="mt-4 h-2 w-full rounded-full bg-secondary">
-        <div className="h-2 rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
+      <div className="mt-4 h-2 w-full rounded-full bg-white/40">
+        <div className="h-2 rounded-full bg-[#01304a] transition-all" style={{ width: `${pct}%` }} />
       </div>
-    </Card>
+    </div>
   );
 }
 
