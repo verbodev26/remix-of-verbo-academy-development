@@ -1049,23 +1049,41 @@ export function UnitDetail({
     overallScore === null
       ? "border-border bg-secondary text-muted-foreground"
       : overallScore >= 85
-      ? "border-transparent bg-success text-white"
+      ? "border-transparent text-white"
       : overallScore >= 78
       ? "border-transparent bg-amber-400 text-amber-950"
       : overallScore >= 60
       ? "border-transparent bg-accent text-accent-foreground"
       : "border-transparent bg-destructive text-destructive-foreground";
 
+  const scoreShellStyle: React.CSSProperties | undefined =
+    overallScore !== null && overallScore >= 85
+      ? { backgroundImage: "linear-gradient(150deg, #8fe64d 0%, #69d11e 55%, #4a9c0f 100%)" }
+      : undefined;
+
   // Next unit in the same level (consecutive number), used by the footer link.
   const nextUnit = level.units.find((u) => unitNumberOf(u.id) === unitNumberOf(unit.id) + 1);
 
   return (
     <div className="space-y-8">
-      <button onClick={onBack} className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground">
-        <ArrowLeft className="h-3.5 w-3.5" /> Back to {level.name}
-      </button>
+      <div className="flex items-center justify-between gap-3">
+        <button onClick={onBack} className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground">
+          <ArrowLeft className="h-3.5 w-3.5" /> Back to {level.name}
+        </button>
+        {!previewMode && (
+          <button
+            className="verbo-report-btn"
+            onClick={() => setIssueOpen(true)}
+            aria-label="Report"
+            title="Report a technical issue"
+          >
+            <span className="sign"><ShieldAlert className="h-4 w-4" /></span>
+            <span className="text">Report</span>
+          </button>
+        )}
+      </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_auto]">
+      <div className="grid gap-4 lg:grid-cols-[1fr_240px]">
         <div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-soft">
           <div className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${heroGradient}`} aria-hidden />
           <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${heroGradient} opacity-[0.07]`} aria-hidden />
@@ -1086,22 +1104,11 @@ export function UnitDetail({
           </div>
         </div>
 
-        <div className={`relative flex min-w-[190px] flex-col justify-between rounded-2xl border p-5 shadow-soft ${scoreShell}`}>
-          <div className="flex items-start justify-between gap-3">
+        <div className={`relative flex flex-col justify-between rounded-2xl border p-5 shadow-soft ${scoreShell}`} style={scoreShellStyle}>
+          <div className="flex items-start gap-3">
             <span className="text-[11px] font-semibold uppercase tracking-[0.16em] opacity-90">
               Overall score
             </span>
-            {!previewMode && (
-              <button
-                className="verbo-report-btn"
-                onClick={() => setIssueOpen(true)}
-                aria-label="Report"
-                title="Report a technical issue"
-              >
-                <span className="sign"><ShieldAlert className="h-4 w-4" /></span>
-                <span className="text">Report</span>
-              </button>
-            )}
           </div>
           <div className="mt-3 flex items-end gap-1">
             <span className="text-5xl font-bold leading-none tabular-nums">
