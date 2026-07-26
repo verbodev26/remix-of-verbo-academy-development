@@ -833,7 +833,7 @@ function UnitsView({
           return (
             <section
               key={bi}
-              className={`shadow-elevated overflow-hidden rounded-3xl border ${shell}`}
+              className={`shadow-elevated rounded-3xl border ${shell}`}
             >
               <button
                 type="button"
@@ -841,12 +841,18 @@ function UnitsView({
                 aria-expanded={open}
                 className="flex w-full items-center gap-4 p-5 text-left sm:p-6"
               >
-                <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-2xl font-semibold tabular-nums ${numberCls}`}>
+                <div
+                  className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-2xl font-semibold tabular-nums ${numberCls}`}
+                  style={available ? { backgroundColor: missionAccent, color: "#ffffff" } : undefined}
+                >
                   {bi + 1}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="text-base font-semibold uppercase tracking-[0.14em] text-foreground">
+                    <h2
+                      className="text-base font-bold uppercase tracking-[0.14em] text-foreground"
+                      style={available ? { color: missionAccent } : undefined}
+                    >
                       Mission {bi + 1}
                     </h2>
                     {complete && <Pill tone="success">Completed</Pill>}
@@ -856,7 +862,7 @@ function UnitsView({
                     <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-background/70">
                       <div
                         className={`h-full rounded-full transition-all duration-500 ${barCls}`}
-                        style={{ width: `${Math.round((blockPassed / total) * 100)}%` }}
+                        style={{ width: `${Math.round((blockPassed / total) * 100)}%`, ...(available ? { backgroundColor: missionAccent } : {}) }}
                       />
                     </div>
                     <span className="text-xs font-semibold tabular-nums text-muted-foreground">
