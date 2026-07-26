@@ -733,7 +733,7 @@ function LevelCard({
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage: `url(${mountainsSunsetAsset.url})`,
+            backgroundImage: `url(${coverImage})`,
             maskImage: "linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.45) 40%, rgba(255,255,255,1) 100%)",
             WebkitMaskImage: "linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.45) 40%, rgba(255,255,255,1) 100%)",
           }}
