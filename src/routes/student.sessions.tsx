@@ -302,9 +302,10 @@ function Page() {
 
 // ---------------------------------------------------------------------------
 // Next upcoming event — derived from the already-loaded `events` list.
-// Purely presentational: no store reads, no mutations.
+// Purely presentational: no store reads, no mutations. Clicking it opens the
+// exact same details modal any calendar event opens.
 // ---------------------------------------------------------------------------
-function NextEventChip({ events }: { events: CalendarEvent[] }) {
+function NextEventCard({ events, onEventClick }: { events: CalendarEvent[]; onEventClick: (ev: CalendarEvent) => void }) {
   const next = useMemo(() => {
     const now = Date.now();
     const skip = new Set(["cancelled", "absent", "completed"]);
@@ -324,32 +325,95 @@ function NextEventChip({ events }: { events: CalendarEvent[] }) {
       : (teacherName ?? kindMeta.label);
 
   return (
-    <div className="card-gradient-lime flex w-full items-center gap-4 rounded-3xl border border-border px-5 py-3 shadow-elevated lg:w-auto">
-      <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "rgba(1, 48, 74, 0.7)" }}>
-        Next up
-      </div>
-      <div className="h-8 w-px" style={{ background: "rgba(1, 48, 74, 0.2)" }} />
-      <div className="min-w-0">
-        <div className="truncate text-sm font-semibold" style={{ color: "#01304a" }}>
-          {kindMeta.label} · {withWho}
+    <button
+      type="button"
+      onClick={() => onEventClick(next)}
+      className="card-gradient-lime group flex h-full min-h-[200px] w-full cursor-pointer flex-col justify-between rounded-3xl border border-border p-6 text-left shadow-elevated transition-transform duration-200 hover:shadow-lg active:scale-[0.99]"
+    >
+      <div className="flex items-center justify-between gap-2">
+        <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "rgba(1, 48, 74, 0.7)" }}>
+          Next up
         </div>
-        <div className="truncate text-xs" style={{ color: "rgba(1, 48, 74, 0.75)" }}>
+        <ChevronRight
+          className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5"
+          style={{ color: "rgba(1, 48, 74, 0.6)" }}
+        />
+      </div>
+      <div className="min-w-0">
+        <div className="truncate font-display text-2xl leading-tight tracking-tight" style={{ color: "#01304a" }}>
+          {withWho}
+        </div>
+        <div className="mt-1 truncate text-xs font-semibold" style={{ color: "rgba(1, 48, 74, 0.75)" }}>
+          {kindMeta.label}
+        </div>
+        <div className="mt-3 truncate text-sm" style={{ color: "rgba(1, 48, 74, 0.75)" }}>
           {fmtDT(next.date)}
         </div>
       </div>
-    </div>
+    </button>
   );
 }
 
-function StatPill({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+type StatPillTone = "violet" | "red" | "amber" | "green" | "dark";
+
+const STAT_PILL_TONES: Record<StatPillTone, {
+  wrap: string; iconWrap: string; label: string; value: string; track: string; bar: string;
+}> = {
+  violet: {
+    wrap: "border-[var(--violet-100)] bg-[var(--violet-50)]",
+    iconWrap: "bg-white text-[#6d28d9]",
+    label: "text-muted-foreground", value: "text-foreground",
+    track: "bg-white/70", bar: "bg-[#6d28d9]",
+  },
+  red: {
+    wrap: "border-red-200 bg-red-50",
+    iconWrap: "bg-white text-red-700",
+    label: "text-red-700/70", value: "text-red-800",
+    track: "bg-white/70", bar: "bg-red-600",
+  },
+  amber: {
+    wrap: "border-amber-200 bg-amber-50",
+    iconWrap: "bg-white text-amber-700",
+    label: "text-amber-700/70", value: "text-amber-800",
+    track: "bg-white/70", bar: "bg-amber-500",
+  },
+  green: {
+    wrap: "border-emerald-200 bg-emerald-50",
+    iconWrap: "bg-white text-emerald-700",
+    label: "text-emerald-700/70", value: "text-emerald-800",
+    track: "bg-white/70", bar: "bg-emerald-600",
+  },
+  dark: {
+    wrap: "border-[#01304a] bg-[#01304a]",
+    iconWrap: "bg-white/15 text-white",
+    label: "text-white/60", value: "text-white",
+    track: "bg-white/20", bar: "bg-white",
+  },
+};
+
+function StatPill({ icon, label, value, tone = "violet", progressPct }: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  tone?: StatPillTone;
+  progressPct?: number;
+}) {
+  const t = STAT_PILL_TONES[tone];
   return (
-    <div className="flex items-start gap-3 rounded-2xl border border-[var(--navy-100)] bg-[var(--navy-50)] px-4 py-3">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-[#01304a]">
-        {icon}
-      </div>
-      <div className="min-w-0">
-        <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</div>
-        <div className="mt-0.5 text-xs font-semibold text-foreground">{value}</div>
+    <div className={`rounded-2xl border px-4 py-3 ${t.wrap}`}>
+      <div className="flex items-start gap-3">
+        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${t.iconWrap}`}>
+          {icon}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className={`text-[10px] font-semibold uppercase tracking-wider ${t.label}`}>{label}</div>
+          <div className={`mt-0.5 text-xs font-semibold ${t.value}`}>{value}</div>
+          {progressPct !== undefined && (
+            <div className={`mt-2 h-1.5 w-full rounded-full ${t.track}`}>
+              <div className={`h-1.5 rounded-full transition-all ${t.bar}`} style={{ width: `${progressPct}%` }} />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
