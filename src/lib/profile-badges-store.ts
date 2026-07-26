@@ -8,14 +8,20 @@
 // independent.
 
 import type { User } from "./mock-data";
-import { unitPassed, levelIsComplete } from "./activities-store";
+import { unitPassed, unitPassedByActivities, levelIsComplete } from "./activities-store";
 import { loadCourses } from "./product-courses-store";
+import { currentLoginStreak } from "./login-streak-store";
 
 export type BadgeMetric =
   | "tenureMonths"
   | "attendancePercentage"
   | "unitsCompletedCount"
-  | "levelsCompletedCount";
+  | "levelsCompletedCount"
+  | "loginStreakDays"
+  | "level1MissionsCompleted"
+  | "level2MissionsCompleted"
+  | "level3MissionsCompleted"
+  | "level4MissionsCompleted";
 
 export const BADGE_METRIC_META: Record<
   BadgeMetric,
@@ -40,6 +46,31 @@ export const BADGE_METRIC_META: Record<
     label: "Levels completed",
     numeric: true,
     hint: "Number of contracted levels the student has finished 100%.",
+  },
+  loginStreakDays: {
+    label: "Login streak (days)",
+    numeric: true,
+    hint: "Consecutive calendar days the student has opened Verbo Academy.",
+  },
+  level1MissionsCompleted: {
+    label: "Level 1 missions completed",
+    numeric: true,
+    hint: "Number of Mission blocks (of 3) fully completed with real activities in the student's Level 1, regardless of product.",
+  },
+  level2MissionsCompleted: {
+    label: "Level 2 missions completed",
+    numeric: true,
+    hint: "Number of Mission blocks (of 3) fully completed with real activities in the student's Level 2, regardless of product.",
+  },
+  level3MissionsCompleted: {
+    label: "Level 3 missions completed",
+    numeric: true,
+    hint: "Number of Mission blocks (of 3) fully completed with real activities in the student's Level 3, regardless of product.",
+  },
+  level4MissionsCompleted: {
+    label: "Level 4 missions completed",
+    numeric: true,
+    hint: "Number of Mission blocks (of 3) fully completed with real activities in the student's Level 4, regardless of product.",
   },
 };
 
