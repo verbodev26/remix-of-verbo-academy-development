@@ -422,7 +422,7 @@ const PRODUCT_GRADIENTS: Record<string, string> = {
 };
 
 /** Ring colors for the three mandatory categories (Vocabulary, Grammar, Practice). */
-const CATEGORY_RING_COLORS = ["#7e22ce", "#0f766e", "#f38934"];
+const CATEGORY_RING_COLORS = ["#cb6ce6", "#69d11d", "#92dfd4"];
 
 /** Login-streak tiers, mirrored from the Profile Badges seed thresholds. */
 const STREAK_TIERS = [
@@ -1088,6 +1088,25 @@ export function UnitDetail({
       ? { backgroundImage: "linear-gradient(150deg, #8fe64d 0%, #69d11e 55%, #4a9c0f 100%)" }
       : undefined;
 
+  // Main action button state: untouched → start, in progress → continue, passed → review.
+  const actionStage: "start" | "continue" | "review" = readOnly
+    ? "review"
+    : passed
+    ? "review"
+    : hasScore
+    ? "continue"
+    : "start";
+  const actionLabel =
+    actionStage === "review" ? "Review activities" : actionStage === "continue" ? "Continue activities" : "Start activities";
+  const actionButtonCls =
+    actionStage === "start" ? "bg-accent text-accent-foreground hover:bg-[#d9731f]" : "text-white hover:opacity-90";
+  const actionButtonStyle: React.CSSProperties | undefined =
+    readOnly || actionStage === "start"
+      ? undefined
+      : actionStage === "review"
+      ? { backgroundColor: "#69d11e" }
+      : { backgroundImage: "linear-gradient(150deg, #ffc700 0%, #f38934 100%)", color: "#01304a" };
+
   // Next unit in the same level (consecutive number), used by the footer link.
   const nextUnit = level.units.find((u) => unitNumberOf(u.id) === unitNumberOf(unit.id) + 1);
 
@@ -1242,9 +1261,10 @@ export function UnitDetail({
           <button
             disabled={activities.length === 0}
             onClick={() => setOpen(true)}
-            className={`inline-flex w-full items-center justify-center gap-2 rounded-xl bg-accent px-5 py-3.5 text-sm font-semibold text-accent-foreground shadow-[0_8px_24px_-6px_rgba(243,137,52,0.5)] transition-all hover:bg-[#d9731f] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none ${canStart ? "verbo-pulse-once" : ""}`}
+            style={actionButtonStyle}
+            className={`inline-flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3.5 text-sm font-semibold shadow-[0_8px_24px_-6px_rgba(243,137,52,0.5)] transition-all active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none ${actionButtonCls} ${canStart ? "verbo-pulse-once" : ""}`}
           >
-            {activities.length === 0 ? "No activities yet" : readOnly ? <>Review activities <ArrowRight className="h-4 w-4" /></> : <>Start activities <ArrowRight className="h-4 w-4" /></>}
+            {activities.length === 0 ? "No activities yet" : <>{actionLabel} <ArrowRight className="h-4 w-4" /></>}
           </button>
         </div>
       </div>
