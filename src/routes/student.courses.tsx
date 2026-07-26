@@ -416,8 +416,18 @@ const PRODUCT_GRADIENTS: Record<string, string> = {
 /** Ring colors for the three mandatory categories (Vocabulary, Grammar, Practice). */
 const CATEGORY_RING_COLORS = ["#7e22ce", "#0f766e", "#f38934"];
 
+/** Login-streak tiers, mirrored from the Profile Badges seed thresholds. */
+const STREAK_TIERS = [
+  { days: 100, name: "100-Day Flame" },
+  { days: 60, name: "60-Day Flame" },
+  { days: 30, name: "30-Day Flame" },
+  { days: 10, name: "10-Day Flame" },
+  { days: 3, name: "3-Day Flame" },
+];
+const MEDAL_METALS = ["Bronze", "Silver", "Gold", "Onyx"];
+
 function LevelsView({
-  productLabel, levels, states, contracted, events, studentId, onOpen, tailoredSection,
+  productLabel, levels, states, contracted, events, studentId, user, onOpen, tailoredSection,
 }: {
   productLabel: string;
   levels: CourseLevel[];
@@ -425,6 +435,7 @@ function LevelsView({
   contracted: string[];
   events: LearningPathEvent[];
   studentId: string;
+  user: User | null;
   onOpen: (level: CourseLevel, state: LevelState) => void;
   tailoredSection?: React.ReactNode;
 }) {
