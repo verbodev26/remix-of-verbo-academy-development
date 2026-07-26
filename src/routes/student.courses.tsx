@@ -915,34 +915,48 @@ function UnitsView({
 }
 
 function UnitStone({
-  unit, number, state, milestone, onOpen, preview = false, unlockFlip = false,
+  unit, number, state, milestone, onOpen, previewLevel = 0, unlockFlip = false,
 }: {
   unit: CourseUnit;
   number: number;
   state: UnitStateKind;
   milestone: boolean;
   onOpen: () => void;
-  preview?: boolean;
+  previewLevel?: 0 | 1 | 2 | 3;
   unlockFlip?: boolean;
 }) {
   const disabled = state === "locked" || state === "milestone_locked";
-  const cls = milestone
-    ? state === "passed"
-      ? "border-amber-500 bg-gradient-to-br from-amber-100 to-amber-200 text-amber-900"
-      : state === "milestone_ready"
-      ? "border-amber-500 bg-gradient-to-br from-amber-50 to-amber-100 text-amber-900"
-      : "border-amber-500/40 bg-amber-50/60 text-amber-900/60"
-    : state === "passed"
-    ? "border-success/40 bg-success/10 text-success"
-    : state === "current"
-    ? "border-accent bg-accent/10 text-foreground"
-    : "border-border bg-secondary/40 text-muted-foreground";
+  const isMilestoneReady = state === "milestone_ready";
 
-  const pulse = state === "milestone_ready"
-    ? "verbo-milestone-glow"
-    : state === "current"
-    ? "verbo-current-ring"
-    : "";
+  const circleGradient =
+    state === "passed"
+      ? "linear-gradient(150deg, #8fe64d 0%, #69d11e 55%, #4a9c0f 100%)"
+      : isMilestoneReady
+      ? "linear-gradient(150deg, #c89116 0%, #787878 100%)"
+      : state === "current"
+      ? "linear-gradient(150deg, #ffc700 0%, #f38934 100%)"
+      : "linear-gradient(150deg, #d9d9d9 0%, #000000 100%)";
+
+  const icon =
+    state === "passed" ? (
+      <Check className="h-6 w-6 text-white" strokeWidth={3} />
+    ) : isMilestoneReady ? (
+      <Brain className="h-6 w-6 text-white" />
+    ) : state === "current" ? (
+      <Target className="h-6 w-6" style={{ color: "#01304a" }} />
+    ) : (
+      <Lock className="h-6 w-6 text-white" strokeWidth={2.5} />
+    );
+
+  const statusLine = state === "passed" ? "Completed" : isMilestoneReady ? "Ready to take" : state === "current" ? "Current unit" : "Unit locked";
+
+  const titleLine =
+    state === "passed" ? (milestone ? "Milestone Check" : unit.title)
+    : isMilestoneReady ? "Milestone Check"
+    : state === "current" ? unit.title
+    : "Complete the previous unit to unlock";
+
+  const pulse = isMilestoneReady ? "verbo-milestone-glow" : state === "current" ? "verbo-current-ring" : "";
 
   const tooltip = milestone && state === "milestone_locked"
     ? "Your teacher will unlock this Milestone Check"
@@ -952,7 +966,7 @@ function UnitStone({
     ? "Complete the previous unit first"
     : undefined;
 
-  const reviewable = state === "passed" && !milestone;
+  const blurCls = previewLevel === 1 ? "blur-[2px] opacity-80" : previewLevel === 2 ? "blur-[5px] opacity-55" : previewLevel === 3 ? "blur-[10px] opacity-30" : "";
 
   return (
     <button
@@ -960,25 +974,18 @@ function UnitStone({
       onClick={disabled ? undefined : onOpen}
       disabled={disabled}
       title={tooltip}
-      className={`verbo-ease-out-expo group relative flex aspect-square w-full flex-col items-center justify-center gap-1 overflow-hidden rounded-xl border-2 p-2 text-center shadow-sm transition-all duration-300 ${cls} ${pulse} ${unlockFlip ? "verbo-unit-unlock" : ""} ${preview ? "blur-sm opacity-60" : ""} ${disabled ? "cursor-not-allowed opacity-70" : "hover:-translate-y-0.5"}`}
+      className={`verbo-ease-out-expo group flex w-full flex-col items-center gap-2 p-1 text-center transition-transform duration-300 ${unlockFlip ? "verbo-unit-unlock" : ""} ${blurCls} ${disabled ? "cursor-not-allowed" : "hover:z-10 hover:scale-110"}`}
     >
-      {milestone ? (
-        <Trophy className="h-5 w-5" />
-      ) : state === "passed" ? (
-        <CheckCircle2 className="verbo-pop-in h-5 w-5" />
-      ) : state === "locked" ? (
-        <Lock className="h-4 w-4" />
-      ) : (
-        <span className="text-sm font-semibold">{number}</span>
-      )}
-      <div className="text-[10px] font-medium leading-tight line-clamp-2">
-        {milestone ? "Milestone Check" : unit.title}
-      </div>
-      {reviewable && (
-        <span className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-[10px] bg-success/25 text-[11px] font-semibold text-success-foreground opacity-0 backdrop-blur-[1px] transition-opacity duration-200 group-hover:opacity-100">
-          Review unit
-        </span>
-      )}
+      <span
+        className={`relative flex h-16 w-16 shrink-0 items-center justify-center rounded-full shadow-md ${pulse}`}
+        style={{ backgroundImage: circleGradient }}
+      >
+        {icon}
+      </span>
+      <span className="flex flex-col items-center gap-0.5">
+        <span className="text-[10px] font-light leading-tight text-muted-foreground">{statusLine}</span>
+        <span className="line-clamp-2 text-[11px] font-bold leading-tight text-foreground">{titleLine}</span>
+      </span>
     </button>
   );
 }
