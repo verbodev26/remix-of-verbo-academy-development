@@ -26,6 +26,7 @@ import {
   PartyPopper,
   Flame,
   Medal,
+  ShieldAlert,
 } from "lucide-react";
 import { Card, Pill, StatRing } from "@/components/verbo/ui";
 import { Confetti } from "@/components/verbo/Confetti";
@@ -34,6 +35,7 @@ import { useAuth } from "@/lib/auth";
 import type { User } from "@/lib/mock-data";
 import { currentLoginStreak } from "@/lib/login-streak-store";
 import { markUnlockSeen } from "@/lib/unit-unlock-seen-store";
+import { ReportContentIssueModal } from "@/components/verbo/ReportContentIssueModal";
 import { buildProfileBadgeContext } from "@/lib/profile-badges-store";
 import {
   type ProductId,
@@ -283,6 +285,7 @@ function Page() {
         readOnly={view.readOnly}
         onBack={() => setView({ kind: "units", levelId: level.id, readOnly: view.readOnly })}
         onChange={() => onUnitCompleted(level.id, unit.id)}
+        onOpenUnit={(u) => setView({ kind: "unit", levelId: level.id, unitId: u.id, readOnly: view.readOnly })}
       />
     );
   }
@@ -1010,7 +1013,7 @@ function UnitVideoPlayer({ url }: { url: string }) {
 }
 
 export function UnitDetail({
-  level, unit, studentId, readOnly, previewMode = false, onBack, onChange,
+  level, unit, studentId, readOnly, previewMode = false, onBack, onChange, onOpenUnit,
 }: {
   level: CourseLevel;
   unit: CourseUnit;
@@ -1019,9 +1022,11 @@ export function UnitDetail({
   previewMode?: boolean;
   onBack: () => void;
   onChange: () => void;
+  onOpenUnit?: (u: CourseUnit) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [pdfOpen, setPdfOpen] = useState(false);
+  const [issueOpen, setIssueOpen] = useState(false);
   const activities = activitiesForUnit(unit.id);
   const catProgress = unitCategoryProgress(studentId, unit.id);
   const passed = unitPassed(studentId, unit.id);
@@ -1030,31 +1035,81 @@ export function UnitDetail({
     PRODUCT_GRADIENTS[(unit.id.split("-")[0] ?? "").toLowerCase()] ?? PRODUCT_GRADIENTS.enterprise;
   const canStart = !readOnly && activities.length > 0;
 
+  // Overall unit score = average of the best score of the mandatory categories
+  // that actually apply to this unit. No attempts yet → neutral state.
+  const mandatoryRows = catProgress.filter((r) => r.mandatory);
+  const attemptedRows = mandatoryRows.filter((r) => r.best > 0);
+  const hasScore = attemptedRows.length > 0;
+  const overallScore = hasScore
+    ? Math.round(mandatoryRows.reduce((s, r) => s + r.best, 0) / mandatoryRows.length)
+    : null;
+  const scoreShell =
+    overallScore === null
+      ? "border-border bg-secondary text-muted-foreground"
+      : overallScore >= 85
+      ? "border-transparent bg-success text-white"
+      : overallScore >= 78
+      ? "border-transparent bg-amber-400 text-amber-950"
+      : overallScore >= 60
+      ? "border-transparent bg-accent text-accent-foreground"
+      : "border-transparent bg-destructive text-destructive-foreground";
+
+  // Next unit in the same level (consecutive number), used by the footer link.
+  const nextUnit = level.units.find((u) => unitNumberOf(u.id) === unitNumberOf(unit.id) + 1);
+
   return (
     <div className="space-y-8">
       <button onClick={onBack} className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground">
         <ArrowLeft className="h-3.5 w-3.5" /> Back to {level.name}
       </button>
 
-      <div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-soft">
-        <div className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${heroGradient}`} aria-hidden />
-        <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${heroGradient} opacity-[0.07]`} aria-hidden />
-        <div className="relative flex items-start justify-between gap-6 p-6">
-          <div>
-            <div className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
-              {level.name} · {milestone ? "Milestone Check" : `Unit ${unitNumberOf(unit.id)}`}
+      <div className="grid gap-4 lg:grid-cols-[1fr_auto]">
+        <div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-soft">
+          <div className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${heroGradient}`} aria-hidden />
+          <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${heroGradient} opacity-[0.07]`} aria-hidden />
+          <div className="relative flex items-start justify-between gap-4 px-5 py-4">
+            <div>
+              <div className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                {level.name} · {milestone ? "Milestone Check" : `Unit ${unitNumberOf(unit.id)}`}
+              </div>
+              <h1 className="mt-1 font-display text-2xl font-bold tracking-tight text-foreground">{unit.title}</h1>
+              <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+                Watch the video, review the PDF guide, then complete Vocabulary, Grammar and Practice with a score of at least 60 in each to pass this unit.
+              </p>
             </div>
-            <h1 className="mt-1.5 font-display text-4xl font-bold tracking-tight text-foreground">{unit.title}</h1>
-            <p className="mt-2.5 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-              Watch the video, review the PDF guide, then complete Vocabulary, Grammar and Practice with a score of at least 60 in each to pass this unit.
-            </p>
+            <div className="flex shrink-0 flex-col items-end gap-2">
+              {passed && <Pill tone="success">Passed</Pill>}
+              {readOnly && <Pill tone="warning">Review mode</Pill>}
+            </div>
           </div>
-          <div className="flex flex-col items-end gap-2">
-            {passed && <Pill tone="success">Passed</Pill>}
-            {readOnly && <Pill tone="warning">Review mode</Pill>}
+        </div>
+
+        <div className={`relative flex min-w-[190px] flex-col justify-between rounded-2xl border p-5 shadow-soft ${scoreShell}`}>
+          <div className="flex items-start justify-between gap-3">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.16em] opacity-90">
+              Overall score
+            </span>
+            {!previewMode && (
+              <button
+                className="verbo-report-btn"
+                onClick={() => setIssueOpen(true)}
+                aria-label="Report"
+                title="Report a technical issue"
+              >
+                <span className="sign"><ShieldAlert className="h-4 w-4" /></span>
+                <span className="text">Report</span>
+              </button>
+            )}
+          </div>
+          <div className="mt-3 flex items-end gap-1">
+            <span className="text-5xl font-bold leading-none tabular-nums">
+              {overallScore === null ? "—" : overallScore}
+            </span>
+            {overallScore !== null && <span className="pb-1 text-lg font-semibold opacity-80">%</span>}
           </div>
         </div>
       </div>
+
 
       <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
         <Card className="overflow-hidden !p-0">
@@ -1157,6 +1212,40 @@ export function UnitDetail({
           </button>
         </div>
       </div>
+
+      {passed && (
+        nextUnit && onOpenUnit ? (
+          <button
+            type="button"
+            onClick={() => onOpenUnit(nextUnit)}
+            className="verbo-ease-out-expo group inline-flex items-center gap-2 text-sm font-semibold text-accent transition-all duration-300 hover:gap-3"
+          >
+            Continue to {nextUnit.title}
+            <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={onBack}
+            className="verbo-ease-out-expo group inline-flex items-center gap-2 text-sm font-semibold text-accent transition-all duration-300 hover:gap-3"
+          >
+            <ArrowLeft className="h-4 w-4 transition-transform duration-300 group-hover:-translate-x-0.5" />
+            Back to {level.name}
+          </button>
+        )
+      )}
+
+      {!previewMode && (
+        <ReportContentIssueModal
+          studentId={studentId}
+          unitId={unit.id}
+          unitTitle={unit.title}
+          open={issueOpen}
+          onClose={() => setIssueOpen(false)}
+        />
+      )}
+
+
 
       {open && (
         <ActivityRunner
