@@ -1,5 +1,8 @@
 // Shared lesson-plans store. Keyed by session_id so Teacher (planner) and
 // Student (calendar modal) read the exact same record in real-time.
+import { loadSessions } from "./sessions-store";
+import { activeMembersOf } from "./groups-store";
+import { setUnitAccess } from "./activities-store";
 export type LessonSessionType =
   | "Syllabus content"
   | "Additional Content"
@@ -51,6 +54,25 @@ export function saveLessonPlan(plan: LessonPlan) {
   const store = loadLessonPlans();
   store[plan.session_id] = plan;
   persistLessonPlans(store);
+  autoUnlockPlannedUnit(plan);
+}
+
+/** When a plan targets a syllabus unit (Syllabus content / Evaluation), that
+ *  exact unit is unlocked for every real student of the session — the roster
+ *  members for a group session, otherwise the single 1:1 student. Idempotent,
+ *  and never cascades to prerequisite units. */
+function autoUnlockPlannedUnit(plan: LessonPlan) {
+  if (!plan.unit_id) return;
+  const session = loadSessions().find((s) => s.id === plan.session_id);
+  if (!session) return;
+  const studentIds = session.group_id
+    ? activeMembersOf(session.group_id).map((m) => m.student_id)
+    : session.student_id
+      ? [session.student_id]
+      : [];
+  for (const studentId of studentIds) {
+    setUnitAccess(studentId, plan.unit_id, "unlocked", session.teacher_id, "teacher");
+  }
 }
 
 export function getLessonPlan(sessionId: string): LessonPlan | undefined {
