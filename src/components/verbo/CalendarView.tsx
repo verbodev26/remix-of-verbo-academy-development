@@ -357,24 +357,27 @@ function EventPill({ ev, onClick, pulse = false }: { ev: CalendarEvent; onClick:
   const cellLabelInline = display.cellLabel && !ev.sub_status
     ? ` · ${display.cellLabel}`
     : "";
+  const full = isClub && isClubFull(ev);
   return (
     <div className="group relative">
       <button
         onClick={onClick}
         className={`flex w-full items-center gap-1 truncate rounded-lg px-1.5 py-1 text-left text-[10.5px] font-medium text-white shadow-sm transition-opacity hover:opacity-90 cursor-pointer ${
           ev.booked ? "ring-2 ring-[#f38934] ring-offset-1 ring-offset-card" : ""
-        } ${pulse ? "verbo-focus-pulse" : ""}`}
+        } ${pulse ? "verbo-focus-pulse" : ""} ${full ? "opacity-55 grayscale-[0.4]" : ""}`}
         style={{
           backgroundColor: display.color,
           ...(pulse ? { ["--verbo-focus-pulse-color" as string]: display.color } : {}),
         }}
 
         title={
-          ev.sub_status
+          (ev.sub_status
             ? `${SUB_STATUS_META[ev.sub_status].label} — ${ev.title}`
-            : `${ev.booked ? "Reserved — " : ""}${ev.is_group ? "Group" : kindMeta.label} — ${ev.title}`
+            : `${ev.booked ? "Reserved — " : ""}${ev.is_group ? "Group" : kindMeta.label} — ${ev.title}`) +
+          (full ? " · Full" : "")
         }
       >
+
         {ev.booked ? (
           <span className="inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full bg-[#f38934] text-white" title="You're in">
             <Check className="h-2.5 w-2.5" strokeWidth={3} />
