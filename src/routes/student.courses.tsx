@@ -585,11 +585,8 @@ function LevelsBento({ levels, states, product, onOpen }: LevelShellProps) {
     <div className="grid gap-5 md:grid-cols-2">
       {levels.map((lvl, idx) => {
         const st = states[idx];
-        const featured = st.kind === "current";
         return (
-          <div key={lvl.id} className={featured ? "md:col-span-2" : ""}>
-            <LevelCard level={lvl} state={st} product={product} featured={featured} onOpen={() => onOpen(lvl, st)} />
-          </div>
+          <LevelCard key={lvl.id} level={lvl} state={st} product={product} onOpen={() => onOpen(lvl, st)} />
         );
       })}
     </div>
