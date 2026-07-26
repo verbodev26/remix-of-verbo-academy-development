@@ -1,9 +1,11 @@
+import { useEffect } from "react";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { RoleGuard } from "@/components/verbo/RoleGuard";
 import { TopNav, type NavEntry } from "@/components/verbo/TopNav";
 import { AnnouncementBanner } from "@/components/verbo/AnnouncementBanner";
 import { Footer } from "@/components/verbo/Footer";
 import { useAuth } from "@/lib/auth";
+import { touchLoginStreak } from "@/lib/login-streak-store";
 
 export const Route = createFileRoute("/student")({
   component: StudentLayout,
@@ -13,6 +15,12 @@ function StudentLayout() {
   const { user } = useAuth();
   const productType = user?.product_type ?? "performance";
   const isVIP = user?.product === "vip";
+
+  // Register the daily visit once per mounted student session.
+  useEffect(() => {
+    if (user?.role === "student") touchLoginStreak(user.id);
+  }, [user?.id, user?.role]);
+
 
   let items: NavEntry[] = [];
   if (productType === "insights") {
