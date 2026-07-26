@@ -723,13 +723,13 @@ function StudentDashboard() {
                 </div>
 
                 <div className="mt-6">
-                  {!s ? (
+                  {!s && !activeClub ? (
                     <div className="max-w-xl mx-auto w-full rounded-2xl border border-[var(--navy-100)] bg-[var(--navy-50)] p-6 text-sm text-muted-foreground">
                       No upcoming sessions scheduled.
                     </div>
-                  ) : (
+                  ) : s ? (
                     <div className="max-w-xl mx-auto w-full rounded-2xl border border-[var(--navy-100)] bg-[var(--navy-50)] shadow-elevated verbo-card-hover relative overflow-hidden">
-                      <div className="absolute inset-x-0 top-0 z-10 h-1 bg-[var(--accent)]" />
+                      <div className="absolute inset-x-0 top-0 z-10 h-1" style={{ background: stripeColor }} />
                       <div className="p-6">
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex items-center gap-3">
@@ -796,7 +796,74 @@ function StudentDashboard() {
                         </div>
                       </div>
                     </div>
-                  )}
+                  ) : activeClub ? (
+                    <div className="max-w-xl mx-auto w-full rounded-2xl border border-[var(--navy-100)] bg-[var(--navy-50)] shadow-elevated verbo-card-hover relative overflow-hidden">
+                      <div className="absolute inset-x-0 top-0 z-10 h-1" style={{ background: stripeColor }} />
+                      <div className="p-6">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex items-center gap-3">
+                            <PhotoPlaceholder tone="dark" shape="circle" className="h-12 w-12 bg-[#01304a]" />
+                            <div>
+                              <div className="text-xs uppercase tracking-wider text-muted-foreground">Host</div>
+                              <div className="text-sm font-semibold" style={{ color: "#01304a" }}>{clubHost ?? "Verbo Team"}</div>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            title="Session Details"
+                            aria-label="Session Details"
+                            onClick={() => setClubCardModal(activeClub)}
+                            className="group flex h-10 w-10 items-center justify-center rounded-full bg-secondary transition-colors hover:bg-primary/10 active:scale-[0.97]"
+                          >
+                            <ArrowUpRight className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" style={{ color: "#01304a" }} />
+                          </button>
+                        </div>
+
+                        <div className="mt-5">
+                          <div className="text-xl font-bold tracking-tight" style={{ color: "#01304a" }}>
+                            {activeClub.title}
+                          </div>
+                          <div className="mt-1 text-sm text-muted-foreground">
+                            {activeClub.type === "book" ? "Book Club" : "Verbo Insight"}
+                          </div>
+                        </div>
+
+                        <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <img src={teamsLogo.url} alt="Microsoft Teams" className="h-5 w-5 shrink-0 object-contain" />
+                            <span>Microsoft Teams Meeting · {fmt(activeClub.date)}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {clubBooked ? (
+                              <button
+                                type="button"
+                                title={clubConnectOpen ? "Connect" : "Activates 5 minutes before the club starts."}
+                                aria-label="Connect"
+                                disabled={!clubConnectOpen}
+                                onClick={() => { if (clubConnectOpen && activeClub.link) window.open(activeClub.link, "_blank"); }}
+                                className={`flex h-10 w-10 items-center justify-center rounded-full shadow-soft transition-opacity active:scale-[0.97] ${
+                                  clubConnectOpen
+                                    ? "bg-success text-success-foreground hover:opacity-90"
+                                    : "cursor-not-allowed bg-secondary text-muted-foreground"
+                                }`}
+                              >
+                                <Video className="h-4 w-4" />
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => setClubCardModal(activeClub)}
+                                className="inline-flex items-center gap-1.5 rounded-full bg-[#01304a] px-3.5 py-2 text-xs font-semibold text-white shadow-soft transition-opacity hover:opacity-90 active:scale-[0.97]"
+                              >
+                                Reserve seat <ArrowRight className="h-3.5 w-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
+
                 </div>
                 </PremiumCard>
               </div>
