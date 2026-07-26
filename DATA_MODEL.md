@@ -820,3 +820,21 @@ Reglas:
 - `updateProfile()` escribe en el storage donde vive la sesión activa y preserva
   el `expiresAt` original (no lo recalcula).
 - Se tolera la forma legacy (user plano) tratándola como `expiresAt: null`.
+
+## Profile Badges — nuevas métricas de racha y misiones (`src/lib/profile-badges-store.ts`)
+
+**`src/lib/login-streak-store.ts`** (nuevo): `localStorage["verbo:login-streak"]`, evento `"verbo:login-streak-updated"`. Guarda por alumno `{ lastActiveDate: "YYYY-MM-DD", currentStreak: number }` en fecha local del navegador.
+- `touchLoginStreak(studentId)` — se llama una vez al montar el layout de alumno (`src/routes/student.tsx`, sólo rol `student`): ayer → +1, hoy → sin cambio, más antiguo/ausente → reset a 1. Devuelve el streak actualizado.
+- `currentLoginStreak(studentId)` — lectura pura, sin mutar (la usa el badge context).
+- `subscribeLoginStreak(cb)`.
+
+**`unitPassedByActivities(studentId, unitId)`** en `activities-store.ts`: misma regla que `unitPassed`, pero si la unidad no tiene ninguna actividad mandatory configurada devuelve `false` (sin fallback al completion flag legacy). Es la única función válida para calcular medallas: un pase por override/seed nunca otorga medalla.
+
+**Nuevas `BadgeMetric`** (todas `numeric: true`):
+- `loginStreakDays` — días calendario consecutivos abriendo Verbo Academy.
+- `level1MissionsCompleted` … `level4MissionsCompleted` — cuántos bloques de Misión (de 3) están 100% completos en el Level N del producto del alumno. Cada nivel se divide en 3 bloques de 10 unidades (`[0-9]`, `[10-19]`, `[20-29]`, mismo criterio que `UnitsView`); un bloque cuenta sólo si sus 10 unidades pasan `unitPassedByActivities`. Niveles no contratados o alumnos VIP → 0.
+
+**Seed ampliada: 8 badges originales + 21 nuevos = 29.**
+- Racha (5): `streak-3` 3-Day Flame (≥3), `streak-10` 10-Day Flame (≥10), `streak-30` 30-Day Flame (≥30), `streak-60` 60-Day Flame (≥60), `streak-100` 100-Day Flame (≥100).
+- Medallas (16): 4 por nivel con metal por nivel (1=Bronze, 2=Silver, 3=Gold, 4=Onyx). Por nivel N con metric `levelNMissionsCompleted`: `l{N}-m1` "{Metal} — Mission 1" (≥1), `l{N}-m2` "{Metal} — Mission 2" (≥2), `l{N}-m3` "{Metal} — Mission 3" (≥3) y `l{N}-complete` "{Metal} — Level Complete" (≥3, coincide intencionalmente con Mission 3).
+- Todas con `image: ""`; el Admin sube la imagen desde `/admin/profile-badges`, cuyo selector de métrica lee `BADGE_METRIC_META` dinámicamente (ya muestra las 5 opciones nuevas sin cambios de lógica).
