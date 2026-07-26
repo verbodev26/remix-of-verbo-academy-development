@@ -58,6 +58,13 @@ export function ClubReservationModal({
   );
 
   const isBook = club.type === "book";
+
+  // "Connect" activates 5 minutes before the club starts, until it ends.
+  const connectOpen = useMemo(() => {
+    const start = new Date(club.date).getTime();
+    const now = Date.now();
+    return now >= start - 5 * 60 * 1000 && now <= start + club.duration_minutes * 60 * 1000;
+  }, [club.date, club.duration_minutes]);
   const accent = isBook ? "#d97706" : "#0ea5e9";
   const label = isBook ? "Book Club" : "Verbo Insight";
 
@@ -208,6 +215,23 @@ export function ClubReservationModal({
                 {cancelBlocked ? cancelBlocked : busy ? "Cancelling…" : "Cancel reservation"}
               </button>
 
+              {connectOpen ? (
+                <PrimaryButton
+                  className="flex-1 justify-center verbo-btn-glow"
+                  onClick={() => club.link && window.open(club.link, "_blank")}
+                >
+                  <Video className="h-4 w-4" /> Connect
+                </PrimaryButton>
+              ) : (
+                <button
+                  type="button"
+                  disabled
+                  title="Activates 5 minutes before your session."
+                  className="flex-1 inline-flex cursor-not-allowed items-center justify-center gap-2 rounded-full bg-secondary px-4 py-2 text-sm font-medium text-muted-foreground"
+                >
+                  <Video className="h-4 w-4" /> Connect
+                </button>
+              )}
               <GhostButton className="flex-1 justify-center" onClick={onClose}>Close</GhostButton>
             </>
           ) : (
