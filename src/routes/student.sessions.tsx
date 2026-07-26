@@ -917,7 +917,9 @@ function SessionsRemainingCard({ studentId }: { studentId: string }) {
   const { done, pct } = sessionProgressFor(hired, remaining);
   const g = groupOfStudent(studentId);
   return (
-    <Card className="!p-6">
+    <Card className="!p-6 h-full min-h-[200px] flex flex-col justify-between">
+      <div>
+      </div>
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sessions remaining</div>
