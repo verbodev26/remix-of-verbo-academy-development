@@ -329,14 +329,14 @@ function NextEventCard({ events, onEventClick }: { events: CalendarEvent[]; onEv
     <button
       type="button"
       onClick={() => onEventClick(next)}
-      className="group relative flex h-full min-h-[200px] w-full cursor-pointer flex-col justify-between rounded-3xl p-6 text-left transition-transform duration-200 active:scale-[0.99]"
+      className="group relative flex h-full min-h-[200px] w-full cursor-pointer flex-col justify-between overflow-hidden rounded-3xl p-6 text-left transition-transform duration-200 active:scale-[0.99]"
     >
       <div className="card-gradient-lime pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-3xl border border-border shadow-elevated" />
       <img
         src={nextUpArt.url}
         alt=""
         aria-hidden="true"
-        className="pointer-events-none absolute bottom-0 right-0 z-[1] h-[124%] w-auto select-none object-contain"
+        className="pointer-events-none absolute bottom-0 right-0 z-[1] h-[85%] w-auto select-none object-contain"
       />
       <div className="relative z-10 flex items-center justify-between gap-2">
         <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "rgba(1, 48, 74, 0.7)" }}>
