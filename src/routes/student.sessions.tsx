@@ -166,35 +166,43 @@ function Page() {
             Your next class, your next conversation club, your next win — all in one place.
           </p>
         </div>
-        <NextEventChip events={events} />
       </div>
 
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
+      <div className="grid items-stretch gap-4 lg:grid-cols-3">
         <SessionsRemainingCard studentId={user.id} />
+        <NextEventCard events={events} onEventClick={handleEventClick} />
         {hasSpot && (
-          <div className="card-gradient-teal relative overflow-visible rounded-3xl border border-border p-6 shadow-elevated">
-            <div className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/35" style={{ color: "#01304a" }}>
-                <Sparkles className="h-4 w-4" />
+          <div className="card-gradient-teal relative h-full min-h-[200px] overflow-hidden rounded-3xl border border-border p-6 shadow-elevated">
+            <img
+              src={spotlightArt.url}
+              alt=""
+              aria-hidden="true"
+              className="pointer-events-none absolute bottom-0 right-0 h-[110%] w-auto translate-y-[6%] select-none object-contain"
+            />
+            <div className="relative z-10 w-[58%]">
+              <div className="flex items-center gap-2">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/35" style={{ color: "#01304a" }}>
+                  <Sparkles className="h-4 w-4" />
+                </div>
+                <h3 className="text-base font-semibold tracking-tight" style={{ color: "#01304a" }}>
+                  Spotlight Session
+                </h3>
               </div>
-              <h3 className="text-base font-semibold tracking-tight" style={{ color: "#01304a" }}>
-                Spotlight Session
-              </h3>
+              <p className="mt-3 text-xs leading-relaxed" style={{ color: "rgba(1, 48, 74, 0.75)" }}>
+                An extra 60-minute 1:1 with an Elite Instructor, focused on one specific challenge.
+              </p>
+              <button
+                type="button"
+                onClick={() => { if (canRequestSpotlight) freemium.tryOpen("spotlight", () => setSpotlightOpen(true)); }}
+                disabled={!canRequestSpotlight}
+                title={!canRequestSpotlight ? "You've used all your Spotlight requests for this month." : undefined}
+                className={`mt-4 inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-full bg-white px-3 py-2.5 text-xs font-semibold transition-transform duration-200 ${canRequestSpotlight ? "cursor-pointer active:scale-[0.97]" : "cursor-not-allowed opacity-60"}`}
+                style={{ color: "#01304a" }}
+              >
+                <Sparkles className="h-3.5 w-3.5" /> Request a Spotlight
+              </button>
             </div>
-            <p className="mt-3 text-xs leading-relaxed" style={{ color: "rgba(1, 48, 74, 0.75)" }}>
-              An extra 60-minute 1:1 with an Elite Instructor, focused on one specific challenge.
-            </p>
-            <button
-              type="button"
-              onClick={() => { if (canRequestSpotlight) freemium.tryOpen("spotlight", () => setSpotlightOpen(true)); }}
-              disabled={!canRequestSpotlight}
-              title={!canRequestSpotlight ? "You've used all your Spotlight requests for this month." : undefined}
-              className={`mt-4 inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-full bg-white px-4 py-2.5 text-sm font-semibold transition-transform duration-200 ${canRequestSpotlight ? "cursor-pointer active:scale-[0.97]" : "cursor-not-allowed opacity-60"}`}
-              style={{ color: "#01304a" }}
-            >
-              <Sparkles className="h-3.5 w-3.5" /> Request a Spotlight Session
-            </button>
           </div>
         )}
       </div>
@@ -215,11 +223,14 @@ function Page() {
           icon={<CalendarClock className="h-4 w-4" />}
           label="Reschedule Policy"
           value={`${policy.noticeHours}h notice · up to ${policy.maxPct}% of monthly sessions`}
+          tone="violet"
         />
         <StatPill
           icon={<RefreshCcw className="h-4 w-4" />}
           label="Used this cycle"
           value={`${used} of ${quota} reschedules`}
+          tone={quota > 0 && used / quota >= 0.8 ? "red" : quota > 0 && used / quota >= 0.5 ? "amber" : "green"}
+          progressPct={quota > 0 ? Math.min(100, Math.round((used / quota) * 100)) : 0}
         />
         {spotlightVisible && (
           <StatPill
@@ -228,6 +239,7 @@ function Page() {
             value={isSignature
               ? `${spotlightUsedNum} used this month`
               : `${spotlightUsedNum} of ${spotlightCapDisplay} used this month`}
+            tone="dark"
           />
         )}
       </div>
