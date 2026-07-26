@@ -22,7 +22,7 @@ import {
   RotateCcw,
   Award,
   Info,
-  Clock,
+  
   PartyPopper,
   Flame,
   Medal,
@@ -497,9 +497,9 @@ function LevelsView({
 
       {/* Overall progress + streak + medal */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card className="card-gradient-gold border-transparent md:col-span-2">
+        <Card className="card-gradient-gold border border-white/15 md:col-span-2">
           <div className="flex flex-wrap items-center gap-5" style={{ color: "#01304a" }}>
-            <StatRing value={pct} size={84} stroke={8} />
+            <StatRing value={pct} size={104} stroke={8} valueClassName="text-2xl font-bold" />
             <div className="min-w-0 flex-1">
               <div className="text-xs font-semibold uppercase tracking-wider opacity-75">Overall progress</div>
               <div className="mt-1 text-lg font-semibold">
@@ -513,38 +513,38 @@ function LevelsView({
           </div>
         </Card>
 
-        <Card className="card-gradient-lime border-transparent">
-          <div style={{ color: "#01304a" }}>
-            <div className="flex items-center gap-2">
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/35">
-                <Flame className="h-4 w-4" />
-              </span>
+        <Card className="card-gradient-lime border border-white/15">
+          <div className="flex items-center justify-between gap-4" style={{ color: "#01304a" }}>
+            <div className="min-w-0 flex-1">
               <div className="text-xs font-semibold uppercase tracking-wider opacity-75">Login streak</div>
+              {streakDays > 0 ? (
+                <>
+                  <div className="mt-2 text-2xl font-semibold tabular-nums">{streakDays} {streakDays === 1 ? "day" : "days"}</div>
+                  <div className="mt-0.5 text-sm font-medium opacity-80">{streakTier ? streakTier.name : "Keep going"}</div>
+                </>
+              ) : (
+                <p className="mt-2 text-sm opacity-80">Log in tomorrow to start your streak</p>
+              )}
             </div>
-            {streakDays > 0 ? (
-              <>
-                <div className="mt-3 text-2xl font-semibold tabular-nums">{streakDays} {streakDays === 1 ? "day" : "days"}</div>
-                <div className="mt-0.5 text-sm font-medium opacity-80">{streakTier ? streakTier.name : "Keep going"}</div>
-              </>
-            ) : (
-              <p className="mt-3 text-sm opacity-80">Log in tomorrow to start your streak</p>
-            )}
+            <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-white/35">
+              <Flame className="h-7 w-7" />
+            </span>
           </div>
         </Card>
 
-        <Card className="card-gradient-violet border-transparent">
-          <div className="text-white">
-            <div className="flex items-center gap-2">
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20">
-                <Medal className="h-4 w-4" />
-              </span>
-              <div className="text-xs font-semibold uppercase tracking-wider text-white/75">Highest medal</div>
+        <Card className="card-gradient-violet border border-white/15">
+          <div className="flex items-center justify-between gap-4 text-white">
+            <div className="min-w-0 flex-1">
+              <div className="text-xs font-semibold uppercase tracking-wider text-white/75">Medal</div>
+              {topMedal ? (
+                <div className="mt-2 text-lg font-semibold leading-snug">{topMedal}</div>
+              ) : (
+                <p className="mt-2 text-sm text-white/80">Complete your first Mission to earn a medal</p>
+              )}
             </div>
-            {topMedal ? (
-              <div className="mt-3 text-lg font-semibold leading-snug">{topMedal}</div>
-            ) : (
-              <p className="mt-3 text-sm text-white/80">Complete your first Mission to earn a medal</p>
-            )}
+            <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-white/20">
+              <Medal className="h-7 w-7" />
+            </span>
           </div>
         </Card>
       </div>
@@ -569,10 +569,7 @@ function LevelsView({
         <LevelsPath levels={levels} states={states} product={productLabel} onOpen={onOpen} />
       )}
 
-      {/* Achievement timeline */}
       {tailoredSection}
-
-      <AchievementTimeline events={events} />
     </div>
   );
 }
@@ -647,8 +644,15 @@ function LevelsPath({ levels, states, product, onOpen }: LevelShellProps) {
                 <div className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">{lvl.id}</div>
                 <div className="mt-0.5 truncate text-sm font-semibold text-foreground">{lvl.name}</div>
                 <div className="mt-2 text-xs text-muted-foreground">{st.passedUnits} / {st.totalUnits} units · {pct}%</div>
-                <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-secondary">
-                  <div className={`h-full rounded-full ${isLocked ? "bg-muted-foreground/40" : "bg-accent"}`} style={{ width: `${pct}%` }} />
+                <div className="relative mt-2 h-1.5 w-full overflow-hidden rounded-full bg-secondary">
+                  {isLocked ? (
+                    <div className="h-full rounded-full bg-muted-foreground/40" style={{ width: `${pct}%` }} />
+                  ) : (
+                    <>
+                      <div className="absolute inset-0 rounded-full" style={{ backgroundImage: "linear-gradient(to right, #ff914d, #ffc700, #69d11e)" }} />
+                      <div className="absolute inset-y-0 right-0 rounded-r-full bg-secondary transition-all duration-500" style={{ width: `${100 - pct}%` }} />
+                    </>
+                  )}
                 </div>
                 <div className="mt-2 flex items-center gap-1.5 md:justify-center">
                   {isCompleted && <Pill tone="success">Completed</Pill>}
@@ -725,8 +729,15 @@ function LevelCard({
           <span className="text-muted-foreground">{state.totalUnits} units</span>
           <span className="font-medium text-foreground">{state.passedUnits} / {state.totalUnits} · {pct}%</span>
         </div>
-        <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-secondary">
-          <div className={`h-full rounded-full transition-all ${isLocked ? "bg-muted-foreground/40" : "bg-accent"}`} style={{ width: `${pct}%` }} />
+        <div className="relative mt-2 h-1.5 w-full overflow-hidden rounded-full bg-secondary">
+          {isLocked ? (
+            <div className="h-full rounded-full bg-muted-foreground/40 transition-all" style={{ width: `${pct}%` }} />
+          ) : (
+            <>
+              <div className="absolute inset-0 rounded-full" style={{ backgroundImage: "linear-gradient(to right, #ff914d, #ffc700, #69d11e)" }} />
+              <div className="absolute inset-y-0 right-0 rounded-r-full bg-secondary transition-all duration-500" style={{ width: `${100 - pct}%` }} />
+            </>
+          )}
         </div>
         {state.message && (
           <div className="mt-3 flex items-start gap-1.5 text-[11px] text-muted-foreground">
@@ -744,37 +755,6 @@ function LevelCard({
   );
 }
 
-function AchievementTimeline({ events }: { events: LearningPathEvent[] }) {
-  const shown = events.slice(0, 15);
-  return (
-    <Card className="card-gradient-teal border-transparent">
-      <div style={{ color: "#01304a" }}>
-        <div className="mb-3 flex items-center gap-2">
-          <Clock className="h-4 w-4 opacity-75" />
-          <h2 className="text-sm font-semibold tracking-tight">Achievement Timeline</h2>
-        </div>
-        {shown.length === 0 ? (
-          <p className="text-sm opacity-75">Your milestones will appear here as you progress.</p>
-        ) : (
-          <ol className="verbo-snap-rail -mx-1 flex gap-3 overflow-x-auto px-1 pb-2">
-            {shown.map((e, i) => (
-              <li
-                key={`${e.ts}-${i}`}
-                className={`verbo-snap-item w-[210px] shrink-0 rounded-2xl border border-white/50 bg-white/55 p-3 ${i === 0 ? "verbo-pop-in" : "verbo-soft-fade"}`}
-              >
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/70">
-                  {e.kind === "level_completed" ? <Trophy className="h-4 w-4" /> : e.kind === "unit_completed" ? <CheckCircle2 className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
-                </div>
-                <div className="mt-2 line-clamp-2 text-sm font-medium">{e.label ?? e.ref}</div>
-                <div className="mt-1 text-[11px] opacity-75">{new Date(e.ts).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}</div>
-              </li>
-            ))}
-          </ol>
-        )}
-      </div>
-    </Card>
-  );
-}
 
 /* -------------------------------------------------------------------------- */
 /* Units view                                                                  */
