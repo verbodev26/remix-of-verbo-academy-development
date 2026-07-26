@@ -1035,6 +1035,14 @@ function StudentDashboard() {
       )}
 
 
+      {clubCardModal && (
+        <ClubReservationModal
+          club={clubCardModal}
+          studentId={user.id}
+          onClose={() => setClubCardModal(null)}
+        />
+      )}
+
       {/* Class Details Modal — unified view (replaces the old standalone
           "Session Performance Breakdown" popup and the row-level icons). */}
       <Dialog open={!!classDetail} onOpenChange={(o) => !o && setClassDetail(null)}>
