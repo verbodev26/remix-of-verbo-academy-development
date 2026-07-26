@@ -840,3 +840,15 @@ Reglas:
 - Racha (5): `streak-3` 3-Day Flame (≥3), `streak-10` 10-Day Flame (≥10), `streak-30` 30-Day Flame (≥30), `streak-60` 60-Day Flame (≥60), `streak-100` 100-Day Flame (≥100).
 - Medallas (16): 4 por nivel con metal por nivel (1=Bronze, 2=Silver, 3=Gold, 4=Onyx). Por nivel N con metric `levelNMissionsCompleted`: `l{N}-m1` "{Metal} — Mission 1" (≥1), `l{N}-m2` "{Metal} — Mission 2" (≥2), `l{N}-m3` "{Metal} — Mission 3" (≥3) y `l{N}-complete` "{Metal} — Level Complete" (≥3, coincide intencionalmente con Mission 3).
 - Todas con `image: ""`; el Admin sube la imagen desde `/admin/profile-badges`, cuyo selector de métrica lee `BADGE_METRIC_META` dinámicamente (ya muestra las 5 opciones nuevas sin cambios de lógica).
+
+
+## Reportes técnicos de contenido (`src/lib/content-issue-reports-store.ts`)
+
+Nuevo store simple (mismo patrón que `student-reports-store.ts`): `localStorage["verbo:content-issue-reports"]`, evento `"verbo:content-issue-reports-updated"`.
+
+`ContentIssueReport = { id, studentId, unitId, unitTitle, issueType, detail, createdAt }`.
+
+- `issueType` ∈ `CONTENT_ISSUE_TYPES`: "PDF won't download" | "Video won't play" | "Audio won't record" | "Exercise won't load" | "Score not saving" | "Other".
+- `detail` es opcional (string vacío si no se completa).
+- `addContentIssueReport(input)` crea el reporte; `loadContentIssueReports()` y `contentIssuesForUnit(unitId)` son lecturas ordenadas por fecha desc.
+- Lo dispara el alumno desde `ReportContentIssueModal` en el detalle de unidad (`student.courses.tsx`). Todavía no existe bandeja de Admin, igual que `student-reports-store.ts`.
