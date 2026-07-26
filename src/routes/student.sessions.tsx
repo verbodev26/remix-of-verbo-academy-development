@@ -43,6 +43,7 @@ import {
 import { Card, PrimaryButton, GhostButton } from "@/components/verbo/ui";
 import { X, Video, AlertTriangle, Sparkles, CalendarClock, RefreshCcw, ArrowLeft, ChevronRight, Users as UsersIcon, BookOpen, Star } from "lucide-react";
 import spotlightArt from "@/assets/spotlight1.png.asset.json";
+import nextUpArt from "@/assets/up_next.png.asset.json";
 import { getLessonPlan } from "@/lib/lesson-plans-store";
 import { resolvePlanTopic } from "@/lib/product-courses-store";
 import { unitsForStudent } from "@/lib/vip-courses-store";
@@ -330,6 +331,12 @@ function NextEventCard({ events, onEventClick }: { events: CalendarEvent[]; onEv
       onClick={() => onEventClick(next)}
       className="card-gradient-lime group relative flex h-full min-h-[200px] w-full cursor-pointer flex-col justify-between overflow-hidden rounded-3xl border border-border p-6 text-left shadow-elevated transition-transform duration-200 hover:shadow-lg active:scale-[0.99]"
     >
+      <img
+        src={nextUpArt.url}
+        alt=""
+        aria-hidden="true"
+        className="pointer-events-none absolute bottom-0 right-0 h-[110%] w-auto translate-y-[6%] select-none object-contain"
+      />
       <div className="relative z-10 flex items-center justify-between gap-2">
         <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "rgba(1, 48, 74, 0.7)" }}>
           Next up
@@ -339,8 +346,8 @@ function NextEventCard({ events, onEventClick }: { events: CalendarEvent[]; onEv
           style={{ color: "rgba(1, 48, 74, 0.6)" }}
         />
       </div>
-      <div className="relative z-10 min-w-0">
-        <div className="truncate font-display text-2xl leading-tight tracking-tight" style={{ color: "#01304a" }}>
+      <div className="relative z-10 w-[58%] min-w-0">
+        <div className="font-display text-2xl leading-tight tracking-tight" style={{ color: "#01304a" }}>
           {headline}
         </div>
         <div className="mt-1 truncate text-xs font-semibold" style={{ color: "rgba(1, 48, 74, 0.75)" }}>
