@@ -156,6 +156,8 @@ function StudentDashboard() {
   // truth shared with Student > Performance and Teacher > Mis Alumnos).
   const macros = useComputedMacros(user?.id ?? "");
   const [classDetail, setClassDetail] = useState<ExtSession | null>(null);
+  const [clubCardModal, setClubCardModal] = useState<Club | null>(null);
+
   const [plansRev, setPlansRev] = useState(0);
   useEffect(() => subscribeLessonPlans(() => setPlansRev((r) => r + 1)), []);
 
