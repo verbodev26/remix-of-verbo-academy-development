@@ -182,7 +182,7 @@ function Page() {
               </h3>
             </div>
             <p className="mt-3 text-xs leading-relaxed" style={{ color: "rgba(1, 48, 74, 0.75)" }}>
-              An extra 60-minute 1:1 with any available qualified teacher, focused on one specific challenge.
+              An extra 60-minute 1:1 with an Elite Instructor, focused on one specific challenge.
             </p>
             <button
               type="button"
@@ -582,10 +582,15 @@ function EventDetailsModal({
           )}
         </div>
         {canAct && plan && (
-          <div className="mt-2">
-            <GhostButton className="w-full justify-center" onClick={() => session && onCantAttend(session)}>
-              Can't Attend
-            </GhostButton>
+          <div className="mt-2 flex justify-end">
+            <button
+              type="button"
+              onClick={() => session && onCantAttend(session)}
+              className="group inline-flex h-8 items-center gap-1.5 overflow-hidden whitespace-nowrap rounded-full border border-border bg-background px-2 text-xs font-medium text-muted-foreground transition-all duration-200 hover:border-destructive/40 hover:bg-destructive/10 hover:px-3 hover:text-destructive"
+            >
+              <X className="h-3.5 w-3.5 shrink-0" />
+              <span className="max-w-0 overflow-hidden transition-all duration-200 group-hover:max-w-[60px]">Cancel</span>
+            </button>
           </div>
         )}
       </div>
@@ -629,11 +634,9 @@ function SpotlightRequestFlow({ studentId, onClose }: { studentId: string; onClo
             </div>
             <h3 className="text-lg font-semibold tracking-tight" style={{ color: "#01304a" }}>What is a Spotlight Session?</h3>
           </div>
-          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-            A Spotlight Session is an additional 1:1 session of up to 60 minutes with any available qualified teacher on the platform. Use it to work on a specific challenge — a presentation coming up, a mock interview, a difficult negotiation, a document review — outside your regular schedule.
-          </p>
+          <p className="mt-3 text-sm font-medium text-foreground">Stuck on something specific?</p>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            You'll describe what you need in the next step so the teacher who claims it can arrive prepared.
+            A Spotlight Session is a focused 60-minute 1:1 with an Elite Instructor — built around exactly what you need: a presentation, an interview, a tricky email, anything on your plate. Tell us what it is, and they'll show up ready for it.
           </p>
           <div className="mt-6 flex justify-end">
             <button
