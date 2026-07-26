@@ -852,6 +852,26 @@
 .verbo-snap-rail { scroll-snap-type: x proximity; }
 .verbo-snap-item { scroll-snap-align: start; }
 
+@keyframes verbo-unit-flip {
+  0% { transform: perspective(600px) rotateY(0deg); }
+  35% { transform: perspective(600px) rotateY(360deg); }
+  70% { transform: perspective(600px) rotateY(720deg); }
+  100% { transform: perspective(600px) rotateY(720deg); }
+}
+@keyframes verbo-unit-flip-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+.verbo-unit-unlock {
+  animation:
+    verbo-unit-flip 720ms ease-out both,
+    verbo-unit-flip-pulse 420ms ease-in-out 720ms 2 both;
+}
+
+.verbo-accordion { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 320ms cubic-bezier(0.23, 1, 0.32, 1); }
+.verbo-accordion[data-open="true"] { grid-template-rows: 1fr; }
+.verbo-accordion > * { overflow: hidden; min-height: 0; }
+
 @media (prefers-reduced-motion: reduce) {
   .verbo-bento-glow,
   .verbo-node-ring::after,
@@ -860,8 +880,11 @@
   .verbo-node-ring::after { opacity: 0.35; }
   .verbo-pop-in,
   .verbo-stagger-in,
+  .verbo-unit-unlock,
   .verbo-soft-fade { animation: verbo-soft-fade 160ms ease-out both; }
+  .verbo-accordion { transition: none; }
 }
+
 
 @keyframes verbo-pulse-once {
   0% { transform: scale(1); box-shadow: 0 8px 24px -6px rgba(243, 137, 52, 0.5); }
