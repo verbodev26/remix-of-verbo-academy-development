@@ -453,8 +453,9 @@ function StudentDashboard() {
               <div className="pr-2">
                 <div className="text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: "rgba(1,48,74,0.8)" }}>Level Progress</div>
                 <div className="mt-3 flex items-baseline gap-2">
-                  <span className="text-6xl font-bold leading-none tracking-tight" style={{ color: "#01304a" }}>{levelProgress}</span>
-                  <span className="text-2xl font-bold" style={{ color: "#01304a" }}>%</span>
+                  <span className="text-6xl font-bold leading-none tracking-tight" style={{ color: "#ffffff" }}>{levelProgress}</span>
+                  <span className="text-2xl font-bold" style={{ color: "#ffffff" }}>%</span>
+
                 </div>
                 <div className="mt-1.5 text-xs font-semibold" style={{ color: "rgba(1,48,74,0.8)" }}>of {currentLevelName ?? "—"}</div>
               </div>
