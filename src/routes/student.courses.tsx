@@ -2,6 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
+  Check,
+  Target,
+  Brain,
   ArrowRight,
   BookOpen,
   CheckCircle2,
@@ -815,22 +818,25 @@ function UnitsView({
           const locked = blockStates.length > 0 && blockStates.every((s) => s === "locked" || s === "milestone_locked");
           const open = openMission === bi;
 
+          const MISSION_ACCENTS = ["#e0299b", "#69d11e", "#ffc700"];
+          const missionAccent = MISSION_ACCENTS[bi % MISSION_ACCENTS.length];
+          const available = !complete && !locked;
           const shell = complete
             ? "border-success/40 bg-gradient-to-br from-success/12 via-success/5 to-transparent"
             : locked
             ? "border-border bg-gradient-to-br from-secondary/60 via-secondary/25 to-transparent"
-            : "border-accent/40 bg-gradient-to-br from-accent/12 via-accent/5 to-transparent";
+            : "border-[#01304a]/15 bg-gradient-to-br from-[#01304a]/8 via-[#01304a]/4 to-transparent";
           const numberCls = complete
             ? "bg-success/15 text-success"
             : locked
             ? "bg-secondary text-muted-foreground"
-            : "bg-accent/15 text-accent";
-          const barCls = complete ? "bg-success" : locked ? "bg-muted-foreground/40" : "bg-accent";
+            : "";
+          const barCls = complete ? "bg-success" : locked ? "bg-muted-foreground/40" : "";
 
           return (
             <section
               key={bi}
-              className={`shadow-elevated overflow-hidden rounded-3xl border ${shell}`}
+              className={`shadow-elevated rounded-3xl border ${shell}`}
             >
               <button
                 type="button"
@@ -838,12 +844,18 @@ function UnitsView({
                 aria-expanded={open}
                 className="flex w-full items-center gap-4 p-5 text-left sm:p-6"
               >
-                <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-2xl font-semibold tabular-nums ${numberCls}`}>
+                <div
+                  className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-2xl font-semibold tabular-nums ${numberCls}`}
+                  style={available ? { backgroundColor: missionAccent, color: "#ffffff" } : undefined}
+                >
                   {bi + 1}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="text-base font-semibold uppercase tracking-[0.14em] text-foreground">
+                    <h2
+                      className="text-base font-bold uppercase tracking-[0.14em] text-foreground"
+                      style={available ? { color: missionAccent } : undefined}
+                    >
                       Mission {bi + 1}
                     </h2>
                     {complete && <Pill tone="success">Completed</Pill>}
@@ -853,7 +865,7 @@ function UnitsView({
                     <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-background/70">
                       <div
                         className={`h-full rounded-full transition-all duration-500 ${barCls}`}
-                        style={{ width: `${Math.round((blockPassed / total) * 100)}%` }}
+                        style={{ width: `${Math.round((blockPassed / total) * 100)}%`, ...(available ? { backgroundColor: missionAccent } : {}) }}
                       />
                     </div>
                     <span className="text-xs font-semibold tabular-nums text-muted-foreground">
@@ -876,7 +888,10 @@ function UnitsView({
                       const idx = level.units.indexOf(u);
                       const st = states[idx];
                       const milestone = isMilestoneUnit(u.id);
-                      const preview = k >= 5 && (st === "locked" || st === "milestone_locked");
+                      const previewLevel: 0 | 1 | 2 | 3 =
+                        (st === "locked" || st === "milestone_locked")
+                          ? (k === 5 ? 1 : k === 6 ? 2 : k >= 7 ? 3 : 0)
+                          : 0;
                       return (
                         <div key={u.id} className={open ? "verbo-stagger-in" : ""} style={{ animationDelay: `${Math.min(k, 9) * 25}ms` }}>
                           <UnitStone
@@ -884,7 +899,7 @@ function UnitsView({
                             number={n}
                             state={st}
                             milestone={milestone}
-                            preview={preview}
+                            previewLevel={previewLevel}
                             unlockFlip={flipUnitId === u.id}
                             onOpen={() => onOpenUnit(u)}
                           />
@@ -903,34 +918,48 @@ function UnitsView({
 }
 
 function UnitStone({
-  unit, number, state, milestone, onOpen, preview = false, unlockFlip = false,
+  unit, number, state, milestone, onOpen, previewLevel = 0, unlockFlip = false,
 }: {
   unit: CourseUnit;
   number: number;
   state: UnitStateKind;
   milestone: boolean;
   onOpen: () => void;
-  preview?: boolean;
+  previewLevel?: 0 | 1 | 2 | 3;
   unlockFlip?: boolean;
 }) {
   const disabled = state === "locked" || state === "milestone_locked";
-  const cls = milestone
-    ? state === "passed"
-      ? "border-amber-500 bg-gradient-to-br from-amber-100 to-amber-200 text-amber-900"
-      : state === "milestone_ready"
-      ? "border-amber-500 bg-gradient-to-br from-amber-50 to-amber-100 text-amber-900"
-      : "border-amber-500/40 bg-amber-50/60 text-amber-900/60"
-    : state === "passed"
-    ? "border-success/40 bg-success/10 text-success"
-    : state === "current"
-    ? "border-accent bg-accent/10 text-foreground"
-    : "border-border bg-secondary/40 text-muted-foreground";
+  const isMilestoneReady = state === "milestone_ready";
 
-  const pulse = state === "milestone_ready"
-    ? "verbo-milestone-glow"
-    : state === "current"
-    ? "verbo-current-ring"
-    : "";
+  const circleGradient =
+    state === "passed"
+      ? "linear-gradient(150deg, #8fe64d 0%, #69d11e 55%, #4a9c0f 100%)"
+      : isMilestoneReady
+      ? "linear-gradient(150deg, #c89116 0%, #787878 100%)"
+      : state === "current"
+      ? "linear-gradient(150deg, #ffc700 0%, #f38934 100%)"
+      : "linear-gradient(150deg, #d9d9d9 0%, #000000 100%)";
+
+  const icon =
+    state === "passed" ? (
+      <Check className="h-6 w-6 text-white" strokeWidth={3} />
+    ) : isMilestoneReady ? (
+      <Brain className="h-6 w-6 text-white" />
+    ) : state === "current" ? (
+      <Target className="h-6 w-6" style={{ color: "#01304a" }} />
+    ) : (
+      <Lock className="h-6 w-6 text-white" strokeWidth={2.5} />
+    );
+
+  const statusLine = state === "passed" ? "Completed" : isMilestoneReady ? "Ready to take" : state === "current" ? "Current unit" : "Unit locked";
+
+  const titleLine =
+    state === "passed" ? (milestone ? "Milestone Check" : unit.title)
+    : isMilestoneReady ? "Milestone Check"
+    : state === "current" ? unit.title
+    : "Complete the previous unit to unlock";
+
+  const pulse = isMilestoneReady ? "verbo-milestone-glow" : state === "current" ? "verbo-current-ring" : "";
 
   const tooltip = milestone && state === "milestone_locked"
     ? "Your teacher will unlock this Milestone Check"
@@ -940,7 +969,7 @@ function UnitStone({
     ? "Complete the previous unit first"
     : undefined;
 
-  const reviewable = state === "passed" && !milestone;
+  const blurCls = previewLevel === 1 ? "blur-[2px] opacity-80" : previewLevel === 2 ? "blur-[5px] opacity-55" : previewLevel === 3 ? "blur-[10px] opacity-30" : "";
 
   return (
     <button
@@ -948,25 +977,18 @@ function UnitStone({
       onClick={disabled ? undefined : onOpen}
       disabled={disabled}
       title={tooltip}
-      className={`verbo-ease-out-expo group relative flex aspect-square w-full flex-col items-center justify-center gap-1 overflow-hidden rounded-xl border-2 p-2 text-center shadow-sm transition-all duration-300 ${cls} ${pulse} ${unlockFlip ? "verbo-unit-unlock" : ""} ${preview ? "blur-sm opacity-60" : ""} ${disabled ? "cursor-not-allowed opacity-70" : "hover:-translate-y-0.5"}`}
+      className={`verbo-ease-out-expo group flex w-full flex-col items-center gap-2 p-1 text-center transition-transform duration-300 ${unlockFlip ? "verbo-unit-unlock" : ""} ${blurCls} ${disabled ? "cursor-not-allowed" : "hover:z-10 hover:scale-110"}`}
     >
-      {milestone ? (
-        <Trophy className="h-5 w-5" />
-      ) : state === "passed" ? (
-        <CheckCircle2 className="verbo-pop-in h-5 w-5" />
-      ) : state === "locked" ? (
-        <Lock className="h-4 w-4" />
-      ) : (
-        <span className="text-sm font-semibold">{number}</span>
-      )}
-      <div className="text-[10px] font-medium leading-tight line-clamp-2">
-        {milestone ? "Milestone Check" : unit.title}
-      </div>
-      {reviewable && (
-        <span className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-[10px] bg-success/25 text-[11px] font-semibold text-success-foreground opacity-0 backdrop-blur-[1px] transition-opacity duration-200 group-hover:opacity-100">
-          Review unit
-        </span>
-      )}
+      <span
+        className={`relative flex h-16 w-16 shrink-0 items-center justify-center rounded-full shadow-md ${pulse}`}
+        style={{ backgroundImage: circleGradient }}
+      >
+        {icon}
+      </span>
+      <span className="flex flex-col items-center gap-0.5">
+        <span className="text-[10px] font-light leading-tight text-muted-foreground">{statusLine}</span>
+        <span className="line-clamp-2 text-[11px] font-bold leading-tight text-foreground">{titleLine}</span>
+      </span>
     </button>
   );
 }
