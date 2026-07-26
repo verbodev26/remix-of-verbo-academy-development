@@ -714,7 +714,7 @@ function StudentDashboard() {
 
                         <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <Video className="h-4 w-4" style={{ color: "#01304a" }} />
+                            <img src={teamsLogo.url} alt="Microsoft Teams" className="h-5 w-5 shrink-0 object-contain" />
                             <span>Microsoft Teams Meeting · {fmt(s.date_time)}</span>
                           </div>
                           <div className="flex items-center gap-2">
