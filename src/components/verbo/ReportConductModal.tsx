@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ASSIGNMENTS, USERS } from "@/lib/mock-data";
 import { cohortsForStudent } from "@/lib/workshops-store";
 import {
@@ -30,6 +30,17 @@ export function ReportConductModal({ studentId, open, onClose }: Props) {
   const [text, setText] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState(false);
+  const [confirmUnlocked, setConfirmUnlocked] = useState(false);
+
+  useEffect(() => {
+    if (!confirming) {
+      setConfirmUnlocked(false);
+      return;
+    }
+    const t = setTimeout(() => setConfirmUnlocked(true), 5000);
+    return () => clearTimeout(t);
+  }, [confirming]);
 
   // Teachers the student actually has a relationship with:
   // - assigned 1:1 teacher(s) via ASSIGNMENTS
@@ -58,6 +69,8 @@ export function ReportConductModal({ studentId, open, onClose }: Props) {
     setText("");
     setSubmitted(false);
     setError(null);
+    setConfirming(false);
+    setConfirmUnlocked(false);
   };
 
   const handleClose = () => {
@@ -74,6 +87,10 @@ export function ReportConductModal({ studentId, open, onClose }: Props) {
       setError("Please complete all fields before submitting.");
       return;
     }
+    setConfirming(true);
+  };
+
+  const handleConfirmSend = () => {
     addConductReport({
       reporterId: studentId,
       targetType,
@@ -81,6 +98,7 @@ export function ReportConductModal({ studentId, open, onClose }: Props) {
       category: category as ConductCategory,
       text,
     });
+    setConfirming(false);
     setSubmitted(true);
   };
 
@@ -89,10 +107,10 @@ export function ReportConductModal({ studentId, open, onClose }: Props) {
   return (
     <Dialog open={open} onOpenChange={(o) => !o && handleClose()}>
       <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle style={{ color: "#01304a" }} className="flex items-center gap-2">
-            <ShieldAlert className="h-5 w-5" style={{ color: "#f38934" }} />
-            Report misconduct
+        <DialogHeader className="-mx-6 -mt-6 space-y-0 rounded-t-none bg-destructive px-6 py-4 text-destructive-foreground shadow-soft sm:rounded-t-lg">
+          <DialogTitle className="flex items-center gap-2 text-destructive-foreground">
+            <ShieldAlert className="h-5 w-5 text-destructive-foreground" />
+            <span className="font-bold">Report misconduct</span>
           </DialogTitle>
         </DialogHeader>
 
@@ -102,8 +120,7 @@ export function ReportConductModal({ studentId, open, onClose }: Props) {
               Thank you. Your report has been sent to the Verbo team for review.
             </p>
             <p className="text-xs text-muted-foreground">
-              Remember: the reported person will never see your name, but the Verbo team knows
-              who submitted this report so we can follow up if needed.
+              Remember: the reported person will never see your name.
             </p>
             <DialogFooter>
               <PrimaryButton onClick={handleClose}>Close</PrimaryButton>
@@ -112,7 +129,7 @@ export function ReportConductModal({ studentId, open, onClose }: Props) {
         ) : (
           <div className="space-y-4">
             <div
-              className="rounded-lg border p-3 text-xs leading-relaxed"
+              className="rounded-xl border p-3 text-xs leading-relaxed shadow-soft"
               style={{
                 backgroundColor: "rgba(243, 137, 52, 0.08)",
                 borderColor: "rgba(243, 137, 52, 0.35)",
@@ -120,8 +137,7 @@ export function ReportConductModal({ studentId, open, onClose }: Props) {
               }}
             >
               This report is <strong>anonymous to the person you are reporting</strong> — they
-              will never see your name. The Verbo team does see your identity for follow-up
-              and to keep the platform safe.
+              will never see your name.
             </div>
 
             <div>
@@ -132,9 +148,9 @@ export function ReportConductModal({ studentId, open, onClose }: Props) {
                     key={t}
                     type="button"
                     onClick={() => { setTargetType(t); setTargetId(""); }}
-                    className={`flex-1 rounded-lg border px-3 py-2 text-sm transition-colors ${
+                    className={`flex-1 rounded-full border px-3 py-2 text-sm transition-all duration-200 active:scale-[0.97] ${
                       targetType === t
-                        ? "border-foreground bg-secondary text-foreground"
+                        ? "border-transparent bg-[#01304a] text-white shadow-soft"
                         : "border-border bg-background text-muted-foreground hover:bg-secondary"
                     }`}
                   >
@@ -151,7 +167,7 @@ export function ReportConductModal({ studentId, open, onClose }: Props) {
               <select
                 value={targetId}
                 onChange={(e) => setTargetId(e.target.value)}
-                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
+                className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground shadow-soft transition-shadow focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="">
                   {targetType === "teacher"
@@ -171,7 +187,7 @@ export function ReportConductModal({ studentId, open, onClose }: Props) {
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value as ConductCategory)}
-                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
+                className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground shadow-soft transition-shadow focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="">Select a category</option>
                 {CONDUCT_CATEGORIES.map((c) => (
@@ -187,7 +203,7 @@ export function ReportConductModal({ studentId, open, onClose }: Props) {
                 onChange={(e) => setText(e.target.value)}
                 rows={5}
                 placeholder="Describe what happened, when, and any relevant context."
-                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
+                className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground shadow-soft transition-shadow focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
 
@@ -202,6 +218,33 @@ export function ReportConductModal({ studentId, open, onClose }: Props) {
           </div>
         )}
       </DialogContent>
+
+      <Dialog open={confirming} onOpenChange={(o) => !o && setConfirming(false)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader className="-mx-6 -mt-6 space-y-0 bg-destructive px-6 py-4 text-destructive-foreground sm:rounded-t-lg">
+            <DialogTitle className="flex items-center gap-2 text-destructive-foreground">
+              <ShieldAlert className="h-5 w-5 text-destructive-foreground" />
+              <span className="font-bold">Confirm your report</span>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 text-sm leading-relaxed text-foreground">
+            <p>
+              By confirming, you declare that everything stated in this report is true.
+            </p>
+            <p className="text-xs text-muted-foreground">
+              If it is true, the Verbo team will investigate thoroughly and apply the
+              corresponding sanctions. If the report turns out to be false, sanctions will
+              also be applied to the person who submitted it.
+            </p>
+          </div>
+          <DialogFooter className="gap-2">
+            <GhostButton onClick={() => setConfirming(false)}>Cancel</GhostButton>
+            <PrimaryButton onClick={handleConfirmSend} disabled={!confirmUnlocked}>
+              {confirmUnlocked ? "Confirm and send" : "Please read carefully…"}
+            </PrimaryButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
