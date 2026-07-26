@@ -396,9 +396,9 @@ function StudentDashboard() {
           className="relative cursor-pointer transition-transform duration-200 hover:scale-[1.01]"
           role="button"
           tabIndex={0}
-          onClick={openCurrentLevel}
+          onClick={openLevels}
           onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openCurrentLevel(); }
+            if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openLevels(); }
           }}
         >
           <div className="card-gradient-navy shadow-card verbo-card-hover relative flex h-full min-h-[168px] items-center overflow-hidden rounded-[2rem] px-6 py-6">
