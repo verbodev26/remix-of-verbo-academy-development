@@ -792,6 +792,19 @@ function UnitsView({
   ];
   const unitAt = (n: number) => level.units.find((u) => unitNumberOf(u.id) === n);
 
+  const currentUnit = level.units.find((u, i) => states[i] === "current");
+
+  // Only the freshly unlocked unit flips, and only the first time it is seen.
+  const [flipUnitId] = useState<string | null>(() => {
+    if (!currentUnit) return null;
+    return markUnlockSeen(studentId, currentUnit.id) ? currentUnit.id : null;
+  });
+
+  const currentBlock = currentUnit
+    ? Math.min(2, Math.floor((unitNumberOf(currentUnit.id) - 1) / 10))
+    : 0;
+  const [openMission, setOpenMission] = useState<number | null>(currentBlock);
+
   return (
     <div className="space-y-8">
       <button onClick={onBack} className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground">
@@ -806,43 +819,96 @@ function UnitsView({
         {readOnly && <Pill tone="warning">Reopened for Review</Pill>}
       </div>
 
-      <div className="space-y-8">
+      <div className="space-y-5">
         {blocks.map((block, bi) => {
           const blockUnits = Array.from({ length: 10 })
             .map((_, k) => unitAt(block.start + k + 1))
             .filter((u): u is CourseUnit => !!u);
-          const blockPassed = blockUnits.filter((u) => states[level.units.indexOf(u)] === "passed").length;
+          const blockStates = blockUnits.map((u) => states[level.units.indexOf(u)]);
+          const blockPassed = blockStates.filter((s) => s === "passed").length;
+          const total = blockUnits.length || 10;
+          const complete = blockPassed >= total && total > 0;
+          const locked = blockStates.length > 0 && blockStates.every((s) => s === "locked" || s === "milestone_locked");
+          const open = openMission === bi;
+
+          const shell = complete
+            ? "border-success/40 bg-gradient-to-br from-success/12 via-success/5 to-transparent"
+            : locked
+            ? "border-border bg-gradient-to-br from-secondary/60 via-secondary/25 to-transparent"
+            : "border-accent/40 bg-gradient-to-br from-accent/12 via-accent/5 to-transparent";
+          const numberCls = complete
+            ? "bg-success/15 text-success"
+            : locked
+            ? "bg-secondary text-muted-foreground"
+            : "bg-accent/15 text-accent";
+          const barCls = complete ? "bg-success" : locked ? "bg-muted-foreground/40" : "bg-accent";
+
           return (
-            <section key={bi}>
-              <div className="mb-3 flex items-center gap-3">
-                <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Block {bi + 1}</div>
-                <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium tabular-nums text-muted-foreground">
-                  {blockPassed}/{blockUnits.length || 10}
-                </span>
-                <div className="h-px flex-1 bg-border" />
-              </div>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-10">
-                {Array.from({ length: 10 }).map((_, k) => {
-                  const n = block.start + k + 1;
-                  const u = unitAt(n);
-                  if (!u) {
-                    return <div key={n} className="aspect-square rounded-lg border border-dashed border-border bg-secondary/30" />;
-                  }
-                  const idx = level.units.indexOf(u);
-                  const st = states[idx];
-                  const milestone = isMilestoneUnit(u.id);
-                  return (
-                    <div key={u.id} className="verbo-stagger-in" style={{ animationDelay: `${Math.min(k, 9) * 25}ms` }}>
-                      <UnitStone
-                        unit={u}
-                        number={n}
-                        state={st}
-                        milestone={milestone}
-                        onOpen={() => onOpenUnit(u)}
+            <section
+              key={bi}
+              className={`shadow-elevated overflow-hidden rounded-3xl border ${shell}`}
+            >
+              <button
+                type="button"
+                onClick={() => setOpenMission(open ? null : bi)}
+                aria-expanded={open}
+                className="flex w-full items-center gap-4 p-5 text-left sm:p-6"
+              >
+                <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-2xl font-semibold tabular-nums ${numberCls}`}>
+                  {bi + 1}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="text-base font-semibold uppercase tracking-[0.14em] text-foreground">
+                      Mission {bi + 1}
+                    </h2>
+                    {complete && <Pill tone="success">Completed</Pill>}
+                    {locked && <Pill>Locked</Pill>}
+                  </div>
+                  <div className="mt-2 flex items-center gap-3">
+                    <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-background/70">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${barCls}`}
+                        style={{ width: `${Math.round((blockPassed / total) * 100)}%` }}
                       />
                     </div>
-                  );
-                })}
+                    <span className="text-xs font-semibold tabular-nums text-muted-foreground">
+                      {blockPassed}/{total}
+                    </span>
+                  </div>
+                </div>
+                <ChevronRight className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-300 ${open ? "rotate-90" : ""}`} />
+              </button>
+
+              <div className="verbo-accordion" data-open={open ? "true" : "false"}>
+                <div>
+                  <div className="grid grid-cols-2 gap-3 px-5 pb-6 sm:grid-cols-3 sm:px-6 md:grid-cols-5 lg:grid-cols-10">
+                    {Array.from({ length: 10 }).map((_, k) => {
+                      const n = block.start + k + 1;
+                      const u = unitAt(n);
+                      if (!u) {
+                        return <div key={n} className="aspect-square rounded-lg border border-dashed border-border bg-secondary/30" />;
+                      }
+                      const idx = level.units.indexOf(u);
+                      const st = states[idx];
+                      const milestone = isMilestoneUnit(u.id);
+                      const preview = k >= 5 && (st === "locked" || st === "milestone_locked");
+                      return (
+                        <div key={u.id} className={open ? "verbo-stagger-in" : ""} style={{ animationDelay: `${Math.min(k, 9) * 25}ms` }}>
+                          <UnitStone
+                            unit={u}
+                            number={n}
+                            state={st}
+                            milestone={milestone}
+                            preview={preview}
+                            unlockFlip={flipUnitId === u.id}
+                            onOpen={() => onOpenUnit(u)}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             </section>
           );
@@ -853,13 +919,15 @@ function UnitsView({
 }
 
 function UnitStone({
-  unit, number, state, milestone, onOpen,
+  unit, number, state, milestone, onOpen, preview = false, unlockFlip = false,
 }: {
   unit: CourseUnit;
   number: number;
   state: UnitStateKind;
   milestone: boolean;
   onOpen: () => void;
+  preview?: boolean;
+  unlockFlip?: boolean;
 }) {
   const disabled = state === "locked" || state === "milestone_locked";
   const cls = milestone
@@ -888,13 +956,15 @@ function UnitStone({
     ? "Complete the previous unit first"
     : undefined;
 
+  const reviewable = state === "passed" && !milestone;
+
   return (
     <button
       type="button"
       onClick={disabled ? undefined : onOpen}
       disabled={disabled}
       title={tooltip}
-      className={`verbo-ease-out-expo group relative flex aspect-square w-full flex-col items-center justify-center gap-1 rounded-xl border-2 p-2 text-center shadow-sm transition-all duration-300 ${cls} ${pulse} ${disabled ? "cursor-not-allowed opacity-70" : "hover:-translate-y-0.5"}`}
+      className={`verbo-ease-out-expo group relative flex aspect-square w-full flex-col items-center justify-center gap-1 overflow-hidden rounded-xl border-2 p-2 text-center shadow-sm transition-all duration-300 ${cls} ${pulse} ${unlockFlip ? "verbo-unit-unlock" : ""} ${preview ? "blur-sm opacity-60" : ""} ${disabled ? "cursor-not-allowed opacity-70" : "hover:-translate-y-0.5"}`}
     >
       {milestone ? (
         <Trophy className="h-5 w-5" />
@@ -908,6 +978,11 @@ function UnitStone({
       <div className="text-[10px] font-medium leading-tight line-clamp-2">
         {milestone ? "Milestone Check" : unit.title}
       </div>
+      {reviewable && (
+        <span className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-[10px] bg-success/25 text-[11px] font-semibold text-success-foreground opacity-0 backdrop-blur-[1px] transition-opacity duration-200 group-hover:opacity-100">
+          Review unit
+        </span>
+      )}
     </button>
   );
 }
