@@ -41,7 +41,8 @@ import {
   type CalendarEvent, type CalendarEventKind,
 } from "@/lib/calendar-events";
 import { Card, PrimaryButton, GhostButton } from "@/components/verbo/ui";
-import { X, Video, AlertTriangle, Sparkles, CalendarClock, RefreshCcw, ArrowLeft, Users as UsersIcon, BookOpen, Star } from "lucide-react";
+import { X, Video, AlertTriangle, Sparkles, CalendarClock, RefreshCcw, ArrowLeft, ChevronRight, Users as UsersIcon, BookOpen, Star } from "lucide-react";
+import spotlightArt from "@/assets/spotlight1.png.asset.json";
 import { getLessonPlan } from "@/lib/lesson-plans-store";
 import { resolvePlanTopic } from "@/lib/product-courses-store";
 import { unitsForStudent } from "@/lib/vip-courses-store";
@@ -165,35 +166,43 @@ function Page() {
             Your next class, your next conversation club, your next win — all in one place.
           </p>
         </div>
-        <NextEventChip events={events} />
       </div>
 
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
+      <div className="grid items-stretch gap-4 lg:grid-cols-3">
         <SessionsRemainingCard studentId={user.id} />
+        <NextEventCard events={events} onEventClick={handleEventClick} />
         {hasSpot && (
-          <div className="card-gradient-teal relative overflow-visible rounded-3xl border border-border p-6 shadow-elevated">
-            <div className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/35" style={{ color: "#01304a" }}>
-                <Sparkles className="h-4 w-4" />
+          <div className="card-gradient-teal relative h-full min-h-[200px] overflow-hidden rounded-3xl border border-border p-6 shadow-elevated">
+            <img
+              src={spotlightArt.url}
+              alt=""
+              aria-hidden="true"
+              className="pointer-events-none absolute bottom-0 right-0 h-[110%] w-auto translate-y-[6%] select-none object-contain"
+            />
+            <div className="relative z-10 w-[58%]">
+              <div className="flex items-center gap-2">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/35" style={{ color: "#01304a" }}>
+                  <Sparkles className="h-4 w-4" />
+                </div>
+                <h3 className="text-base font-semibold tracking-tight" style={{ color: "#01304a" }}>
+                  Spotlight Session
+                </h3>
               </div>
-              <h3 className="text-base font-semibold tracking-tight" style={{ color: "#01304a" }}>
-                Spotlight Session
-              </h3>
+              <p className="mt-3 text-xs leading-relaxed" style={{ color: "rgba(1, 48, 74, 0.75)" }}>
+                An extra 60-minute 1:1 with an Elite Instructor, focused on one specific challenge.
+              </p>
+              <button
+                type="button"
+                onClick={() => { if (canRequestSpotlight) freemium.tryOpen("spotlight", () => setSpotlightOpen(true)); }}
+                disabled={!canRequestSpotlight}
+                title={!canRequestSpotlight ? "You've used all your Spotlight requests for this month." : undefined}
+                className={`mt-4 inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-full bg-white px-3 py-2.5 text-xs font-semibold transition-transform duration-200 ${canRequestSpotlight ? "cursor-pointer active:scale-[0.97]" : "cursor-not-allowed opacity-60"}`}
+                style={{ color: "#01304a" }}
+              >
+                <Sparkles className="h-3.5 w-3.5" /> Request a Spotlight
+              </button>
             </div>
-            <p className="mt-3 text-xs leading-relaxed" style={{ color: "rgba(1, 48, 74, 0.75)" }}>
-              An extra 60-minute 1:1 with an Elite Instructor, focused on one specific challenge.
-            </p>
-            <button
-              type="button"
-              onClick={() => { if (canRequestSpotlight) freemium.tryOpen("spotlight", () => setSpotlightOpen(true)); }}
-              disabled={!canRequestSpotlight}
-              title={!canRequestSpotlight ? "You've used all your Spotlight requests for this month." : undefined}
-              className={`mt-4 inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-full bg-white px-4 py-2.5 text-sm font-semibold transition-transform duration-200 ${canRequestSpotlight ? "cursor-pointer active:scale-[0.97]" : "cursor-not-allowed opacity-60"}`}
-              style={{ color: "#01304a" }}
-            >
-              <Sparkles className="h-3.5 w-3.5" /> Request a Spotlight Session
-            </button>
           </div>
         )}
       </div>
@@ -214,11 +223,14 @@ function Page() {
           icon={<CalendarClock className="h-4 w-4" />}
           label="Reschedule Policy"
           value={`${policy.noticeHours}h notice · up to ${policy.maxPct}% of monthly sessions`}
+          tone="violet"
         />
         <StatPill
           icon={<RefreshCcw className="h-4 w-4" />}
           label="Used this cycle"
           value={`${used} of ${quota} reschedules`}
+          tone={quota > 0 && used / quota >= 0.8 ? "red" : quota > 0 && used / quota >= 0.5 ? "amber" : "green"}
+          progressPct={quota > 0 ? Math.min(100, Math.round((used / quota) * 100)) : 0}
         />
         {spotlightVisible && (
           <StatPill
@@ -227,6 +239,7 @@ function Page() {
             value={isSignature
               ? `${spotlightUsedNum} used this month`
               : `${spotlightUsedNum} of ${spotlightCapDisplay} used this month`}
+            tone="dark"
           />
         )}
       </div>
@@ -289,9 +302,10 @@ function Page() {
 
 // ---------------------------------------------------------------------------
 // Next upcoming event — derived from the already-loaded `events` list.
-// Purely presentational: no store reads, no mutations.
+// Purely presentational: no store reads, no mutations. Clicking it opens the
+// exact same details modal any calendar event opens.
 // ---------------------------------------------------------------------------
-function NextEventChip({ events }: { events: CalendarEvent[] }) {
+function NextEventCard({ events, onEventClick }: { events: CalendarEvent[]; onEventClick: (ev: CalendarEvent) => void }) {
   const next = useMemo(() => {
     const now = Date.now();
     const skip = new Set(["cancelled", "absent", "completed"]);
@@ -311,32 +325,95 @@ function NextEventChip({ events }: { events: CalendarEvent[] }) {
       : (teacherName ?? kindMeta.label);
 
   return (
-    <div className="card-gradient-lime flex w-full items-center gap-4 rounded-3xl border border-border px-5 py-3 shadow-elevated lg:w-auto">
-      <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "rgba(1, 48, 74, 0.7)" }}>
-        Next up
-      </div>
-      <div className="h-8 w-px" style={{ background: "rgba(1, 48, 74, 0.2)" }} />
-      <div className="min-w-0">
-        <div className="truncate text-sm font-semibold" style={{ color: "#01304a" }}>
-          {kindMeta.label} · {withWho}
+    <button
+      type="button"
+      onClick={() => onEventClick(next)}
+      className="card-gradient-lime group flex h-full min-h-[200px] w-full cursor-pointer flex-col justify-between rounded-3xl border border-border p-6 text-left shadow-elevated transition-transform duration-200 hover:shadow-lg active:scale-[0.99]"
+    >
+      <div className="flex items-center justify-between gap-2">
+        <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "rgba(1, 48, 74, 0.7)" }}>
+          Next up
         </div>
-        <div className="truncate text-xs" style={{ color: "rgba(1, 48, 74, 0.75)" }}>
+        <ChevronRight
+          className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5"
+          style={{ color: "rgba(1, 48, 74, 0.6)" }}
+        />
+      </div>
+      <div className="min-w-0">
+        <div className="truncate font-display text-2xl leading-tight tracking-tight" style={{ color: "#01304a" }}>
+          {withWho}
+        </div>
+        <div className="mt-1 truncate text-xs font-semibold" style={{ color: "rgba(1, 48, 74, 0.75)" }}>
+          {kindMeta.label}
+        </div>
+        <div className="mt-3 truncate text-sm" style={{ color: "rgba(1, 48, 74, 0.75)" }}>
           {fmtDT(next.date)}
         </div>
       </div>
-    </div>
+    </button>
   );
 }
 
-function StatPill({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+type StatPillTone = "violet" | "red" | "amber" | "green" | "dark";
+
+const STAT_PILL_TONES: Record<StatPillTone, {
+  wrap: string; iconWrap: string; label: string; value: string; track: string; bar: string;
+}> = {
+  violet: {
+    wrap: "border-[var(--violet-100)] bg-[var(--violet-50)]",
+    iconWrap: "bg-white text-[#6d28d9]",
+    label: "text-muted-foreground", value: "text-foreground",
+    track: "bg-white/70", bar: "bg-[#6d28d9]",
+  },
+  red: {
+    wrap: "border-red-200 bg-red-50",
+    iconWrap: "bg-white text-red-700",
+    label: "text-red-700/70", value: "text-red-800",
+    track: "bg-white/70", bar: "bg-red-600",
+  },
+  amber: {
+    wrap: "border-amber-200 bg-amber-50",
+    iconWrap: "bg-white text-amber-700",
+    label: "text-amber-700/70", value: "text-amber-800",
+    track: "bg-white/70", bar: "bg-amber-500",
+  },
+  green: {
+    wrap: "border-emerald-200 bg-emerald-50",
+    iconWrap: "bg-white text-emerald-700",
+    label: "text-emerald-700/70", value: "text-emerald-800",
+    track: "bg-white/70", bar: "bg-emerald-600",
+  },
+  dark: {
+    wrap: "border-[#01304a] bg-[#01304a]",
+    iconWrap: "bg-white/15 text-white",
+    label: "text-white/60", value: "text-white",
+    track: "bg-white/20", bar: "bg-white",
+  },
+};
+
+function StatPill({ icon, label, value, tone = "violet", progressPct }: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  tone?: StatPillTone;
+  progressPct?: number;
+}) {
+  const t = STAT_PILL_TONES[tone];
   return (
-    <div className="flex items-start gap-3 rounded-2xl border border-[var(--navy-100)] bg-[var(--navy-50)] px-4 py-3">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-[#01304a]">
-        {icon}
-      </div>
-      <div className="min-w-0">
-        <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</div>
-        <div className="mt-0.5 text-xs font-semibold text-foreground">{value}</div>
+    <div className={`rounded-2xl border px-4 py-3 ${t.wrap}`}>
+      <div className="flex items-start gap-3">
+        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${t.iconWrap}`}>
+          {icon}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className={`text-[10px] font-semibold uppercase tracking-wider ${t.label}`}>{label}</div>
+          <div className={`mt-0.5 text-xs font-semibold ${t.value}`}>{value}</div>
+          {progressPct !== undefined && (
+            <div className={`mt-2 h-1.5 w-full rounded-full ${t.track}`}>
+              <div className={`h-1.5 rounded-full transition-all ${t.bar}`} style={{ width: `${progressPct}%` }} />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -840,7 +917,7 @@ function SessionsRemainingCard({ studentId }: { studentId: string }) {
   const { done, pct } = sessionProgressFor(hired, remaining);
   const g = groupOfStudent(studentId);
   return (
-    <Card className="!p-6">
+    <Card className="!p-6 h-full min-h-[200px] flex flex-col justify-between">
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sessions remaining</div>

@@ -232,7 +232,7 @@ export const EVENT_KIND_META: Record<CalendarEventKind, { label: string; color: 
   workshop:   { label: "Workshop",       color: "#7c3aed", short: "WS" },
   insight:    { label: "Insight",        color: "#0ea5e9", short: "IN" },
   book_club:  { label: "Book Club",      color: "#d97706", short: "BC" },
-  spotlight:  { label: "Spotlight",      color: "#06b6d4", short: "SP" },
+  spotlight:  { label: "Spotlight",      color: "#0f766e", short: "SP" },
 };
 
 /** The 7 canonical statuses in the order they appear in the legend. */
@@ -244,7 +244,7 @@ export const CALENDAR_STATUS_META: Record<ExtSessionStatus, { label: string; col
   // Cancelled reassigned to a slate blue-gray, distinct from Scheduled's
   // #94a3b8. The lighter tint used for justified-cancelled variants lives in
   // SUB_STATUS_META (#cbd5e1).
-  cancelled:          { label: "Cancelled",          color: "#64748B" },
+  cancelled:          { label: "Cancelled",          color: "#a8556c" },
   pending_reschedule: { label: "Pending Reschedule", color: "#b45309" },
   no_show:            { label: "No Show",            color: "#334155" },
   rescheduled:        { label: "Rescheduled",        color: "#94a3b8" },

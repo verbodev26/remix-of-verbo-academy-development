@@ -109,8 +109,8 @@ export function CalendarView({
               <button
                 key={m}
                 onClick={() => setMode(m)}
-                className={`rounded-md px-3 py-1 text-xs font-semibold capitalize transition-colors ${
-                  mode === m ? "bg-[#01304a] text-white" : "text-muted-foreground hover:text-foreground"
+                className={`cursor-pointer rounded-md px-3 py-1 text-xs font-semibold capitalize transition-all duration-150 active:scale-[0.97] ${
+                  mode === m ? "bg-[#01304a] text-white" : "text-muted-foreground hover:bg-white/60 hover:text-foreground"
                 }`}
               >
                 {m}
@@ -123,7 +123,7 @@ export function CalendarView({
               <GhostButton onClick={() => setCursor(addMonths(cursor, -1))} className="!px-2.5 cursor-pointer"><ChevronLeft className="h-4 w-4" /></GhostButton>
               <GhostButton onClick={() => { const d = new Date(); d.setDate(1); setCursor(d); }} className="cursor-pointer">Today</GhostButton>
               <GhostButton onClick={() => setCursor(addMonths(cursor, 1))} className="!px-2.5 cursor-pointer"><ChevronRight className="h-4 w-4" /></GhostButton>
-              <span className="ml-1 text-sm font-semibold text-foreground">
+              <span className="ml-1 rounded-full bg-secondary px-3 py-1 text-sm font-semibold text-foreground">
                 {cursor.toLocaleString(undefined, { month: "long", year: "numeric" })}
               </span>
             </div>
@@ -132,7 +132,7 @@ export function CalendarView({
               <GhostButton onClick={() => setDayCursor(addDays(dayCursor, -1))} className="!px-2.5 cursor-pointer"><ChevronLeft className="h-4 w-4" /></GhostButton>
               <GhostButton onClick={() => setDayCursor(new Date())} className="cursor-pointer">Today</GhostButton>
               <GhostButton onClick={() => setDayCursor(addDays(dayCursor, 1))} className="!px-2.5 cursor-pointer"><ChevronRight className="h-4 w-4" /></GhostButton>
-              <span className="ml-1 text-sm font-semibold text-foreground">
+              <span className="ml-1 rounded-full bg-secondary px-3 py-1 text-sm font-semibold text-foreground">
                 {dayCursor.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
               </span>
             </div>
@@ -218,7 +218,7 @@ function MonthGrid({
           <div
             key={i}
             className={`relative min-h-[110px] p-1.5 transition-shadow duration-150 ${
-              isToday ? "bg-[var(--navy-50)]" : "bg-card"
+              isToday ? "bg-[var(--navy-50)] ring-2 ring-inset ring-[#f38934]" : "bg-card"
             } ${inMonth ? "" : "opacity-40"} ${
               dayEvents.length > 0 ? "hover:relative hover:z-10 hover:shadow-elevated" : ""
             }`}
@@ -347,7 +347,7 @@ function EventPill({ ev, onClick, pulse = false }: { ev: CalendarEvent; onClick:
       <button
         onClick={onClick}
         className={`flex w-full items-center gap-1 truncate rounded-lg px-1.5 py-1 text-left text-[10.5px] font-medium text-white shadow-sm transition-opacity hover:opacity-90 cursor-pointer ${
-          ev.booked ? "ring-2 ring-emerald-400 ring-offset-1 ring-offset-card" : ""
+          ev.booked ? "ring-2 ring-[#f38934] ring-offset-1 ring-offset-card" : ""
         } ${pulse ? "verbo-focus-pulse" : ""}`}
         style={{
           backgroundColor: display.color,
@@ -361,7 +361,7 @@ function EventPill({ ev, onClick, pulse = false }: { ev: CalendarEvent; onClick:
         }
       >
         {ev.booked ? (
-          <span className="inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white" title="You're in">
+          <span className="inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full bg-[#f38934] text-white" title="You're in">
             <Check className="h-2.5 w-2.5" strokeWidth={3} />
           </span>
         ) : (
