@@ -940,7 +940,7 @@ function SessionsRemainingCard({ studentId }: { studentId: string }) {
     hired: u.hired_sessions,
     remaining: u.remaining_sessions,
   });
-  const { done, pct } = sessionProgressFor(hired, remaining);
+  const { done } = sessionProgressFor(hired, remaining);
   const g = groupOfStudent(studentId);
   const dim = "rgba(1, 48, 74, 0.75)";
   return (
