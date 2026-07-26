@@ -755,37 +755,6 @@ function LevelCard({
   );
 }
 
-function AchievementTimeline({ events }: { events: LearningPathEvent[] }) {
-  const shown = events.slice(0, 15);
-  return (
-    <Card className="card-gradient-teal border-transparent">
-      <div style={{ color: "#01304a" }}>
-        <div className="mb-3 flex items-center gap-2">
-          <Clock className="h-4 w-4 opacity-75" />
-          <h2 className="text-sm font-semibold tracking-tight">Achievement Timeline</h2>
-        </div>
-        {shown.length === 0 ? (
-          <p className="text-sm opacity-75">Your milestones will appear here as you progress.</p>
-        ) : (
-          <ol className="verbo-snap-rail -mx-1 flex gap-3 overflow-x-auto px-1 pb-2">
-            {shown.map((e, i) => (
-              <li
-                key={`${e.ts}-${i}`}
-                className={`verbo-snap-item w-[210px] shrink-0 rounded-2xl border border-white/50 bg-white/55 p-3 ${i === 0 ? "verbo-pop-in" : "verbo-soft-fade"}`}
-              >
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/70">
-                  {e.kind === "level_completed" ? <Trophy className="h-4 w-4" /> : e.kind === "unit_completed" ? <CheckCircle2 className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
-                </div>
-                <div className="mt-2 line-clamp-2 text-sm font-medium">{e.label ?? e.ref}</div>
-                <div className="mt-1 text-[11px] opacity-75">{new Date(e.ts).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}</div>
-              </li>
-            ))}
-          </ol>
-        )}
-      </div>
-    </Card>
-  );
-}
 
 /* -------------------------------------------------------------------------- */
 /* Units view                                                                  */
