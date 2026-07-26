@@ -234,7 +234,9 @@ function Page() {
           onEventClick={handleEventClick}
           availableKinds={studentKinds}
           initialEnabledKinds={focusParam === "clubs" ? CLUB_KINDS : undefined}
-          pulseKinds={focusParam === "clubs" ? CLUB_KINDS : undefined}
+          pulseKinds={pulseActive ? CLUB_KINDS : undefined}
+          initialDate={nearestClubDate}
+
         />
 
       </Card>
