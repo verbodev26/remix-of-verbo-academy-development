@@ -726,7 +726,15 @@ function LevelCard({
       }`}
     >
       {/* Cover slot */}
-      <div className={`relative w-full bg-gradient-to-br ${gradient} aspect-[16/7] ${isLocked ? "opacity-40 saturate-50" : ""}`}>
+      <div
+        className={`relative w-full aspect-[16/7] overflow-hidden ${isLocked ? "opacity-40 saturate-50" : ""}`}
+        style={{
+          backgroundImage: `url(${mountainsSunsetAsset.url})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-75`} />
         <div
           className="absolute inset-0 opacity-30"
           style={{ backgroundImage: "radial-gradient(circle at 20% 20%, rgba(255,255,255,0.35), transparent 40%), radial-gradient(circle at 80% 60%, rgba(255,255,255,0.25), transparent 45%)" }}
