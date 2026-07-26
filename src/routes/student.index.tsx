@@ -237,6 +237,15 @@ function StudentDashboard() {
     return recent >= previous ? "up" : "down";
   })();
 
+  const openLevels = () => {
+    if (!progress) return;
+    if (progress.isVip) {
+      navigate({ to: "/student/my-course" });
+    } else {
+      navigate({ to: "/student/courses" });
+    }
+  };
+
   const openCurrentLevel = () => {
     if (!progress) return;
     if (progress.isVip) {
