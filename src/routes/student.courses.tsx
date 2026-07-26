@@ -833,8 +833,17 @@ function UnitsView({
           const locked = blockStates.length > 0 && blockStates.every((s) => s === "locked" || s === "milestone_locked");
           const open = openMission === bi;
 
-          const MISSION_ACCENTS = ["#e0299b", "#69d11e", "#ffc700"];
+          const MISSION_ACCENTS = ["#cb6ce6", "#69d11e", "#ffc700"];
+          const MISSION_ACCENT_GRADIENTS: (string | null)[] = [
+            "linear-gradient(150deg, #dea3ee 0%, #cb6ce6 55%, #a34ac0 100%)",
+            null,
+            null,
+          ];
           const missionAccent = MISSION_ACCENTS[bi % MISSION_ACCENTS.length];
+          const missionAccentGradient = MISSION_ACCENT_GRADIENTS[bi % MISSION_ACCENT_GRADIENTS.length];
+          const missionAccentFill = missionAccentGradient
+            ? { backgroundImage: missionAccentGradient }
+            : { backgroundColor: missionAccent };
           const available = !complete && !locked;
           const shell = complete
             ? "border-success/40 bg-gradient-to-br from-success/12 via-success/5 to-transparent"
@@ -861,7 +870,7 @@ function UnitsView({
               >
                 <div
                   className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-2xl font-semibold tabular-nums ${numberCls}`}
-                  style={available ? { backgroundColor: missionAccent, color: "#ffffff" } : undefined}
+                  style={available ? { ...missionAccentFill, color: "#ffffff" } : undefined}
                 >
                   {bi + 1}
                 </div>
@@ -880,7 +889,7 @@ function UnitsView({
                     <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-background/70">
                       <div
                         className={`h-full rounded-full transition-all duration-500 ${barCls}`}
-                        style={{ width: `${Math.round((blockPassed / total) * 100)}%`, ...(available ? { backgroundColor: missionAccent } : {}) }}
+                        style={{ width: `${Math.round((blockPassed / total) * 100)}%`, ...(available ? missionAccentFill : {}) }}
                       />
                     </div>
                     <span className="text-xs font-semibold tabular-nums text-muted-foreground">
@@ -893,7 +902,7 @@ function UnitsView({
 
               <div className="verbo-accordion" data-open={open ? "true" : "false"}>
                 <div>
-                  <div className="grid grid-cols-2 gap-3 px-5 pb-6 sm:grid-cols-3 sm:px-6 md:grid-cols-5 lg:grid-cols-10">
+                  <div className="grid grid-cols-2 gap-3 px-8 pb-10 pt-8 sm:grid-cols-3 sm:px-10 md:grid-cols-5 lg:grid-cols-10">
                     {Array.from({ length: 10 }).map((_, k) => {
                       const n = block.start + k + 1;
                       const u = unitAt(n);
@@ -948,12 +957,12 @@ function UnitStone({
 
   const circleGradient =
     state === "passed"
-      ? "linear-gradient(150deg, #8fe64d 0%, #69d11e 55%, #4a9c0f 100%)"
+      ? "linear-gradient(150deg, #7ddc37 0%, #69d11e 55%, #5cb81a 100%)"
       : isMilestoneReady
-      ? "linear-gradient(150deg, #c89116 0%, #787878 100%)"
+      ? "linear-gradient(150deg, #c89116 0%, #a58a4e 100%)"
       : state === "current"
-      ? "linear-gradient(150deg, #ffc700 0%, #f38934 100%)"
-      : "linear-gradient(150deg, #d9d9d9 0%, #000000 100%)";
+      ? "linear-gradient(150deg, #ffc700 0%, #f7a52c 100%)"
+      : "linear-gradient(150deg, #e0e0e0 0%, #9a9a9a 100%)";
 
   const icon =
     state === "passed" ? (
@@ -995,8 +1004,11 @@ function UnitStone({
       className={`verbo-ease-out-expo group flex w-full flex-col items-center gap-2 p-1 text-center transition-transform duration-300 ${unlockFlip ? "verbo-unit-unlock" : ""} ${blurCls} ${disabled ? "cursor-not-allowed" : "hover:z-10 hover:scale-110"}`}
     >
       <span
-        className={`relative flex h-16 w-16 shrink-0 items-center justify-center rounded-full shadow-md ${pulse}`}
-        style={{ backgroundImage: circleGradient }}
+        className={`relative flex h-16 w-16 shrink-0 items-center justify-center rounded-full ${pulse}`}
+        style={{
+          backgroundImage: circleGradient,
+          boxShadow: "0 1px 2px rgba(1, 48, 74, 0.16), inset 0 0 0 1px rgba(255, 255, 255, 0.28), inset 0 -1px 2px rgba(1, 48, 74, 0.12)",
+        }}
       >
         {icon}
       </span>
