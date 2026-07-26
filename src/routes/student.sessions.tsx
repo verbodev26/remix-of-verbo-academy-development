@@ -909,7 +909,7 @@ void UsersIcon;
 function SessionsRemainingCard({ studentId }: { studentId: string }) {
   const u = USERS.find((x) => x.id === studentId);
   if (!u) return null;
-  if (u.product_type !== "performance") return null;
+  if ((u.product_type ?? "performance") !== "performance") return null;
   const { hired, remaining } = effectiveSessionCounts(studentId, {
     hired: u.hired_sessions,
     remaining: u.remaining_sessions,
