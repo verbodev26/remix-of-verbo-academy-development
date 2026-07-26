@@ -340,7 +340,9 @@ function DayList({
             <span className="rounded-md border border-border px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">WS</span>
           )}
         </button>
-      ))}
+        );
+      })}
+
     </div>
   );
 }
