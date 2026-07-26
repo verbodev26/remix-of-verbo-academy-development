@@ -500,56 +500,65 @@ function LevelsView({
 
       {/* Overall progress + streak + medal */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card className="card-gradient-gold border border-white/15 md:col-span-2">
-          <div className="flex flex-wrap items-center gap-5" style={{ color: "#01304a" }}>
-            <StatRing value={pct} size={104} stroke={8} valueClassName="text-2xl font-bold" />
-            <div className="min-w-0 flex-1">
-              <div className="text-xs font-semibold uppercase tracking-wider opacity-75">Overall progress</div>
-              <div className="mt-1 text-lg font-semibold">
-                {passedUnits} of {totalUnits} units completed
+        <Card className="relative border border-white/15 md:col-span-2">
+          <div className="relative overflow-hidden rounded-[inherit]">
+            <div className="card-gradient-gold pointer-events-none absolute inset-0 z-0 rounded-[inherit]" aria-hidden />
+            <div className="relative z-10 flex flex-wrap items-center gap-5" style={{ color: "#01304a" }}>
+              <StatRing value={pct} size={104} stroke={8} valueClassName="text-2xl font-bold" />
+              <div className="min-w-0 flex-1">
+                <div className="text-xs font-semibold uppercase tracking-wider opacity-75">Overall progress</div>
+                <div className="mt-1 text-[4.5rem] font-extrabold leading-none tabular-nums">{passedUnits}</div>
+                <div className="mt-1 text-lg font-semibold">of {totalUnits} units completed</div>
+              </div>
+              <div className="text-right">
+                <div className="text-xs opacity-75">Contracted levels</div>
+                <div className="mt-0.5 text-sm font-medium">{contractedLevels.length} of {levels.length}</div>
               </div>
             </div>
-            <div className="text-right">
-              <div className="text-xs opacity-75">Contracted levels</div>
-              <div className="mt-0.5 text-sm font-medium">{contractedLevels.length} of {levels.length}</div>
+          </div>
+        </Card>
+
+        <Card className="relative border border-white/15">
+          <div className="relative overflow-hidden rounded-[inherit]">
+            <div className="card-gradient-lime pointer-events-none absolute inset-0 z-0 rounded-[inherit]" aria-hidden />
+            <div className="relative z-10 flex items-center justify-between gap-4" style={{ color: "#01304a" }}>
+              <div className="min-w-0 flex-1">
+                <div className="text-xs font-semibold uppercase tracking-wider opacity-75">Login streak</div>
+                {streakDays > 0 ? (
+                  <>
+                    <div className="mt-2 text-2xl font-semibold tabular-nums">{streakDays} {streakDays === 1 ? "day" : "days"}</div>
+                    <div className="mt-0.5 text-sm font-medium opacity-80">{streakTier ? streakTier.name : "Keep going"}</div>
+                  </>
+                ) : (
+                  <p className="mt-2 text-sm opacity-80">Log in tomorrow to start your streak</p>
+                )}
+              </div>
+              <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-white/35">
+                <Flame className="h-9 w-9" />
+              </span>
             </div>
           </div>
         </Card>
 
-        <Card className="card-gradient-lime border border-white/15">
-          <div className="flex items-center justify-between gap-4" style={{ color: "#01304a" }}>
-            <div className="min-w-0 flex-1">
-              <div className="text-xs font-semibold uppercase tracking-wider opacity-75">Login streak</div>
-              {streakDays > 0 ? (
-                <>
-                  <div className="mt-2 text-2xl font-semibold tabular-nums">{streakDays} {streakDays === 1 ? "day" : "days"}</div>
-                  <div className="mt-0.5 text-sm font-medium opacity-80">{streakTier ? streakTier.name : "Keep going"}</div>
-                </>
-              ) : (
-                <p className="mt-2 text-sm opacity-80">Log in tomorrow to start your streak</p>
-              )}
+        <Card className="relative border border-white/15">
+          <div className="relative overflow-hidden rounded-[inherit]">
+            <div className="card-gradient-violet pointer-events-none absolute inset-0 z-0 rounded-[inherit]" aria-hidden />
+            <div className="relative z-10 flex items-center justify-between gap-4 text-white">
+              <div className="min-w-0 flex-1">
+                <div className="text-xs font-semibold uppercase tracking-wider text-white/75">Medal</div>
+                {topMedal ? (
+                  <div className="mt-2 text-lg font-bold leading-snug">{topMedal}</div>
+                ) : (
+                  <p className="mt-2 text-sm text-white/80">Complete your first Mission to earn a medal</p>
+                )}
+              </div>
+              <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-white/20">
+                <Medal className="h-9 w-9" />
+              </span>
             </div>
-            <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-white/35">
-              <Flame className="h-7 w-7" />
-            </span>
           </div>
         </Card>
 
-        <Card className="card-gradient-violet border border-white/15">
-          <div className="flex items-center justify-between gap-4 text-white">
-            <div className="min-w-0 flex-1">
-              <div className="text-xs font-semibold uppercase tracking-wider text-white/75">Medal</div>
-              {topMedal ? (
-                <div className="mt-2 text-lg font-semibold leading-snug">{topMedal}</div>
-              ) : (
-                <p className="mt-2 text-sm text-white/80">Complete your first Mission to earn a medal</p>
-              )}
-            </div>
-            <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-white/20">
-              <Medal className="h-7 w-7" />
-            </span>
-          </div>
-        </Card>
       </div>
 
 
