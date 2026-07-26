@@ -805,9 +805,9 @@ function SpotlightFormModal({ studentId, onClose }: { studentId: string; onClose
     return (
       <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
         <div className="w-full max-w-md rounded-2xl bg-card p-6 shadow-floating">
-          <h3 className="text-base font-semibold text-foreground">Overlaps with an existing class</h3>
+          <h3 className="text-base font-semibold text-foreground">Overlaps with an existing session</h3>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-            This overlaps with your already-scheduled class with <strong>{teacherName}</strong> at that time — would you like to replace it with this Spotlight instead?
+            This overlaps with your already-scheduled Performance Session with <strong>{teacherName}</strong> at that time — would you like to replace it with this Spotlight instead?
           </p>
           <p className="mt-2 text-[11px] text-muted-foreground">
             The original session will change to <strong>Converted to Spotlight</strong>. It won't count as a cancellation or a strike, and the credit is returned to your Hired / Remaining Sessions.

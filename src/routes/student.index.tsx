@@ -696,8 +696,8 @@ function StudentDashboard() {
                           </div>
                           <button
                             type="button"
-                            title="Class Details"
-                            aria-label="Class Details"
+                            title="Session Details"
+                            aria-label="Session Details"
                             onClick={() => setClassDetail(s)}
                             className="group flex h-10 w-10 items-center justify-center rounded-full bg-secondary transition-colors hover:bg-primary/10 active:scale-[0.97]"
                           >
