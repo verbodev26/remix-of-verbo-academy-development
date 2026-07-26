@@ -10,6 +10,8 @@ import {
   Lock,
   Play,
   Sparkles,
+  MessageSquareQuote,
+  FileQuestion,
   X,
   Mic,
   Trophy,
@@ -400,6 +402,9 @@ const PRODUCT_GRADIENTS: Record<string, string> = {
   international: "from-[#134e4a] via-[#0f766e] to-[#14b8a6]",
   vip: "from-[#4a044e] via-[#7e22ce] to-[#a855f7]",
 };
+
+/** Ring colors for the three mandatory categories (Vocabulary, Grammar, Practice). */
+const CATEGORY_RING_COLORS = ["#7e22ce", "#0f766e", "#f38934"];
 
 function LevelsView({
   productLabel, levels, states, contracted, events, studentId, onOpen, tailoredSection,
@@ -871,6 +876,9 @@ export function UnitDetail({
   const catProgress = unitCategoryProgress(studentId, unit.id);
   const passed = unitPassed(studentId, unit.id);
   const milestone = isMilestoneUnit(unit.id);
+  const heroGradient =
+    PRODUCT_GRADIENTS[(unit.id.split("-")[0] ?? "").toLowerCase()] ?? PRODUCT_GRADIENTS.enterprise;
+  const canStart = !readOnly && activities.length > 0;
 
   return (
     <div className="space-y-8">
@@ -878,19 +886,23 @@ export function UnitDetail({
         <ArrowLeft className="h-3.5 w-3.5" /> Back to {level.name}
       </button>
 
-      <div className="flex items-start justify-between gap-6">
-        <div>
-          <div className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
-            {level.name} · {milestone ? "Milestone Check" : `Unit ${unitNumberOf(unit.id)}`}
+      <div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-soft">
+        <div className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${heroGradient}`} aria-hidden />
+        <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${heroGradient} opacity-[0.07]`} aria-hidden />
+        <div className="relative flex items-start justify-between gap-6 p-6">
+          <div>
+            <div className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+              {level.name} · {milestone ? "Milestone Check" : `Unit ${unitNumberOf(unit.id)}`}
+            </div>
+            <h1 className="mt-1.5 font-display text-4xl font-bold tracking-tight text-foreground">{unit.title}</h1>
+            <p className="mt-2.5 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+              Watch the video, review the PDF guide, then complete Vocabulary, Grammar and Practice with a score of at least 60 in each to pass this unit.
+            </p>
           </div>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-foreground">{unit.title}</h1>
-          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            Watch the video, review the PDF guide, then complete Vocabulary, Grammar and Practice with a score of at least 60 in each to pass this unit.
-          </p>
-        </div>
-        <div className="flex flex-col items-end gap-2">
-          {passed && <Pill tone="success">Passed</Pill>}
-          {readOnly && <Pill tone="warning">Review mode</Pill>}
+          <div className="flex flex-col items-end gap-2">
+            {passed && <Pill tone="success">Passed</Pill>}
+            {readOnly && <Pill tone="warning">Review mode</Pill>}
+          </div>
         </div>
       </div>
 
@@ -923,56 +935,62 @@ export function UnitDetail({
             </div>
             {unit.pdf_url ? (
               previewMode ? (
-                <button onClick={() => setPdfOpen(true)} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-secondary">
+                <button onClick={() => setPdfOpen(true)} className="verbo-ease-out-expo mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-all duration-300 hover:scale-[1.02] hover:border-accent/50 hover:bg-accent/10 hover:text-accent">
                   <BookOpen className="h-4 w-4" /> View PDF Guide
                 </button>
               ) : (
-                <a href={unit.pdf_url} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-secondary">
+                <a href={unit.pdf_url} target="_blank" rel="noopener noreferrer" className="verbo-ease-out-expo mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-all duration-300 hover:scale-[1.02] hover:border-accent/50 hover:bg-accent/10 hover:text-accent">
                   <Download className="h-4 w-4" /> Download PDF Guide
                 </a>
               )
             ) : (
-              <button disabled className="mt-4 inline-flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-medium text-muted-foreground shadow-sm opacity-50">
-                <Download className="h-4 w-4" /> {previewMode ? "View PDF Guide" : "Download PDF Guide"}
-              </button>
+              <div className="mt-4 flex flex-col items-center gap-2 rounded-xl border border-dashed border-border bg-secondary/40 px-4 py-5 text-center">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-muted-foreground">
+                  <FileQuestion className="h-4 w-4" />
+                </span>
+                <div className="text-xs font-semibold text-foreground">Guide on the way</div>
+                <p className="text-[11px] leading-relaxed text-muted-foreground">
+                  Your teacher is still preparing this unit's PDF. The video and activities are ready to go.
+                </p>
+              </div>
             )}
           </Card>
 
-          {((unit.vocabulary && unit.vocabulary.length > 0) || unit.grammar_point) && (
+          {unit.teaser?.trim() && (
             <Card>
-              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">What you'll learn</div>
-              {unit.vocabulary && unit.vocabulary.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  {unit.vocabulary.map((w) => (
-                    <span key={w} className="inline-flex items-center rounded-full border border-border bg-secondary/60 px-2.5 py-0.5 text-xs font-medium text-foreground">{w}</span>
-                  ))}
-                </div>
-              )}
-              {unit.grammar_point && (
-                <div className="mt-3 text-xs text-muted-foreground">
-                  <span className="font-semibold text-foreground">Grammar focus: </span>{unit.grammar_point}
-                </div>
-              )}
+              <div className="flex items-start gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent/15 text-accent">
+                  <MessageSquareQuote className="h-5 w-5" />
+                </span>
+                <p className="font-display text-[15px] font-semibold leading-relaxed text-foreground">
+                  {unit.teaser}
+                </p>
+              </div>
             </Card>
           )}
 
           <Card>
             <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Mandatory Categories</div>
-            <ul className="mt-3 space-y-2">
-              {MANDATORY_CATEGORIES.map((c) => {
+            <div className="mt-4 flex items-start justify-between gap-2">
+              {MANDATORY_CATEGORIES.map((c, i) => {
                 const row = catProgress.find((r) => r.category === c);
                 const best = row?.best ?? 0;
-                const ok = best >= 60;
+                const color = CATEGORY_RING_COLORS[i % CATEGORY_RING_COLORS.length];
                 return (
-                  <li key={c} className="flex items-center justify-between text-sm">
-                    <span className="text-foreground">{categoryLabel(c)}</span>
-                    <span className={`text-xs font-semibold ${row ? (ok ? "text-success" : "text-muted-foreground") : "text-destructive"}`}>
-                      {row ? `${best}/100` : "No activity yet"}
-                    </span>
-                  </li>
+                  <div key={c} className="flex flex-1 flex-col items-center gap-1.5 text-center">
+                    <StatRing
+                      value={best}
+                      size={62}
+                      stroke={6}
+                      label={row ? String(best) : "—"}
+                      progressColor={color}
+                      textColor={color}
+                    />
+                    <span className="text-[11px] font-medium leading-tight text-muted-foreground">{categoryLabel(c)}</span>
+                  </div>
                 );
               })}
-            </ul>
+            </div>
             {catProgress.some((r) => !r.mandatory) && (
               <div className="mt-4 border-t border-border pt-3 text-[11px] text-muted-foreground">
                 Optional practice: {catProgress.filter((r) => !r.mandatory).map((r) => categoryLabel(r.category)).join(", ")}. Doesn't affect progression.
@@ -983,7 +1001,7 @@ export function UnitDetail({
           <button
             disabled={activities.length === 0}
             onClick={() => setOpen(true)}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-accent px-5 py-3.5 text-sm font-semibold text-accent-foreground shadow-[0_8px_24px_-6px_rgba(243,137,52,0.5)] transition-all hover:bg-[#d9731f] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+            className={`inline-flex w-full items-center justify-center gap-2 rounded-xl bg-accent px-5 py-3.5 text-sm font-semibold text-accent-foreground shadow-[0_8px_24px_-6px_rgba(243,137,52,0.5)] transition-all hover:bg-[#d9731f] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none ${canStart ? "verbo-pulse-once" : ""}`}
           >
             {activities.length === 0 ? "No activities yet" : readOnly ? <>Review activities <ArrowRight className="h-4 w-4" /></> : <>Start activities <ArrowRight className="h-4 w-4" /></>}
           </button>

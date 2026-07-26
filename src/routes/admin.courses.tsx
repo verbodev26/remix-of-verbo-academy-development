@@ -86,7 +86,7 @@ function Page() {
   const sortUnits = (units: CourseUnit[]) =>
     [...units].sort((a, b) => unitNum(a.id) - unitNum(b.id));
 
-  const createUnit = (title: string, num: number, videoUrl: string, pdfUrl: string) => {
+  const createUnit = (title: string, num: number, videoUrl: string, pdfUrl: string, teaser: string) => {
     if (!level) return;
     const id = `${level.id}-U${num}`;
     mutateLevel((units) => {
@@ -97,12 +97,13 @@ function Page() {
         title,
         video_url: videoUrl,
         pdf_url: pdfUrl,
+        teaser,
       };
       return sortUnits([...units.filter((u) => u.id !== id), merged]);
     });
   };
 
-  const updateUnit = (originalId: string, title: string, num: number, videoUrl: string, pdfUrl: string) => {
+  const updateUnit = (originalId: string, title: string, num: number, videoUrl: string, pdfUrl: string, teaser: string) => {
     if (!level) return;
     const newId = `${level.id}-U${num}`;
     mutateLevel((units) => {
@@ -113,6 +114,7 @@ function Page() {
         title,
         video_url: videoUrl,
         pdf_url: pdfUrl,
+        teaser,
       };
       return sortUnits([...units.filter((u) => u.id !== originalId && u.id !== newId), merged]);
     });
@@ -283,8 +285,8 @@ function Page() {
           level={level}
           editingUnit={unitModal.mode === "edit" ? unitModal.unit : undefined}
           onClose={() => setUnitModal(null)}
-          onCreate={(title, num, videoUrl, pdfUrl) => { createUnit(title, num, videoUrl, pdfUrl); setUnitModal(null); }}
-          onUpdate={(id, title, num, videoUrl, pdfUrl) => { updateUnit(id, title, num, videoUrl, pdfUrl); setUnitModal(null); }}
+          onCreate={(title, num, videoUrl, pdfUrl, teaser) => { createUnit(title, num, videoUrl, pdfUrl, teaser); setUnitModal(null); }}
+          onUpdate={(id, title, num, videoUrl, pdfUrl, teaser) => { updateUnit(id, title, num, videoUrl, pdfUrl, teaser); setUnitModal(null); }}
         />
       )}
       {actModalUnit && (
@@ -318,8 +320,8 @@ function UnitModal({ level, editingUnit, onClose, onCreate, onUpdate }: {
   level: CourseLevel;
   editingUnit?: CourseUnit;
   onClose: () => void;
-  onCreate: (title: string, unitNumber: number, videoUrl: string, pdfUrl: string) => void;
-  onUpdate: (originalId: string, title: string, unitNumber: number, videoUrl: string, pdfUrl: string) => void;
+  onCreate: (title: string, unitNumber: number, videoUrl: string, pdfUrl: string, teaser: string) => void;
+  onUpdate: (originalId: string, title: string, unitNumber: number, videoUrl: string, pdfUrl: string, teaser: string) => void;
 }) {
   const isEdit = !!editingUnit;
   const [title, setTitle] = useState(isEdit ? editingUnit!.title : "");
@@ -327,10 +329,11 @@ function UnitModal({ level, editingUnit, onClose, onCreate, onUpdate }: {
   const [videoSource, setVideoSource] = useState<"url" | "upload">("url");
   const [videoUrl, setVideoUrl] = useState(isEdit ? editingUnit!.video_url : "");
   const [pdfUrl, setPdfUrl] = useState(isEdit ? editingUnit!.pdf_url : "");
+  const [teaser, setTeaser] = useState(isEdit ? editingUnit!.teaser ?? "" : "");
 
   const handleSave = () => {
-    if (isEdit) onUpdate(editingUnit!.id, title.trim(), unitNumber, videoUrl.trim(), pdfUrl.trim());
-    else onCreate(title.trim(), unitNumber, videoUrl.trim(), pdfUrl.trim());
+    if (isEdit) onUpdate(editingUnit!.id, title.trim(), unitNumber, videoUrl.trim(), pdfUrl.trim(), teaser.trim());
+    else onCreate(title.trim(), unitNumber, videoUrl.trim(), pdfUrl.trim(), teaser.trim());
   };
 
   return (
@@ -341,6 +344,23 @@ function UnitModal({ level, editingUnit, onClose, onCreate, onUpdate }: {
         </Field>
         <Field label="Unit Number">
           <input type="number" min={1} max={UNITS_PER_LEVEL} value={unitNumber} onChange={(e) => setUnitNumber(Number(e.target.value))} className={`${inputCls} max-w-[140px]`} />
+        </Field>
+
+        <Field label="Student Teaser">
+          <textarea
+            value={teaser}
+            onChange={(e) => setTeaser(e.target.value)}
+            maxLength={160}
+            rows={3}
+            className={`${inputCls} resize-none`}
+            placeholder="e.g. Order food, ask for the bill and survive any restaurant abroad."
+          />
+          <div className="mt-1.5 flex items-start justify-between gap-3">
+            <p className="text-[11px] leading-relaxed text-muted-foreground">
+              1-2 short lines shown to students instead of the vocabulary/grammar list — don't repeat what's inside the PDF.
+            </p>
+            <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">{teaser.length}/160</span>
+          </div>
         </Field>
 
         {isEdit && (editingUnit?.block || (editingUnit?.vocabulary && editingUnit.vocabulary.length > 0) || editingUnit?.grammar_point) && (

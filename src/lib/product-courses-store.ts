@@ -15,6 +15,8 @@ export interface CourseUnit {
   block?: string;
   vocabulary?: string[];
   grammar_point?: string;
+  /** Short admin-authored hook shown to students instead of vocabulary/grammar. */
+  teaser?: string;
 }
 
 interface SyllabusUnit {
