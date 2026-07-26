@@ -68,10 +68,12 @@ export function CalendarView({
   availableKinds,
   initialEnabledKinds,
   pulseKinds,
+  initialDate,
 }: CalendarViewProps) {
   const [mode, setMode] = useState<CalendarViewMode>(initialMode);
-  const [cursor, setCursor] = useState(() => { const d = new Date(); d.setDate(1); return d; });
-  const [dayCursor, setDayCursor] = useState(() => new Date());
+  const [cursor, setCursor] = useState(() => { const d = initialDate ? new Date(initialDate) : new Date(); d.setDate(1); return d; });
+  const [dayCursor, setDayCursor] = useState(() => (initialDate ? new Date(initialDate) : new Date()));
+
   const [enabledKinds, setEnabledKinds] = useState<Set<CalendarEventKind>>(
     () => new Set(initialEnabledKinds ?? availableKinds ?? (Object.keys(EVENT_KIND_META) as CalendarEventKind[])),
   );
