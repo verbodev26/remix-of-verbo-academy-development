@@ -467,6 +467,23 @@ function LevelsView({
     }
   }
 
+  // Streak + medal cards read the real Profile Badges catalog data.
+  const streakDays = currentLoginStreak(studentId);
+  const streakTier = STREAK_TIERS.find((t) => streakDays >= t.days) ?? null;
+
+  const badgeCtx = user ? buildProfileBadgeContext(user) : null;
+  const missionsByLevel = badgeCtx
+    ? [badgeCtx.level1MissionsCompleted, badgeCtx.level2MissionsCompleted, badgeCtx.level3MissionsCompleted, badgeCtx.level4MissionsCompleted]
+    : [0, 0, 0, 0];
+  let topMedal: string | null = null;
+  for (let i = 3; i >= 0; i--) {
+    const done = missionsByLevel[i];
+    if (done >= 1) {
+      topMedal = done >= 3 ? `${MEDAL_METALS[i]} — Level Complete` : `${MEDAL_METALS[i]} — Mission ${done}`;
+      break;
+    }
+  }
+
   return (
     <div className="space-y-8">
       <div>
