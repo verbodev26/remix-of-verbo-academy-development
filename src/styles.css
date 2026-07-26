@@ -6,7 +6,7 @@
 
 @theme inline {
   --font-sans: "Montserrat", "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Fraunces", "Georgia", serif;
+  --font-display: "Open Sauce Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-marketing: "Open Sauce Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
 
   --radius-sm: calc(var(--radius) - 4px);
