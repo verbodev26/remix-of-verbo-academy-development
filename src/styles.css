@@ -794,3 +794,71 @@
 .verbo-report-btn:active {
   transform: scale(0.97);
 }
+
+/* ── Learning path (student.courses) ─────────────────────────────── */
+@keyframes verbo-bento-glow {
+  0%, 100% { box-shadow: 0 0 0 1px color-mix(in oklab, var(--accent) 45%, transparent), 0 0 0 0 color-mix(in oklab, var(--accent) 22%, transparent); }
+  50% { box-shadow: 0 0 0 1px color-mix(in oklab, var(--accent) 70%, transparent), 0 0 22px 4px color-mix(in oklab, var(--accent) 22%, transparent); }
+}
+.verbo-bento-glow { animation: verbo-bento-glow 3.2s ease-in-out infinite; }
+
+@keyframes verbo-node-ring {
+  0% { transform: scale(1); opacity: 0.55; }
+  70% { transform: scale(1.35); opacity: 0; }
+  100% { transform: scale(1.35); opacity: 0; }
+}
+.verbo-node-ring::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  border: 2px solid color-mix(in oklab, var(--accent) 70%, transparent);
+  animation: verbo-node-ring 2.4s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes verbo-pop-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+.verbo-pop-in { animation: verbo-pop-in 320ms cubic-bezier(0.23, 1, 0.32, 1) both; }
+
+@keyframes verbo-soft-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.verbo-soft-fade { animation: verbo-soft-fade 260ms ease-out both; }
+
+@keyframes verbo-stagger-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.verbo-stagger-in { animation: verbo-stagger-in 320ms cubic-bezier(0.23, 1, 0.32, 1) both; }
+
+@keyframes verbo-milestone-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.18); }
+  50% { box-shadow: 0 0 16px 3px rgba(245, 158, 11, 0.35); }
+}
+.verbo-milestone-glow { animation: verbo-milestone-glow 2.6s ease-in-out infinite; }
+
+@keyframes verbo-current-ring {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--accent) 30%, transparent); }
+  50% { box-shadow: 0 0 0 4px color-mix(in oklab, var(--accent) 16%, transparent); }
+}
+.verbo-current-ring { animation: verbo-current-ring 2.4s ease-in-out infinite; }
+
+.verbo-ease-out-expo { transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+
+.verbo-snap-rail { scroll-snap-type: x proximity; }
+.verbo-snap-item { scroll-snap-align: start; }
+
+@media (prefers-reduced-motion: reduce) {
+  .verbo-bento-glow,
+  .verbo-node-ring::after,
+  .verbo-milestone-glow,
+  .verbo-current-ring { animation: none; }
+  .verbo-node-ring::after { opacity: 0.35; }
+  .verbo-pop-in,
+  .verbo-stagger-in,
+  .verbo-soft-fade { animation: verbo-soft-fade 160ms ease-out both; }
+}

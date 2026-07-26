@@ -19,7 +19,7 @@ import {
   Clock,
   PartyPopper,
 } from "lucide-react";
-import { Card, Pill } from "@/components/verbo/ui";
+import { Card, Pill, StatRing } from "@/components/verbo/ui";
 import { Confetti } from "@/components/verbo/Confetti";
 import { useAuth } from "@/lib/auth";
 import {
@@ -449,26 +449,26 @@ function LevelsView({
 
       {/* Global progress */}
       <Card>
-        <div className="flex items-center justify-between gap-4">
-          <div>
+        <div className="flex flex-wrap items-center gap-5">
+          <StatRing value={pct} size={84} stroke={8} />
+          <div className="min-w-0 flex-1">
             <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Overall progress</div>
             <div className="mt-1 text-lg font-semibold text-foreground">
-              {passedUnits} of {totalUnits} units completed — {pct}%
+              {passedUnits} of {totalUnits} units completed
             </div>
           </div>
-          <div className="hidden text-right md:block">
+          <div className="text-right">
             <div className="text-xs text-muted-foreground">Contracted levels</div>
             <div className="mt-0.5 text-sm font-medium text-foreground">{contractedLevels.length} of {levels.length}</div>
           </div>
         </div>
-        <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-secondary">
-          <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${pct}%` }} />
-        </div>
       </Card>
 
       {milestoneRemaining !== null && (
-        <div className="flex items-center gap-3 rounded-xl border border-amber-300/60 bg-amber-50/60 px-4 py-3 text-sm text-amber-900 dark:border-amber-400/30 dark:bg-amber-500/10 dark:text-amber-100">
-          <Award className="h-4 w-4 shrink-0" />
+        <div className="flex items-center gap-3 rounded-2xl border border-amber-300/60 bg-amber-50/60 px-4 py-3.5 text-sm text-amber-900 shadow-soft dark:border-amber-400/30 dark:bg-amber-500/10 dark:text-amber-100">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-400/25 text-amber-700 dark:text-amber-200">
+            <Award className="h-4 w-4" />
+          </span>
           <div>
             <span className="font-semibold">Your Milestone Check is coming up in {milestoneRemaining} {milestoneRemaining === 1 ? "unit" : "units"}!</span>
             <span className="ml-2 text-amber-800/80 dark:text-amber-200/80">Your teacher will unlock it when you're ready.</span>
@@ -476,13 +476,12 @@ function LevelsView({
         </div>
       )}
 
-      {/* Level cards */}
-      <div className="grid gap-5 md:grid-cols-2">
-        {levels.map((lvl, idx) => {
-          const st = states[idx];
-          return <LevelCard key={lvl.id} level={lvl} state={st} product={productLabel} onOpen={() => onOpen(lvl, st)} />;
-        })}
-      </div>
+      {/* Level shell — bento for enterprise, path for go / international */}
+      {productLabel === "enterprise" ? (
+        <LevelsBento levels={levels} states={states} product={productLabel} onOpen={onOpen} />
+      ) : (
+        <LevelsPath levels={levels} states={states} product={productLabel} onOpen={onOpen} />
+      )}
 
       {/* Achievement timeline */}
       {tailoredSection}
@@ -492,13 +491,109 @@ function LevelsView({
   );
 }
 
+interface LevelShellProps {
+  levels: CourseLevel[];
+  states: LevelState[];
+  product: string;
+  onOpen: (level: CourseLevel, state: LevelState) => void;
+}
+
+function LevelsBento({ levels, states, product, onOpen }: LevelShellProps) {
+  return (
+    <div className="grid gap-5 md:grid-cols-2">
+      {levels.map((lvl, idx) => {
+        const st = states[idx];
+        const featured = st.kind === "current";
+        return (
+          <div key={lvl.id} className={featured ? "md:col-span-2" : ""}>
+            <LevelCard level={lvl} state={st} product={product} featured={featured} onOpen={() => onOpen(lvl, st)} />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function LevelsPath({ levels, states, product, onOpen }: LevelShellProps) {
+  const gradient = PRODUCT_GRADIENTS[product] ?? PRODUCT_GRADIENTS.enterprise;
+  const completed = states.filter((s) => s.kind === "completed" || s.kind === "reopened").length;
+  const fillPct = levels.length === 0 ? 0 : Math.round((completed / levels.length) * 100);
+
+  return (
+    <div className="relative">
+      {/* Track — vertical on mobile, horizontal from md up */}
+      <div className="pointer-events-none absolute bottom-8 left-[33px] top-8 w-[3px] overflow-hidden rounded-full bg-border md:hidden" aria-hidden>
+        <div className={`w-full rounded-full bg-gradient-to-b ${gradient} transition-all duration-700`} style={{ height: `${fillPct}%` }} />
+      </div>
+      <div className="pointer-events-none absolute left-8 right-8 top-[42px] hidden h-[3px] overflow-hidden rounded-full bg-border md:block" aria-hidden>
+        <div className={`h-full rounded-full bg-gradient-to-r ${gradient} transition-all duration-700`} style={{ width: `${fillPct}%` }} />
+      </div>
+
+      <ol className="relative grid gap-6 md:grid-cols-4">
+        {levels.map((lvl, idx) => {
+          const st = states[idx];
+          const isLocked = st.kind === "locked_progress" || st.kind === "locked_not_contracted";
+          const isCompleted = st.kind === "completed";
+          const isCurrent = st.kind === "current";
+          const clickable = !isLocked && !isCompleted;
+          const pct = st.totalUnits === 0 ? 0 : Math.round((st.passedUnits / st.totalUnits) * 100);
+          return (
+            <li key={lvl.id} className="flex items-start gap-4 md:flex-col md:items-center md:gap-3 md:text-center">
+              <div
+                className={`relative flex h-[68px] w-[68px] shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${gradient} text-white shadow-soft ${
+                  isLocked ? "opacity-35 saturate-50" : ""
+                } ${isCurrent ? "verbo-node-ring" : ""}`}
+              >
+                {isCompleted ? (
+                  <CheckCircle2 className="h-6 w-6" />
+                ) : isLocked ? (
+                  <Lock className="h-5 w-5" />
+                ) : (
+                  <span className="text-lg font-semibold tabular-nums">{idx + 1}</span>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={clickable ? () => onOpen(lvl, st) : undefined}
+                disabled={!clickable}
+                title={st.message}
+                className={`verbo-ease-out-expo min-w-0 flex-1 rounded-2xl border border-border bg-card p-4 text-left shadow-soft transition-all duration-300 md:w-full md:text-center ${
+                  clickable ? "hover:-translate-y-0.5 hover:shadow-elevated" : "cursor-default"
+                } ${isLocked ? "opacity-60" : ""}`}
+              >
+                <div className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">{lvl.id}</div>
+                <div className="mt-0.5 truncate text-sm font-semibold text-foreground">{lvl.name}</div>
+                <div className="mt-2 text-xs text-muted-foreground">{st.passedUnits} / {st.totalUnits} units · {pct}%</div>
+                <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-secondary">
+                  <div className={`h-full rounded-full ${isLocked ? "bg-muted-foreground/40" : "bg-accent"}`} style={{ width: `${pct}%` }} />
+                </div>
+                <div className="mt-2 flex items-center gap-1.5 md:justify-center">
+                  {isCompleted && <Pill tone="success">Completed</Pill>}
+                  {st.kind === "reopened" && <Pill tone="warning">Reopened for Review</Pill>}
+                  {isCurrent && <Pill tone="success">Current</Pill>}
+                </div>
+                {clickable && (
+                  <div className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-accent">
+                    {st.kind === "reopened" ? "Review level" : "Continue"} <ChevronRight className="h-3.5 w-3.5" />
+                  </div>
+                )}
+              </button>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  );
+}
+
 function LevelCard({
-  level, state, product, onOpen,
+  level, state, product, onOpen, featured = false,
 }: {
   level: CourseLevel;
   state: LevelState;
   product: string;
   onOpen: () => void;
+  featured?: boolean;
 }) {
   const gradient = PRODUCT_GRADIENTS[product] ?? PRODUCT_GRADIENTS.enterprise;
   const isLocked = state.kind === "locked_progress" || state.kind === "locked_not_contracted";
@@ -514,23 +609,25 @@ function LevelCard({
       onClick={clickable ? onOpen : undefined}
       disabled={!clickable}
       title={state.message}
-      className={`group relative overflow-hidden rounded-2xl border text-left shadow-soft transition-all ${
+      className={`verbo-ease-out-expo group relative block w-full overflow-hidden rounded-2xl border text-left shadow-soft transition-all duration-300 ${
+        featured ? "verbo-bento-glow border-accent/60" : "border-border"
+      } ${
         isLocked
-          ? "border-border cursor-not-allowed"
+          ? "cursor-not-allowed opacity-60"
           : isCompleted
-          ? "border-border cursor-default"
-          : "border-border hover:-translate-y-0.5 hover:shadow-elevated"
+          ? "cursor-default"
+          : "hover:-translate-y-0.5 hover:shadow-elevated"
       }`}
     >
       {/* Cover slot */}
-      <div className={`relative aspect-[16/7] w-full bg-gradient-to-br ${gradient} ${isLocked ? "opacity-40 saturate-50" : ""}`}>
+      <div className={`relative w-full bg-gradient-to-br ${gradient} ${featured ? "aspect-[16/5]" : "aspect-[16/7]"} ${isLocked ? "opacity-40 saturate-50" : ""}`}>
         <div
           className="absolute inset-0 opacity-30"
           style={{ backgroundImage: "radial-gradient(circle at 20% 20%, rgba(255,255,255,0.35), transparent 40%), radial-gradient(circle at 80% 60%, rgba(255,255,255,0.25), transparent 45%)" }}
         />
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-4">
           <div className="text-[11px] font-medium uppercase tracking-[0.2em] text-white/70">{level.id}</div>
-          <div className="mt-0.5 text-lg font-semibold text-white">{level.name}</div>
+          <div className={`mt-0.5 font-semibold text-white ${featured ? "text-2xl" : "text-lg"}`}>{level.name}</div>
         </div>
         <div className="absolute right-3 top-3">
           {isLocked && <Lock className="h-4 w-4 text-white/80" />}
@@ -540,7 +637,7 @@ function LevelCard({
         </div>
       </div>
 
-      <div className="bg-card p-5">
+      <div className={`bg-card ${featured ? "p-6" : "p-5"}`}>
         <div className="flex items-center justify-between text-xs">
           <span className="text-muted-foreground">{state.totalUnits} units</span>
           <span className="font-medium text-foreground">{state.passedUnits} / {state.totalUnits} · {pct}%</span>
@@ -575,18 +672,19 @@ function AchievementTimeline({ events }: { events: LearningPathEvent[] }) {
       {shown.length === 0 ? (
         <p className="text-sm text-muted-foreground">Your milestones will appear here as you progress.</p>
       ) : (
-        <ol className="space-y-3">
+        <ol className="verbo-snap-rail -mx-1 flex gap-3 overflow-x-auto px-1 pb-2">
           {shown.map((e, i) => (
-            <li key={`${e.ts}-${i}`} className="flex items-start gap-3">
-              <div className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${
+            <li
+              key={`${e.ts}-${i}`}
+              className={`verbo-snap-item w-[210px] shrink-0 rounded-2xl border border-border bg-secondary/30 p-3 ${i === 0 ? "verbo-pop-in" : "verbo-soft-fade"}`}
+            >
+              <div className={`flex h-8 w-8 items-center justify-center rounded-full ${
                 e.kind === "level_completed" ? "bg-accent/15 text-accent" : e.kind === "unit_completed" ? "bg-success/15 text-success" : "bg-secondary text-muted-foreground"
               }`}>
-                {e.kind === "level_completed" ? <Trophy className="h-3.5 w-3.5" /> : e.kind === "unit_completed" ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Sparkles className="h-3.5 w-3.5" />}
+                {e.kind === "level_completed" ? <Trophy className="h-4 w-4" /> : e.kind === "unit_completed" ? <CheckCircle2 className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
               </div>
-              <div className="flex-1">
-                <div className="text-sm text-foreground">{e.label ?? e.ref}</div>
-                <div className="text-[11px] text-muted-foreground">{new Date(e.ts).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}</div>
-              </div>
+              <div className="mt-2 line-clamp-2 text-sm font-medium text-foreground">{e.label ?? e.ref}</div>
+              <div className="mt-1 text-[11px] text-muted-foreground">{new Date(e.ts).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}</div>
             </li>
           ))}
         </ol>
@@ -630,36 +728,46 @@ function UnitsView({
       </div>
 
       <div className="space-y-8">
-        {blocks.map((block, bi) => (
-          <section key={bi}>
-            <div className="mb-3 flex items-center gap-3">
-              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Block {bi + 1}</div>
-              <div className="h-px flex-1 bg-border" />
-            </div>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-10">
-              {Array.from({ length: 10 }).map((_, k) => {
-                const n = block.start + k + 1;
-                const u = unitAt(n);
-                if (!u) {
-                  return <div key={n} className="aspect-square rounded-lg border border-dashed border-border bg-secondary/30" />;
-                }
-                const idx = level.units.indexOf(u);
-                const st = states[idx];
-                const milestone = isMilestoneUnit(u.id);
-                return (
-                  <UnitStone
-                    key={u.id}
-                    unit={u}
-                    number={n}
-                    state={st}
-                    milestone={milestone}
-                    onOpen={() => onOpenUnit(u)}
-                  />
-                );
-              })}
-            </div>
-          </section>
-        ))}
+        {blocks.map((block, bi) => {
+          const blockUnits = Array.from({ length: 10 })
+            .map((_, k) => unitAt(block.start + k + 1))
+            .filter((u): u is CourseUnit => !!u);
+          const blockPassed = blockUnits.filter((u) => states[level.units.indexOf(u)] === "passed").length;
+          return (
+            <section key={bi}>
+              <div className="mb-3 flex items-center gap-3">
+                <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Block {bi + 1}</div>
+                <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium tabular-nums text-muted-foreground">
+                  {blockPassed}/{blockUnits.length || 10}
+                </span>
+                <div className="h-px flex-1 bg-border" />
+              </div>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-10">
+                {Array.from({ length: 10 }).map((_, k) => {
+                  const n = block.start + k + 1;
+                  const u = unitAt(n);
+                  if (!u) {
+                    return <div key={n} className="aspect-square rounded-lg border border-dashed border-border bg-secondary/30" />;
+                  }
+                  const idx = level.units.indexOf(u);
+                  const st = states[idx];
+                  const milestone = isMilestoneUnit(u.id);
+                  return (
+                    <div key={u.id} className="verbo-stagger-in" style={{ animationDelay: `${Math.min(k, 9) * 25}ms` }}>
+                      <UnitStone
+                        unit={u}
+                        number={n}
+                        state={st}
+                        milestone={milestone}
+                        onOpen={() => onOpenUnit(u)}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          );
+        })}
       </div>
     </div>
   );
@@ -687,6 +795,12 @@ function UnitStone({
     ? "border-accent bg-accent/10 text-foreground"
     : "border-border bg-secondary/40 text-muted-foreground";
 
+  const pulse = state === "milestone_ready"
+    ? "verbo-milestone-glow"
+    : state === "current"
+    ? "verbo-current-ring"
+    : "";
+
   const tooltip = milestone && state === "milestone_locked"
     ? "Your teacher will unlock this Milestone Check"
     : milestone
@@ -701,12 +815,12 @@ function UnitStone({
       onClick={disabled ? undefined : onOpen}
       disabled={disabled}
       title={tooltip}
-      className={`group relative flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border-2 p-2 text-center shadow-sm transition-all ${cls} ${disabled ? "cursor-not-allowed opacity-70" : "hover:-translate-y-0.5"}`}
+      className={`verbo-ease-out-expo group relative flex aspect-square w-full flex-col items-center justify-center gap-1 rounded-xl border-2 p-2 text-center shadow-sm transition-all duration-300 ${cls} ${pulse} ${disabled ? "cursor-not-allowed opacity-70" : "hover:-translate-y-0.5"}`}
     >
       {milestone ? (
         <Trophy className="h-5 w-5" />
       ) : state === "passed" ? (
-        <CheckCircle2 className="h-5 w-5" />
+        <CheckCircle2 className="verbo-pop-in h-5 w-5" />
       ) : state === "locked" ? (
         <Lock className="h-4 w-4" />
       ) : (
