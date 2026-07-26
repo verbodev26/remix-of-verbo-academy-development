@@ -12,6 +12,10 @@ import {
   Sparkles,
   MessageSquareQuote,
   FileQuestion,
+  Pencil,
+  ListChecks,
+  Headphones,
+  Shuffle,
   X,
   Mic,
   Trophy,
@@ -23,6 +27,7 @@ import {
 } from "lucide-react";
 import { Card, Pill, StatRing } from "@/components/verbo/ui";
 import { Confetti } from "@/components/verbo/Confetti";
+import { VerboAudioPlayer } from "@/components/verbo/VerboAudioPlayer";
 import { useAuth } from "@/lib/auth";
 import {
   type ProductId,
@@ -1037,6 +1042,27 @@ export function UnitDetail({
 /* -------------------------------------------------------------------------- */
 /* Activity runner                                                             */
 /* -------------------------------------------------------------------------- */
+/** Solid tab colors per mandatory category; anything else falls back to neutral. */
+const CATEGORY_TAB_COLORS: Record<string, string> = {
+  vocabulary: "#7e22ce",
+  grammar: "#0f766e",
+  practice: "#f38934",
+};
+const NEUTRAL_TAB_COLOR = "#64748b";
+
+function categoryColor(cat: string): string {
+  return CATEGORY_TAB_COLORS[cat] ?? NEUTRAL_TAB_COLOR;
+}
+
+function ExerciseTypeIcon({ type, className = "" }: { type: Activity["type"]; className?: string }) {
+  if (type === "fill_gaps" || type === "read_complete") return <Pencil className={className} />;
+  if (type === "listen_select") return <Headphones className={className} />;
+  if (type === "read_select") return <ListChecks className={className} />;
+  if (type === "drag_drop" || type === "match") return <Shuffle className={className} />;
+  if (type === "record") return <Mic className={className} />;
+  return <Sparkles className={className} />;
+}
+
 export function ActivityRunner({
   unit, activities, studentId, readOnly, previewMode = false, onClose,
 }: {
@@ -1104,6 +1130,15 @@ export function ActivityRunner({
           </div>
           <button onClick={onClose} className="rounded-md p-1 text-white/80 hover:bg-white/10 hover:text-white"><X className="h-4 w-4" /></button>
         </div>
+        <div className="h-1 w-full bg-secondary" aria-hidden>
+          <div
+            className="h-full rounded-r-full transition-[width] duration-200 ease-out"
+            style={{
+              width: `${list.length === 0 ? 0 : (Math.min(index + 1, list.length) / list.length) * 100}%`,
+              backgroundColor: categoryColor(activeCat),
+            }}
+          />
+        </div>
 
         {/* Category tabs */}
         <div className="flex flex-wrap gap-2 border-b border-border bg-secondary/40 px-6 py-3">
@@ -1116,15 +1151,16 @@ export function ActivityRunner({
               <button
                 key={c}
                 onClick={() => setActiveCat(c)}
-                className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
-                  active ? "border-accent bg-accent/10 text-foreground" : "border-border bg-background text-muted-foreground hover:bg-secondary"
+                className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-all duration-200 ${
+                  active ? "border-transparent text-white shadow-sm" : "border-border bg-background text-muted-foreground hover:bg-secondary"
                 }`}
+                style={active ? { backgroundColor: categoryColor(c) } : undefined}
               >
                 <span>{categoryLabel(c)}</span>
                 {mandatory ? (
-                  <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${ok ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>{best}/100</span>
+                  <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${active ? "bg-white/20 text-white" : ok ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>{best}/100</span>
                 ) : (
-                  <span className="rounded-full bg-secondary px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">Optional</span>
+                  <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${active ? "bg-white/20 text-white" : "bg-secondary text-muted-foreground"}`}>Optional</span>
                 )}
               </button>
             );
@@ -1133,15 +1169,28 @@ export function ActivityRunner({
 
         <div className="relative flex-1 overflow-y-auto">
           {current ? (
-            <div key={current.id} className="mx-auto max-w-2xl px-6 py-8">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">{EXERCISE_LABELS[current.type]}</div>
-              <h3 className="mt-1 text-xl font-semibold tracking-tight text-foreground">{current.name}</h3>
+            <div key={current.id} className="verbo-crossfade mx-auto max-w-2xl px-6 py-8">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: categoryColor(current.category ?? "uncategorized") }}>
+                {EXERCISE_LABELS[current.type]}
+              </div>
+              <h3 className="mt-1 flex items-center gap-2 text-xl font-semibold tracking-tight text-foreground">
+                <span
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg"
+                  style={{
+                    color: categoryColor(current.category ?? "uncategorized"),
+                    backgroundColor: `${categoryColor(current.category ?? "uncategorized")}1f`,
+                  }}
+                >
+                  <ExerciseTypeIcon type={current.type} className="h-4 w-4" />
+                </span>
+                {current.name}
+              </h3>
               {readOnly && (
                 <div className="mt-2 rounded-lg bg-secondary/50 p-2 text-[11px] text-muted-foreground">
                   Best score: <span className="font-semibold text-foreground">{bestScoreFor(studentId, current.id)}/100</span> — review only.
                 </div>
               )}
-              <div className="mt-6">
+              <div key={`${current.id}-${feedback ? (feedback.ok ? "ok" : "ko") : "idle"}`} className={`mt-6 ${feedback && !feedback.ok ? "verbo-shake" : ""}`}>
                 <ExerciseBody activity={current} value={draft[current.id] ?? ""} onChange={(v) => setDraft((d) => ({ ...d, [current.id]: v }))} disabled={readOnly} />
               </div>
             </div>
@@ -1177,9 +1226,14 @@ export function ActivityRunner({
               </div>
             ) : (
               <div className={`flex items-center justify-between gap-4 rounded-xl px-5 py-4 ${feedback.ok ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "bg-rose-500/10 text-rose-700 dark:text-rose-300"}`}>
-                <div>
-                  <div className="text-sm font-semibold">{feedback.ok ? "Correct!" : "Not quite"}</div>
-                  <div className="text-xs opacity-80">{feedback.ok ? "Nice work — moving on." : "Try again next round — your best score is kept."}</div>
+                <div className="flex items-center gap-3">
+                  <span className={`verbo-pop-in flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${feedback.ok ? "bg-emerald-500/20" : "bg-rose-500/20"}`}>
+                    {feedback.ok ? <CheckCircle2 className="h-5 w-5" /> : <X className="h-5 w-5" />}
+                  </span>
+                  <div>
+                    <div className="text-sm font-semibold">{feedback.ok ? "Correct!" : "Not quite"}</div>
+                    <div className="text-xs opacity-80">{feedback.ok ? "Nice work — moving on." : "Try again next round — your best score is kept."}</div>
+                  </div>
                 </div>
                 <button
                   onClick={next}
@@ -1223,21 +1277,7 @@ function ExerciseBody({ activity, value, onChange, disabled }: { activity: Activ
     return (
       <div className="space-y-4">
         {activity.type === "listen_select" ? (
-          <div className="flex items-center gap-3 rounded-xl bg-secondary/50 p-4">
-            <button
-              type="button"
-              disabled
-              title="Coming soon"
-              aria-label="Play audio clip"
-              className="flex h-10 w-10 cursor-not-allowed items-center justify-center rounded-full bg-accent text-accent-foreground opacity-70"
-            >
-              <Play className="h-4 w-4" />
-            </button>
-            <div className="flex-1">
-              <div className="text-xs font-medium text-muted-foreground">Audio clip</div>
-              <div className="text-sm text-foreground">{activity.audioName || "Sample audio"}</div>
-            </div>
-          </div>
+          <VerboAudioPlayer durationSec={activity.audioDurationSec} disabled={disabled} />
         ) : activity.prompt ? (
           <div className="rounded-xl bg-secondary/50 p-5 text-sm leading-relaxed text-foreground">{activity.prompt}</div>
         ) : null}
