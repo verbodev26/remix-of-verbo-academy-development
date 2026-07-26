@@ -94,6 +94,11 @@ export interface BadgeContext {
   attendancePercentage: number;
   unitsCompletedCount: number;
   levelsCompletedCount: number;
+  loginStreakDays: number;
+  level1MissionsCompleted: number;
+  level2MissionsCompleted: number;
+  level3MissionsCompleted: number;
+  level4MissionsCompleted: number;
 }
 
 export function isBadgeEarned(badge: BadgeDef, ctx: BadgeContext): boolean {
