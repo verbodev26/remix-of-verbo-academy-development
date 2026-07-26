@@ -84,6 +84,7 @@ export function ActivityModal({ unitId, unitTitle, onClose }: { unitId: string; 
   const [items, setItems] = useState<{ text: string; key: string }[]>([{ text: "", key: "" }, { text: "", key: "" }]);
   const [prompt, setPrompt] = useState("");
   const [audioName, setAudioName] = useState("");
+  const [audioDurationSec, setAudioDurationSec] = useState<number | undefined>(undefined);
   const [question, setQuestion] = useState("");
   const [options, setOptions] = useState(["", "", "", ""]);
   const [correctIndex, setCorrectIndex] = useState(0);
@@ -99,8 +100,23 @@ export function ActivityModal({ unitId, unitTitle, onClose }: { unitId: string; 
   const resetDraft = () => {
     setName(""); setParagraph(""); setAnswer("");
     setItems([{ text: "", key: "" }, { text: "", key: "" }]);
-    setPrompt(""); setAudioName(""); setQuestion("");
+    setPrompt(""); setAudioName(""); setAudioDurationSec(undefined); setQuestion("");
     setOptions(["", "", "", ""]); setCorrectIndex(0);
+  };
+
+  /** Reads the audio duration straight from the file — admins never type it. */
+  const handleAudioFile = (file?: File) => {
+    if (!file) { setAudioName(""); setAudioDurationSec(undefined); return; }
+    setAudioName(file.name);
+    setAudioDurationSec(undefined);
+    const url = URL.createObjectURL(file);
+    const audio = new Audio();
+    audio.addEventListener("loadedmetadata", () => {
+      if (Number.isFinite(audio.duration)) setAudioDurationSec(Math.round(audio.duration));
+      URL.revokeObjectURL(url);
+    });
+    audio.addEventListener("error", () => URL.revokeObjectURL(url));
+    audio.src = url;
   };
 
   const save = () => {
@@ -117,7 +133,7 @@ export function ActivityModal({ unitId, unitTitle, onClose }: { unitId: string; 
       payload = { ...base, items: cleaned };
     } else if (type === "read_select" || type === "listen_select") {
       if (!question.trim() || options.filter((o) => o.trim()).length < 2) { alert("Add a question and at least two options."); return; }
-      payload = { ...base, prompt: prompt.trim(), audioName: type === "listen_select" ? audioName.trim() : undefined, question: question.trim(), options: options.map((o) => o.trim()), correctIndex };
+      payload = { ...base, prompt: prompt.trim(), audioName: type === "listen_select" ? audioName.trim() : undefined, audioDurationSec: type === "listen_select" ? audioDurationSec : undefined, question: question.trim(), options: options.map((o) => o.trim()), correctIndex };
     } else if (type === "record") {
       if (!answer.trim()) { alert("Type the sentence the student must speak."); return; }
       payload = { ...base, answer: answer.trim() };
@@ -236,7 +252,7 @@ export function ActivityModal({ unitId, unitTitle, onClose }: { unitId: string; 
                   <label className="flex h-24 w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-secondary/40 text-sm text-muted-foreground transition-colors hover:bg-secondary">
                     <Headphones className="h-4 w-4" />
                     {audioName || "Click to upload audio"}
-                    <input type="file" accept="audio/*" className="sr-only" onChange={(e) => setAudioName(e.target.files?.[0]?.name ?? "")} />
+                    <input type="file" accept="audio/*" className="sr-only" onChange={(e) => handleAudioFile(e.target.files?.[0])} />
                   </label>
                 </Field>
               ) : (

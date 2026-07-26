@@ -873,3 +873,31 @@
 @media (prefers-reduced-motion: reduce) {
   .verbo-pulse-once { animation: none; }
 }
+
+/* ── Activity runner + audio player ──────────────────────────────── */
+@keyframes verbo-wave-bar {
+  0%, 100% { transform: scaleY(0.6); }
+  50% { transform: scaleY(1.25); }
+}
+.verbo-wave-bar { animation: verbo-wave-bar 900ms ease-in-out infinite; transform-origin: bottom; }
+
+@keyframes verbo-crossfade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.verbo-crossfade { animation: verbo-crossfade 180ms ease-out both; }
+
+@keyframes verbo-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  45% { transform: translateX(4px); }
+  70% { transform: translateX(-3px); }
+  90% { transform: translateX(2px); }
+}
+.verbo-shake { animation: verbo-shake 300ms ease-in-out both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .verbo-wave-bar { animation: none; }
+  .verbo-shake { animation: none; }
+  .verbo-crossfade { animation: verbo-crossfade 120ms ease-out both; }
+}
