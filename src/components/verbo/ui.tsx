@@ -129,7 +129,7 @@ export function StatRing({
           style={{ transition: "stroke-dashoffset 700ms ease" }}
         />
       </svg>
-      <div className="absolute inset-0 flex items-center justify-center text-[11px] font-semibold tabular-nums" style={{ color: textColor }}>
+      <div className={`absolute inset-0 flex items-center justify-center tabular-nums ${valueClassName ?? "text-[11px] font-semibold"}`} style={{ color: textColor }}>
         {label ?? `${Math.round(pct)}%`}
       </div>
     </div>
