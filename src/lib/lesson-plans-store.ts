@@ -1,5 +1,8 @@
 // Shared lesson-plans store. Keyed by session_id so Teacher (planner) and
 // Student (calendar modal) read the exact same record in real-time.
+import { loadSessions } from "./sessions-store";
+import { activeMembersOf } from "./groups-store";
+import { setUnitAccess } from "./activities-store";
 export type LessonSessionType =
   | "Syllabus content"
   | "Additional Content"
