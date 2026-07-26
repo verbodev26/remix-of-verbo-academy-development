@@ -644,8 +644,15 @@ function LevelsPath({ levels, states, product, onOpen }: LevelShellProps) {
                 <div className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">{lvl.id}</div>
                 <div className="mt-0.5 truncate text-sm font-semibold text-foreground">{lvl.name}</div>
                 <div className="mt-2 text-xs text-muted-foreground">{st.passedUnits} / {st.totalUnits} units · {pct}%</div>
-                <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-secondary">
-                  <div className={`h-full rounded-full ${isLocked ? "bg-muted-foreground/40" : "bg-accent"}`} style={{ width: `${pct}%` }} />
+                <div className="relative mt-2 h-1.5 w-full overflow-hidden rounded-full bg-secondary">
+                  {isLocked ? (
+                    <div className="h-full rounded-full bg-muted-foreground/40" style={{ width: `${pct}%` }} />
+                  ) : (
+                    <>
+                      <div className="absolute inset-0 rounded-full" style={{ backgroundImage: "linear-gradient(to right, #ff914d, #ffc700, #69d11e)" }} />
+                      <div className="absolute inset-y-0 right-0 rounded-r-full bg-secondary transition-all duration-500" style={{ width: `${100 - pct}%` }} />
+                    </>
+                  )}
                 </div>
                 <div className="mt-2 flex items-center gap-1.5 md:justify-center">
                   {isCompleted && <Pill tone="success">Completed</Pill>}
