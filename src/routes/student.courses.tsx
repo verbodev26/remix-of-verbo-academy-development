@@ -1212,6 +1212,40 @@ export function UnitDetail({
         </div>
       </div>
 
+      {passed && (
+        nextUnit && onOpenUnit ? (
+          <button
+            type="button"
+            onClick={() => onOpenUnit(nextUnit)}
+            className="verbo-ease-out-expo group inline-flex items-center gap-2 text-sm font-semibold text-accent transition-all duration-300 hover:gap-3"
+          >
+            Continue to {nextUnit.title}
+            <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={onBack}
+            className="verbo-ease-out-expo group inline-flex items-center gap-2 text-sm font-semibold text-accent transition-all duration-300 hover:gap-3"
+          >
+            <ArrowLeft className="h-4 w-4 transition-transform duration-300 group-hover:-translate-x-0.5" />
+            Back to {level.name}
+          </button>
+        )
+      )}
+
+      {!previewMode && (
+        <ReportContentIssueModal
+          studentId={studentId}
+          unitId={unit.id}
+          unitTitle={unit.title}
+          open={issueOpen}
+          onClose={() => setIssueOpen(false)}
+        />
+      )}
+
+
+
       {open && (
         <ActivityRunner
           unit={unit}
