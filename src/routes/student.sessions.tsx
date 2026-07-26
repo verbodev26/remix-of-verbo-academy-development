@@ -916,25 +916,26 @@ function SessionsRemainingCard({ studentId }: { studentId: string }) {
   });
   const { done, pct } = sessionProgressFor(hired, remaining);
   const g = groupOfStudent(studentId);
+  const dim = "rgba(1, 48, 74, 0.75)";
   return (
-    <Card className="!p-6 h-full min-h-[200px] flex flex-col justify-between">
+    <div className="card-gradient-gold flex h-full min-h-[200px] flex-col justify-between rounded-3xl border border-border p-6 shadow-elevated">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sessions remaining</div>
+          <div className="text-xs font-semibold uppercase tracking-wider" style={{ color: dim }}>Sessions remaining</div>
           <div className="mt-1 flex items-baseline gap-2">
             <span className="font-display text-4xl leading-none tracking-tight" style={{ color: "#01304a" }}>{remaining}</span>
-            <span className="text-sm text-muted-foreground">of {hired} sessions</span>
+            <span className="text-sm" style={{ color: dim }}>of {hired} sessions</span>
           </div>
           {g && (
-            <div className="mt-1 text-[11px] text-muted-foreground">Shared with your group</div>
+            <div className="mt-1 text-[11px]" style={{ color: dim }}>Shared with your group</div>
           )}
         </div>
-        <div className="text-right text-xs text-muted-foreground">{done} used</div>
+        <div className="text-right text-xs" style={{ color: dim }}>{done} used</div>
       </div>
-      <div className="mt-4 h-2 w-full rounded-full bg-secondary">
-        <div className="h-2 rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
+      <div className="mt-4 h-2 w-full rounded-full bg-white/40">
+        <div className="h-2 rounded-full bg-[#01304a] transition-all" style={{ width: `${pct}%` }} />
       </div>
-    </Card>
+    </div>
   );
 }
 
