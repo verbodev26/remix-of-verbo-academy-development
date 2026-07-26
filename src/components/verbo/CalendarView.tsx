@@ -275,15 +275,18 @@ function DayList({
   }
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card">
-      {events.map((e) => (
+      {events.map((e) => {
+        const pulse = !!pulseKinds?.includes(e.kind) && !isClubFull(e);
+        return (
         <button
           key={e.id}
           onClick={() => onEventClick?.(e)}
-          style={pulseKinds?.includes(e.kind) ? { ["--verbo-focus-pulse-color" as string]: EVENT_KIND_META[e.kind].color } : undefined}
+          style={pulse ? { ["--verbo-focus-pulse-color" as string]: EVENT_KIND_META[e.kind].color } : undefined}
           className={`flex w-full items-center gap-4 border-b border-border p-3 text-left transition-colors last:border-0 hover:bg-secondary/60 ${
-            pulseKinds?.includes(e.kind) ? "verbo-focus-pulse" : ""
+            pulse ? "verbo-focus-pulse" : ""
           }`}
         >
+
 
           <div className="w-16 shrink-0 text-sm font-semibold tabular-nums" style={{ color: "#01304a" }}>
             {fmtTime(e.date)}
