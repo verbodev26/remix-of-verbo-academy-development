@@ -569,10 +569,7 @@ function LevelsView({
         <LevelsPath levels={levels} states={states} product={productLabel} onOpen={onOpen} />
       )}
 
-      {/* Achievement timeline */}
       {tailoredSection}
-
-      <AchievementTimeline events={events} />
     </div>
   );
 }
