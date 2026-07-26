@@ -285,6 +285,7 @@ function Page() {
         readOnly={view.readOnly}
         onBack={() => setView({ kind: "units", levelId: level.id, readOnly: view.readOnly })}
         onChange={() => onUnitCompleted(level.id, unit.id)}
+        onOpenUnit={(u) => setView({ kind: "unit", levelId: level.id, unitId: u.id, readOnly: view.readOnly })}
       />
     );
   }
