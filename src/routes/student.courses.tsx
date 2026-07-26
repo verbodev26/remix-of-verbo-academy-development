@@ -666,18 +666,18 @@ function LevelsPath({ levels, states, product, onOpen }: LevelShellProps) {
 }
 
 function LevelCard({
-  level, state, product, onOpen, featured = false,
+  level, state, product, onOpen,
 }: {
   level: CourseLevel;
   state: LevelState;
   product: string;
   onOpen: () => void;
-  featured?: boolean;
 }) {
   const gradient = PRODUCT_GRADIENTS[product] ?? PRODUCT_GRADIENTS.enterprise;
   const isLocked = state.kind === "locked_progress" || state.kind === "locked_not_contracted";
   const isCompleted = state.kind === "completed";
   const isReopened = state.kind === "reopened";
+  const isCurrent = state.kind === "current";
   const pct = state.totalUnits === 0 ? 0 : Math.round((state.passedUnits / state.totalUnits) * 100);
 
   const clickable = !isLocked && !isCompleted;
@@ -689,34 +689,34 @@ function LevelCard({
       disabled={!clickable}
       title={state.message}
       className={`verbo-ease-out-expo group relative block w-full overflow-hidden rounded-2xl border text-left shadow-soft transition-all duration-300 ${
-        featured ? "verbo-bento-glow border-accent/60" : "border-border"
+        isCurrent ? "border-accent" : "border-border"
       } ${
         isLocked
           ? "cursor-not-allowed opacity-60"
           : isCompleted
           ? "cursor-default"
-          : "hover:-translate-y-0.5 hover:shadow-elevated"
+          : "hover:-translate-y-1 hover:shadow-elevated hover:shadow-2xl"
       }`}
     >
       {/* Cover slot */}
-      <div className={`relative w-full bg-gradient-to-br ${gradient} ${featured ? "aspect-[16/5]" : "aspect-[16/7]"} ${isLocked ? "opacity-40 saturate-50" : ""}`}>
+      <div className={`relative w-full bg-gradient-to-br ${gradient} aspect-[16/7] ${isLocked ? "opacity-40 saturate-50" : ""}`}>
         <div
           className="absolute inset-0 opacity-30"
           style={{ backgroundImage: "radial-gradient(circle at 20% 20%, rgba(255,255,255,0.35), transparent 40%), radial-gradient(circle at 80% 60%, rgba(255,255,255,0.25), transparent 45%)" }}
         />
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-4">
           <div className="text-[11px] font-medium uppercase tracking-[0.2em] text-white/70">{level.id}</div>
-          <div className={`mt-0.5 font-semibold text-white ${featured ? "text-2xl" : "text-lg"}`}>{level.name}</div>
+          <div className="mt-0.5 text-lg font-semibold text-white">{level.name}</div>
         </div>
         <div className="absolute right-3 top-3">
           {isLocked && <Lock className="h-4 w-4 text-white/80" />}
           {isCompleted && !isReopened && <Pill tone="success">Completed</Pill>}
           {isReopened && <Pill tone="warning">Reopened for Review</Pill>}
-          {state.kind === "current" && <Pill tone="success">Current</Pill>}
+          {isCurrent && <Pill tone="success">Current</Pill>}
         </div>
       </div>
 
-      <div className={`bg-card ${featured ? "p-6" : "p-5"}`}>
+      <div className="bg-card p-5">
         <div className="flex items-center justify-between text-xs">
           <span className="text-muted-foreground">{state.totalUnits} units</span>
           <span className="font-medium text-foreground">{state.passedUnits} / {state.totalUnits} · {pct}%</span>
