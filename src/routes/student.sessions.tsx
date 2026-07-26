@@ -24,7 +24,7 @@
 // → publish as a Spotlight Request (or convert an overlapping regular session
 // into "Converted to Spotlight" if the picked slot already has one).
 
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
@@ -41,7 +41,11 @@ import {
   type CalendarEvent, type CalendarEventKind,
 } from "@/lib/calendar-events";
 import { Card, PrimaryButton, GhostButton } from "@/components/verbo/ui";
-import { X, Video, AlertTriangle, Sparkles, CalendarClock, RefreshCcw, ArrowLeft, Users as UsersIcon } from "lucide-react";
+import { X, Video, AlertTriangle, Sparkles, CalendarClock, RefreshCcw, ArrowLeft, Users as UsersIcon, BookOpen, Star } from "lucide-react";
+import { getLessonPlan } from "@/lib/lesson-plans-store";
+import { resolvePlanTopic } from "@/lib/product-courses-store";
+import { unitsForStudent } from "@/lib/vip-courses-store";
+import { tailoredUnitsForStudent } from "@/lib/tailored-content-store";
 import {
   addStudentRequest,
   convertSessionToSpotlight,
