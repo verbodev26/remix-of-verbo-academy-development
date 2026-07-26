@@ -1049,12 +1049,17 @@ export function UnitDetail({
     overallScore === null
       ? "border-border bg-secondary text-muted-foreground"
       : overallScore >= 85
-      ? "border-transparent bg-success text-white"
+      ? "border-transparent text-white"
       : overallScore >= 78
       ? "border-transparent bg-amber-400 text-amber-950"
       : overallScore >= 60
       ? "border-transparent bg-accent text-accent-foreground"
       : "border-transparent bg-destructive text-destructive-foreground";
+
+  const scoreShellStyle: React.CSSProperties | undefined =
+    overallScore !== null && overallScore >= 85
+      ? { backgroundImage: "linear-gradient(150deg, #8fe64d 0%, #69d11e 55%, #4a9c0f 100%)" }
+      : undefined;
 
   // Next unit in the same level (consecutive number), used by the footer link.
   const nextUnit = level.units.find((u) => unitNumberOf(u.id) === unitNumberOf(unit.id) + 1);
