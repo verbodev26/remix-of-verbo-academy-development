@@ -228,7 +228,7 @@ export function adminCalendarEvents(opts?: {
 
 /** Meta a chip/legend can render for each supported event kind. */
 export const EVENT_KIND_META: Record<CalendarEventKind, { label: string; color: string; short: string }> = {
-  class:      { label: "1:1 Class",      color: "#01304a", short: "1:1" },
+  class:      { label: "Performance Session", color: "#01304a", short: "1:1" },
   workshop:   { label: "Workshop",       color: "#7c3aed", short: "WS" },
   insight:    { label: "Insight",        color: "#0ea5e9", short: "IN" },
   book_club:  { label: "Book Club",      color: "#d97706", short: "BC" },

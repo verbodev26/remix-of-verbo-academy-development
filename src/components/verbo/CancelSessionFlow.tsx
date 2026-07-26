@@ -237,8 +237,12 @@ export function SlotPickerGrid({
   );
   if (slots.length === 0) {
     return (
-      <div className="mt-2 rounded-lg border border-dashed border-input bg-secondary/30 p-4 text-center text-xs text-muted-foreground">
-        No available start times on this date. Try another day.
+      <div className="mt-2 flex flex-col items-center gap-2 rounded-xl border border-dashed border-input bg-secondary/30 px-4 py-6 text-center">
+        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-muted-foreground">
+          <CalendarClock className="h-4 w-4" />
+        </div>
+        <p className="text-xs font-medium text-foreground">No available start times on this date</p>
+        <p className="text-xs text-muted-foreground">Try another day.</p>
       </div>
     );
   }
