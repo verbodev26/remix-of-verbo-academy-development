@@ -24,11 +24,16 @@ import {
   Info,
   Clock,
   PartyPopper,
+  Flame,
+  Medal,
 } from "lucide-react";
 import { Card, Pill, StatRing } from "@/components/verbo/ui";
 import { Confetti } from "@/components/verbo/Confetti";
 import { VerboAudioPlayer } from "@/components/verbo/VerboAudioPlayer";
 import { useAuth } from "@/lib/auth";
+import type { User } from "@/lib/mock-data";
+import { currentLoginStreak } from "@/lib/login-streak-store";
+import { buildProfileBadgeContext } from "@/lib/profile-badges-store";
 import {
   type ProductId,
   type ProductCourse,
@@ -304,6 +309,7 @@ function Page() {
       <LevelsView
         key={rev}
         studentId={user?.id ?? ""}
+        user={user}
         productLabel={user?.product ?? ""}
         levels={levels}
         states={states}
@@ -411,8 +417,18 @@ const PRODUCT_GRADIENTS: Record<string, string> = {
 /** Ring colors for the three mandatory categories (Vocabulary, Grammar, Practice). */
 const CATEGORY_RING_COLORS = ["#7e22ce", "#0f766e", "#f38934"];
 
+/** Login-streak tiers, mirrored from the Profile Badges seed thresholds. */
+const STREAK_TIERS = [
+  { days: 100, name: "100-Day Flame" },
+  { days: 60, name: "60-Day Flame" },
+  { days: 30, name: "30-Day Flame" },
+  { days: 10, name: "10-Day Flame" },
+  { days: 3, name: "3-Day Flame" },
+];
+const MEDAL_METALS = ["Bronze", "Silver", "Gold", "Onyx"];
+
 function LevelsView({
-  productLabel, levels, states, contracted, events, studentId, onOpen, tailoredSection,
+  productLabel, levels, states, contracted, events, studentId, user, onOpen, tailoredSection,
 }: {
   productLabel: string;
   levels: CourseLevel[];
@@ -420,6 +436,7 @@ function LevelsView({
   contracted: string[];
   events: LearningPathEvent[];
   studentId: string;
+  user: User | null;
   onOpen: (level: CourseLevel, state: LevelState) => void;
   tailoredSection?: React.ReactNode;
 }) {
@@ -450,6 +467,23 @@ function LevelsView({
     }
   }
 
+  // Streak + medal cards read the real Profile Badges catalog data.
+  const streakDays = currentLoginStreak(studentId);
+  const streakTier = STREAK_TIERS.find((t) => streakDays >= t.days) ?? null;
+
+  const badgeCtx = user ? buildProfileBadgeContext(user) : null;
+  const missionsByLevel = badgeCtx
+    ? [badgeCtx.level1MissionsCompleted, badgeCtx.level2MissionsCompleted, badgeCtx.level3MissionsCompleted, badgeCtx.level4MissionsCompleted]
+    : [0, 0, 0, 0];
+  let topMedal: string | null = null;
+  for (let i = 3; i >= 0; i--) {
+    const done = missionsByLevel[i];
+    if (done >= 1) {
+      topMedal = done >= 3 ? `${MEDAL_METALS[i]} — Level Complete` : `${MEDAL_METALS[i]} — Mission ${done}`;
+      break;
+    }
+  }
+
   return (
     <div className="space-y-8">
       <div>
@@ -457,22 +491,60 @@ function LevelsView({
         <p className="mt-1.5 text-sm text-muted-foreground">Progress through your program level by level. Complete each unit's mandatory Vocabulary, Grammar, and Practice activities to move on.</p>
       </div>
 
-      {/* Global progress */}
-      <Card>
-        <div className="flex flex-wrap items-center gap-5">
-          <StatRing value={pct} size={84} stroke={8} />
-          <div className="min-w-0 flex-1">
-            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Overall progress</div>
-            <div className="mt-1 text-lg font-semibold text-foreground">
-              {passedUnits} of {totalUnits} units completed
+      {/* Overall progress + streak + medal */}
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card className="card-gradient-gold border-transparent md:col-span-2">
+          <div className="flex flex-wrap items-center gap-5" style={{ color: "#01304a" }}>
+            <StatRing value={pct} size={84} stroke={8} />
+            <div className="min-w-0 flex-1">
+              <div className="text-xs font-semibold uppercase tracking-wider opacity-75">Overall progress</div>
+              <div className="mt-1 text-lg font-semibold">
+                {passedUnits} of {totalUnits} units completed
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-xs opacity-75">Contracted levels</div>
+              <div className="mt-0.5 text-sm font-medium">{contractedLevels.length} of {levels.length}</div>
             </div>
           </div>
-          <div className="text-right">
-            <div className="text-xs text-muted-foreground">Contracted levels</div>
-            <div className="mt-0.5 text-sm font-medium text-foreground">{contractedLevels.length} of {levels.length}</div>
+        </Card>
+
+        <Card className="card-gradient-lime border-transparent">
+          <div style={{ color: "#01304a" }}>
+            <div className="flex items-center gap-2">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/35">
+                <Flame className="h-4 w-4" />
+              </span>
+              <div className="text-xs font-semibold uppercase tracking-wider opacity-75">Login streak</div>
+            </div>
+            {streakDays > 0 ? (
+              <>
+                <div className="mt-3 text-2xl font-semibold tabular-nums">{streakDays} {streakDays === 1 ? "day" : "days"}</div>
+                <div className="mt-0.5 text-sm font-medium opacity-80">{streakTier ? streakTier.name : "Keep going"}</div>
+              </>
+            ) : (
+              <p className="mt-3 text-sm opacity-80">Log in tomorrow to start your streak</p>
+            )}
           </div>
-        </div>
-      </Card>
+        </Card>
+
+        <Card className="card-gradient-violet border-transparent">
+          <div className="text-white">
+            <div className="flex items-center gap-2">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20">
+                <Medal className="h-4 w-4" />
+              </span>
+              <div className="text-xs font-semibold uppercase tracking-wider text-white/75">Highest medal</div>
+            </div>
+            {topMedal ? (
+              <div className="mt-3 text-lg font-semibold leading-snug">{topMedal}</div>
+            ) : (
+              <p className="mt-3 text-sm text-white/80">Complete your first Mission to earn a medal</p>
+            )}
+          </div>
+        </Card>
+      </div>
+
 
       {milestoneRemaining !== null && (
         <div className="flex items-center gap-3 rounded-2xl border border-amber-300/60 bg-amber-50/60 px-4 py-3.5 text-sm text-amber-900 shadow-soft dark:border-amber-400/30 dark:bg-amber-500/10 dark:text-amber-100">
@@ -513,11 +585,8 @@ function LevelsBento({ levels, states, product, onOpen }: LevelShellProps) {
     <div className="grid gap-5 md:grid-cols-2">
       {levels.map((lvl, idx) => {
         const st = states[idx];
-        const featured = st.kind === "current";
         return (
-          <div key={lvl.id} className={featured ? "md:col-span-2" : ""}>
-            <LevelCard level={lvl} state={st} product={product} featured={featured} onOpen={() => onOpen(lvl, st)} />
-          </div>
+          <LevelCard key={lvl.id} level={lvl} state={st} product={product} onOpen={() => onOpen(lvl, st)} />
         );
       })}
     </div>
@@ -597,18 +666,18 @@ function LevelsPath({ levels, states, product, onOpen }: LevelShellProps) {
 }
 
 function LevelCard({
-  level, state, product, onOpen, featured = false,
+  level, state, product, onOpen,
 }: {
   level: CourseLevel;
   state: LevelState;
   product: string;
   onOpen: () => void;
-  featured?: boolean;
 }) {
   const gradient = PRODUCT_GRADIENTS[product] ?? PRODUCT_GRADIENTS.enterprise;
   const isLocked = state.kind === "locked_progress" || state.kind === "locked_not_contracted";
   const isCompleted = state.kind === "completed";
   const isReopened = state.kind === "reopened";
+  const isCurrent = state.kind === "current";
   const pct = state.totalUnits === 0 ? 0 : Math.round((state.passedUnits / state.totalUnits) * 100);
 
   const clickable = !isLocked && !isCompleted;
@@ -620,34 +689,34 @@ function LevelCard({
       disabled={!clickable}
       title={state.message}
       className={`verbo-ease-out-expo group relative block w-full overflow-hidden rounded-2xl border text-left shadow-soft transition-all duration-300 ${
-        featured ? "verbo-bento-glow border-accent/60" : "border-border"
+        isCurrent ? "border-accent" : "border-border"
       } ${
         isLocked
           ? "cursor-not-allowed opacity-60"
           : isCompleted
           ? "cursor-default"
-          : "hover:-translate-y-0.5 hover:shadow-elevated"
+          : "hover:-translate-y-1 hover:shadow-elevated hover:shadow-2xl"
       }`}
     >
       {/* Cover slot */}
-      <div className={`relative w-full bg-gradient-to-br ${gradient} ${featured ? "aspect-[16/5]" : "aspect-[16/7]"} ${isLocked ? "opacity-40 saturate-50" : ""}`}>
+      <div className={`relative w-full bg-gradient-to-br ${gradient} aspect-[16/7] ${isLocked ? "opacity-40 saturate-50" : ""}`}>
         <div
           className="absolute inset-0 opacity-30"
           style={{ backgroundImage: "radial-gradient(circle at 20% 20%, rgba(255,255,255,0.35), transparent 40%), radial-gradient(circle at 80% 60%, rgba(255,255,255,0.25), transparent 45%)" }}
         />
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-4">
           <div className="text-[11px] font-medium uppercase tracking-[0.2em] text-white/70">{level.id}</div>
-          <div className={`mt-0.5 font-semibold text-white ${featured ? "text-2xl" : "text-lg"}`}>{level.name}</div>
+          <div className="mt-0.5 text-lg font-semibold text-white">{level.name}</div>
         </div>
         <div className="absolute right-3 top-3">
           {isLocked && <Lock className="h-4 w-4 text-white/80" />}
           {isCompleted && !isReopened && <Pill tone="success">Completed</Pill>}
           {isReopened && <Pill tone="warning">Reopened for Review</Pill>}
-          {state.kind === "current" && <Pill tone="success">Current</Pill>}
+          {isCurrent && <Pill tone="success">Current</Pill>}
         </div>
       </div>
 
-      <div className={`bg-card ${featured ? "p-6" : "p-5"}`}>
+      <div className="bg-card p-5">
         <div className="flex items-center justify-between text-xs">
           <span className="text-muted-foreground">{state.totalUnits} units</span>
           <span className="font-medium text-foreground">{state.passedUnits} / {state.totalUnits} · {pct}%</span>
@@ -674,31 +743,31 @@ function LevelCard({
 function AchievementTimeline({ events }: { events: LearningPathEvent[] }) {
   const shown = events.slice(0, 15);
   return (
-    <Card>
-      <div className="mb-3 flex items-center gap-2">
-        <Clock className="h-4 w-4 text-muted-foreground" />
-        <h2 className="text-sm font-semibold tracking-tight text-foreground">Achievement Timeline</h2>
+    <Card className="card-gradient-teal border-transparent">
+      <div style={{ color: "#01304a" }}>
+        <div className="mb-3 flex items-center gap-2">
+          <Clock className="h-4 w-4 opacity-75" />
+          <h2 className="text-sm font-semibold tracking-tight">Achievement Timeline</h2>
+        </div>
+        {shown.length === 0 ? (
+          <p className="text-sm opacity-75">Your milestones will appear here as you progress.</p>
+        ) : (
+          <ol className="verbo-snap-rail -mx-1 flex gap-3 overflow-x-auto px-1 pb-2">
+            {shown.map((e, i) => (
+              <li
+                key={`${e.ts}-${i}`}
+                className={`verbo-snap-item w-[210px] shrink-0 rounded-2xl border border-white/50 bg-white/55 p-3 ${i === 0 ? "verbo-pop-in" : "verbo-soft-fade"}`}
+              >
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/70">
+                  {e.kind === "level_completed" ? <Trophy className="h-4 w-4" /> : e.kind === "unit_completed" ? <CheckCircle2 className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
+                </div>
+                <div className="mt-2 line-clamp-2 text-sm font-medium">{e.label ?? e.ref}</div>
+                <div className="mt-1 text-[11px] opacity-75">{new Date(e.ts).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}</div>
+              </li>
+            ))}
+          </ol>
+        )}
       </div>
-      {shown.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Your milestones will appear here as you progress.</p>
-      ) : (
-        <ol className="verbo-snap-rail -mx-1 flex gap-3 overflow-x-auto px-1 pb-2">
-          {shown.map((e, i) => (
-            <li
-              key={`${e.ts}-${i}`}
-              className={`verbo-snap-item w-[210px] shrink-0 rounded-2xl border border-border bg-secondary/30 p-3 ${i === 0 ? "verbo-pop-in" : "verbo-soft-fade"}`}
-            >
-              <div className={`flex h-8 w-8 items-center justify-center rounded-full ${
-                e.kind === "level_completed" ? "bg-accent/15 text-accent" : e.kind === "unit_completed" ? "bg-success/15 text-success" : "bg-secondary text-muted-foreground"
-              }`}>
-                {e.kind === "level_completed" ? <Trophy className="h-4 w-4" /> : e.kind === "unit_completed" ? <CheckCircle2 className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
-              </div>
-              <div className="mt-2 line-clamp-2 text-sm font-medium text-foreground">{e.label ?? e.ref}</div>
-              <div className="mt-1 text-[11px] text-muted-foreground">{new Date(e.ts).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}</div>
-            </li>
-          ))}
-        </ol>
-      )}
     </Card>
   );
 }
