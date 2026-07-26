@@ -774,25 +774,27 @@ function SpotlightFormModal({ studentId, onClose }: { studentId: string; onClose
         <p className="mt-2 text-xs text-muted-foreground">
           Pick one of the available start times. Spotlight sessions are always <strong>60 min</strong>, and require at least 24h notice.
         </p>
-        <div className="mt-4">
-          <label className="text-xs font-medium text-foreground">Date</label>
-          <input
-            type="date"
-            value={dateYMD}
-            min={todayYMD()}
-            onChange={(e) => { setDateYMD(e.target.value); setSlotISO(""); setError(null); }}
-            className="mt-1.5 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
-          />
-        </div>
-        <div className="mt-3">
-          <label className="text-xs font-medium text-foreground">Available start times</label>
-          <SlotPickerGrid
-            dateYMD={dateYMD}
-            durationMin={SPOTLIGHT_DURATION}
-            qualifiedTeacherIds={qualifiedIds}
-            selectedISO={slotISO}
-            onSelect={(iso) => { setSlotISO(iso); setError(null); }}
-          />
+        <div className="mt-4 rounded-2xl border border-[var(--navy-100)] bg-[var(--navy-50)] p-4">
+          <div>
+            <label className="text-xs font-medium text-foreground">Date</label>
+            <input
+              type="date"
+              value={dateYMD}
+              min={todayYMD()}
+              onChange={(e) => { setDateYMD(e.target.value); setSlotISO(""); setError(null); }}
+              className="mt-1.5 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+          <div className="mt-3">
+            <label className="text-xs font-medium text-foreground">Available start times</label>
+            <SlotPickerGrid
+              dateYMD={dateYMD}
+              durationMin={SPOTLIGHT_DURATION}
+              qualifiedTeacherIds={qualifiedIds}
+              selectedISO={slotISO}
+              onSelect={(iso) => { setSlotISO(iso); setError(null); }}
+            />
+          </div>
         </div>
         <div className="mt-4">
           <label className="text-xs font-medium text-foreground">What do you need this Spotlight for? <span className="text-destructive">*</span></label>
@@ -801,7 +803,7 @@ function SpotlightFormModal({ studentId, onClose }: { studentId: string; onClose
             onChange={(e) => { setContext(e.target.value); setError(null); }}
             rows={4}
             placeholder="e.g. Prepare for a Q&A with our US investors next week — focus on hedging language and confident pushback."
-            className="mt-1.5 w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+            className="mt-2 w-full resize-none rounded-xl border border-input bg-background px-3.5 py-3 text-sm leading-relaxed outline-none transition-colors focus:border-ring focus:ring-2 focus:ring-ring"
           />
         </div>
         {error && (
