@@ -26,6 +26,7 @@ import {
   PartyPopper,
   Flame,
   Medal,
+  ShieldAlert,
 } from "lucide-react";
 import { Card, Pill, StatRing } from "@/components/verbo/ui";
 import { Confetti } from "@/components/verbo/Confetti";
@@ -34,6 +35,7 @@ import { useAuth } from "@/lib/auth";
 import type { User } from "@/lib/mock-data";
 import { currentLoginStreak } from "@/lib/login-streak-store";
 import { markUnlockSeen } from "@/lib/unit-unlock-seen-store";
+import { ReportContentIssueModal } from "@/components/verbo/ReportContentIssueModal";
 import { buildProfileBadgeContext } from "@/lib/profile-badges-store";
 import {
   type ProductId,
