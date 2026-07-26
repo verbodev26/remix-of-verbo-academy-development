@@ -318,19 +318,19 @@ function NextEventCard({ events, onEventClick }: { events: CalendarEvent[]; onEv
 
   const kindMeta = EVENT_KIND_META[next.kind];
   const teacherName = next.session ? userById(next.session.teacher_id)?.name : undefined;
-  const withWho = next.kind === "book_club"
-    ? "Book Club"
-    : next.kind === "insight"
-      ? "Verbo Insight"
-      : (teacherName ?? kindMeta.label);
+  const plan = next.session ? getLessonPlan(next.session.id) : undefined;
+  const headline = plan?.title?.trim() ? plan.title : next.title;
+  const secondary = teacherName ? `${kindMeta.label} · with ${teacherName}` : kindMeta.label;
+  const endTime = new Date(+new Date(next.date) + next.duration_minutes * 60000)
+    .toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
   return (
     <button
       type="button"
       onClick={() => onEventClick(next)}
-      className="card-gradient-lime group flex h-full min-h-[200px] w-full cursor-pointer flex-col justify-between rounded-3xl border border-border p-6 text-left shadow-elevated transition-transform duration-200 hover:shadow-lg active:scale-[0.99]"
+      className="card-gradient-lime group relative flex h-full min-h-[200px] w-full cursor-pointer flex-col justify-between overflow-hidden rounded-3xl border border-border p-6 text-left shadow-elevated transition-transform duration-200 hover:shadow-lg active:scale-[0.99]"
     >
-      <div className="flex items-center justify-between gap-2">
+      <div className="relative z-10 flex items-center justify-between gap-2">
         <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "rgba(1, 48, 74, 0.7)" }}>
           Next up
         </div>
@@ -339,15 +339,15 @@ function NextEventCard({ events, onEventClick }: { events: CalendarEvent[]; onEv
           style={{ color: "rgba(1, 48, 74, 0.6)" }}
         />
       </div>
-      <div className="min-w-0">
+      <div className="relative z-10 min-w-0">
         <div className="truncate font-display text-2xl leading-tight tracking-tight" style={{ color: "#01304a" }}>
-          {withWho}
+          {headline}
         </div>
         <div className="mt-1 truncate text-xs font-semibold" style={{ color: "rgba(1, 48, 74, 0.75)" }}>
-          {kindMeta.label}
+          {secondary}
         </div>
         <div className="mt-3 truncate text-sm" style={{ color: "rgba(1, 48, 74, 0.75)" }}>
-          {fmtDT(next.date)}
+          {fmtDT(next.date)} – {endTime}
         </div>
       </div>
     </button>
