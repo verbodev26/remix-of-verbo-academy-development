@@ -628,12 +628,19 @@ function StudentDashboard() {
               d.setDate(weekStart.getDate() + i);
               return d;
             });
-            const sessionForDay = (d: Date) =>
-              upcoming.find((s) => dayKey(s.date_time) === dayKeyOf(d));
+            const sessionsForDay = (d: Date) =>
+              upcoming
+                .filter((s) => dayKey(s.date_time) === dayKeyOf(d))
+                .sort((a, b) => +new Date(a.date_time) - +new Date(b.date_time));
             const visibleClubs = loadClubs().filter(
               (c) => (c.type === "insight" || c.type === "book") && c.status !== "cancelled",
             );
-            const clubForDay = (d: Date) => visibleClubs.find((c) => dayKey(c.date) === dayKeyOf(d));
+            const clubsForDay = (d: Date) =>
+              visibleClubs
+                .filter((c) => dayKey(c.date) === dayKeyOf(d))
+                .sort((a, b) => +new Date(a.date) - +new Date(b.date));
+            const sessionForDay = (d: Date) => sessionsForDay(d)[0];
+            const clubForDay = (d: Date) => clubsForDay(d)[0];
             const CLASS_COLOR = "#cb6ce6";
             const CLUB_COLOR = "#ffc802";
             const SPOTLIGHT_COLOR = "#b2ece3";
@@ -644,23 +651,24 @@ function StudentDashboard() {
             const defaultDay = week.find((d) => sessionForDay(d)) ?? today;
             const activeDay = selectedDay ?? dayKeyOf(defaultDay);
             const active = week.find((d) => dayKeyOf(d) === activeDay);
-            const s = active ? sessionForDay(active) : undefined;
-            const activeClub = !s && active ? clubForDay(active) : undefined;
-            const teacher = s ? userById(s.teacher_id) : undefined;
-            const plan = s ? getLessonPlan(s.id) : undefined;
-            const imminent = s ? isImminentSession(s) : false;
-            const clubHost = activeClub?.teacher_id ? userById(activeClub.teacher_id)?.name : undefined;
-            const clubBooked = !!activeClub && isBooked(user.id, activeClub.id);
-            const clubConnectOpen = !!activeClub && (() => {
-              const start = +new Date(activeClub.date);
-              const now = Date.now();
-              return now >= start - 5 * 60 * 1000 && now <= start + activeClub.duration_minutes * 60 * 1000;
-            })();
-            const stripeColor = s
-              ? (s.origin === "spotlight" ? EVENT_KIND_META.spotlight.color : EVENT_KIND_META.class.color)
-              : activeClub
-                ? (activeClub.type === "book" ? EVENT_KIND_META.book_club.color : EVENT_KIND_META.insight.color)
-                : EVENT_KIND_META.class.color;
+            type DayEvent =
+              | { kind: "session"; start: number; session: ExtSession }
+              | { kind: "club"; start: number; club: ReturnType<typeof loadClubs>[number] };
+            const dayEvents: DayEvent[] = active
+              ? [
+                  ...sessionsForDay(active).map((s) => ({
+                    kind: "session" as const,
+                    start: +new Date(s.date_time),
+                    session: s,
+                  })),
+                  ...clubsForDay(active).map((c) => ({
+                    kind: "club" as const,
+                    start: +new Date(c.date),
+                    club: c,
+                  })),
+                ].sort((a, b) => a.start - b.start)
+              : [];
+
 
 
             return (
