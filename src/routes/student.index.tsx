@@ -671,7 +671,23 @@ function StudentDashboard() {
                   {week.map((d) => {
                     const key = dayKeyOf(d);
                     const ds = sessionForDay(d);
+                    const dc = clubForDay(d);
                     const isActive = key === activeDay;
+                    const tokens: string[] = [];
+                    if (ds) tokens.push(ds.origin === "spotlight" ? SPOTLIGHT_COLOR : CLASS_COLOR);
+                    if (dc) tokens.push(CLUB_COLOR);
+                    const multi = `linear-gradient(135deg, ${tokens.join(", ")})`;
+                    const cellBg = tokens.length === 0
+                      ? undefined
+                      : tokens.length === 1
+                        ? `color-mix(in srgb, ${tokens[0]} 18%, white)`
+                        : `linear-gradient(135deg, ${tokens.map((t) => `color-mix(in srgb, ${t} 22%, white)`).join(", ")})`;
+                    const dotBg = tokens.length === 0
+                      ? "transparent"
+                      : tokens.length === 1
+                        ? tokens[0]
+                        : multi;
+                    const dsImminent = !!ds && isImminentSession(ds);
                     return (
                       <button
                         key={key}
@@ -682,7 +698,13 @@ function StudentDashboard() {
                             ? "shadow-card text-white"
                             : "border border-border bg-white text-foreground hover:-translate-y-0.5"
                         }`}
-                        style={isActive ? { backgroundColor: "var(--calendar-accent)" } : undefined}
+                        style={
+                          isActive
+                            ? { backgroundColor: "var(--calendar-accent)" }
+                            : cellBg
+                              ? { background: cellBg }
+                              : undefined
+                        }
 
                       >
                         <span className={`text-[10px] font-semibold uppercase tracking-wider ${isActive ? "text-white/70" : "text-muted-foreground"}`}>
@@ -690,19 +712,14 @@ function StudentDashboard() {
                         </span>
                         <span className="text-lg font-bold leading-none">{d.getDate()}</span>
                         <span
-                          className={`verbo-status-dot ${ds && isImminentSession(ds) ? "verbo-live-pulse" : ""}`}
-                          style={{
-                            background: ds
-                              ? isImminentSession(ds)
-                                ? "var(--green-500)"
-                                : "var(--orange-500)"
-                              : "transparent",
-                          }}
+                          className={`verbo-status-dot ${dsImminent ? "verbo-live-pulse" : ""}`}
+                          style={{ background: dsImminent ? "var(--green-500)" : dotBg }}
                           aria-hidden
                         />
                       </button>
                     );
                   })}
+
                 </div>
 
                 <div className="mt-6">
