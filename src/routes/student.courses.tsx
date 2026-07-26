@@ -815,17 +815,20 @@ function UnitsView({
           const locked = blockStates.length > 0 && blockStates.every((s) => s === "locked" || s === "milestone_locked");
           const open = openMission === bi;
 
+          const MISSION_ACCENTS = ["#e0299b", "#69d11e", "#ffc700"];
+          const missionAccent = MISSION_ACCENTS[bi % MISSION_ACCENTS.length];
+          const available = !complete && !locked;
           const shell = complete
             ? "border-success/40 bg-gradient-to-br from-success/12 via-success/5 to-transparent"
             : locked
             ? "border-border bg-gradient-to-br from-secondary/60 via-secondary/25 to-transparent"
-            : "border-accent/40 bg-gradient-to-br from-accent/12 via-accent/5 to-transparent";
+            : "border-[#01304a]/15 bg-gradient-to-br from-[#01304a]/8 via-[#01304a]/4 to-transparent";
           const numberCls = complete
             ? "bg-success/15 text-success"
             : locked
             ? "bg-secondary text-muted-foreground"
-            : "bg-accent/15 text-accent";
-          const barCls = complete ? "bg-success" : locked ? "bg-muted-foreground/40" : "bg-accent";
+            : "";
+          const barCls = complete ? "bg-success" : locked ? "bg-muted-foreground/40" : "";
 
           return (
             <section
