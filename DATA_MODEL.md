@@ -241,8 +241,12 @@ CourseLevel { id: string; name: string; units: CourseUnit[] }
 CourseUnit {
   id: string; title: string; video_url: string; pdf_url: string;
   block?: string; vocabulary?: string[]; grammar_point?: string;
+  teaser?: string;
 }
 ```
+
+**`teaser`** (opcional): texto corto (máx. 160 caracteres) editable por Admin en el modal de unidad (Admin > Courses > unidad, campo "Student Teaser"). Es lo único de contenido pedagógico que ve el alumno en la vista de unidad: reemplaza por completo la tarjeta "What you'll learn" que antes exponía `vocabulary` y `grammar_point`. `vocabulary`, `grammar_point` y `block` siguen existiendo pero son de uso interno (syllabus/Admin) y **nunca** se renderizan al alumno. Si `teaser` está vacío, la tarjeta simplemente no se renderiza.
+
 
 Nombres de nivel confirmados por producto:
 - **go:** Kickstart, Everyday Flow, Confident Voice, Culture Master
