@@ -24,11 +24,16 @@ import {
   Info,
   Clock,
   PartyPopper,
+  Flame,
+  Medal,
 } from "lucide-react";
 import { Card, Pill, StatRing } from "@/components/verbo/ui";
 import { Confetti } from "@/components/verbo/Confetti";
 import { VerboAudioPlayer } from "@/components/verbo/VerboAudioPlayer";
 import { useAuth } from "@/lib/auth";
+import type { User } from "@/lib/mock-data";
+import { currentLoginStreak } from "@/lib/login-streak-store";
+import { buildProfileBadgeContext } from "@/lib/profile-badges-store";
 import {
   type ProductId,
   type ProductCourse,
