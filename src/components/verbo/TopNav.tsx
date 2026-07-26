@@ -48,10 +48,11 @@ const activeTabCls =
 const darkTabCls =
   "relative z-10 inline-flex items-center gap-1 px-3 py-1.5 text-sm transition-colors duration-200 ease-out text-[#94a3b8] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f38934]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent data-[status=active]:text-white";
 
-function SingleNav({ item, pathname, isDark }: { item: NavItem; pathname: string; isDark?: boolean }) {
+function SingleNav({ item, pathname, isDark, registerRef }: { item: NavItem; pathname: string; isDark?: boolean; registerRef?: (key: string, el: HTMLElement | null) => void }) {
   const active = isActive(pathname, item);
   return (
     <Link
+      ref={(el: HTMLAnchorElement | null) => registerRef?.(item.to, el)}
       to={item.to}
       activeOptions={{ exact: active }}
       data-status={active ? "active" : undefined}
@@ -63,7 +64,7 @@ function SingleNav({ item, pathname, isDark }: { item: NavItem; pathname: string
 }
 
 
-function NavGroupDropdown({ group, pathname, isDark }: { group: NavGroup; pathname: string; isDark?: boolean }) {
+function NavGroupDropdown({ group, pathname, isDark, registerRef }: { group: NavGroup; pathname: string; isDark?: boolean; registerRef?: (key: string, el: HTMLElement | null) => void }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -137,7 +138,7 @@ function NavGroupDropdown({ group, pathname, isDark }: { group: NavGroup; pathna
       onMouseLeave={scheduleClose}
     >
       <button
-        ref={buttonRef}
+        ref={(el) => { buttonRef.current = el; registerRef?.(`group:${group.label}`, el); }}
         type="button"
         onClick={() => setOpen((v) => !v)}
         onKeyDown={onButtonKeyDown}
@@ -190,6 +191,11 @@ export function TopNav({ items, variant = "light" }: { items: NavEntry[]; varian
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   const navRef = useRef<HTMLElement>(null);
+  const itemRefs = useRef<Map<string, HTMLElement>>(new Map());
+  const registerRef = (key: string, el: HTMLElement | null) => {
+    if (el) itemRefs.current.set(key, el);
+    else itemRefs.current.delete(key);
+  };
   const headerRef = useRef<HTMLElement>(null);
   const [indicator, setIndicator] = useState<{ left: number; width: number; visible: boolean }>({
     left: 0,
@@ -226,24 +232,43 @@ export function TopNav({ items, variant = "light" }: { items: NavEntry[]; varian
     };
   }, []);
 
+  const activeKey = (() => {
+    for (const item of items) {
+      if (isGroup(item)) {
+        if (isGroupActive(pathname, item)) return `group:${item.label}`;
+      } else if (isActive(pathname, item)) {
+        return item.to;
+      }
+    }
+    return null;
+  })();
+
   useLayoutEffect(() => {
     if (!isDark) return;
     const nav = navRef.current;
     if (!nav) return;
     const measure = () => {
-      const active = nav.querySelector<HTMLElement>('[data-status="active"]');
-      if (!active) {
+      const el = activeKey ? itemRefs.current.get(activeKey) : null;
+      if (!el || !el.isConnected) {
         setIndicator((p) => ({ ...p, visible: false }));
         return;
       }
       const navRect = nav.getBoundingClientRect();
-      const rect = active.getBoundingClientRect();
+      const rect = el.getBoundingClientRect();
       setIndicator({ left: rect.left - navRect.left, width: rect.width, visible: true });
     };
     measure();
+    let raf2 = 0;
+    const raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(measure);
+    });
     window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
-  }, [pathname, isDark, items]);
+    return () => {
+      cancelAnimationFrame(raf1);
+      if (raf2) cancelAnimationFrame(raf2);
+      window.removeEventListener("resize", measure);
+    };
+  }, [pathname, isDark, items, activeKey]);
 
   return (
     <header
@@ -274,9 +299,9 @@ export function TopNav({ items, variant = "light" }: { items: NavEntry[]; varian
             )}
             {items.map((item) => {
               if (isGroup(item)) {
-                return <NavGroupDropdown key={item.label} group={item} pathname={pathname} isDark={isDark} />;
+                return <NavGroupDropdown key={item.label} group={item} pathname={pathname} isDark={isDark} registerRef={registerRef} />;
               }
-              return <SingleNav key={item.to} item={item} pathname={pathname} isDark={isDark} />;
+              return <SingleNav key={item.to} item={item} pathname={pathname} isDark={isDark} registerRef={registerRef} />;
             })}
           </nav>
         </div>

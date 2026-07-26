@@ -122,6 +122,13 @@ export function NotificationsBell({ variant = "light" }: { variant?: "light" | "
     };
   }, [open]);
 
+  useEffect(() => {
+    if (!open || !user) return;
+    const unreadIds = notifications.filter((n) => !n.read).map((n) => n.id);
+    if (unreadIds.length === 0) return;
+    markAllNotificationsRead(user.id, unreadIds);
+  }, [open, user, notifications]);
+
   if (!user) return null;
 
   const isDark = variant === "dark";

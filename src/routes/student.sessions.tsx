@@ -370,13 +370,13 @@ function NextEventCard({ events, onEventClick }: { events: CalendarEvent[]; onEv
         />
       </div>
       <div className="relative z-10 w-[58%] min-w-0">
-        <div className="font-display text-2xl leading-tight tracking-tight" style={{ color: "#01304a" }}>
+        <div className="font-display text-2xl font-bold leading-tight tracking-tight" style={{ color: "#01304a" }}>
           {headline}
         </div>
         <div className="mt-1 truncate text-xs font-semibold" style={{ color: "rgba(1, 48, 74, 0.75)" }}>
           {secondary}
         </div>
-        <div className="mt-3 truncate text-sm" style={{ color: "rgba(1, 48, 74, 0.75)" }}>
+        <div className="mt-3 truncate text-sm font-semibold" style={{ color: "rgba(1, 48, 74, 0.75)" }}>
           {fmtDT(next.date)} – {endTime}
         </div>
       </div>
