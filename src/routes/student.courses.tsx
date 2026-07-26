@@ -729,8 +729,15 @@ function LevelCard({
           <span className="text-muted-foreground">{state.totalUnits} units</span>
           <span className="font-medium text-foreground">{state.passedUnits} / {state.totalUnits} · {pct}%</span>
         </div>
-        <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-secondary">
-          <div className={`h-full rounded-full transition-all ${isLocked ? "bg-muted-foreground/40" : "bg-accent"}`} style={{ width: `${pct}%` }} />
+        <div className="relative mt-2 h-1.5 w-full overflow-hidden rounded-full bg-secondary">
+          {isLocked ? (
+            <div className="h-full rounded-full bg-muted-foreground/40 transition-all" style={{ width: `${pct}%` }} />
+          ) : (
+            <>
+              <div className="absolute inset-0 rounded-full" style={{ backgroundImage: "linear-gradient(to right, #ff914d, #ffc700, #69d11e)" }} />
+              <div className="absolute inset-y-0 right-0 rounded-r-full bg-secondary transition-all duration-500" style={{ width: `${100 - pct}%` }} />
+            </>
+          )}
         </div>
         {state.message && (
           <div className="mt-3 flex items-start gap-1.5 text-[11px] text-muted-foreground">
