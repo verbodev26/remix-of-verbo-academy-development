@@ -2,6 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
+  Check,
+  Target,
+  Brain,
   ArrowRight,
   BookOpen,
   CheckCircle2,
