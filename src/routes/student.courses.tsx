@@ -501,8 +501,10 @@ function LevelsView({
       {/* Overall progress + streak + medal */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card className="relative border border-white/15 md:col-span-2">
-          <div className="relative overflow-hidden rounded-[inherit]">
-            <div className="card-gradient-gold pointer-events-none absolute inset-0 z-0 rounded-[inherit]" aria-hidden />
+          <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]" aria-hidden>
+            <div className="card-gradient-gold absolute inset-0 rounded-[inherit]" />
+          </div>
+          <div className="relative z-10">
             <div className="relative z-10 flex flex-wrap items-center gap-5" style={{ color: "#01304a" }}>
               <StatRing value={pct} size={104} stroke={8} valueClassName="text-2xl font-bold" />
               <div className="min-w-0 flex-1">
@@ -519,8 +521,10 @@ function LevelsView({
         </Card>
 
         <Card className="relative border border-white/15">
-          <div className="relative overflow-hidden rounded-[inherit]">
-            <div className="card-gradient-lime pointer-events-none absolute inset-0 z-0 rounded-[inherit]" aria-hidden />
+          <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]" aria-hidden>
+            <div className="card-gradient-lime absolute inset-0 rounded-[inherit]" />
+          </div>
+          <div className="relative z-10">
             <div className="relative z-10 flex items-center justify-between gap-4" style={{ color: "#01304a" }}>
               <div className="min-w-0 flex-1">
                 <div className="text-xs font-semibold uppercase tracking-wider opacity-75">Login streak</div>
@@ -541,8 +545,10 @@ function LevelsView({
         </Card>
 
         <Card className="relative border border-white/15">
-          <div className="relative overflow-hidden rounded-[inherit]">
-            <div className="card-gradient-violet pointer-events-none absolute inset-0 z-0 rounded-[inherit]" aria-hidden />
+          <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]" aria-hidden>
+            <div className="card-gradient-violet absolute inset-0 rounded-[inherit]" />
+          </div>
+          <div className="relative z-10">
             <div className="relative z-10 flex items-center justify-between gap-4 text-white">
               <div className="min-w-0 flex-1">
                 <div className="text-xs font-semibold uppercase tracking-wider text-white/75">Medal</div>
