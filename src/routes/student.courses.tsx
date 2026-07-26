@@ -35,6 +35,7 @@ import { Card, Pill, StatRing } from "@/components/verbo/ui";
 import { Confetti } from "@/components/verbo/Confetti";
 import { VerboAudioPlayer } from "@/components/verbo/VerboAudioPlayer";
 import mountainsSunsetAsset from "@/assets/mountains-sunset.png.asset.json";
+import citySunsetAsset from "@/assets/city-sunset.png.asset.json";
 import { useAuth } from "@/lib/auth";
 import type { User } from "@/lib/mock-data";
 import { currentLoginStreak } from "@/lib/login-streak-store";
