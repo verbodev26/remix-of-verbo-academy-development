@@ -964,7 +964,7 @@ function StudentDashboard() {
               return (
                 <>
                   <DialogHeader>
-                    <DialogTitle style={{ color: "#01304a" }}>Class Details</DialogTitle>
+                    <DialogTitle style={{ color: "#01304a" }}>Session Details</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4">
                     {headerBlock}
@@ -1008,7 +1008,7 @@ function StudentDashboard() {
             return (
               <>
                 <DialogHeader>
-                  <DialogTitle style={{ color: "#01304a" }}>Class Details</DialogTitle>
+                  <DialogTitle style={{ color: "#01304a" }}>Session Details</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
                   {/* Header block */}
