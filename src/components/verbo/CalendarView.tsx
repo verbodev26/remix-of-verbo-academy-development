@@ -123,7 +123,7 @@ export function CalendarView({
               <GhostButton onClick={() => setCursor(addMonths(cursor, -1))} className="!px-2.5 cursor-pointer"><ChevronLeft className="h-4 w-4" /></GhostButton>
               <GhostButton onClick={() => { const d = new Date(); d.setDate(1); setCursor(d); }} className="cursor-pointer">Today</GhostButton>
               <GhostButton onClick={() => setCursor(addMonths(cursor, 1))} className="!px-2.5 cursor-pointer"><ChevronRight className="h-4 w-4" /></GhostButton>
-              <span className="ml-1 rounded-full bg-secondary px-3 py-1 text-sm font-semibold text-foreground">
+              <span className="ml-1 rounded-full bg-[#cb6ce6]/15 px-3.5 py-1 text-lg font-bold text-[#01304a]">
                 {cursor.toLocaleString(undefined, { month: "long", year: "numeric" })}
               </span>
             </div>
@@ -132,7 +132,7 @@ export function CalendarView({
               <GhostButton onClick={() => setDayCursor(addDays(dayCursor, -1))} className="!px-2.5 cursor-pointer"><ChevronLeft className="h-4 w-4" /></GhostButton>
               <GhostButton onClick={() => setDayCursor(new Date())} className="cursor-pointer">Today</GhostButton>
               <GhostButton onClick={() => setDayCursor(addDays(dayCursor, 1))} className="!px-2.5 cursor-pointer"><ChevronRight className="h-4 w-4" /></GhostButton>
-              <span className="ml-1 rounded-full bg-secondary px-3 py-1 text-sm font-semibold text-foreground">
+              <span className="ml-1 rounded-full bg-[#cb6ce6]/15 px-3.5 py-1 text-lg font-bold text-[#01304a]">
                 {dayCursor.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
               </span>
             </div>

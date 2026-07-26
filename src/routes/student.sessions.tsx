@@ -329,13 +329,14 @@ function NextEventCard({ events, onEventClick }: { events: CalendarEvent[]; onEv
     <button
       type="button"
       onClick={() => onEventClick(next)}
-      className="card-gradient-lime group relative flex h-full min-h-[200px] w-full cursor-pointer flex-col justify-between overflow-hidden rounded-3xl border border-border p-6 text-left shadow-elevated transition-transform duration-200 hover:shadow-lg active:scale-[0.99]"
+      className="group relative flex h-full min-h-[200px] w-full cursor-pointer flex-col justify-between rounded-3xl p-6 text-left transition-transform duration-200 active:scale-[0.99]"
     >
+      <div className="card-gradient-lime pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-3xl border border-border shadow-elevated" />
       <img
         src={nextUpArt.url}
         alt=""
         aria-hidden="true"
-        className="pointer-events-none absolute bottom-0 right-0 h-[110%] w-auto translate-y-[6%] select-none object-contain"
+        className="pointer-events-none absolute bottom-0 right-0 z-[1] h-[124%] w-auto select-none object-contain"
       />
       <div className="relative z-10 flex items-center justify-between gap-2">
         <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "rgba(1, 48, 74, 0.7)" }}>
@@ -367,7 +368,7 @@ const STAT_PILL_TONES: Record<StatPillTone, {
   wrap: string; iconWrap: string; label: string; value: string; track: string; bar: string;
 }> = {
   violet: {
-    wrap: "border-[#6d28d9] bg-[#6d28d9]",
+    wrap: "border-[#cb6ce6] bg-[#cb6ce6]",
     iconWrap: "bg-white/15 text-white",
     label: "text-white/60", value: "text-white",
     track: "bg-white/20", bar: "bg-white",
@@ -385,7 +386,7 @@ const STAT_PILL_TONES: Record<StatPillTone, {
     track: "bg-white/20", bar: "bg-white",
   },
   green: {
-    wrap: "border-[#16a34a] bg-[#16a34a]",
+    wrap: "border-[#3ea008] bg-[#3ea008]",
     iconWrap: "bg-white/15 text-white",
     label: "text-white/60", value: "text-white",
     track: "bg-white/20", bar: "bg-white",
@@ -807,7 +808,7 @@ function SpotlightFormModal({ studentId, onClose }: { studentId: string; onClose
         <div className="w-full max-w-md rounded-2xl bg-card p-6 shadow-floating">
           <h3 className="text-base font-semibold text-foreground">Overlaps with an existing session</h3>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-            This overlaps with your already-scheduled Performance Session with <strong>{teacherName}</strong> at that time — would you like to replace it with this Spotlight instead?
+            This overlaps with your already-scheduled session with <strong>{teacherName}</strong> at that time — would you like to replace it with this Spotlight instead?
           </p>
           <p className="mt-2 text-[11px] text-muted-foreground">
             The original session will change to <strong>Converted to Spotlight</strong>. It won't count as a cancellation or a strike, and the credit is returned to your Hired / Remaining Sessions.
@@ -913,6 +914,24 @@ void UsersIcon;
 // `effectiveSessionCounts` so group members see the group's shared counter
 // automatically, and hides itself for non-performance products.
 // ---------------------------------------------------------------------------
+/** Circular ring showing the share of sessions still remaining (it empties as
+ *  sessions get used). Purely presentational. */
+function RemainingRing({ remaining, hired }: { remaining: number; hired: number }) {
+  const r = 30;
+  const c = 2 * Math.PI * r;
+  const ratio = hired > 0 ? Math.max(0, Math.min(1, remaining / hired)) : 0;
+  return (
+    <svg viewBox="0 0 72 72" className="h-[72px] w-[72px] shrink-0 -rotate-90">
+      <circle cx="36" cy="36" r={r} fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="7" />
+      <circle
+        cx="36" cy="36" r={r} fill="none" stroke="#01304a" strokeWidth="7" strokeLinecap="round"
+        strokeDasharray={c} strokeDashoffset={c * (1 - ratio)}
+        style={{ transition: "stroke-dashoffset 400ms ease-out" }}
+      />
+    </svg>
+  );
+}
+
 function SessionsRemainingCard({ studentId }: { studentId: string }) {
   const u = USERS.find((x) => x.id === studentId);
   if (!u) return null;
@@ -921,26 +940,24 @@ function SessionsRemainingCard({ studentId }: { studentId: string }) {
     hired: u.hired_sessions,
     remaining: u.remaining_sessions,
   });
-  const { done, pct } = sessionProgressFor(hired, remaining);
+  const { done } = sessionProgressFor(hired, remaining);
   const g = groupOfStudent(studentId);
   const dim = "rgba(1, 48, 74, 0.75)";
   return (
     <div className="card-gradient-gold flex h-full min-h-[200px] flex-col justify-between rounded-3xl border border-border p-6 shadow-elevated">
       <div className="flex items-start justify-between gap-4">
-        <div>
-          <div className="text-xs font-semibold uppercase tracking-wider" style={{ color: dim }}>Sessions remaining</div>
-          <div className="mt-1 flex items-baseline gap-2">
-            <span className="font-display text-4xl leading-none tracking-tight" style={{ color: "#01304a" }}>{remaining}</span>
-            <span className="text-sm" style={{ color: dim }}>of {hired} sessions</span>
-          </div>
+        <div className="text-xs font-semibold uppercase tracking-wider" style={{ color: dim }}>Sessions remaining</div>
+        <div className="text-right text-xs" style={{ color: dim }}>{done} used</div>
+      </div>
+      <div className="mt-3 flex items-end justify-between gap-4">
+        <div className="min-w-0">
+          <div className="font-display text-7xl font-extrabold leading-none tracking-tight" style={{ color: "#01304a" }}>{remaining}</div>
+          <div className="mt-2 text-xs" style={{ color: dim }}>of {hired} sessions</div>
           {g && (
             <div className="mt-1 text-[11px]" style={{ color: dim }}>Shared with your group</div>
           )}
         </div>
-        <div className="text-right text-xs" style={{ color: dim }}>{done} used</div>
-      </div>
-      <div className="mt-4 h-2 w-full rounded-full bg-white/40">
-        <div className="h-2 rounded-full bg-[#01304a] transition-all" style={{ width: `${pct}%` }} />
+        <RemainingRing remaining={remaining} hired={hired} />
       </div>
     </div>
   );
