@@ -491,22 +491,60 @@ function LevelsView({
         <p className="mt-1.5 text-sm text-muted-foreground">Progress through your program level by level. Complete each unit's mandatory Vocabulary, Grammar, and Practice activities to move on.</p>
       </div>
 
-      {/* Global progress */}
-      <Card>
-        <div className="flex flex-wrap items-center gap-5">
-          <StatRing value={pct} size={84} stroke={8} />
-          <div className="min-w-0 flex-1">
-            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Overall progress</div>
-            <div className="mt-1 text-lg font-semibold text-foreground">
-              {passedUnits} of {totalUnits} units completed
+      {/* Overall progress + streak + medal */}
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card className="card-gradient-gold border-transparent md:col-span-2">
+          <div className="flex flex-wrap items-center gap-5" style={{ color: "#01304a" }}>
+            <StatRing value={pct} size={84} stroke={8} />
+            <div className="min-w-0 flex-1">
+              <div className="text-xs font-semibold uppercase tracking-wider opacity-75">Overall progress</div>
+              <div className="mt-1 text-lg font-semibold">
+                {passedUnits} of {totalUnits} units completed
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-xs opacity-75">Contracted levels</div>
+              <div className="mt-0.5 text-sm font-medium">{contractedLevels.length} of {levels.length}</div>
             </div>
           </div>
-          <div className="text-right">
-            <div className="text-xs text-muted-foreground">Contracted levels</div>
-            <div className="mt-0.5 text-sm font-medium text-foreground">{contractedLevels.length} of {levels.length}</div>
+        </Card>
+
+        <Card className="card-gradient-lime border-transparent">
+          <div style={{ color: "#01304a" }}>
+            <div className="flex items-center gap-2">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/35">
+                <Flame className="h-4 w-4" />
+              </span>
+              <div className="text-xs font-semibold uppercase tracking-wider opacity-75">Login streak</div>
+            </div>
+            {streakDays > 0 ? (
+              <>
+                <div className="mt-3 text-2xl font-semibold tabular-nums">{streakDays} {streakDays === 1 ? "day" : "days"}</div>
+                <div className="mt-0.5 text-sm font-medium opacity-80">{streakTier ? streakTier.name : "Keep going"}</div>
+              </>
+            ) : (
+              <p className="mt-3 text-sm opacity-80">Log in tomorrow to start your streak</p>
+            )}
           </div>
-        </div>
-      </Card>
+        </Card>
+
+        <Card className="card-gradient-violet border-transparent">
+          <div className="text-white">
+            <div className="flex items-center gap-2">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20">
+                <Medal className="h-4 w-4" />
+              </span>
+              <div className="text-xs font-semibold uppercase tracking-wider text-white/75">Highest medal</div>
+            </div>
+            {topMedal ? (
+              <div className="mt-3 text-lg font-semibold leading-snug">{topMedal}</div>
+            ) : (
+              <p className="mt-3 text-sm text-white/80">Complete your first Mission to earn a medal</p>
+            )}
+          </div>
+        </Card>
+      </div>
+
 
       {milestoneRemaining !== null && (
         <div className="flex items-center gap-3 rounded-2xl border border-amber-300/60 bg-amber-50/60 px-4 py-3.5 text-sm text-amber-900 shadow-soft dark:border-amber-400/30 dark:bg-amber-500/10 dark:text-amber-100">
