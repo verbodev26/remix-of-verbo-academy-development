@@ -824,6 +824,8 @@ Reglas:
 ## Profile Badges — nuevas métricas de racha y misiones (`src/lib/profile-badges-store.ts`)
 
 **`src/lib/login-streak-store.ts`** (nuevo): `localStorage["verbo:login-streak"]`, evento `"verbo:login-streak-updated"`. Guarda por alumno `{ lastActiveDate: "YYYY-MM-DD", currentStreak: number }` en fecha local del navegador.
+
+**`src/lib/unit-unlock-seen-store.ts`** (nuevo): `localStorage["verbo:unit-unlock-seen:{studentId}"]` = array de `unit id` cuya animación de desbloqueo ya se mostró al alumno. Solo UI (se usa para no repetir el flip de la unidad `current`); no afecta progreso ni estados.
 - `touchLoginStreak(studentId)` — se llama una vez al montar el layout de alumno (`src/routes/student.tsx`, sólo rol `student`): ayer → +1, hoy → sin cambio, más antiguo/ausente → reset a 1. Devuelve el streak actualizado.
 - `currentLoginStreak(studentId)` — lectura pura, sin mutar (la usa el badge context).
 - `subscribeLoginStreak(cb)`.
