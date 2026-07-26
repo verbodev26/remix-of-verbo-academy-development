@@ -242,7 +242,7 @@ function StudentDashboard() {
     if (progress.isVip) {
       navigate({ to: "/student/my-course" });
     } else {
-      navigate({ to: "/student/courses" });
+      navigate({ to: "/student/courses", search: { levelId: progress.levelId } });
     }
   };
 
