@@ -184,7 +184,7 @@ function Page() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">Sessions &amp; Events</h1>
           <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-            Your next class, your next conversation club, your next win — all in one place.
+            Your next class, your next club, your next win. All in one place.
           </p>
         </div>
       </div>
