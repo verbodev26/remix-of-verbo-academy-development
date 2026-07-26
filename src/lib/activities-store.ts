@@ -68,7 +68,8 @@ export interface Activity {
   items?: MatchItem[];
   // read_select / listen_select
   prompt?: string;
-  audioName?: string; // listen_select only (mock placeholder)
+  audioName?: string; // listen_select only (mock placeholder) — INTERNAL Admin metadata, never rendered to students
+  audioDurationSec?: number; // listen_select only — auto-detected from the uploaded file, never manual
   question?: string;
   options?: string[];
   correctIndex?: number;

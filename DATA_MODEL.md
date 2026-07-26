@@ -297,7 +297,14 @@ Nombres de nivel confirmados por producto:
 | type | `ExerciseType` | requerido | ver §12 |
 | category | string | opcional | libre, admin-extensible |
 | session_phase | `"pre"\|"post"` | opcional | default "pre" |
-| paragraph / answer / items / prompt / audioName / question / options / correctIndex | — | opcional | según `type` |
+| paragraph / answer / items / prompt / question / options / correctIndex | — | opcional | según `type` |
+| audioName | string | opcional | `listen_select` únicamente |
+| audioDurationSec | number | opcional | `listen_select` únicamente |
+
+⚠️ **`audioName` es metadata interna de Admin y NUNCA debe renderizarse en ninguna vista de alumno.** Contiene el nombre real del archivo subido (incluye referencias a nuestro proveedor de voz). Se muestra solo en el modal de Admin al cargar el archivo; el reproductor del alumno (`VerboAudioPlayer`) rotula siempre con el texto fijo "Audio · Verbo Academy".
+
+**`audioDurationSec`**: duración del clip en segundos, **auto-detectada** al subir el archivo en Admin (elemento `Audio` temporal + `loadedmetadata`, redondeada al segundo). El admin nunca la escribe a mano. Se usa para mostrar `mm:ss` en el reproductor del alumno; si falta, el reproductor muestra `--:--`.
+
 
 **`MatchItem`**: `{ text: string; key: string }`.
 **`ActivityScore`**: `{ best: number; attempts: number; lastAt: string }`, clave = `` `${studentId}::${activityId}` `` — ✅ scoped por alumno desde 2026-07-11 (fix bug de progreso compartido).
