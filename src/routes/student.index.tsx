@@ -50,9 +50,14 @@ import {
   loadEquippedBadgeIds,
   subscribeEquippedBadges,
 } from "@/lib/equipped-profile-badges-store";
+import { loadClubs, type Club } from "@/lib/clubs-store";
+import { isBooked } from "@/lib/club-bookings-store";
+import { ClubReservationModal } from "@/components/verbo/ClubReservationModal";
+import { EVENT_KIND_META } from "@/lib/calendar-events";
 import { RatingModal } from "@/components/verbo/RatingModal";
 import { ReportConductModal } from "@/components/verbo/ReportConductModal";
 import { CantAttendRouter, RescheduleRequestModal } from "@/components/verbo/CancelSessionFlow";
+
 import {
   Dialog,
   DialogContent,
@@ -151,6 +156,8 @@ function StudentDashboard() {
   // truth shared with Student > Performance and Teacher > Mis Alumnos).
   const macros = useComputedMacros(user?.id ?? "");
   const [classDetail, setClassDetail] = useState<ExtSession | null>(null);
+  const [clubCardModal, setClubCardModal] = useState<Club | null>(null);
+
   const [plansRev, setPlansRev] = useState(0);
   useEffect(() => subscribeLessonPlans(() => setPlansRev((r) => r + 1)), []);
 
@@ -622,6 +629,13 @@ function StudentDashboard() {
             });
             const sessionForDay = (d: Date) =>
               upcoming.find((s) => dayKey(s.date_time) === dayKeyOf(d));
+            const visibleClubs = loadClubs().filter(
+              (c) => (c.type === "insight" || c.type === "book") && c.status !== "cancelled",
+            );
+            const clubForDay = (d: Date) => visibleClubs.find((c) => dayKey(c.date) === dayKeyOf(d));
+            const CLASS_COLOR = "#cb6ce6";
+            const CLUB_COLOR = "#ffc802";
+            const SPOTLIGHT_COLOR = "#b2ece3";
             const isImminentSession = (s: ExtSession) => {
               const ms = +new Date(s.date_time) - Date.now();
               return ms > 0 && ms <= 60 * 60 * 1000;
@@ -630,9 +644,23 @@ function StudentDashboard() {
             const activeDay = selectedDay ?? dayKeyOf(defaultDay);
             const active = week.find((d) => dayKeyOf(d) === activeDay);
             const s = active ? sessionForDay(active) : undefined;
+            const activeClub = !s && active ? clubForDay(active) : undefined;
             const teacher = s ? userById(s.teacher_id) : undefined;
             const plan = s ? getLessonPlan(s.id) : undefined;
             const imminent = s ? isImminentSession(s) : false;
+            const clubHost = activeClub?.teacher_id ? userById(activeClub.teacher_id)?.name : undefined;
+            const clubBooked = !!activeClub && isBooked(user.id, activeClub.id);
+            const clubConnectOpen = !!activeClub && (() => {
+              const start = +new Date(activeClub.date);
+              const now = Date.now();
+              return now >= start - 5 * 60 * 1000 && now <= start + activeClub.duration_minutes * 60 * 1000;
+            })();
+            const stripeColor = s
+              ? (s.origin === "spotlight" ? EVENT_KIND_META.spotlight.color : EVENT_KIND_META.class.color)
+              : activeClub
+                ? (activeClub.type === "book" ? EVENT_KIND_META.book_club.color : EVENT_KIND_META.insight.color)
+                : EVENT_KIND_META.class.color;
+
 
             return (
               <div>
@@ -643,7 +671,23 @@ function StudentDashboard() {
                   {week.map((d) => {
                     const key = dayKeyOf(d);
                     const ds = sessionForDay(d);
+                    const dc = clubForDay(d);
                     const isActive = key === activeDay;
+                    const tokens: string[] = [];
+                    if (ds) tokens.push(ds.origin === "spotlight" ? SPOTLIGHT_COLOR : CLASS_COLOR);
+                    if (dc) tokens.push(CLUB_COLOR);
+                    const multi = `linear-gradient(135deg, ${tokens.join(", ")})`;
+                    const cellBg = tokens.length === 0
+                      ? undefined
+                      : tokens.length === 1
+                        ? `color-mix(in srgb, ${tokens[0]} 18%, white)`
+                        : `linear-gradient(135deg, ${tokens.map((t) => `color-mix(in srgb, ${t} 22%, white)`).join(", ")})`;
+                    const dotBg = tokens.length === 0
+                      ? "transparent"
+                      : tokens.length === 1
+                        ? tokens[0]
+                        : multi;
+                    const dsImminent = !!ds && isImminentSession(ds);
                     return (
                       <button
                         key={key}
@@ -654,7 +698,13 @@ function StudentDashboard() {
                             ? "shadow-card text-white"
                             : "border border-border bg-white text-foreground hover:-translate-y-0.5"
                         }`}
-                        style={isActive ? { backgroundColor: "var(--calendar-accent)" } : undefined}
+                        style={
+                          isActive
+                            ? { backgroundColor: "var(--calendar-accent)" }
+                            : cellBg
+                              ? { background: cellBg }
+                              : undefined
+                        }
 
                       >
                         <span className={`text-[10px] font-semibold uppercase tracking-wider ${isActive ? "text-white/70" : "text-muted-foreground"}`}>
@@ -662,29 +712,24 @@ function StudentDashboard() {
                         </span>
                         <span className="text-lg font-bold leading-none">{d.getDate()}</span>
                         <span
-                          className={`verbo-status-dot ${ds && isImminentSession(ds) ? "verbo-live-pulse" : ""}`}
-                          style={{
-                            background: ds
-                              ? isImminentSession(ds)
-                                ? "var(--green-500)"
-                                : "var(--orange-500)"
-                              : "transparent",
-                          }}
+                          className={`verbo-status-dot ${dsImminent ? "verbo-live-pulse" : ""}`}
+                          style={{ background: dsImminent ? "var(--green-500)" : dotBg }}
                           aria-hidden
                         />
                       </button>
                     );
                   })}
+
                 </div>
 
                 <div className="mt-6">
-                  {!s ? (
+                  {!s && !activeClub ? (
                     <div className="max-w-xl mx-auto w-full rounded-2xl border border-[var(--navy-100)] bg-[var(--navy-50)] p-6 text-sm text-muted-foreground">
                       No upcoming sessions scheduled.
                     </div>
-                  ) : (
+                  ) : s ? (
                     <div className="max-w-xl mx-auto w-full rounded-2xl border border-[var(--navy-100)] bg-[var(--navy-50)] shadow-elevated verbo-card-hover relative overflow-hidden">
-                      <div className="absolute inset-x-0 top-0 z-10 h-1 bg-[var(--accent)]" />
+                      <div className="absolute inset-x-0 top-0 z-10 h-1" style={{ background: stripeColor }} />
                       <div className="p-6">
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex items-center gap-3">
@@ -751,7 +796,74 @@ function StudentDashboard() {
                         </div>
                       </div>
                     </div>
-                  )}
+                  ) : activeClub ? (
+                    <div className="max-w-xl mx-auto w-full rounded-2xl border border-[var(--navy-100)] bg-[var(--navy-50)] shadow-elevated verbo-card-hover relative overflow-hidden">
+                      <div className="absolute inset-x-0 top-0 z-10 h-1" style={{ background: stripeColor }} />
+                      <div className="p-6">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex items-center gap-3">
+                            <PhotoPlaceholder tone="dark" shape="circle" className="h-12 w-12 bg-[#01304a]" />
+                            <div>
+                              <div className="text-xs uppercase tracking-wider text-muted-foreground">Host</div>
+                              <div className="text-sm font-semibold" style={{ color: "#01304a" }}>{clubHost ?? "Verbo Team"}</div>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            title="Session Details"
+                            aria-label="Session Details"
+                            onClick={() => setClubCardModal(activeClub)}
+                            className="group flex h-10 w-10 items-center justify-center rounded-full bg-secondary transition-colors hover:bg-primary/10 active:scale-[0.97]"
+                          >
+                            <ArrowUpRight className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" style={{ color: "#01304a" }} />
+                          </button>
+                        </div>
+
+                        <div className="mt-5">
+                          <div className="text-xl font-bold tracking-tight" style={{ color: "#01304a" }}>
+                            {activeClub.title}
+                          </div>
+                          <div className="mt-1 text-sm text-muted-foreground">
+                            {activeClub.type === "book" ? "Book Club" : "Verbo Insight"}
+                          </div>
+                        </div>
+
+                        <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <img src={teamsLogo.url} alt="Microsoft Teams" className="h-5 w-5 shrink-0 object-contain" />
+                            <span>Microsoft Teams Meeting · {fmt(activeClub.date)}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {clubBooked ? (
+                              <button
+                                type="button"
+                                title={clubConnectOpen ? "Connect" : "Activates 5 minutes before the club starts."}
+                                aria-label="Connect"
+                                disabled={!clubConnectOpen}
+                                onClick={() => { if (clubConnectOpen && activeClub.link) window.open(activeClub.link, "_blank"); }}
+                                className={`flex h-10 w-10 items-center justify-center rounded-full shadow-soft transition-opacity active:scale-[0.97] ${
+                                  clubConnectOpen
+                                    ? "bg-success text-success-foreground hover:opacity-90"
+                                    : "cursor-not-allowed bg-secondary text-muted-foreground"
+                                }`}
+                              >
+                                <Video className="h-4 w-4" />
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => setClubCardModal(activeClub)}
+                                className="inline-flex items-center gap-1.5 rounded-full bg-[#01304a] px-3.5 py-2 text-xs font-semibold text-white shadow-soft transition-opacity hover:opacity-90 active:scale-[0.97]"
+                              >
+                                Reserve seat <ArrowRight className="h-3.5 w-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
+
                 </div>
                 </PremiumCard>
               </div>
@@ -922,6 +1034,14 @@ function StudentDashboard() {
         />
       )}
 
+
+      {clubCardModal && (
+        <ClubReservationModal
+          club={clubCardModal}
+          studentId={user.id}
+          onClose={() => setClubCardModal(null)}
+        />
+      )}
 
       {/* Class Details Modal — unified view (replaces the old standalone
           "Session Performance Breakdown" popup and the row-level icons). */}

@@ -226,6 +226,13 @@ export function adminCalendarEvents(opts?: {
 
 
 
+/** True when a club event has no seats left. Full clubs never pulse and are
+ *  rendered dimmed in the calendar. */
+export function isClubFull(ev: CalendarEvent): boolean {
+  return ev.spots_total != null && (ev.spots_taken ?? 0) >= ev.spots_total;
+}
+
+
 /** Meta a chip/legend can render for each supported event kind. */
 export const EVENT_KIND_META: Record<CalendarEventKind, { label: string; color: string; short: string }> = {
   class:      { label: "Performance Session", color: "#01304a", short: "1:1" },

@@ -20,6 +20,7 @@ import {
   CANONICAL_STATUS_ORDER,
   EVENT_KIND_META,
   eventPillDisplay,
+  isClubFull,
   type CalendarEvent,
   type CalendarEventKind,
 } from "@/lib/calendar-events";
@@ -37,7 +38,10 @@ export interface CalendarViewProps {
   initialEnabledKinds?: CalendarEventKind[];
   /** Kinds whose event pills get a subtle attention pulse. */
   pulseKinds?: CalendarEventKind[];
+  /** Month/day the calendar opens on. Defaults to today. */
+  initialDate?: Date;
 }
+
 
 
 function dayKey(d: Date) { return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`; }
@@ -64,10 +68,12 @@ export function CalendarView({
   availableKinds,
   initialEnabledKinds,
   pulseKinds,
+  initialDate,
 }: CalendarViewProps) {
   const [mode, setMode] = useState<CalendarViewMode>(initialMode);
-  const [cursor, setCursor] = useState(() => { const d = new Date(); d.setDate(1); return d; });
-  const [dayCursor, setDayCursor] = useState(() => new Date());
+  const [cursor, setCursor] = useState(() => { const d = initialDate ? new Date(initialDate) : new Date(); d.setDate(1); return d; });
+  const [dayCursor, setDayCursor] = useState(() => (initialDate ? new Date(initialDate) : new Date()));
+
   const [enabledKinds, setEnabledKinds] = useState<Set<CalendarEventKind>>(
     () => new Set(initialEnabledKinds ?? availableKinds ?? (Object.keys(EVENT_KIND_META) as CalendarEventKind[])),
   );
@@ -238,7 +244,7 @@ function MonthGrid({
             </div>
             <div className="space-y-1">
               {dayEvents.slice(0, 3).map((e) => (
-                <EventPill key={e.id} ev={e} onClick={() => onEventClick?.(e)} pulse={!!pulseKinds?.includes(e.kind)} />
+                <EventPill key={e.id} ev={e} onClick={() => onEventClick?.(e)} pulse={!!pulseKinds?.includes(e.kind) && !isClubFull(e)} />
               ))}
               {dayEvents.length > 3 && (
                 <div className="px-1.5 text-[10px] text-muted-foreground">+{dayEvents.length - 3} more</div>
@@ -269,15 +275,18 @@ function DayList({
   }
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card">
-      {events.map((e) => (
+      {events.map((e) => {
+        const pulse = !!pulseKinds?.includes(e.kind) && !isClubFull(e);
+        return (
         <button
           key={e.id}
           onClick={() => onEventClick?.(e)}
-          style={pulseKinds?.includes(e.kind) ? { ["--verbo-focus-pulse-color" as string]: EVENT_KIND_META[e.kind].color } : undefined}
+          style={pulse ? { ["--verbo-focus-pulse-color" as string]: EVENT_KIND_META[e.kind].color } : undefined}
           className={`flex w-full items-center gap-4 border-b border-border p-3 text-left transition-colors last:border-0 hover:bg-secondary/60 ${
-            pulseKinds?.includes(e.kind) ? "verbo-focus-pulse" : ""
+            pulse ? "verbo-focus-pulse" : ""
           }`}
         >
+
 
           <div className="w-16 shrink-0 text-sm font-semibold tabular-nums" style={{ color: "#01304a" }}>
             {fmtTime(e.date)}
@@ -331,7 +340,9 @@ function DayList({
             <span className="rounded-md border border-border px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">WS</span>
           )}
         </button>
-      ))}
+        );
+      })}
+
     </div>
   );
 }
@@ -346,24 +357,27 @@ function EventPill({ ev, onClick, pulse = false }: { ev: CalendarEvent; onClick:
   const cellLabelInline = display.cellLabel && !ev.sub_status
     ? ` · ${display.cellLabel}`
     : "";
+  const full = isClub && isClubFull(ev);
   return (
     <div className="group relative">
       <button
         onClick={onClick}
         className={`flex w-full items-center gap-1 truncate rounded-lg px-1.5 py-1 text-left text-[10.5px] font-medium text-white shadow-sm transition-opacity hover:opacity-90 cursor-pointer ${
           ev.booked ? "ring-2 ring-[#f38934] ring-offset-1 ring-offset-card" : ""
-        } ${pulse ? "verbo-focus-pulse" : ""}`}
+        } ${pulse ? "verbo-focus-pulse" : ""} ${full ? "opacity-55 grayscale-[0.4]" : ""}`}
         style={{
           backgroundColor: display.color,
           ...(pulse ? { ["--verbo-focus-pulse-color" as string]: display.color } : {}),
         }}
 
         title={
-          ev.sub_status
+          (ev.sub_status
             ? `${SUB_STATUS_META[ev.sub_status].label} — ${ev.title}`
-            : `${ev.booked ? "Reserved — " : ""}${ev.is_group ? "Group" : kindMeta.label} — ${ev.title}`
+            : `${ev.booked ? "Reserved — " : ""}${ev.is_group ? "Group" : kindMeta.label} — ${ev.title}`) +
+          (full ? " · Full" : "")
         }
       >
+
         {ev.booked ? (
           <span className="inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full bg-[#f38934] text-white" title="You're in">
             <Check className="h-2.5 w-2.5" strokeWidth={3} />
