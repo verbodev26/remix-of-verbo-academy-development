@@ -50,9 +50,14 @@ import {
   loadEquippedBadgeIds,
   subscribeEquippedBadges,
 } from "@/lib/equipped-profile-badges-store";
+import { loadClubs, type Club } from "@/lib/clubs-store";
+import { isBooked } from "@/lib/club-bookings-store";
+import { ClubReservationModal } from "@/components/verbo/ClubReservationModal";
+import { EVENT_KIND_META } from "@/lib/calendar-events";
 import { RatingModal } from "@/components/verbo/RatingModal";
 import { ReportConductModal } from "@/components/verbo/ReportConductModal";
 import { CantAttendRouter, RescheduleRequestModal } from "@/components/verbo/CancelSessionFlow";
+
 import {
   Dialog,
   DialogContent,
