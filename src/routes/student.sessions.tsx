@@ -342,8 +342,39 @@ function StatPill({ icon, label, value }: { icon: React.ReactNode; label: string
 
 // ---------------------------------------------------------------------------
 // Session details modal — student view.
-// Logistics only (no Lesson Plan surface here).
+// Performance Sessions branch on whether the teacher already saved a lesson
+// plan (same data pattern as the Dashboard "Class Details" modal), never on
+// the status string alone. "Connect" only activates 5 minutes before start.
 // ---------------------------------------------------------------------------
+/** True from 5 minutes before the start until the session's end time. */
+function withinConnectWindow(iso: string, durationMinutes: number): boolean {
+  const h = hoursUntil(iso);
+  return h <= 5 / 60 && h > -(durationMinutes / 60);
+}
+const CONNECT_HINT = "Activates 5 minutes before your session.";
+
+function ConnectButton({
+  enabled, onClick, className,
+}: { enabled: boolean; onClick: () => void; className?: string }) {
+  if (enabled) {
+    return (
+      <PrimaryButton className={`verbo-btn-glow ${className ?? ""}`} onClick={onClick}>
+        <Video className="h-4 w-4" /> Connect
+      </PrimaryButton>
+    );
+  }
+  return (
+    <button
+      type="button"
+      disabled
+      title={CONNECT_HINT}
+      className={`inline-flex cursor-not-allowed items-center justify-center gap-2 rounded-full bg-secondary px-4 py-2 text-sm font-medium text-muted-foreground ${className ?? ""}`}
+    >
+      <Video className="h-4 w-4" /> Connect
+    </button>
+  );
+}
+
 function EventDetailsModal({
   event, onClose, onCantAttend, onCancelSpotlight,
 }: {
@@ -352,6 +383,8 @@ function EventDetailsModal({
   onCantAttend: (session: ExtSession) => void;
   onCancelSpotlight: (session: ExtSession) => void;
 }) {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const isClass = event.kind === "class";
   const isSpotlight = event.kind === "spotlight";
   const session = event.session;
@@ -359,15 +392,68 @@ function EventDetailsModal({
   const status = event.status as ExtSessionStatus | undefined;
   const statusMeta = status ? CALENDAR_STATUS_META[status] : null;
   const kindMeta = EVENT_KIND_META[event.kind];
+  const isAbsent = status === "absent" || status === "no_show";
+  const isCompleted = status === "completed";
   const canAct =
     isClass && session &&
     (status === "scheduled" || status === "ready" || status === "rescheduled");
   const canConnectSpotlight =
     isSpotlight && session &&
     (status === "scheduled" || status === "ready" || status === "rescheduled");
+  const connectOpen = session ? withinConnectWindow(session.date_time, session.duration_minutes) : false;
   const connect = () => {
     if (session?.teams_link) window.open(session.teams_link, "_blank");
   };
+
+  const plan = session ? getLessonPlan(session.id) : undefined;
+  let topic: { levelName: string; unitTitle: string } | null = null;
+  if (plan && user) {
+    if (plan.vip_unit_id) {
+      const u = unitsForStudent(user.id).find((x) => x.id === plan.vip_unit_id);
+      if (u) topic = { levelName: "VIP Course", unitTitle: u.title };
+    } else if (plan.tailored_unit_id) {
+      const u = tailoredUnitsForStudent(user.id).find((x) => x.id === plan.tailored_unit_id);
+      if (u) topic = { levelName: "Tailored Content", unitTitle: u.title };
+    } else {
+      topic = resolvePlanTopic(user.product, plan.level_id, plan.unit_id);
+    }
+  }
+  const prepare = () => {
+    if (!plan) return;
+    onClose();
+    if (plan.vip_unit_id) {
+      navigate({ to: "/student/my-course" });
+    } else if (plan.tailored_unit_id) {
+      navigate({ to: "/student/courses", search: {} });
+    } else {
+      navigate({ to: "/student/courses", search: { levelId: plan.level_id, unitId: plan.unit_id } });
+    }
+  };
+
+  const planBlock = plan ? (
+    <section className="mt-4">
+      <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        {isCompleted ? "What we covered" : "What we'll cover"}
+      </h4>
+      <div className="mt-2 space-y-1 rounded-lg border border-[var(--navy-100)] bg-[var(--navy-50)] p-3.5 text-sm text-foreground">
+        <div><span className="text-muted-foreground">Type:</span> {plan.type}</div>
+        <div><span className="text-muted-foreground">Title:</span> {plan.title}</div>
+        {topic && (
+          <div className="text-muted-foreground">{topic.levelName} — {topic.unitTitle}</div>
+        )}
+      </div>
+    </section>
+  ) : null;
+
+  const notesBlock = (
+    <section className="mt-4">
+      <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Teacher's notes</h4>
+      <p className="mt-2 text-sm text-muted-foreground">
+        {session?.report_comments || "No notes were left for this session."}
+      </p>
+    </section>
+  );
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
       <div onClick={(e) => e.stopPropagation()} className="relative w-full max-w-md rounded-2xl bg-card p-6 shadow-floating">
@@ -418,21 +504,69 @@ function EventDetailsModal({
           </div>
         )}
 
+        {isClass && session && isAbsent && (
+          <>
+            {session.absent_cause && (
+              <div className="mt-4 rounded-lg border border-[var(--navy-100)] bg-[var(--navy-50)] p-3.5 text-sm text-muted-foreground">
+                {session.absent_cause === "student"
+                  ? "You marked yourself unavailable."
+                  : session.absent_cause === "teacher"
+                  ? "Your teacher canceled this session."
+                  : "This session was not attended."}
+              </div>
+            )}
+            {notesBlock}
+          </>
+        )}
+
+        {isClass && session && isCompleted && (
+          <>
+            {planBlock}
+            {notesBlock}
+            <section className="mt-4">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Your rating</h4>
+              {session.student_rating ? (
+                <div className="mt-2 flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <Star
+                      key={n}
+                      className={`h-4 w-4 ${n <= session.student_rating! ? "fill-amber-400 text-amber-400" : "text-muted-foreground/40"}`}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-2 text-sm text-muted-foreground">You haven't rated this session yet.</p>
+              )}
+            </section>
+          </>
+        )}
+
+        {canAct && (
+          plan ? planBlock : (
+            <div className="mt-4 flex items-start gap-2.5 rounded-lg border border-[var(--navy-100)] bg-[var(--navy-50)] p-3.5">
+              <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                This Performance Session hasn't been planned yet. Check back closer to the date.
+              </p>
+            </div>
+          )
+        )}
+
         <div className="mt-6 flex gap-2">
           {canAct ? (
-            <>
-              <PrimaryButton className="flex-1" onClick={connect}>
-                <Video className="h-4 w-4" /> Connect
-              </PrimaryButton>
-              <GhostButton className="flex-1" onClick={() => session && onCantAttend(session)}>
-                Can't Attend
-              </GhostButton>
-            </>
+            plan ? (
+              <>
+                <GhostButton className="flex-1 justify-center" onClick={prepare}>
+                  <BookOpen className="h-3.5 w-3.5" /> Prepare Session
+                </GhostButton>
+                <ConnectButton className="flex-1" enabled={connectOpen} onClick={connect} />
+              </>
+            ) : (
+              <GhostButton className="w-full justify-center" onClick={onClose}>Close</GhostButton>
+            )
           ) : canConnectSpotlight ? (
             <>
-              <PrimaryButton className="flex-1" onClick={connect}>
-                <Video className="h-4 w-4" /> Connect
-              </PrimaryButton>
+              <ConnectButton className="flex-1" enabled={connectOpen} onClick={connect} />
               {status === "scheduled" && (
                 <GhostButton className="flex-1" onClick={() => session && onCancelSpotlight(session)}>
                   Cancel Spotlight
@@ -443,6 +577,13 @@ function EventDetailsModal({
             <GhostButton className="w-full" onClick={onClose}>Close</GhostButton>
           )}
         </div>
+        {canAct && plan && (
+          <div className="mt-2">
+            <GhostButton className="w-full justify-center" onClick={() => session && onCantAttend(session)}>
+              Can't Attend
+            </GhostButton>
+          </div>
+        )}
       </div>
     </div>
   );
