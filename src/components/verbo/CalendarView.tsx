@@ -20,6 +20,7 @@ import {
   CANONICAL_STATUS_ORDER,
   EVENT_KIND_META,
   eventPillDisplay,
+  isClubFull,
   type CalendarEvent,
   type CalendarEventKind,
 } from "@/lib/calendar-events";
@@ -37,7 +38,10 @@ export interface CalendarViewProps {
   initialEnabledKinds?: CalendarEventKind[];
   /** Kinds whose event pills get a subtle attention pulse. */
   pulseKinds?: CalendarEventKind[];
+  /** Month/day the calendar opens on. Defaults to today. */
+  initialDate?: Date;
 }
+
 
 
 function dayKey(d: Date) { return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`; }
