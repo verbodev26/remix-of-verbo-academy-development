@@ -1099,7 +1099,9 @@ export function UnitDetail({
   const actionLabel =
     actionStage === "review" ? "Review activities" : actionStage === "continue" ? "Continue activities" : "Start activities";
   const actionButtonCls =
-    actionStage === "start" ? "bg-accent text-accent-foreground hover:bg-[#d9731f]" : "text-white hover:opacity-90";
+    readOnly || actionStage === "start"
+      ? "bg-accent text-accent-foreground hover:bg-[#d9731f]"
+      : "text-white hover:opacity-90";
   const actionButtonStyle: React.CSSProperties | undefined =
     readOnly || actionStage === "start"
       ? undefined
