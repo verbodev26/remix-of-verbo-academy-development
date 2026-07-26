@@ -862,3 +862,14 @@
   .verbo-stagger-in,
   .verbo-soft-fade { animation: verbo-soft-fade 160ms ease-out both; }
 }
+
+@keyframes verbo-pulse-once {
+  0% { transform: scale(1); box-shadow: 0 8px 24px -6px rgba(243, 137, 52, 0.5); }
+  40% { transform: scale(1.025); box-shadow: 0 0 0 6px rgba(243, 137, 52, 0.18), 0 8px 24px -6px rgba(243, 137, 52, 0.5); }
+  100% { transform: scale(1); box-shadow: 0 8px 24px -6px rgba(243, 137, 52, 0.5); }
+}
+.verbo-pulse-once { animation: verbo-pulse-once 1100ms cubic-bezier(0.23, 1, 0.32, 1) 250ms 2 both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .verbo-pulse-once { animation: none; }
+}
