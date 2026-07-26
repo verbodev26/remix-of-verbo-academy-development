@@ -22,7 +22,7 @@ import {
   RotateCcw,
   Award,
   Info,
-  Clock,
+  
   PartyPopper,
   Flame,
   Medal,
